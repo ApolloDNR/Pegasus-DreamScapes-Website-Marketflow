@@ -2,6 +2,10 @@ import { useLocation, Redirect } from "wouter";
 import { useSupabaseAuth, canAccessRoute, getRoleDashboardPath } from "@/contexts/supabase-auth-context";
 import { Loader2 } from "lucide-react";
 import type { MarketplacePermission } from "@shared/schema";
+import {
+  hasGovernedMarketflowAccess,
+  isGuestMarketflowWalkthrough,
+} from "@/lib/marketflow-access";
 
 interface AuthGuardProps {
   children: React.ReactNode;
@@ -10,7 +14,15 @@ interface AuthGuardProps {
 }
 
 export function AuthGuard({ children, requiredRoles, fallbackPath = "/login" }: AuthGuardProps) {
-  const { isAuthenticated, isLoading, userRole, isGuestMode, guestRole } = useSupabaseAuth();
+  const {
+    isAuthenticated,
+    isLoading,
+    userRole,
+    isGuestMode,
+    guestRole,
+    isAdmin,
+    profile,
+  } = useSupabaseAuth();
   const [location] = useLocation();
 
   if (isLoading) {
@@ -30,6 +42,25 @@ export function AuthGuard({ children, requiredRoles, fallbackPath = "/login" }: 
 
   if (!hasAccess) {
     return <Redirect to={fallbackPath} />;
+  }
+
+  if (location.startsWith("/marketflow/")) {
+    if (isGuestMode && !isGuestMarketflowWalkthrough(location)) {
+      return <Redirect to="/marketflow/access" />;
+    }
+
+    if (
+      !isGuestMode &&
+      !hasGovernedMarketflowAccess({
+        isAuthenticated,
+        isGuestMode,
+        isAdmin,
+        profile,
+        userRole,
+      })
+    ) {
+      return <Redirect to="/marketflow/access" />;
+    }
   }
 
   if (requiredRoles && requiredRoles.length > 0) {

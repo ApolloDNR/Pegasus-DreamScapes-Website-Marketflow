@@ -343,7 +343,7 @@ describe("MarketFlow access explicit contact consent", () => {
     expect(apiRequestMock).not.toHaveBeenCalled();
   });
 
-  it("announces a pending manual review and prevents duplicate submission", async () => {
+  it("announces that the request is being recorded and prevents duplicate submission", async () => {
     let now = 100_000;
     vi.spyOn(Date, "now").mockImplementation(() => now);
     renderWithQueryClient(<MarketflowAccessPage />);
@@ -352,7 +352,7 @@ describe("MarketFlow access explicit contact consent", () => {
     consentAndSubmitMarketflowAccess();
 
     const pending = await screen.findByRole("button", {
-      name: /sending for manual review/i,
+      name: /recording request/i,
     });
     expect(pending).toBeDisabled();
     expect(pending).toHaveAttribute("aria-busy", "true");
@@ -380,7 +380,7 @@ describe("MarketFlow access explicit contact consent", () => {
     expect(apiRequestMock).toHaveBeenCalledTimes(2);
   });
 
-  it("renders the MarketFlow-specific manual-review success and fully resets", async () => {
+  it("renders a receipt without promising review, approval, invitation, or response", async () => {
     let now = 120_000;
     vi.spyOn(Date, "now").mockImplementation(() => now);
     apiRequestMock.mockResolvedValueOnce({ ok: true });
@@ -395,18 +395,23 @@ describe("MarketFlow access explicit contact consent", () => {
 
     const success = await screen.findByTestId("success-view-marketflow_access");
     expect(success).toHaveAttribute("role", "region");
-    expect(success).toHaveAccessibleName("Your access request is logged.");
+    expect(success).toHaveAccessibleName("Your MarketFlow interest was recorded.");
     expect(success).toHaveFocus();
     expect(within(success).getByRole("heading", { level: 1 })).toHaveTextContent(
-      "Your access request is logged.",
+      "Your MarketFlow interest was recorded.",
     );
     expect(within(success).getByRole("status")).toHaveAttribute("aria-live", "polite");
     expect(window.scrollTo).toHaveBeenCalledWith(expect.objectContaining({ top: 0 }));
     expect(success).toHaveTextContent("Request logged");
-    expect(success).toHaveTextContent("Introduction reviewed");
-    expect(success).toHaveTextContent("Role and network fit reviewed");
-    expect(success).toHaveTextContent("Direct response");
-    expect(success).not.toHaveTextContent(/Acquisitions|comps|48 hours|invite link|onboarding call/i);
+    expect(success).toHaveTextContent("Possible consideration");
+    expect(success).toHaveTextContent("Possible follow-up");
+    expect(success).toHaveTextContent("No access created");
+    expect(success).toHaveTextContent(
+      /does not guarantee human review, a response, approval, an invitation, inventory, or access/i,
+    );
+    expect(success).not.toHaveTextContent(
+      /Introduction reviewed|Role and network fit reviewed|Direct response|Acquisitions|comps|48 hours|invite link|onboarding call/i,
+    );
 
     fireEvent.click(screen.getByTestId("button-success-add-another-marketflow_access"));
     const resetName = await screen.findByTestId("input-access-name");

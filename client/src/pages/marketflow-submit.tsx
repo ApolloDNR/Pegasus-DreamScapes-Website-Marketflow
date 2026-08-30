@@ -7,6 +7,7 @@ import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useDemoMode } from "@/contexts/demo-mode-context";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { useSEO } from "@/hooks/use-seo";
+import { hasGovernedMarketflowAccess } from "@/lib/marketflow-access";
 import { WholesaleDealForm } from "@/components/wholesale-deal-form";
 import { ListingForm } from "@/components/listing-form";
 import { Link } from "wouter";
@@ -17,7 +18,6 @@ import {
   CheckCircle,
   Shield,
   Loader2,
-  Sparkles,
   Crown,
   Target,
   Building2,
@@ -36,7 +36,17 @@ export default function MarketflowSubmit() {
     description: "Private MarketFlow submission surface.",
     noIndex: true,
   });
-  const { user, isLoading, isWholesaler, isDreamscaper, userRole, isGuestMode } = useSupabaseAuth();
+  const {
+    user,
+    profile,
+    isLoading,
+    isAuthenticated,
+    isAdmin,
+    isWholesaler,
+    isDreamscaper,
+    userRole,
+    isGuestMode,
+  } = useSupabaseAuth();
   const { isDemoMode } = useDemoMode();
 
   if (isLoading) {
@@ -48,36 +58,54 @@ export default function MarketflowSubmit() {
   }
 
   const isPegasus = userRole?.startsWith("pegasus_") || false;
-  const canSubmit = isWholesaler || isDreamscaper;
-  const isPreviewMode = isDemoMode || isGuestMode;
+  const hasGovernedAccess = hasGovernedMarketflowAccess({
+    isAuthenticated,
+    isGuestMode,
+    isAdmin,
+    profile,
+    userRole,
+  });
+  const hasSubmissionRole = isWholesaler || isDreamscaper;
+  const holdReason = isDemoMode || isGuestMode
+    ? "preview"
+    : !user
+      ? "login"
+      : !hasGovernedAccess
+        ? "approval"
+        : !hasSubmissionRole
+          ? "role"
+          : null;
 
-  // Anonymous and out-of-role users get the marketing-style gate
-  // WITHOUT the authenticated MarketplaceLayout sidebar. Auditor flagged
-  // the sidebar leaking to public visitors as the biggest visual whiplash.
-  if (!user && !isPreviewMode) {
+  if (holdReason) {
     return (
       <div className="min-h-screen bg-background pt-24 pb-24">
-        <LockedScreen reason="login" />
-      </div>
-    );
-  }
-
-  if (user && !canSubmit && !isPreviewMode) {
-    return (
-      <div className="min-h-screen bg-background pt-24 pb-24">
-        <LockedScreen reason="role" currentRole={userRole} />
+        <LockedScreen reason={holdReason} currentRole={userRole} />
       </div>
     );
   }
 
   return (
     <MarketplaceLayout>
-      <AuthenticatedSubmitPage isPegasus={isPegasus} isPreviewMode={isPreviewMode} />
+      <AuthenticatedSubmitPage isPegasus={isPegasus} />
     </MarketplaceLayout>
   );
 }
 
-function LockedScreen({ reason, currentRole }: { reason: "login" | "role"; currentRole?: string | null }) {
+function LockedScreen({
+  reason,
+  currentRole,
+}: {
+  reason: "login" | "preview" | "approval" | "role";
+  currentRole?: string | null;
+}) {
+  const explanation = reason === "login"
+    ? "Signing in or creating a preview account does not unlock submissions. If you already have separately approved MarketFlow access, sign in to that account."
+    : reason === "preview"
+      ? "A preview role does not create private access. It is a walkthrough lens only and cannot view inventory or submit a record."
+      : reason === "approval"
+        ? "Your self-selected account role is declared interest only. It does not verify or approve you, and it does not grant MarketFlow inventory access or submission privileges."
+        : "This governed account does not currently have a submission-capable operator role. Role and submission privileges are assigned separately.";
+
   return (
     <div className="min-h-[70vh] flex items-center justify-center">
       <div className="max-w-lg w-full">
@@ -86,7 +114,7 @@ function LockedScreen({ reason, currentRole }: { reason: "login" | "role"; curre
             <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
               <Lock className="w-8 h-8 text-primary" />
             </div>
-            <CardTitle className="text-2xl font-serif">Verification Required</CardTitle>
+            <CardTitle className="text-2xl font-serif">Invitation and role approval required</CardTitle>
             <div className="flex items-center justify-center gap-2 mt-2">
               <Badge variant="outline" className="gap-1">
                 <Wrench className="w-3 h-3" />
@@ -95,81 +123,48 @@ function LockedScreen({ reason, currentRole }: { reason: "login" | "role"; curre
             </div>
           </CardHeader>
           <CardContent className="text-center space-y-6">
-            {reason === "login" ? (
-              <>
-                <p className="text-muted-foreground">
-                  Sign in to your account to submit deals to the MarketFlow platform.
-                </p>
-                <div className="space-y-3">
-                  <a href="/login">
-                    <Button className="w-full gap-2" data-testid="button-login-submit">
-                      <ArrowRight className="w-4 h-4" />
-                      Sign In to Continue
-                    </Button>
-                  </a>
-                  <p className="text-sm text-muted-foreground">
-                    Don't have an account?{" "}
-                    <Link href="/signup" className="text-primary hover:underline">
-                      Apply to become a Wholesaler
-                    </Link>
-                  </p>
+            <div className="space-y-4">
+              <div className="flex items-center justify-center gap-2">
+                <AlertCircle className="w-5 h-5 text-amber-500" />
+                <span className="font-medium">Private workspace unavailable</span>
+              </div>
+              <p className="text-muted-foreground">{explanation}</p>
+              {currentRole ? (
+                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <span>Declared or assigned role:</span>
+                  <Badge variant="secondary">{currentRole.replace(/_/g, " ")}</Badge>
                 </div>
-              </>
-            ) : (
-              <>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-center gap-2">
-                    <AlertCircle className="w-5 h-5 text-amber-500" />
-                    <span className="font-medium">Access Restricted</span>
-                  </div>
-                  <p className="text-muted-foreground">
-                    Only verified <span className="font-semibold text-foreground">Dreamscapers</span> and{" "}
-                    <span className="font-semibold text-foreground">Wholesalers</span> can submit deals to the MarketFlow platform.
-                  </p>
-                  {currentRole && (
-                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                      <span>Your current role:</span>
-                      <Badge variant="secondary">{currentRole.replace(/_/g, " ")}</Badge>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="bg-muted/50 rounded-lg p-4 text-left space-y-3">
-                  <h4 className="font-semibold flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-primary" />
-                    How to Get Verified
-                  </h4>
-                  <ul className="text-sm text-muted-foreground space-y-2">
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span>Complete your profile with business information</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span>Submit verification documents</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span>Pass our quick screening process</span>
-                    </li>
-                  </ul>
-                </div>
-                
-                <div className="flex flex-col gap-3">
-                  <Link href="/partner">
-                    <Button className="w-full gap-2" data-testid="button-apply-wholesaler">
-                      <Sparkles className="w-4 h-4" />
-                      Apply to Become a Wholesaler
-                    </Button>
-                  </Link>
-                  <Link href="/marketflow/discover">
-                    <Button variant="outline" className="w-full gap-2" data-testid="button-browse-deals">
-                      Browse Available Deals
-                    </Button>
-                  </Link>
-                </div>
-              </>
-            )}
+              ) : null}
+            </div>
+
+            <div className="bg-muted/50 rounded-lg p-4 text-left space-y-3">
+              <h4 className="font-semibold flex items-center gap-2">
+                <Shield className="w-4 h-4 text-primary" />
+                Controlled-pilot boundary
+              </h4>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                An access request records context for possible consideration only. It does
+                not promise review, response, verification, approval, an invitation,
+                inventory, or submission rights.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              {reason === "login" ? (
+                <a href="/login">
+                  <Button variant="outline" className="w-full gap-2" data-testid="button-login-submit">
+                    Sign in to an approved account
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </a>
+              ) : null}
+              <Link href="/marketflow/access">
+                <Button className="w-full gap-2" data-testid="button-request-marketflow-access">
+                  Record MarketFlow interest
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -177,37 +172,11 @@ function LockedScreen({ reason, currentRole }: { reason: "login" | "role"; curre
   );
 }
 
-function AuthenticatedSubmitPage({ isPegasus, isPreviewMode = false }: { isPegasus: boolean; isPreviewMode?: boolean }) {
+function AuthenticatedSubmitPage({ isPegasus }: { isPegasus: boolean }) {
   const [submitType, setSubmitType] = useState<"wholesale" | "capital" | "listing">("wholesale");
   
   return (
     <div className="space-y-6">
-      {isPreviewMode && (
-        <Card className="border-amber-500/30 bg-amber-500/10">
-          <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <Lock className="w-5 h-5 text-amber-600" />
-                <div>
-                  <h3 className="font-medium">Preview Mode</h3>
-                  <p className="text-sm text-muted-foreground">
-                    You're viewing the submission forms in preview mode. Sign up as a Wholesaler to submit deals.
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Link href="/signup">
-                  <Button size="sm" data-testid="button-signup-preview">
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Sign Up to Submit
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       <div>
         <div className="flex items-center gap-3 mb-2">
           <h1 className="text-2xl sm:text-3xl font-bold" data-testid="text-submit-deal-title">
@@ -219,17 +188,10 @@ function AuthenticatedSubmitPage({ isPegasus, isPreviewMode = false }: { isPegas
               Pegasus
             </Badge>
           )}
-          {isPreviewMode && (
-            <Badge variant="outline" className="gap-1 text-amber-600 border-amber-500/50">
-              <Lock className="w-3 h-3" />
-              Preview
-            </Badge>
-          )}
         </div>
         <p className="text-muted-foreground">
-          {isPreviewMode 
-            ? "Explore our deal submission process. Sign up to submit your own deals."
-            : "Submit a private record for review. Only a separately approved opportunity may later be made available to eligible MarketFlow participants."}
+          Submit a private record for possible consideration. Only a separately
+          approved opportunity may later be made available to eligible MarketFlow participants.
         </p>
       </div>
 

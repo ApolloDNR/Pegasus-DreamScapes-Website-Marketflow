@@ -391,7 +391,7 @@ export function LeadSection({
             <div className="flex items-center gap-3"><MapPin className={`w-4 h-4 ${ic}`} /> East Bay · California</div>
           </div>
           <p className={`mt-7 text-[0.82rem] !tracking-normal normal-case ${navy ? 'text-[var(--cream)]/55' : 'text-[var(--muted)]'}`}>
-            Submissions are reviewed for fit; follow-up is not guaranteed.
+            Submission may be considered for fit; review, follow-up, and timing are not guaranteed.
           </p>
         </div>
         <div className="lg:col-span-7 reveal delay-100">

@@ -74,7 +74,14 @@ export type FormCfg = {
   roleOptions?: string[];
 };
 
-export type SplitPath = { name: string; desc: string; cta: string; route: Route };
+export type SplitPath = {
+  name: string;
+  desc: string;
+  cta: string;
+} & (
+  | { route: Route }
+  | { href: string }
+);
 
 export type FaqItem = { q: string; a: string };
 

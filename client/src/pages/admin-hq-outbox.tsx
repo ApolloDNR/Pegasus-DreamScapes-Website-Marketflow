@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useState } from "react";
 import { Loader2, RefreshCw, CheckCircle2, AlertCircle, XCircle, Clock } from "lucide-react";
+import { PrivateDataError } from "@/components/private-data-state";
 
 type HqOutboxRow = {
   id: number;
@@ -21,6 +22,14 @@ type HqOutboxRow = {
   createdAt: string;
 };
 
+type HqOutboxPayload = { rows: HqOutboxRow[]; hqHealthy: boolean };
+
+function isHqOutboxPayload(value: unknown): value is HqOutboxPayload {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const candidate = value as Partial<HqOutboxPayload>;
+  return Array.isArray(candidate.rows) && typeof candidate.hqHealthy === "boolean";
+}
+
 const statusIcon = (s: string) => {
   if (s === "forwarded") return <CheckCircle2 className="h-4 w-4 text-green-600" />;
   if (s === "failed") return <XCircle className="h-4 w-4 text-red-600" />;
@@ -30,7 +39,13 @@ const statusIcon = (s: string) => {
 
 export default function AdminHqOutbox() {
   const [statusFilter, setStatusFilter] = useState<string>("");
-  const { data, isLoading } = useQuery<{ rows: HqOutboxRow[]; hqHealthy: boolean }>({
+  const {
+    data,
+    isLoading,
+    isError,
+    isFetching,
+    refetch,
+  } = useQuery<HqOutboxPayload>({
     queryKey: ["/api/admin/hq-outbox", statusFilter],
     queryFn: async () => {
       const qs = statusFilter ? `?status=${statusFilter}` : "";
@@ -49,22 +64,39 @@ export default function AdminHqOutbox() {
     mutationFn: async () => apiRequest("POST", `/api/admin/hq-outbox/drain`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/admin/hq-outbox"] }),
   });
+  const hasVerifiedData = isHqOutboxPayload(data);
+  const dataUnavailable = isError || (!isLoading && !hasVerifiedData);
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       <div className="mb-6 rounded-md border-l-4 border-copper bg-cream p-4 text-sm text-navy" data-testid="banner-hq-system-of-record">
-        Pegasus HQ is the system of record. The website forwards captures and shows status. Work the funnel in HQ.
+        This page reports website-to-HQ forwarding attempts. Confirm the corresponding record in Pegasus HQ before treating a capture as received there.
       </div>
 
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-display text-navy">Pegasus HQ Outbox</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            HQ endpoint health:{" "}
-            <Badge variant={data?.hqHealthy ? "default" : "destructive"} data-testid="badge-hq-health">
-              {data?.hqHealthy ? "Live" : "Down — queueing to outbox"}
+          <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
+            <span>HQ endpoint health:</span>
+            <Badge
+              variant={
+                isLoading || dataUnavailable
+                  ? "outline"
+                  : hasVerifiedData && data.hqHealthy
+                    ? "default"
+                    : "destructive"
+              }
+              data-testid="badge-hq-health"
+            >
+              {isLoading
+                ? "Checking…"
+                : dataUnavailable
+                  ? "Unavailable"
+                    : hasVerifiedData && data.hqHealthy
+                    ? "Live"
+                    : "Reported down — captures remain queued"}
             </Badge>
-          </p>
+          </div>
         </div>
         <div className="flex gap-2">
           <select
@@ -81,7 +113,7 @@ export default function AdminHqOutbox() {
           </select>
           <Button
             onClick={() => drain.mutate()}
-            disabled={drain.isPending}
+            disabled={drain.isPending || isLoading || dataUnavailable}
             data-testid="button-drain-pending"
           >
             {drain.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
@@ -92,12 +124,33 @@ export default function AdminHqOutbox() {
 
       {isLoading && <div className="text-center py-12"><Loader2 className="h-8 w-8 animate-spin mx-auto" /></div>}
 
-      {data?.rows?.length === 0 && (
+      {dataUnavailable && (
+        <PrivateDataError
+          title="HQ outbox unavailable"
+          description="The outbox request failed, so queue contents and endpoint health cannot be verified. No empty-queue or outage claim is shown from this failed response."
+          onRetry={() => void refetch()}
+          isRetrying={isFetching}
+          testId="state-hq-outbox-error"
+        />
+      )}
+
+      {(retry.isError || drain.isError) && (
+        <div
+          className="mb-4 flex items-start gap-2 rounded-md border border-destructive/40 bg-destructive/5 p-3 text-sm"
+          role="alert"
+          data-testid="state-hq-outbox-action-error"
+        >
+          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-destructive" />
+          <span>The requested outbox action did not complete. Refresh the verified queue state before trying again.</span>
+        </div>
+      )}
+
+      {!isLoading && hasVerifiedData && data.rows.length === 0 && (
         <Card><CardContent className="py-12 text-center text-muted-foreground">No outbox rows.</CardContent></Card>
       )}
 
       <div className="space-y-3">
-        {data?.rows?.map((row) => (
+        {hasVerifiedData && data.rows.map((row) => (
           <Card key={row.id} data-testid={`row-outbox-${row.id}`}>
             <CardHeader className="pb-2">
               <CardTitle className="flex items-center justify-between text-base">

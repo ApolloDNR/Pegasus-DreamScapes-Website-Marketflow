@@ -788,15 +788,15 @@ function HomepageContentManager() {
   const [heroCta, setHeroCta] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
-  const { data: wholesaleDeals = [] } = useQuery<WholesaleDealSummary[]>({
+  const { data: wholesaleDeals = [], isError: wholesaleDealsError } = useQuery<WholesaleDealSummary[]>({
     queryKey: ["/api/wholesale-deals"],
   });
 
-  const { data: featuredDeals = [], isLoading: featuredLoading } = useQuery<FeaturedDeal[]>({
+  const { data: featuredDeals = [], isLoading: featuredLoading, isError: featuredDealsError } = useQuery<FeaturedDeal[]>({
     queryKey: ["/api/admin/featured-deals"],
   });
 
-  const { data: storedContent = [] } = useQuery<StoredHomepageContent[]>({
+  const { data: storedContent = [], isError: storedContentError } = useQuery<StoredHomepageContent[]>({
     queryKey: ["/api/admin/homepage-content"],
   });
 
@@ -876,11 +876,16 @@ function HomepageContentManager() {
 
   const activeDeals = wholesaleDeals.filter(d => d.status === "approved" || d.status === "listed" || d.status === "active");
   const featuredDealIds = new Set(featuredDeals.map(f => `${f.dealType}-${f.dealId}`));
+  const homepageContentError = wholesaleDealsError || featuredDealsError || storedContentError;
 
   const formatCurrency = (amount: number | null) => {
     if (!amount) return "N/A";
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount);
   };
+
+  if (homepageContentError) {
+    return <AdminDataUnavailable scope="Homepage content and featured-deal records" />;
+  }
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -1075,7 +1080,7 @@ function FAQManager() {
   const [editQuestion, setEditQuestion] = useState("");
   const [editAnswer, setEditAnswer] = useState("");
 
-  const { data: faqs = [], isLoading } = useQuery<FAQItem[]>({
+  const { data: faqs = [], isLoading, isError: faqsError } = useQuery<FAQItem[]>({
     queryKey: ["/api/faqs"],
   });
 
@@ -1126,6 +1131,10 @@ function FAQManager() {
     setEditQuestion(faq.question);
     setEditAnswer(faq.answer);
   };
+
+  if (faqsError) {
+    return <AdminDataUnavailable scope="FAQ records" />;
+  }
 
   return (
     <Card>
@@ -1252,7 +1261,7 @@ function TestimonialsManager() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState({ quote: "", authorName: "", authorRole: "", authorLocation: "", rating: 5 });
 
-  const { data: testimonials = [], isLoading } = useQuery<TestimonialItem[]>({
+  const { data: testimonials = [], isLoading, isError: testimonialsError } = useQuery<TestimonialItem[]>({
     queryKey: ["/api/testimonials"],
   });
 
@@ -1308,6 +1317,10 @@ function TestimonialsManager() {
       rating: t.rating || 5,
     });
   };
+
+  if (testimonialsError) {
+    return <AdminDataUnavailable scope="Testimonial records" />;
+  }
 
   return (
     <Card>
@@ -1479,7 +1492,7 @@ function TeamManager() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState({ name: "", role: "", bio: "", email: "", linkedinUrl: "" });
 
-  const { data: members = [], isLoading } = useQuery<TeamMemberItem[]>({
+  const { data: members = [], isLoading, isError: teamError } = useQuery<TeamMemberItem[]>({
     queryKey: ["/api/team"],
   });
 
@@ -1535,6 +1548,10 @@ function TeamManager() {
       linkedinUrl: m.linkedinUrl || "",
     });
   };
+
+  if (teamError) {
+    return <AdminDataUnavailable scope="Team records" />;
+  }
 
   return (
     <Card>
@@ -1702,7 +1719,7 @@ function MediaLibrary() {
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const { getUploadParameters } = useUpload();
 
-  const { data: mediaFiles = [], isLoading, refetch } = useQuery<MediaItem[]>({
+  const { data: mediaFiles = [], isLoading, isError: mediaError, refetch } = useQuery<MediaItem[]>({
     queryKey: ["/api/admin/media"],
   });
 
@@ -1771,6 +1788,10 @@ function MediaLibrary() {
       refetch();
     }
   };
+
+  if (mediaError) {
+    return <AdminDataUnavailable scope="Media records" />;
+  }
 
   return (
     <Card>

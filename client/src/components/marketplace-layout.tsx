@@ -57,6 +57,11 @@ export function MarketplaceLayout({ children }: MarketplaceLayoutProps) {
   const { profile, user, signOut, userRole } = useSupabaseAuth();
 
   const roleItems = getRoleNavItems(userRole);
+  const roleDashboardPath = getRoleDashboardPath(userRole);
+  const dashboardPath =
+    roleDashboardPath === "/marketflow"
+      ? "/marketflow/dashboard"
+      : roleDashboardPath;
   const displayName = profile?.display_name || user?.email?.split("@")[0] || "User";
   const initials = displayName
     .split(" ")
@@ -104,7 +109,6 @@ export function MarketplaceLayout({ children }: MarketplaceLayoutProps) {
               <SidebarGroupContent>
                 <SidebarMenu>
                   {BASE_NAV_ITEMS.map((item) => {
-                    const dashboardPath = getRoleDashboardPath(userRole);
                     const isActive =
                       item.href === "/marketflow"
                         ? location === dashboardPath ||

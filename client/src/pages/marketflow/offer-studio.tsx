@@ -1200,10 +1200,6 @@ interface AdvisorProps {
 }
 
 function PeggyAdvisor({ dealInfo, offers, agreementReached }: AdvisorProps) {
-  const [query, setQuery] = useState("");
-  const [aiResponse, setAiResponse] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
   const latestOffer = offers[offers.length - 1];
   const offerCount = offers.length;
 
@@ -1238,61 +1234,14 @@ function PeggyAdvisor({ dealInfo, offers, agreementReached }: AdvisorProps) {
     ];
   }, [agreementReached, offerCount, latestOffer]);
 
-  const quickPrompts = [
-    "What's a fair counter here?",
-    "Which term should I move on?",
-    "How do I frame this offer?",
-    "What risks am I missing?",
-  ];
-
-  const askPeggy = async (promptText: string) => {
-    if (!promptText.trim()) return;
-    setIsLoading(true);
-    setAiResponse(null);
-    try {
-      const context = [
-        `Deal: ${dealInfo.propertyAddress}`,
-        `Asking: $${dealInfo.askingPrice?.toLocaleString() || "N/A"}`,
-        `ARV: ${dealInfo.arv ? `$${dealInfo.arv.toLocaleString()}` : "n/a"}`,
-        `Lane: ${dealInfo.lane}`,
-        `Offers: ${offerCount}`,
-        latestOffer
-          ? `Latest: $${latestOffer.terms.offerPrice.toLocaleString()} from ${latestOffer.senderName} (${latestOffer.status})`
-          : "No offers yet",
-        `Agreement: ${agreementReached ? "reached" : "open"}`,
-      ].join("\n");
-
-      const res = await fetch("/api/peggy-ai/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: promptText,
-          context,
-          mode: "negotiation_advisor",
-        }),
-      });
-      if (!res.ok) throw new Error("Peggy unavailable");
-      const data = await res.json();
-      setAiResponse(
-        data.response ||
-          data.message ||
-          "I can help — share a little more about what's blocking you.",
-      );
-    } catch {
-      setAiResponse("Peggy is offline right now. Try again in a moment.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 h-full flex flex-col" data-testid="card-peggy-advisor">
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-primary" />
-          Peggy · Negotiation Advisor
+          Negotiation checklist
           <Badge variant="secondary" className="ml-auto text-[10px]">
-            Beta
+            General guidance
           </Badge>
         </CardTitle>
       </CardHeader>
@@ -1305,72 +1254,9 @@ function PeggyAdvisor({ dealInfo, offers, agreementReached }: AdvisorProps) {
           ))}
         </div>
 
-        <div className="space-y-2">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-supporting font-semibold">
-            Quick prompts
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {quickPrompts.map((prompt) => (
-              <Button
-                key={prompt}
-                size="sm"
-                variant="outline"
-                className="text-xs h-7"
-                onClick={() => {
-                  setQuery(prompt);
-                  askPeggy(prompt);
-                }}
-                disabled={isLoading}
-                data-testid={`button-prompt-${prompt.slice(0, 10).replace(/\s+/g, "-")}`}
-              >
-                {prompt}
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        <Separator />
-
-        <div className="space-y-2 flex-1 flex flex-col">
-          <Textarea
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Ask Peggy about this negotiation…"
-            className="min-h-[80px] text-sm resize-none"
-            data-testid="input-peggy-question"
-          />
-          <Button
-            size="sm"
-            onClick={() => askPeggy(query)}
-            disabled={isLoading || !query.trim()}
-            data-testid="button-ask-peggy"
-          >
-            {isLoading ? (
-              <>
-                <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
-                Thinking…
-              </>
-            ) : (
-              <>
-                <MessageSquare className="w-3 h-3 mr-1" />
-                Ask Peggy
-              </>
-            )}
-          </Button>
-
-          {aiResponse && (
-            <div
-              className="p-3 bg-background rounded-lg border text-sm space-y-2 mt-2"
-              data-testid="text-peggy-response"
-            >
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Sparkles className="w-3 h-3 text-primary" />
-                Peggy's Response
-              </div>
-              <p className="text-foreground whitespace-pre-wrap">{aiResponse}</p>
-            </div>
-          )}
-        </div>
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          Context for {dealInfo.propertyAddress || "this record"}, based only on activity shown here. This checklist is informational, not legal, financial, or brokerage advice.
+        </p>
       </CardContent>
     </Card>
   );

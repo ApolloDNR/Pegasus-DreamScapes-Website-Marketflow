@@ -75,6 +75,7 @@ export function Peggy({
   go,
   toSubmit,
   initialRole = null,
+  initialPrompt = null,
 }: {
   open: boolean;
   setOpen: (v: boolean) => void;
@@ -83,6 +84,7 @@ export function Peggy({
   go: Nav;
   toSubmit: (intent?: string) => void;
   initialRole?: string | null;
+  initialPrompt?: string | null;
 }) {
   const panelId = useId();
   const fabRef = useRef<HTMLButtonElement>(null);
@@ -103,8 +105,11 @@ export function Peggy({
   useEffect(() => {
     if (open && !messages.some((message) => message.role === 'user')) {
       setPickedRole(typeof initialRole === 'string' && initialRole ? initialRole : null);
+      if (typeof initialPrompt === 'string' && initialPrompt.trim()) {
+        setDraft(initialPrompt.trim());
+      }
     }
-  }, [open, initialRole, messages]);
+  }, [open, initialPrompt, initialRole, messages]);
 
   useEffect(() => {
     if (!open) return;

@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
+import { Link } from 'wouter';
 import {
   ArrowRight, ArrowUpRight, Check, Minus, ChevronDown, Plus,
   Compass, Home, Target, Calculator, Layers, Hammer, Route as RouteIcon, Shield,
   ConciergeBell, Key, Search, Handshake,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import type { Nav, Theme, Pillar, FaqItem, Route } from './theme';
+import type { Nav, Theme, Pillar, FaqItem, Route, SplitPath } from './theme';
 import { IMG, SectionHead, ContourLines, BrandMark } from './primitives';
 import { DealEngineSchematic } from './deal-engine';
 import {
@@ -1256,7 +1257,7 @@ export function Qualifier({ forYou, notFit }: { forYou: string[]; notFit: string
    Split paths (e.g. three ways to sell)
 ---------------------------------------------------------------- */
 export function SplitPaths({ go, openPeggy, heading, copy, paths, founderPhoto = false, peggyHint = false }:
-  { go: Nav; openPeggy: () => void; heading: string; copy: string; paths: { name: string; desc: string; cta: string; route: Route }[]; founderPhoto?: boolean; peggyHint?: boolean }) {
+  { go: Nav; openPeggy: () => void; heading: string; copy: string; paths: SplitPath[]; founderPhoto?: boolean; peggyHint?: boolean }) {
   const run = (r: Route) => { if (r === 'peggy') openPeggy(); else go(r); };
   const gridCols = paths.length === 2 ? 'lg:grid-cols-2 max-w-[920px] mx-auto' : 'lg:grid-cols-3';
   return (
@@ -1274,10 +1275,17 @@ export function SplitPaths({ go, openPeggy, heading, copy, paths, founderPhoto =
               <div className="font-serif-display text-3xl text-[var(--accent)] mb-5 leading-none">{String(i + 1).padStart(2, '0')}</div>
               <h3 className="font-serif-display text-2xl text-[var(--text)] mb-3 leading-tight">{p.name}</h3>
               <p className="text-[var(--muted)] text-[0.92rem] leading-relaxed mb-8">{p.desc}</p>
-              <button type="button" onClick={() => run(p.route)}
-                className="mt-auto btn-line px-7 py-3.5 pg-label !text-[10px] inline-flex items-center gap-3 group self-start">
-                {p.cta} <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-              </button>
+              {'href' in p ? (
+                <Link href={p.href}
+                  className="mt-auto btn-line px-7 py-3.5 pg-label !text-[10px] inline-flex items-center gap-3 group self-start">
+                  {p.cta} <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              ) : (
+                <button type="button" onClick={() => run(p.route)}
+                  className="mt-auto btn-line px-7 py-3.5 pg-label !text-[10px] inline-flex items-center gap-3 group self-start">
+                  {p.cta} <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </button>
+              )}
             </div>
           ))}
         </div>

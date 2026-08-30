@@ -219,7 +219,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/contact": {
     title: tag("Contact"),
     description:
-      "Share a property or situation for possible review. Receipt does not promise review, follow-up, a response time, an offer, or another outcome.",
+      "Use Contact for a general question or help finding the right public route. Receipt does not promise review, follow-up, a response, or another outcome.",
     image: `${SITE_URL}/og/contact.png`,
   },
   // ---- Public Website v1 (issue #22) pages ----

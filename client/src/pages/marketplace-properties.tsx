@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +30,7 @@ import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { RetailListing } from "@shared/schema";
+import { useAuthenticatedQuery } from "@/hooks/use-authenticated-query";
 
 export default function MarketplacePropertiesPage() {
   return (
@@ -51,9 +52,11 @@ function PropertiesBrowsePage() {
   const [priceRange, setPriceRange] = useState<string>("all");
   const [bedsFilter, setBedsFilter] = useState<string>("all");
 
-  const { data: listings, isLoading } = useQuery<RetailListing[]>({
-    queryKey: ["/api/supabase/listings"],
-  });
+  const {
+    data: listings,
+    isLoading,
+    isError,
+  } = useAuthenticatedQuery<RetailListing[]>(["/api/supabase/listings"]);
 
   const toggleSaveMutation = useMutation({
     mutationFn: async ({ propertyId }: { propertyId: string }) => {
@@ -66,13 +69,13 @@ function PropertiesBrowsePage() {
       queryClient.invalidateQueries({ queryKey: ["/api/supabase/saved-items"] });
       toast({
         title: "Saved",
-        description: "Property added to favorites",
+        description: "Property record saved to your account",
       });
     },
     onError: () => {
       toast({
-        title: "Error",
-        description: "Please log in to save properties",
+        title: "Unable to save",
+        description: "Confirm your account access and try again.",
         variant: "destructive",
       });
     },
@@ -81,8 +84,8 @@ function PropertiesBrowsePage() {
   const handleSave = (propertyId: string) => {
     if (!isAuthenticated) {
       toast({
-        title: "Login Required",
-        description: "Please log in to save properties to your favorites",
+        title: "Sign in required",
+        description: "Sign in with an approved account to save private records.",
       });
       navigate("/login");
       return;
@@ -132,15 +135,15 @@ function PropertiesBrowsePage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "active":
-        return <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">Active</Badge>;
+        return <Badge variant="secondary">Source status: active</Badge>;
       case "coming_soon":
-        return <Badge variant="secondary">Coming Soon</Badge>;
+        return <Badge variant="secondary">Source status: coming soon</Badge>;
       case "pending":
-        return <Badge className="bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-100">Pending</Badge>;
+        return <Badge variant="secondary">Source status: pending</Badge>;
       case "sold":
-        return <Badge variant="outline">Sold</Badge>;
+        return <Badge variant="outline">Source status: sold</Badge>;
       default:
-        return <Badge variant="secondary">{status}</Badge>;
+        return <Badge variant="secondary">Source status: {status}</Badge>;
     }
   };
 
@@ -149,10 +152,10 @@ function PropertiesBrowsePage() {
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-serif font-bold" data-testid="text-page-title">
-            Properties
+            Private property records
           </h1>
           <p className="text-muted-foreground">
-            Browse our collection of renovated homes and investment opportunities
+            Review source-supplied records available to your approved controlled-pilot account.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -160,14 +163,17 @@ function PropertiesBrowsePage() {
             <Link href="/login">
               <Button variant="outline" data-testid="button-login">
                 <LogIn className="h-4 w-4 mr-2" />
-                Login to Save
+                Sign in
               </Button>
             </Link>
           )}
           <Button
             variant={viewMode === "grid" ? "default" : "outline"}
             size="icon"
+            type="button"
             onClick={() => setViewMode("grid")}
+            aria-label="Grid view"
+            aria-pressed={viewMode === "grid"}
             data-testid="button-view-grid"
           >
             <Grid3X3 className="h-4 w-4" />
@@ -175,7 +181,10 @@ function PropertiesBrowsePage() {
           <Button
             variant={viewMode === "list" ? "default" : "outline"}
             size="icon"
+            type="button"
             onClick={() => setViewMode("list")}
+            aria-label="List view"
+            aria-pressed={viewMode === "list"}
             data-testid="button-view-list"
           >
             <List className="h-4 w-4" />
@@ -238,21 +247,53 @@ function PropertiesBrowsePage() {
         </CardContent>
       </Card>
 
-      {isLoading ? (
+      {!isAuthenticated ? (
+        <Card className="border-dashed" data-testid="state-property-access-required">
+          <CardContent className="py-12 text-center">
+            <LogIn className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+            <h2 className="text-lg font-semibold">Approved account required</h2>
+            <p className="mx-auto mt-2 max-w-2xl text-sm text-muted-foreground">
+              Guest preview and account creation do not grant access to private property records.
+              Sign in only if Pegasus has separately approved your pilot participation.
+            </p>
+            <Link href="/login">
+              <Button className="mt-4">Sign in</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      ) : isLoading ? (
         <div className={viewMode === "grid" ? "grid gap-6 md:grid-cols-2 lg:grid-cols-3" : "space-y-4"}>
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <Skeleton key={i} className="h-80 w-full" />
           ))}
         </div>
+      ) : isError || !listings ? (
+        <Card
+          className="border-dashed"
+          role="status"
+          data-testid="state-property-records-unavailable"
+        >
+          <CardContent className="py-12 text-center">
+            <Building2 className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
+            <h2 className="text-lg font-semibold">Property records unavailable</h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              The approved registry could not be loaded. No empty inventory is being inferred.
+            </p>
+          </CardContent>
+        </Card>
       ) : filteredListings.length === 0 ? (
         <Card>
           <CardContent className="py-16 text-center">
             <Building2 className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Properties Found</h3>
+            <h3 className="text-lg font-semibold mb-2">
+              {searchQuery || propertyType !== "all" || priceRange !== "all" || bedsFilter !== "all"
+                ? "No records match these filters"
+                : "No reviewed property records"}
+            </h3>
             <p className="text-muted-foreground mb-4">
               {searchQuery || propertyType !== "all" || priceRange !== "all" || bedsFilter !== "all"
-                ? "Try adjusting your filters to see more results"
-                : "Check back soon for new listings"}
+                ? "Adjust or clear the filters to review the full approved set."
+                : "This controlled pilot is not presenting any property inventory to this account."}
             </p>
             {(searchQuery || propertyType !== "all" || priceRange !== "all" || bedsFilter !== "all") && (
               <Button
@@ -300,7 +341,7 @@ function PropertiesBrowsePage() {
 
       {filteredListings.length > 0 && (
         <p className="text-center text-sm text-muted-foreground">
-          Showing {filteredListings.length} {filteredListings.length === 1 ? "property" : "properties"}
+          Showing {filteredListings.length} approved {filteredListings.length === 1 ? "record" : "records"}
         </p>
       )}
     </div>
@@ -343,14 +384,10 @@ function PropertyGridCard({ listing, formatCurrency, getStatusBadge, onSave, isA
           }}
           data-testid={`button-save-${listing.id}`}
           title={isAuthenticated ? "Save to favorites" : "Login to save"}
+          aria-label={isAuthenticated ? `Save ${listing.propertyAddress}` : "Sign in to save this record"}
         >
           <Heart className="h-4 w-4" />
         </Button>
-        {listing.featured && (
-          <Badge className="absolute bottom-3 left-3 bg-primary text-primary-foreground">
-            Featured
-          </Badge>
-        )}
       </div>
       <CardContent className="p-4">
         <div className="mb-2">
@@ -383,7 +420,7 @@ function PropertyGridCard({ listing, formatCurrency, getStatusBadge, onSave, isA
         </div>
         <Link href={`/marketflow/properties/${listing.id}`}>
           <Button className="w-full" data-testid={`button-view-${listing.id}`}>
-            View Details
+            View record
           </Button>
         </Link>
       </CardContent>
@@ -428,6 +465,7 @@ function PropertyListCard({ listing, formatCurrency, getStatusBadge, onSave, isA
                 onClick={onSave}
                 data-testid={`button-save-${listing.id}`}
                 title={isAuthenticated ? "Save to favorites" : "Login to save"}
+                aria-label={isAuthenticated ? `Save ${listing.propertyAddress}` : "Sign in to save this record"}
               >
                 <Heart className="h-4 w-4" />
               </Button>
@@ -460,7 +498,7 @@ function PropertyListCard({ listing, formatCurrency, getStatusBadge, onSave, isA
           <div className="mt-4">
             <Link href={`/marketflow/properties/${listing.id}`}>
               <Button data-testid={`button-view-${listing.id}`}>
-                View Details
+                View record
               </Button>
             </Link>
           </div>

@@ -616,14 +616,14 @@ const sellerSplits: { heading: string; copy: string; paths: SplitPath[]; founder
 };
 
 const buyerSplits: { heading: string; copy: string; paths: SplitPath[]; founderPhoto?: boolean; peggyHint?: boolean } = {
-  heading: 'Three ways to buy',
-  copy: 'A finished home, an investment question, or possible future inventory. These paths describe requests, not guaranteed inventory, matching, or representation.',
+  heading: 'Three separate buyer paths',
+  copy: 'Licensed representation, investor-interest intake, and controlled-pilot access are separate requests with separate terms and no guaranteed inventory, match, service, or response.',
   founderPhoto: true,
   peggyHint: true,
   paths: [
-    { name: 'Possible buyer representation', desc: 'Ask about current licensed-representation availability. Search, diligence, valuation, and offer duties require a separate written brokerage agreement.', cta: 'See representation boundaries', route: 'apollo' },
-    { name: 'Investor buyer request', desc: 'Share a buyer mandate for possible consideration. Guidance, a project, a capital path, or a response is not promised.', cta: 'Share a buyer request', route: 'contact' },
-    { name: 'MarketFlow controlled pilot', desc: 'Learn about discretionary access. Inventory, early access, review, matching, and transactions are not promised.', cta: 'See MarketFlow status', route: 'marketflow' },
+    { name: 'Possible buyer representation', desc: 'Ask about current licensed-representation availability. Search, diligence, valuation, and offer duties require a separate written brokerage agreement.', cta: 'Request representation', href: '/work-with-apollo' },
+    { name: 'Investor buyer request', desc: 'Submit an investor-interest mandate for possible consideration. This is not a representation request, capital application, MarketFlow account, or promise of a response.', cta: 'Submit investor interest', href: '/bring-an-opportunity?intent=buyer' },
+    { name: 'MarketFlow controlled pilot', desc: 'Request discretionary controlled-pilot access. Approval, an account, inventory, review, matching, and transactions are not promised.', cta: 'Request pilot access', href: '/marketflow/access' },
   ],
 };
 
@@ -684,7 +684,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     heroScrimTop: true,
     layout: 'grid',
     pointsLabel: 'How you buy',
-    lead: 'Whether you are looking for a home, investment property, or possible opportunity, you may ask about current licensed-representation availability. Any agency requires a separate written brokerage agreement.',
+    lead: 'Choose the lane that matches the request: licensed buyer representation, investor-interest intake, or discretionary access to the controlled MarketFlow pilot. These lanes are separate and none promises inventory, service, access, or a response.',
     points: [
       { t: 'Possible buyer representation', d: 'Availability, duties, search scope, fees, and brokerage relationship must be confirmed in a signed agreement.' },
       { t: 'Buy-box questions', d: 'Educational tools can help frame location, condition, cost, and exit assumptions without recommending a purchase.' },
@@ -697,7 +697,8 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     forYou: [
       'You want to ask about current buyer-representation availability',
       'You want to organize buy-box, diligence, cost, and value questions before deciding',
-      'You want to describe a home or investment-property mandate',
+      'You want to submit an investor-interest mandate without requesting representation',
+      'You want to request access to the controlled MarketFlow pilot',
     ],
     notFit: [
       'You want to be rushed into a decision before the numbers are clear',
@@ -712,9 +713,9 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     form: {
       role: 'Buyer',
       intent: 'buyer',
-      heading: <>Tell us what you are looking for</>,
-      lead: 'Describe the request for possible consideration. Inventory, representation, capital participation, matching, and a response are not promised.',
-      submit: 'Get on the buyer list',
+      heading: <>Share an investor-interest request</>,
+      lead: 'Describe the investor-interest mandate for possible consideration. This is not licensed representation, a MarketFlow signup, a capital application, or a promise of inventory, matching, review, or response.',
+      submit: 'Submit investor interest',
       third: { label: 'Target area or budget', placeholder: 'East Bay, up to $900K' },
       messageLabel: 'What are you looking for?',
       messagePlaceholder: 'Move-in ready 3 bed, or open to a project to invest in...',
@@ -849,7 +850,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
       intent: 'operator',
       heading: <>Tell us what you do</>,
       lead: 'Share your trade, service area, credentials, and capacity. Application does not promise review, approval, work, or follow-up.',
-      submit: 'Join the Network',
+      submit: 'Submit Operator Profile',
       third: { label: 'Trade / service & area', placeholder: 'Licensed GC, East Bay' },
       messageLabel: 'About your work',
       messagePlaceholder: 'Capacity, specialties, licenses...',

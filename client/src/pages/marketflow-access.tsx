@@ -31,14 +31,14 @@ import { SuccessView } from "@/components/success-view";
 
 function WhatYouGet() {
   const perks = [
-    { title: "Reviewed fit", desc: "Pegasus reviews each request against the needs of the controlled pilot." },
-    { title: "Role-based profile", desc: "Share your market, mandate, and capacity without publishing them publicly." },
-    { title: "Controlled introductions", desc: "When a real fit appears, Pegasus may make a direct introduction under written terms." },
-    { title: "Pilot updates", desc: "Approved participants receive relevant updates; access never guarantees inventory or placement." },
+    { title: "Private record", desc: "The site records the identity, role interest, introduction context, and note you provide." },
+    { title: "Possible consideration", desc: "Pegasus may consider the record if pilot capacity and a responsible fit exist." },
+    { title: "Possible follow-up", desc: "Pegasus may contact you for clarification, but no human review or response is promised." },
+    { title: "Separate invitation", desc: "Only a separate, direct approval can create pilot access; this request creates none." },
   ];
   return (
     <section className="mf-access-perks" data-testid="marketflow-what-you-get">
-      <p>What a reviewed relationship provides</p>
+      <p>What this request does</p>
       <ul>
         {perks.map((perk) => (
           <li key={perk.title}>
@@ -95,7 +95,7 @@ export default function MarketflowAccessPage() {
   useSEO({
     title: "Request MarketFlow Access",
     description:
-      "Request access to MarketFlow, the private routing layer of Pegasus Dreamscapes. Access is by introduction.",
+      "Record interest in the invitation-led MarketFlow controlled pilot. Review, response, approval, inventory, and access are not promised.",
     image: "/og/marketflow.png",
   });
 
@@ -218,17 +218,17 @@ export default function MarketflowAccessPage() {
         <div className="mf-access-intro-inner">
           <div>
             <p className="mf-access-kicker">MarketFlow · Controlled pilot</p>
-            <h1>Request a place in the relationship room.</h1>
-            <p>MarketFlow is reviewed access for professionals with a clear role, credible mandate, and enough context for a deliberate introduction. It is not an open signup or public marketplace.</p>
+            <h1>Record your interest in the controlled pilot.</h1>
+            <p>MarketFlow is private and invitation-led. This form records the context for possible consideration; it is not an open signup, application decision, or public marketplace.</p>
           </div>
           <aside className="mf-access-protocol" aria-label="Current access protocol">
-            <h2>Review protocol</h2>
+            <h2>Request boundary</h2>
             <dl>
               <div><dt>Relationship</dt><dd>{ACCESS_ROLE_LABEL[selectedRole]}</dd></div>
-              <div><dt>Review</dt><dd>Case by case</dd></div>
-              <div><dt>Distribution</dt><dd>Permissioned</dd></div>
+              <div><dt>Human review</dt><dd>Not promised</dd></div>
+              <div><dt>Access created</dt><dd>None</dd></div>
             </dl>
-            <p><LockKeyhole aria-hidden="true" /> No inventory, placement, compensation, or approval is promised by this request.</p>
+            <p><LockKeyhole aria-hidden="true" /> This request does not guarantee human review, a response, approval, an invitation, inventory, or access.</p>
           </aside>
         </div>
         <p className="mf-access-public-boundary">MarketFlow is not a public marketplace. It is not a securities or investment platform, and no securities are offered through this request.</p>
@@ -237,8 +237,8 @@ export default function MarketflowAccessPage() {
       <section className="mf-access-body">
         <aside className="mf-access-review">
           <p className="mf-access-kicker">Before you request access</p>
-          <h2>One concise record. A Pegasus fit review.</h2>
-          <p>Tell Pegasus who you are, how you entered the relationship, and what role you can responsibly fill.</p>
+          <h2>One concise record for possible consideration.</h2>
+          <p>Tell Pegasus who you are, how the relationship began, and the role that interests you. The site records the request; Pegasus may or may not review or answer it.</p>
           <WhatYouGet />
           <div className="mf-access-boundary" data-testid="marketflow-private-access-note">
             <ShieldCheck aria-hidden="true" />
@@ -251,8 +251,8 @@ export default function MarketflowAccessPage() {
             <span>Selected relationship</span>
             <strong>{ACCESS_ROLE_LABEL[selectedRole]}</strong>
           </div>
-          <h2>Provide the facts required for a real review.</h2>
-          <p className="mf-access-form-lede">Fields remain private to the access review and the service providers supporting it.</p>
+          <h2>Provide enough context to identify the request.</h2>
+          <p className="mf-access-form-lede">Fields are recorded privately and may be handled by service providers that operate this intake.</p>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(submitRequest)} className="mf-access-form">
               <div className="mf-access-honeypot" aria-hidden="true">
@@ -359,12 +359,13 @@ export default function MarketflowAccessPage() {
                     </FormControl>
                     <div className="space-y-1 leading-none">
                       <FormLabel className="text-sm font-normal leading-relaxed cursor-pointer">
-                        I agree Pegasus Dreamscapes may email me about this MarketFlow access
-                        request. Pegasus uses the information to review fit for the controlled
-                        pilot and may share it with service providers supporting that review. See
+                        I agree Pegasus Dreamscapes may email me about this MarketFlow interest
+                        record. Pegasus may use the information for possible consideration and may
+                        share it with service providers that operate this intake. See
                         the <a className="underline underline-offset-2" href="/privacy">Privacy Policy</a>{' '}
                         for retention, rights, and deletion requests. Requesting access does not
-                        guarantee approval, inventory, or placement.
+                        guarantee human review, a response, approval, an invitation, inventory,
+                        access, or placement.
                       </FormLabel>
                       <FormMessage />
                     </div>
@@ -391,10 +392,10 @@ export default function MarketflowAccessPage() {
               data-testid="button-access-submit"
             >
               {mutation.isPending ? <Loader2 aria-hidden="true" className="w-4 h-4 mr-2 animate-spin" /> : null}
-              {mutation.isPending ? "Sending for manual review…" : "Send for review"}
+              {mutation.isPending ? "Recording request…" : "Record access interest"}
               {!mutation.isPending ? <ArrowRight aria-hidden="true" /> : null}
             </Button>
-            <p className="mf-access-form-foot"><FileCheck2 aria-hidden="true" /> Pegasus reviews identity, role, mandate, introduction context, and current network fit before responding.</p>
+            <p className="mf-access-form-foot"><FileCheck2 aria-hidden="true" /> Receipt confirms only that the site recorded the request. Review, response, invitation, and access remain discretionary and are not promised.</p>
             </form>
           </Form>
         </div>

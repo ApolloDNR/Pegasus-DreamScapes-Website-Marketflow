@@ -19,6 +19,10 @@ vi.mock("@/contexts/supabase-auth-context", () => ({
   }),
 }));
 
+vi.mock("@/components/marketplace-layout", () => ({
+  MarketplaceLayout: ({ children }: { children: React.ReactNode }) => <>{children}</>,
+}));
+
 vi.mock("@/lib/queryClient", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/queryClient")>();
   return {
@@ -102,5 +106,38 @@ describe("unavailable profile review creation", () => {
     expect(screen.queryByRole("dialog", { name: /write a review/i })).not.toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /submit review/i })).not.toBeInTheDocument();
     expect(boundary.apiRequest).not.toHaveBeenCalled();
+  });
+
+  it("deep-links Message to the selected member without publishing unverified performance claims", async () => {
+    const { hook } = memoryLocation({ path: "/profile/member-2", static: true });
+    const client = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false, gcTime: 0 },
+        mutations: { retry: false },
+      },
+    });
+
+    render(
+      <QueryClientProvider client={client}>
+        <Router hook={hook}>
+          <Route path="/profile/:userId">
+            <UserProfile />
+          </Route>
+        </Router>
+      </QueryClientProvider>,
+    );
+
+    expect(await screen.findByText("Morgan Member")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /^message$/i })).toHaveAttribute(
+      "href",
+      "/marketflow/messages?to=member-2",
+    );
+    expect(screen.getByText(/performance metrics are not published/i)).toBeInTheDocument();
+    expect(screen.queryByText(/trust score/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/rank progress/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/avg return/i)).not.toBeInTheDocument();
+
+    const requestedUrls = vi.mocked(globalThis.fetch).mock.calls.map(([input]) => String(input));
+    expect(requestedUrls).toEqual(["/api/users/member-2"]);
   });
 });

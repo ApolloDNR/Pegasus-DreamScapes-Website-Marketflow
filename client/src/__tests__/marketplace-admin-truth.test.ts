@@ -24,6 +24,11 @@ describe("MarketFlow admin truth contract", () => {
       "usersError",
       "leadsError",
       "auditLogsError",
+      "homepageContentError",
+      "faqsError",
+      "testimonialsError",
+      "teamError",
+      "mediaError",
     ]) {
       expect(source).toContain(errorName);
     }

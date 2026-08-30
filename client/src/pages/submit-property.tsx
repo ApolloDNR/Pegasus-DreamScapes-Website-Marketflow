@@ -27,8 +27,8 @@ const VISITOR_TYPES = [
   { value: "deal_finder", label: "A lead or opportunity", desc: "You found it; the contract is not signed yet." },
   { value: "deal_finder_contract", label: "A property under contract", desc: "You hold the agreement and need the next piece." },
   { value: "strategy_only", label: "A project or development plan", desc: "A scope, a lot, or a plan that needs a straight read." },
-  { value: "capital_partner", label: "An operating partnership", desc: "Co-GP, JV, capital, or an operating seat on a deal." },
-  { value: "buyer", label: "A licensed representation need", desc: "Buying or selling with representation through the Keller Williams lane." },
+  { value: "capital_partner", label: "An existing capital relationship or personal introduction", desc: "Use this only if Apollo already knows you or someone personally introduced you." },
+  { value: "buyer", label: "An investor-interest request", desc: "A property mandate for possible consideration, not a request for licensed representation or MarketFlow access." },
   { value: "vendor_operator", label: "A specialist relationship", desc: "GC, trade, lender, title, design, or another service." },
   { value: "other", label: "Something else", desc: "Tell us in the notes; we route it to the right desk." },
 ] as const;
@@ -59,6 +59,7 @@ const INTENT_TO_VISITOR: Record<string, string> = {
   explore: "strategy_only",
   blueprint: "strategy_only",
   partnership: "capital_partner",
+  buyer: "buyer",
 };
 
 const OWNER_SITUATION_TO_INTAKE: Record<string, string> = {

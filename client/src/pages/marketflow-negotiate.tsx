@@ -890,11 +890,6 @@ interface PeggyAdvisorProps {
 }
 
 function PeggyNegotiationAdvisor({ dealInfo, offers, agreementReached }: PeggyAdvisorProps) {
-  const [expanded, setExpanded] = useState(false);
-  const [query, setQuery] = useState("");
-  const [aiResponse, setAiResponse] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  
   const latestOffer = offers[offers.length - 1];
   const offerCount = offers.length;
   
@@ -934,53 +929,6 @@ function PeggyNegotiationAdvisor({ dealInfo, offers, agreementReached }: PeggyAd
     ];
   };
 
-  const quickPrompts = [
-    "What's a fair offer for this property?",
-    "How should I counter this offer?",
-    "What due diligence should I do?",
-    "Explain the negotiation timeline",
-  ];
-
-  const handleAskPeggy = async (promptText: string) => {
-    if (!promptText.trim()) return;
-    
-    setIsLoading(true);
-    setAiResponse(null);
-    
-    try {
-      const context = `
-Deal: ${dealInfo.propertyAddress}
-Asking Price: $${dealInfo.askingPrice?.toLocaleString() || "N/A"}
-ARV: ${dealInfo.arv ? `$${dealInfo.arv.toLocaleString()}` : "Not specified"}
-Lane: ${dealInfo.lane}
-Offer Count: ${offerCount}
-${latestOffer ? `Latest Offer: $${latestOffer.terms.offerPrice.toLocaleString()} (${latestOffer.status})` : "No offers yet"}
-Agreement Status: ${agreementReached ? "Reached" : "In negotiation"}
-
-User Question: ${promptText}
-      `.trim();
-
-      const res = await fetch("/api/peggy-ai/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: promptText,
-          context,
-          mode: "negotiation_advisor",
-        }),
-      });
-      
-      if (!res.ok) throw new Error("Failed to get response");
-      
-      const data = await res.json();
-      setAiResponse(data.response || data.message || "I can help you with this negotiation. Could you provide more details?");
-    } catch (error) {
-      setAiResponse("I'm having trouble connecting right now. Please try again or check your connection.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const tips = getContextualTips();
 
   return (
@@ -988,11 +936,11 @@ User Question: ${promptText}
       <CardHeader className="pb-2">
         <CardTitle className="text-lg flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-primary" />
-          Peggy Advisor
-          <Badge variant="secondary" className="ml-auto text-xs">Beta</Badge>
+          Negotiation checklist
+          <Badge variant="secondary" className="ml-auto text-xs">General guidance</Badge>
         </CardTitle>
         <CardDescription className="text-sm">
-          Get real-time negotiation guidance
+          Context for {dealInfo.propertyAddress || "this record"}, based only on the activity shown here.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -1007,81 +955,9 @@ User Question: ${promptText}
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-1.5">
-          {quickPrompts.slice(0, expanded ? 4 : 2).map((prompt) => (
-            <Button
-              key={prompt}
-              variant="outline"
-              size="sm"
-              className="text-xs h-7"
-              onClick={() => {
-                setQuery(prompt);
-                setExpanded(true);
-                handleAskPeggy(prompt);
-              }}
-              disabled={isLoading}
-              data-testid={`button-quick-prompt-${prompt.slice(0,10)}`}
-            >
-              {prompt}
-            </Button>
-          ))}
-        </div>
-
-        {!expanded && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="w-full text-xs"
-            onClick={() => setExpanded(true)}
-            data-testid="button-expand-peggy"
-          >
-            <MessageSquare className="w-3 h-3 mr-1" />
-            Ask Peggy a question
-          </Button>
-        )}
-
-        {expanded && (
-          <div className="space-y-2 pt-2 border-t">
-            <div className="flex gap-2">
-              <Textarea
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Ask about this negotiation..."
-                className="min-h-[60px] text-sm resize-none"
-                data-testid="input-peggy-question"
-              />
-            </div>
-            <Button 
-              size="sm" 
-              className="w-full"
-              onClick={() => handleAskPeggy(query)}
-              disabled={isLoading || !query.trim()}
-              data-testid="button-ask-peggy"
-            >
-              {isLoading ? (
-                <>
-                  <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
-                  Thinking...
-                </>
-              ) : (
-                <>
-                  <Send className="w-3 h-3 mr-1" />
-                  Ask Peggy
-                </>
-              )}
-            </Button>
-
-            {aiResponse && (
-              <div className="p-3 bg-background rounded-lg border text-sm space-y-2" data-testid="text-peggy-response">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Sparkles className="w-3 h-3 text-primary" />
-                  Peggy's Response
-                </div>
-                <p className="text-foreground whitespace-pre-wrap">{aiResponse}</p>
-              </div>
-            )}
-          </div>
-        )}
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          This checklist is informational only. Confirm material terms and due diligence with the appropriate licensed or legal professional.
+        </p>
       </CardContent>
     </Card>
   );

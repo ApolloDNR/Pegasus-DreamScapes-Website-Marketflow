@@ -335,6 +335,8 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         options: {
           data: {
             primary_role: role,
+            declared_role_interest: role,
+            account_scope: "general_preview",
             display_name: displayName
           }
         }
@@ -420,7 +422,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       return true;
     }
     // Fallback checks for Supabase Auth users
-    const userEmail = user?.email?.toLowerCase() || profile?.display_name?.toLowerCase();
+    const userEmail = user?.email?.toLowerCase();
     if (userEmail && ADMIN_EMAILS.includes(userEmail)) {
       return true;
     }
@@ -428,7 +430,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       return true;
     }
     return false;
-  }, [backendIsAdmin, user?.email, profile?.display_name, effectiveRole]);
+  }, [backendIsAdmin, user?.email, effectiveRole]);
   
   const hasPermission = useCallback((permission: MarketplacePermission): boolean => {
     if (!effectiveRole) return false;

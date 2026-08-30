@@ -40,7 +40,11 @@ import {
 } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import logoImage from "@/assets/brand/pegasus-emblem.png";
-import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
+import {
+  getRoleDashboardPath,
+  useSupabaseAuth,
+} from "@/contexts/supabase-auth-context";
+import { hasGovernedMarketflowAccess } from "@/lib/marketflow-access";
 import { trackCtaClick } from "@/lib/analytics";
 import { CommandPalette } from "./command-palette";
 import {
@@ -142,12 +146,16 @@ function UserMenu({
   userEmail,
   onLightSurface,
   isAdmin,
+  hasMarketflowAccess,
+  dashboardHref,
   onSignOut,
 }: {
   profile: any;
   userEmail: string;
   onLightSurface: boolean;
   isAdmin: boolean;
+  hasMarketflowAccess: boolean;
+  dashboardHref: string;
   onSignOut: () => void;
 }) {
   const initials = (profile?.display_name || userEmail || "U")
@@ -192,18 +200,29 @@ function UserMenu({
             MarketFlow
           </DropdownMenuItem>
         </Link>
-        <Link href="/marketflow/dashboard">
-          <DropdownMenuItem className="cursor-pointer gap-2">
-            <BarChart3 className="w-4 h-4" aria-hidden="true" />
-            My Dashboard
-          </DropdownMenuItem>
-        </Link>
-        <Link href="/marketflow/messages">
-          <DropdownMenuItem className="cursor-pointer gap-2">
-            <MessageSquare className="w-4 h-4" aria-hidden="true" />
-            Messages
-          </DropdownMenuItem>
-        </Link>
+        {hasMarketflowAccess ? (
+          <>
+            <Link href={dashboardHref}>
+              <DropdownMenuItem className="cursor-pointer gap-2">
+                <BarChart3 className="w-4 h-4" aria-hidden="true" />
+                My Dashboard
+              </DropdownMenuItem>
+            </Link>
+            <Link href="/marketflow/messages">
+              <DropdownMenuItem className="cursor-pointer gap-2">
+                <MessageSquare className="w-4 h-4" aria-hidden="true" />
+                Messages
+              </DropdownMenuItem>
+            </Link>
+          </>
+        ) : (
+          <Link href="/marketflow/access">
+            <DropdownMenuItem className="cursor-pointer gap-2">
+              <Shield className="w-4 h-4" aria-hidden="true" />
+              Record access interest
+            </DropdownMenuItem>
+          </Link>
+        )}
         {isAdmin && (
           <>
             <DropdownMenuSeparator />
@@ -237,7 +256,27 @@ export function Navigation() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [location, navigate] = useLocation();
-  const { user, profile, isAuthenticated, isAdmin, signOut } = useSupabaseAuth();
+  const {
+    user,
+    profile,
+    isAuthenticated,
+    isAdmin,
+    isGuestMode,
+    userRole,
+    signOut,
+  } = useSupabaseAuth();
+  const hasMarketflowAccess = hasGovernedMarketflowAccess({
+    isAuthenticated,
+    isGuestMode,
+    isAdmin,
+    profile,
+    userRole,
+  });
+  const roleDashboardHref = getRoleDashboardPath(userRole);
+  const dashboardHref =
+    roleDashboardHref === "/marketflow"
+      ? "/marketflow/dashboard"
+      : roleDashboardHref;
 
   const handleSignOut = async () => {
     // Clear the SPA's Supabase session first, then hand off to the
@@ -555,12 +594,16 @@ export function Navigation() {
           <div className="flex items-center gap-2">
             {isAuthenticated ? (
               <>
-                <NotificationBell onLightSurface={onLightSurface} />
+                {hasMarketflowAccess ? (
+                  <NotificationBell onLightSurface={onLightSurface} />
+                ) : null}
                 <UserMenu
                   profile={profile}
                   userEmail={user?.email || ""}
                   onLightSurface={onLightSurface}
                   isAdmin={isAdmin}
+                  hasMarketflowAccess={hasMarketflowAccess}
+                  dashboardHref={dashboardHref}
                   onSignOut={handleSignOut}
                 />
               </>

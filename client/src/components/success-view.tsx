@@ -57,22 +57,22 @@ const MARKETFLOW_TIMELINE = [
   {
     icon: Inbox,
     title: "Request logged",
-    sub: "Your private request is recorded for manual review.",
+    sub: "The site recorded the private context you submitted.",
   },
   {
     icon: Search,
-    title: "Introduction reviewed",
-    sub: "Pegasus checks how the relationship began and whether the context is complete.",
+    title: "Possible consideration",
+    sub: "Pegasus may consider the record if pilot capacity and a responsible fit exist.",
   },
   {
     icon: Compass,
-    title: "Role and network fit reviewed",
-    sub: "Your mandate, role, and current network fit are considered case by case.",
+    title: "Possible follow-up",
+    sub: "Pegasus may ask for clarification, but no review or response is promised.",
   },
   {
     icon: FlagTriangleRight,
-    title: "Direct response",
-    sub: "Pegasus may respond directly if a responsible next step exists.",
+    title: "No access created",
+    sub: "Only a separate direct invitation can create controlled-pilot access.",
   },
 ];
 
@@ -110,12 +110,12 @@ const FORM_COPY: Record<
   },
   marketflow_access: {
     kicker: "Request received",
-    headline: "Your access request is logged.",
-    lead: "Pegasus reviews each MarketFlow relationship manually and will respond directly if the role, introduction context, and current network fit support a responsible next step.",
+    headline: "Your MarketFlow interest was recorded.",
+    lead: "This receipt confirms only that the site recorded your request. It does not guarantee human review, a response, approval, an invitation, inventory, or access.",
     expectations: [
-      "Access is discretionary and reviewed case by case.",
-      "A request does not guarantee approval, inventory, placement, compensation, or an introduction.",
-      "Pegasus may contact you if a responsible next step exists.",
+      "Pegasus may consider the record if current pilot capacity and context support it.",
+      "Any follow-up, verification, approval, or invitation would occur separately.",
+      "The request creates no membership, inventory rights, submission privileges, placement, compensation, or introduction.",
     ],
     addAnotherLabel: "Submit a different request",
   },

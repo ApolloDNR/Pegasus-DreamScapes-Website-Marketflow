@@ -31,7 +31,7 @@ export default function LoginPage() {
   const [, setLocation] = useLocation();
   const search = useSearch();
   const returnTo = getReturnToFromSearch(search);
-  const { signIn, isLoading, profile, enterGuestMode } = useSupabaseAuth();
+  const { signIn, isLoading, enterGuestMode } = useSupabaseAuth();
 
   const handleGuestExplore = (role: UserRole) => {
     enterGuestMode(role);
@@ -62,10 +62,9 @@ export default function LoginPage() {
       } else {
         toast({
           title: "Welcome Back",
-          description: "You've been signed in successfully.",
+          description: "You've been signed in to your Pegasus account.",
         });
-        const dashboardPath = getRoleDashboardPath(profile?.primary_role ?? null);
-        setLocation(returnTo ?? dashboardPath);
+        setLocation(returnTo ?? "/marketflow");
       }
     } catch (err) {
       toast({
@@ -94,8 +93,12 @@ export default function LoginPage() {
             Welcome Back
           </CardTitle>
           <CardDescription>
-            Sign in to access your Pegasus Dreamscapes account
+            Sign in to your general Pegasus preview account.
           </CardDescription>
+          <p className="text-sm text-muted-foreground leading-relaxed pt-2">
+            MarketFlow is invitation-led and requires separate approval. Signing in or
+            creating an account does not grant private inventory or submission access.
+          </p>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -178,7 +181,7 @@ export default function LoginPage() {
               className="text-primary hover:underline font-medium"
               data-testid="link-signup"
             >
-              Create one
+              Create a preview account
             </Link>
           </div>
 
@@ -221,7 +224,8 @@ export default function LoginPage() {
               </Button>
             </div>
             <p className="text-[11px] text-muted-foreground/80 text-center mt-3">
-              Preview only. Private-beta walkthrough. No real actions.
+              Preview roles are walkthrough lenses only. They do not create approval,
+              private access, or submission privileges.
             </p>
           </div>
 

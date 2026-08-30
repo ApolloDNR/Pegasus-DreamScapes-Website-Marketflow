@@ -1,1168 +1,629 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
-import { useRoute } from "wouter";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { Link, useRoute } from "wouter";
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Bookmark,
+  Building2,
+  CalendarDays,
+  CheckCircle2,
+  Clipboard,
+  ExternalLink,
+  FileText,
+  Loader2,
+  MapPin,
+  Pencil,
+  Save,
+  X,
+} from "lucide-react";
+
 import { DealflowLayout } from "@/components/dealflow-layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Progress } from "@/components/ui/progress";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { 
-  Building2, 
-  DollarSign, 
-  MapPin,
-  Calendar,
-  TrendingUp,
-  Users,
-  ArrowLeft,
-  CheckCircle2,
-  Clock,
-  Target,
-  Loader2,
-  Send,
-  Sparkles,
-  Shield,
-  Palette,
-  BarChart3,
-  Star,
-  Flame,
-  Heart,
-  Bookmark,
-  MessageCircle,
-  Share2,
-  Info,
-  Award,
-  ThumbsUp,
-  AlertTriangle,
-  TrendingDown,
-  Activity,
-  Pencil,
-  Save,
-  X
-} from "lucide-react";
-import { Link } from "wouter";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import { DealChat } from "@/components/deal-chat";
-import { 
-  CapitalStackBreakdown, 
-  DealLevelTransparency, 
-  InvestorReturnCalculator, 
-  ScenarioCalculator,
-  InvestorBreakdownTable,
-  RepaymentTimeline 
-} from "@/components/deal-transparency";
-import { AskPeggyButton } from "@/components/ask-peggy-button";
 
 interface CapitalProject {
   id: number;
   title: string;
-  description?: string;
-  location?: string;
-  fundingGoal: number;
-  amountRaised: number;
-  minInvestment: number;
-  structure?: string;
-  projectedReturn?: string;
-  holdPeriod?: string;
+  description?: string | null;
+  location?: string | null;
+  fundingGoal?: number | null;
+  amountRaised?: number | null;
+  minInvestment?: number | null;
+  structure?: string | null;
+  projectedReturn?: string | null;
+  holdPeriod?: string | null;
   status: string;
-  createdBy?: string;
-  images?: string[];
-  riskLevel?: string;
-  designAppeal?: number;
-  roiPotential?: number;
-  marketDemand?: number;
-  neighborhoodGrade?: string;
-  strategy?: string;
-  propertyType?: string;
-  investorCount?: number;
-  isFeatured?: boolean;
-  isHot?: boolean;
-  askingInterestRate?: string;
-  askingLoanDuration?: string;
-  askingEquityPercent?: string;
-  askingProfitSplit?: string;
-  // Capital Stack
-  purchasePrice?: number;
-  rehabBudget?: number;
-  softCosts?: number;
-  operatorEquity?: number;
-  contingency?: number;
-  projectedARV?: number;
-  projectedProfit?: number;
-  // Timeline phases
-  acquisitionDate?: string;
-  constructionStart?: string;
-  constructionEnd?: string;
-  stabilizationDate?: string;
-  exitDate?: string;
-  startDate?: string;
-  estimatedCompletion?: string;
+  images?: string[] | null;
+  riskLevel?: string | null;
+  neighborhoodGrade?: string | null;
+  strategy?: string | null;
+  propertyType?: string | null;
+  purchasePrice?: number | null;
+  rehabBudget?: number | null;
+  softCosts?: number | null;
+  contingency?: number | null;
+  projectedARV?: number | null;
+  projectedProfit?: number | null;
+  acquisitionDate?: string | null;
+  constructionStart?: string | null;
+  constructionEnd?: string | null;
+  stabilizationDate?: string | null;
+  exitDate?: string | null;
+  startDate?: string | null;
+  estimatedCompletion?: string | null;
+}
+
+interface ProjectMilestone {
+  id: number;
+  title?: string | null;
+  description?: string | null;
+  isComplete?: boolean | null;
+  targetDate?: string | null;
+  completedAt?: string | null;
+}
+
+interface SavedDeal {
+  id: number | string;
+  dealType: string;
+  dealId: number;
+  action?: string | null;
+}
+
+const formatCurrency = (amount: number) =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(amount);
+
+const formatStatus = (status: string) =>
+  status
+    .trim()
+    .replace(/[_-]+/g, " ")
+    .replace(/\b\w/g, (letter) => letter.toUpperCase());
+
+const formatDate = (value?: string | null) => {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
+
+function ReadOnlyMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="border-t border-border/70 py-3 first:border-t-0 first:pt-0 last:pb-0">
+      <dt className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">
+        {label}
+      </dt>
+      <dd className="mt-1 text-sm font-medium text-foreground">{value}</dd>
+    </div>
+  );
 }
 
 export default function DealflowProject() {
-  const { user, isAuthenticated, isAdmin } = useSupabaseAuth();
+  const { isAuthenticated, isAdmin } = useSupabaseAuth();
   const { toast } = useToast();
   const [, params] = useRoute("/dealflow/project/:id");
-  const projectId = params?.id ? parseInt(params.id) : null;
-  const [isSaved, setIsSaved] = useState(false);
-  
-  // Admin edit mode states
+  const parsedProjectId = params?.id ? Number(params.id) : Number.NaN;
+  const projectId = Number.isSafeInteger(parsedProjectId) && parsedProjectId > 0
+    ? parsedProjectId
+    : null;
   const [isEditMode, setIsEditMode] = useState(false);
   const [editData, setEditData] = useState<Partial<CapitalProject>>({});
 
-  const { data: project, isLoading } = useQuery<CapitalProject>({
+  const {
+    data: project,
+    isLoading,
+    isError,
+  } = useQuery<CapitalProject>({
     queryKey: ["/api/capital-projects", projectId],
-    enabled: !!projectId,
+    enabled: projectId !== null,
   });
 
-  const { data: milestones = [] } = useQuery<any[]>({
+  const {
+    data: milestones = [],
+    isError: milestonesUnavailable,
+  } = useQuery<ProjectMilestone[]>({
     queryKey: [`/api/capital-projects/${projectId}/milestones`],
-    enabled: !!projectId,
+    enabled: projectId !== null,
   });
 
-  const { data: commitments = [] } = useQuery<any[]>({
-    queryKey: [`/api/capital-projects/${projectId}/commitments`],
-    enabled: !!projectId,
+  const { data: savedDeals = [] } = useQuery<SavedDeal[]>({
+    queryKey: ["/api/deals/saved"],
+    enabled: Boolean(projectId && isAuthenticated),
   });
 
-  const { data: negotiations = [] } = useQuery<any[]>({
-    queryKey: ["/api/negotiations", "capital_project", projectId],
-    enabled: !!projectId,
-  });
+  const isSaved = projectId !== null && savedDeals.some(
+    (saved) =>
+      saved.dealType === "capital_project" &&
+      Number(saved.dealId) === projectId &&
+      saved.action !== "pass",
+  );
 
-  // Admin update project mutation
   const updateProjectMutation = useMutation({
     mutationFn: async (data: Partial<CapitalProject>) => {
-      const res = await apiRequest("PATCH", `/api/hq/capital-projects/${projectId}`, data);
-      return res.json();
+      const response = await apiRequest(
+        "PATCH",
+        `/api/hq/capital-projects/${projectId}`,
+        data,
+      );
+      return response.json() as Promise<CapitalProject>;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/capital-projects", projectId] });
       queryClient.invalidateQueries({ queryKey: ["/api/capital-projects"] });
-      toast({
-        title: "Project Updated",
-        description: "Your changes have been saved.",
-      });
       setIsEditMode(false);
       setEditData({});
-    },
-    onError: (error: any) => {
       toast({
-        title: "Error",
-        description: error.message || "Failed to update project",
+        title: "Project record updated",
+        description: "The authorized record changes were saved.",
+      });
+    },
+    onError: (error: unknown) => {
+      toast({
+        title: "Project update failed",
+        description: error instanceof Error ? error.message : "Try again or contact an administrator.",
         variant: "destructive",
       });
     },
   });
 
-  const handleEditToggle = () => {
-    if (isEditMode) {
-      setEditData({});
-    } else if (project) {
-      setEditData({
-        title: project.title,
-        description: project.description,
-        fundingGoal: project.fundingGoal,
-        amountRaised: project.amountRaised,
-        minInvestment: project.minInvestment,
-        projectedReturn: project.projectedReturn,
-        holdPeriod: project.holdPeriod,
-        riskLevel: project.riskLevel,
+  const saveProjectMutation = useMutation({
+    mutationFn: async (nextSaved: boolean) => {
+      if (!projectId) throw new Error("Project record is unavailable.");
+      if (nextSaved) {
+        return apiRequest("POST", "/api/deals/action", {
+          dealType: "capital_project",
+          dealId: projectId,
+          action: "save",
+        });
+      }
+      return apiRequest(
+        "DELETE",
+        `/api/deals/capital_project/${projectId}/saved`,
+      );
+    },
+    onSuccess: (_response, nextSaved) => {
+      queryClient.setQueryData<SavedDeal[]>(["/api/deals/saved"], (current = []) => {
+        const withoutProject = current.filter(
+          (saved) =>
+            saved.dealType !== "capital_project" || Number(saved.dealId) !== projectId,
+        );
+        return nextSaved && projectId
+          ? [
+              ...withoutProject,
+              {
+                id: `capital_project-${projectId}`,
+                dealType: "capital_project",
+                dealId: projectId,
+                action: "save",
+              },
+            ]
+          : withoutProject;
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/deals/saved"] });
+      toast({
+        title: nextSaved ? "Project saved" : "Project removed",
+        description: nextSaved
+          ? "This record is now in your saved MarketFlow items."
+          : "This record was removed from your saved MarketFlow items.",
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Save failed",
+        description: "The project record was not changed. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const beginEditing = () => {
+    if (!project) return;
+    setEditData({
+      title: project.title,
+      description: project.description,
+      location: project.location,
+      status: project.status,
+    });
+    setIsEditMode(true);
+  };
+
+  const cancelEditing = () => {
+    setEditData({});
+    setIsEditMode(false);
+  };
+
+  const copyProtectedLink = async () => {
+    if (!project || typeof window === "undefined") return;
+    try {
+      if (!navigator.clipboard?.writeText) {
+        throw new Error("Clipboard access is unavailable.");
+      }
+      await navigator.clipboard.writeText(window.location.href);
+      toast({
+        title: "Protected link copied",
+        description: "Recipients still need authorized MarketFlow access to open this record.",
+      });
+    } catch {
+      toast({
+        title: "Could not copy the link",
+        description: "Use your browser's address bar to copy this protected page URL.",
+        variant: "destructive",
       });
     }
-    setIsEditMode(!isEditMode);
-  };
-
-  const handleSaveEdits = () => {
-    if (Object.keys(editData).length > 0) {
-      updateProjectMutation.mutate(editData);
-    }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
-  };
-
-  const calculateMatchScore = (project: CapitalProject) => {
-    let score = 75;
-    if (project.roiPotential) score += project.roiPotential * 3;
-    if (project.designAppeal) score += project.designAppeal * 2;
-    if (project.marketDemand) score += project.marketDemand * 2;
-    if (project.isFeatured) score += 5;
-    if (project.isHot) score += 3;
-    return Math.min(Math.round(score), 100);
   };
 
   if (isLoading) {
     return (
       <DealflowLayout>
-        <div className="container mx-auto px-4 py-20 text-center">
-          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
-          <p className="text-muted-foreground mt-4">Loading project...</p>
+        <div className="mx-auto flex min-h-[420px] max-w-xl flex-col items-center justify-center px-4 text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
+          <p className="mt-4 text-sm text-muted-foreground" role="status">
+            Loading the authorized project record…
+          </p>
         </div>
       </DealflowLayout>
     );
   }
 
-  if (!project) {
+  if (isError || !project) {
     return (
       <DealflowLayout>
-        <div className="container mx-auto px-4 py-20 text-center">
-          <Building2 className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-          <h1 className="text-2xl font-semibold mb-2">Project Not Found</h1>
-          <p className="text-muted-foreground mb-4">This project doesn't exist or has been removed.</p>
-          <Link href="/dealflow/deals">
-            <Button>Back to Marketplace</Button>
-          </Link>
+        <div className="mx-auto flex min-h-[420px] max-w-xl flex-col items-center justify-center px-4 text-center">
+          <AlertTriangle className="h-10 w-10 text-muted-foreground" aria-hidden="true" />
+          <h1 className="mt-4 font-serif text-2xl font-semibold">Project record unavailable</h1>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            The record does not exist, is no longer published to your workspace, or your account cannot access it.
+          </p>
+          <Button asChild className="mt-6">
+            <Link href="/marketflow/deals">
+              <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
+              Back to Deal Flow
+            </Link>
+          </Button>
         </div>
       </DealflowLayout>
     );
   }
 
-  const progress = project.fundingGoal > 0 
-    ? Math.round((project.amountRaised / project.fundingGoal) * 100) 
-    : 0;
+  const assumptions = [
+    ["Purchase price", project.purchasePrice],
+    ["Rehabilitation budget", project.rehabBudget],
+    ["Soft costs", project.softCosts],
+    ["Contingency", project.contingency],
+    ["Projected after-repair value", project.projectedARV],
+    ["Projected profit", project.projectedProfit],
+  ].filter((entry): entry is [string, number] => typeof entry[1] === "number");
 
-  const completedMilestones = milestones.filter((m: any) => m.isComplete).length;
-  const matchScore = calculateMatchScore(project);
-
-  const getRiskColor = (risk?: string) => {
-    switch (risk?.toLowerCase()) {
-      case "low": return "text-green-600 bg-green-100 dark:bg-green-950";
-      case "medium": return "text-amber-600 bg-amber-100 dark:bg-amber-950";
-      case "high": return "text-red-600 bg-red-100 dark:bg-red-950";
-      default: return "text-amber-600 bg-amber-100 dark:bg-amber-950";
-    }
-  };
-
-  const getRiskIcon = (risk?: string) => {
-    switch (risk?.toLowerCase()) {
-      case "low": return Shield;
-      case "high": return AlertTriangle;
-      default: return Activity;
-    }
-  };
+  const timeline = [
+    ["Acquisition", project.acquisitionDate],
+    ["Work begins", project.constructionStart || project.startDate],
+    ["Work target", project.constructionEnd || project.estimatedCompletion],
+    ["Stabilization", project.stabilizationDate],
+    ["Exit target", project.exitDate],
+  ]
+    .map(([label, value]) => [label, formatDate(value)] as const)
+    .filter((entry): entry is readonly [string, string] => Boolean(entry[1]));
 
   return (
     <DealflowLayout>
-      <div className="container mx-auto px-4 py-6">
-        <div className="flex items-center justify-between mb-6">
-          <Link href="/dealflow/deals">
-            <Button variant="ghost" data-testid="button-back">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Deals
-            </Button>
-          </Link>
-          <div className="flex items-center gap-2">
-            {/* Staff Admin Edit Controls */}
-            {isAdmin && (
+      <div className="mx-auto w-full max-w-6xl space-y-6">
+        <div className="flex flex-col gap-4 border-b border-border pb-5 sm:flex-row sm:items-center sm:justify-between">
+          <Button variant="ghost" asChild className="w-fit">
+            <Link href="/marketflow/deals" data-testid="button-back">
+              <ArrowLeft className="mr-2 h-4 w-4" aria-hidden="true" />
+              Back to Deal Flow
+            </Link>
+          </Button>
+
+          <div className="flex flex-wrap items-center gap-2">
+            {isAdmin && (isEditMode ? (
               <>
-                {isEditMode ? (
-                  <>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={handleEditToggle}
-                      data-testid="button-cancel-edit"
-                    >
-                      <X className="w-4 h-4 mr-2" />
-                      Cancel
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      onClick={handleSaveEdits}
-                      disabled={updateProjectMutation.isPending}
-                      data-testid="button-save-edit"
-                    >
-                      {updateProjectMutation.isPending ? (
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      ) : (
-                        <Save className="w-4 h-4 mr-2" />
-                      )}
-                      Save Changes
-                    </Button>
-                  </>
-                ) : (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={handleEditToggle}
-                    className="border-amber-500 text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950/30"
-                    data-testid="button-edit-project"
-                  >
-                    <Pencil className="w-4 h-4 mr-2" />
-                    Edit Deal
-                  </Button>
-                )}
-              </>
-            )}
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="icon"
-                  onClick={() => {
-                    setIsSaved(!isSaved);
-                    toast({ title: isSaved ? "Removed from saved" : "Saved to your list" });
-                  }}
-                  data-testid="button-save-project"
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={cancelEditing}
+                  data-testid="button-cancel-edit"
                 >
-                  <Bookmark className={`w-4 h-4 ${isSaved ? "fill-current" : ""}`} />
+                  <X className="mr-2 h-4 w-4" aria-hidden="true" />
+                  Cancel
                 </Button>
-              </TooltipTrigger>
-              <TooltipContent>Save</TooltipContent>
-            </Tooltip>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="outline" size="icon" data-testid="button-share-project">
-                  <Share2 className="w-4 h-4" />
+                <Button
+                  size="sm"
+                  onClick={() => updateProjectMutation.mutate(editData)}
+                  disabled={updateProjectMutation.isPending || Object.keys(editData).length === 0}
+                  data-testid="button-save-edit"
+                >
+                  {updateProjectMutation.isPending ? (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Save className="mr-2 h-4 w-4" aria-hidden="true" />
+                  )}
+                  Save changes
                 </Button>
-              </TooltipTrigger>
-              <TooltipContent>Share</TooltipContent>
-            </Tooltip>
-            <Button variant="outline" size="sm" data-testid="button-contact-project">
-              <MessageCircle className="w-4 h-4 mr-2" />
-              Contact
+              </>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={beginEditing}
+                data-testid="button-edit-project"
+              >
+                <Pencil className="mr-2 h-4 w-4" aria-hidden="true" />
+                Edit record
+              </Button>
+            ))}
+
+            <Button
+              variant="outline"
+              size="sm"
+              aria-label={isSaved ? "Remove saved project" : "Save project"}
+              aria-pressed={isSaved}
+              onClick={() => saveProjectMutation.mutate(!isSaved)}
+              disabled={saveProjectMutation.isPending}
+              data-testid="button-save-project"
+            >
+              {saveProjectMutation.isPending ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Bookmark className={`mr-2 h-4 w-4 ${isSaved ? "fill-current" : ""}`} aria-hidden="true" />
+              )}
+              {isSaved ? "Saved" : "Save"}
             </Button>
-            <AskPeggyButton
-              dealType="capital"
-              dealId={projectId}
-              dealLabel={project.title}
-            />
+
+            <Button
+              variant="outline"
+              size="sm"
+              aria-label="Copy protected link"
+              onClick={copyProtectedLink}
+              data-testid="button-share-project"
+            >
+              <Clipboard className="mr-2 h-4 w-4" aria-hidden="true" />
+              Copy link
+            </Button>
+
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/contact?intent=marketflow" data-testid="button-contact-project">
+                <ExternalLink className="mr-2 h-4 w-4" aria-hidden="true" />
+                Contact Pegasus
+              </Link>
+            </Button>
           </div>
         </div>
 
-        {/* Admin Edit Mode Banner */}
-        {isEditMode && (
-          <Card className="mb-6 border-amber-500 bg-amber-50 dark:bg-amber-950/30">
-            <CardContent className="py-4">
-              <div className="flex items-center gap-3">
-                <Pencil className="w-5 h-5 text-amber-600" />
-                <div className="flex-1">
-                  <p className="font-medium text-amber-800 dark:text-amber-300">Edit Mode Active</p>
-                  <p className="text-sm text-amber-700 dark:text-amber-400">Click on editable fields below to modify deal information</p>
+        <section aria-labelledby="project-title" className="grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(280px,0.8fr)]">
+          <div className="space-y-6">
+            {project.images?.[0] ? (
+              <img
+                src={project.images[0]}
+                alt=""
+                className="aspect-[16/7] w-full rounded-md border border-border object-cover"
+              />
+            ) : null}
+
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge variant="outline">Controlled pilot</Badge>
+                <Badge variant="secondary">Record status: {formatStatus(project.status)}</Badge>
+              </div>
+              <h1 id="project-title" className="mt-4 font-serif text-3xl font-semibold tracking-tight sm:text-4xl">
+                {project.title}
+              </h1>
+              {project.location ? (
+                <p className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+                  <MapPin className="h-4 w-4" aria-hidden="true" />
+                  {project.location}
+                </p>
+              ) : null}
+            </div>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <FileText className="h-5 w-5 text-primary" aria-hidden="true" />
+                  Record overview
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="max-w-3xl text-sm leading-7 text-muted-foreground">
+                  {project.description?.trim() || "No project description has been published to this record."}
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {project.strategy ? <Badge variant="outline">{formatStatus(project.strategy)}</Badge> : null}
+                  {project.propertyType ? <Badge variant="outline">{formatStatus(project.propertyType)}</Badge> : null}
+                  {project.neighborhoodGrade ? <Badge variant="outline">Recorded grade {project.neighborhoodGrade}</Badge> : null}
+                  {project.riskLevel ? <Badge variant="outline">Recorded risk: {formatStatus(project.riskLevel)}</Badge> : null}
                 </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Recorded assumptions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="mb-5 max-w-3xl text-sm leading-6 text-muted-foreground">
+                  These are record inputs, not independently verified facts, a valuation, an appraisal, an offer, or a promised outcome.
+                </p>
+                {assumptions.length > 0 ? (
+                  <dl className="grid gap-x-8 sm:grid-cols-2">
+                    {assumptions.map(([label, value]) => (
+                      <ReadOnlyMetric key={label} label={label} value={formatCurrency(value)} />
+                    ))}
+                  </dl>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No financial assumptions are published for this record.</p>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Recorded milestones</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {milestonesUnavailable ? (
+                  <p className="text-sm text-muted-foreground">
+                    Milestone details are unavailable to this account.
+                  </p>
+                ) : milestones.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No milestones have been published to this record.
+                  </p>
+                ) : (
+                  <ol className="space-y-4">
+                    {milestones.map((milestone) => {
+                      const date = formatDate(milestone.completedAt || milestone.targetDate);
+                      return (
+                        <li key={milestone.id} className="flex gap-3 border-t border-border pt-4 first:border-t-0 first:pt-0">
+                          <CheckCircle2
+                            className={`mt-0.5 h-5 w-5 shrink-0 ${milestone.isComplete ? "text-primary" : "text-muted-foreground"}`}
+                            aria-hidden="true"
+                          />
+                          <div>
+                            <p className="text-sm font-medium">
+                              {milestone.title?.trim() || "Untitled milestone"}
+                            </p>
+                            <p className="mt-1 text-xs text-muted-foreground">
+                              {milestone.isComplete ? "Recorded complete" : "Recorded planned"}
+                              {date ? ` · ${date}` : ""}
+                            </p>
+                            {milestone.description ? (
+                              <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                                {milestone.description}
+                              </p>
+                            ) : null}
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          <aside className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Pilot boundary</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm leading-6 text-muted-foreground">
+                  This authenticated page is a reference record. It does not create an investment offer, commitment, approval, match, allocation, or right to participate.
+                </p>
+                <Button variant="outline" className="w-full" asChild>
+                  <Link href="/capital#capital-introduction">
+                    Relationship information
+                    <ExternalLink className="ml-2 h-4 w-4" aria-hidden="true" />
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Building2 className="h-5 w-5 text-primary" aria-hidden="true" />
+                  Record context
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <dl>
+                  {typeof project.fundingGoal === "number" ? (
+                    <ReadOnlyMetric label="Recorded capital target" value={formatCurrency(project.fundingGoal)} />
+                  ) : null}
+                  {project.structure ? (
+                    <ReadOnlyMetric label="Recorded structure" value={formatStatus(project.structure)} />
+                  ) : null}
+                  {project.holdPeriod ? (
+                    <ReadOnlyMetric label="Recorded horizon" value={project.holdPeriod} />
+                  ) : null}
+                </dl>
+                <p className="mt-4 text-xs leading-5 text-muted-foreground">
+                  Progress, participant counts, return figures, and executable terms are not published through this legacy record.
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <CalendarDays className="h-5 w-5 text-primary" aria-hidden="true" />
+                  Recorded timeline
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {timeline.length > 0 ? (
+                  <dl>
+                    {timeline.map(([label, value]) => (
+                      <ReadOnlyMetric key={label} label={label} value={value} />
+                    ))}
+                  </dl>
+                ) : (
+                  <p className="text-sm text-muted-foreground">No timeline dates are published for this record.</p>
+                )}
+              </CardContent>
+            </Card>
+          </aside>
+        </section>
+
+        {isEditMode ? (
+          <Card className="border-primary/40" data-testid="project-edit-panel">
+            <CardHeader>
+              <CardTitle className="text-lg">Edit authorized record fields</CardTitle>
+            </CardHeader>
+            <CardContent className="grid gap-5 md:grid-cols-2">
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="project-title-edit">Title</Label>
+                <Input
+                  id="project-title-edit"
+                  value={editData.title ?? ""}
+                  onChange={(event) => setEditData((current) => ({ ...current, title: event.target.value }))}
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="project-description-edit">Description</Label>
+                <Textarea
+                  id="project-description-edit"
+                  value={editData.description ?? ""}
+                  onChange={(event) => setEditData((current) => ({ ...current, description: event.target.value }))}
+                  rows={5}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="project-location-edit">Location</Label>
+                <Input
+                  id="project-location-edit"
+                  value={editData.location ?? ""}
+                  onChange={(event) => setEditData((current) => ({ ...current, location: event.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="project-status-edit">Record status</Label>
+                <Input
+                  id="project-status-edit"
+                  value={editData.status ?? ""}
+                  onChange={(event) => setEditData((current) => ({ ...current, status: event.target.value }))}
+                />
               </div>
             </CardContent>
           </Card>
-        )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <div className="relative aspect-[16/9] bg-gradient-to-br from-primary/20 via-primary/10 to-amber-500/10 rounded-md overflow-hidden">
-              {project.images && project.images[0] ? (
-                <img 
-                  src={project.images[0]} 
-                  alt={project.title}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Building2 className="w-24 h-24 text-primary/30" />
-                </div>
-              )}
-              
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-              
-              <div className="absolute top-4 left-4 flex gap-2">
-                {project.isHot && (
-                  <Badge className="bg-red-500 text-white">
-                    <Flame className="w-3 h-3 mr-1" />
-                    Hot
-                  </Badge>
-                )}
-                {project.isFeatured && (
-                  <Badge className="bg-amber-500 text-white">
-                    <Star className="w-3 h-3 mr-1" />
-                    Featured
-                  </Badge>
-                )}
-                <Badge className={
-                  project.status === "OPEN_FOR_INVESTMENT" ? "bg-green-600 text-white" :
-                  project.status === "FUNDED" ? "bg-blue-600 text-white" :
-                  project.status === "COMPLETED" ? "bg-emerald-600 text-white" :
-                  "bg-amber-600 text-white"
-                }>
-                  {project.status?.replace(/_/g, " ")}
-                </Badge>
-              </div>
-              
-              <div className="absolute bottom-4 left-4 right-4">
-                <h1 className="text-3xl font-serif font-bold text-white mb-2">{project.title}</h1>
-                {project.location && (
-                  <p className="text-white/80 flex items-center gap-1">
-                    <MapPin className="w-4 h-4" />
-                    {project.location}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <Card className="border-2 border-primary/20 bg-gradient-to-r from-primary/5 to-amber-500/5">
-              <CardContent className="py-5">
-                <div className="flex flex-col md:flex-row md:items-center gap-6">
-                  <div className="flex items-center gap-4">
-                    <div className="relative">
-                      <svg className="w-20 h-20 transform -rotate-90" viewBox="0 0 36 36">
-                        <circle
-                          cx="18" cy="18" r="15"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="3"
-                          className="text-secondary"
-                        />
-                        <circle
-                          cx="18" cy="18" r="15"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="3"
-                          strokeDasharray={`${matchScore} ${100 - matchScore}`}
-                          strokeLinecap="round"
-                          className={matchScore >= 90 ? "text-green-500" : matchScore >= 75 ? "text-emerald-500" : "text-amber-500"}
-                        />
-                      </svg>
-                      <span className={`absolute inset-0 flex items-center justify-center text-xl font-bold ${matchScore >= 90 ? "text-green-600" : matchScore >= 75 ? "text-emerald-600" : "text-amber-600"}`}>
-                        {matchScore}%
-                      </span>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-lg flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-amber-500" />
-                        Match Score
-                      </h3>
-                      <p className="text-sm text-muted-foreground">Based on your investment profile</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-3">
-                    {project.roiPotential && (
-                      <div className="text-center p-2 bg-background/50 rounded-lg">
-                        <TrendingUp className="w-5 h-5 mx-auto mb-1 text-green-500" />
-                        <p className="text-xs text-muted-foreground">ROI Potential</p>
-                        <p className="font-bold text-green-600">{project.roiPotential}/5</p>
-                      </div>
-                    )}
-                    {project.designAppeal && (
-                      <div className="text-center p-2 bg-background/50 rounded-lg">
-                        <Palette className="w-5 h-5 mx-auto mb-1 text-pink-500" />
-                        <p className="text-xs text-muted-foreground">Design Appeal</p>
-                        <p className="font-bold text-pink-600">{project.designAppeal}/5</p>
-                      </div>
-                    )}
-                    {project.marketDemand && (
-                      <div className="text-center p-2 bg-background/50 rounded-lg">
-                        <BarChart3 className="w-5 h-5 mx-auto mb-1 text-blue-500" />
-                        <p className="text-xs text-muted-foreground">Market Demand</p>
-                        <p className="font-bold text-blue-600">{project.marketDemand}/5</p>
-                      </div>
-                    )}
-                    {project.riskLevel && (
-                      <div className="text-center p-2 bg-background/50 rounded-lg">
-                        {(() => {
-                          const RiskIcon = getRiskIcon(project.riskLevel);
-                          const riskColorClass = getRiskColor(project.riskLevel).split(' ')[0];
-                          return (
-                            <>
-                              <RiskIcon className={`w-5 h-5 mx-auto mb-1 ${riskColorClass}`} />
-                              <p className="text-xs text-muted-foreground">Risk Level</p>
-                              <p className={`font-bold capitalize ${riskColorClass}`}>{project.riskLevel}</p>
-                            </>
-                          );
-                        })()}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <div>
-              <p className="text-muted-foreground leading-relaxed mb-4">
-                {project.description || "Investment opportunity in real estate development."}
-              </p>
-              
-              <div className="flex flex-wrap gap-2">
-                {project.strategy && (
-                  <Badge variant="outline">{project.strategy.replace("-", " & ")}</Badge>
-                )}
-                {project.propertyType && (
-                  <Badge variant="outline">{project.propertyType.replace("-", " ")}</Badge>
-                )}
-                {project.neighborhoodGrade && (
-                  <Badge variant="outline">Grade {project.neighborhoodGrade}</Badge>
-                )}
-              </div>
-            </div>
-
-            <Tabs defaultValue="chemistry" className="w-full">
-              <TabsList className="grid w-full grid-cols-6">
-                <TabsTrigger value="chemistry" data-testid="tab-chemistry">Chemistry</TabsTrigger>
-                <TabsTrigger value="transparency" data-testid="tab-transparency">Transparency</TabsTrigger>
-                <TabsTrigger value="overview" data-testid="tab-overview">Details</TabsTrigger>
-                <TabsTrigger value="milestones" data-testid="tab-milestones">Milestones</TabsTrigger>
-                <TabsTrigger value="offers" data-testid="tab-offers">Offers</TabsTrigger>
-                <TabsTrigger value="investors" data-testid="tab-investors">Investors</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="chemistry" className="mt-6 space-y-4">
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <Sparkles className="w-5 h-5 text-amber-500" />
-                      Investment Chemistry Breakdown
-                    </CardTitle>
-                    <CardDescription>
-                      How this deal aligns with your investment preferences
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <ChemistryBar 
-                      label="ROI Potential" 
-                      value={project.roiPotential || 3} 
-                      max={5}
-                      color="bg-green-500"
-                      icon={<TrendingUp className="w-4 h-4" />}
-                      description="Expected return on investment compared to similar projects"
-                    />
-                    <ChemistryBar 
-                      label="Design Appeal" 
-                      value={project.designAppeal || 3} 
-                      max={5}
-                      color="bg-pink-500"
-                      icon={<Palette className="w-4 h-4" />}
-                      description="Quality of renovation design and aesthetic value"
-                    />
-                    <ChemistryBar 
-                      label="Market Demand" 
-                      value={project.marketDemand || 3} 
-                      max={5}
-                      color="bg-blue-500"
-                      icon={<BarChart3 className="w-4 h-4" />}
-                      description="Local market conditions and buyer demand"
-                    />
-                    <ChemistryBar 
-                      label="Risk Profile Match" 
-                      value={project.riskLevel === "low" ? 5 : project.riskLevel === "medium" ? 3 : 1} 
-                      max={5}
-                      color="bg-amber-500"
-                      icon={<Shield className="w-4 h-4" />}
-                      description="How well the risk level matches your preferences"
-                    />
-                    <ChemistryBar 
-                      label="Investment Size Fit" 
-                      value={4} 
-                      max={5}
-                      color="bg-primary"
-                      icon={<DollarSign className="w-4 h-4" />}
-                      description="How well the minimum investment fits your capital allocation"
-                    />
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg flex items-center gap-2">
-                      <ThumbsUp className="w-5 h-5 text-green-500" />
-                      Why This Matches You
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      <div className="flex items-start gap-3 p-3 bg-green-50 dark:bg-green-950/30 rounded-lg">
-                        <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
-                        <div>
-                          <p className="font-medium text-sm">Strong ROI Potential</p>
-                          <p className="text-xs text-muted-foreground">Target returns align with your goals</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3 p-3 bg-green-50 dark:bg-green-950/30 rounded-lg">
-                        <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
-                        <div>
-                          <p className="font-medium text-sm">Premium Location</p>
-                          <p className="text-xs text-muted-foreground">High-demand neighborhood grade</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3 p-3 bg-green-50 dark:bg-green-950/30 rounded-lg">
-                        <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
-                        <div>
-                          <p className="font-medium text-sm">Design-Forward Approach</p>
-                          <p className="text-xs text-muted-foreground">Matches your aesthetic preferences</p>
-                        </div>
-                      </div>
-                      <div className="flex items-start gap-3 p-3 bg-green-50 dark:bg-green-950/30 rounded-lg">
-                        <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
-                        <div>
-                          <p className="font-medium text-sm">Experienced Operator</p>
-                          <p className="text-xs text-muted-foreground">Proven track record with similar projects</p>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="transparency" className="mt-6 space-y-6">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  <CapitalStackBreakdown project={project} />
-                  <DealLevelTransparency project={project} commitments={commitments} />
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  {project.structure?.toLowerCase() === "debt" ? (
-                    <InvestorReturnCalculator project={project} />
-                  ) : (
-                    <ScenarioCalculator project={project} />
-                  )}
-                  <RepaymentTimeline project={project} />
-                </div>
-
-                <InvestorBreakdownTable project={project} commitments={commitments} />
-              </TabsContent>
-
-              <TabsContent value="overview" className="mt-6">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <Card>
-                    <CardContent className="pt-5 pb-4">
-                      <p className="text-sm text-muted-foreground">Structure</p>
-                      <p className="text-xl font-bold">{project.structure || "Not provided"}</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="pt-5 pb-4">
-                      <p className="text-sm text-muted-foreground">Minimum Capital</p>
-                      <p className="text-xl font-bold">{formatCurrency(project.minInvestment)}</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="pt-5 pb-4">
-                      <p className="text-sm text-muted-foreground">Target Return</p>
-                      <p className="text-xl font-bold text-green-600">{project.projectedReturn || "Not provided"}</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="pt-5 pb-4">
-                      <p className="text-sm text-muted-foreground">Hold Period</p>
-                      <p className="text-xl font-bold">{project.holdPeriod || "Not provided"}</p>
-                    </CardContent>
-                  </Card>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="milestones" className="mt-6">
-                {milestones.length === 0 ? (
-                  <Card>
-                    <CardContent className="py-12 text-center text-muted-foreground">
-                      <Target className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p>No milestones defined yet</p>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="space-y-3">
-                    {milestones.map((milestone: any, index: number) => (
-                      <Card key={milestone.id} className={milestone.isComplete ? "bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800" : ""}>
-                        <CardContent className="py-4">
-                          <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
-                              milestone.isComplete ? "bg-green-600 text-white" : "bg-secondary"
-                            }`}>
-                              {milestone.isComplete ? <CheckCircle2 className="w-4 h-4" /> : index + 1}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium">{milestone.title}</p>
-                              {milestone.description && (
-                                <p className="text-sm text-muted-foreground line-clamp-1">{milestone.description}</p>
-                              )}
-                            </div>
-                            <Badge variant={milestone.isComplete ? "default" : "outline"} className="shrink-0">
-                              {milestone.isComplete ? "Complete" : "Pending"}
-                            </Badge>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="offers" className="mt-6 space-y-4">
-                <Card className="border-2 border-dashed border-primary/30">
-                  <CardContent className="py-6 text-center">
-                    <Link href="/capital#capital-introduction">
-                      <Button variant="outline" className="gap-2" data-testid="button-capital-relationship-info">
-                        <Info className="w-4 h-4" />
-                        Relationship information
-                      </Button>
-                    </Link>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      MarketFlow does not accept or counter project terms through this record.
-                    </p>
-                  </CardContent>
-                </Card>
-
-                {negotiations.length === 0 ? (
-                  <Card>
-                    <CardContent className="py-12 text-center text-muted-foreground">
-                      <MessageCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p className="font-medium">No offer records</p>
-                      <p className="text-sm">Any later discussion remains separate and conditional.</p>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="space-y-4">
-                    <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-                      Negotiation History ({negotiations.length})
-                    </h3>
-                    {negotiations.map((negotiation: any) => (
-                      <Card key={negotiation.id} className={
-                        negotiation.status === "accepted" ? "border-green-500/50 bg-green-50/50 dark:bg-green-950/20" :
-                        negotiation.status === "declined" ? "border-red-500/50 bg-red-50/50 dark:bg-red-950/20" :
-                        negotiation.status === "countered" ? "border-amber-500/50 bg-amber-50/50 dark:bg-amber-950/20" :
-                        ""
-                      }>
-                        <CardContent className="py-4">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center gap-2 mb-2">
-                                <Badge variant={
-                                  negotiation.status === "accepted" ? "default" :
-                                  negotiation.status === "declined" ? "destructive" :
-                                  negotiation.status === "countered" ? "secondary" :
-                                  "outline"
-                                }>
-                                  {negotiation.status}
-                                </Badge>
-                                <Badge variant="outline" className="text-xs">
-                                  {negotiation.structureType === "debt" ? "Debt" : "Equity"}
-                                </Badge>
-                                {negotiation.transactionRole && (
-                                  <Badge variant="outline" className="text-xs">
-                                    {negotiation.transactionRole}
-                                  </Badge>
-                                )}
-                              </div>
-                              
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mt-3">
-                                <div>
-                                  <p className="text-muted-foreground text-xs">Amount</p>
-                                  <p className="font-semibold">{formatCurrency(negotiation.proposedAmount)}</p>
-                                </div>
-                                {negotiation.structureType === "debt" && (
-                                  <>
-                                    {negotiation.proposedInterestRate && (
-                                      <div>
-                                        <p className="text-muted-foreground text-xs">Interest Rate</p>
-                                        <p className="font-semibold text-green-600">{negotiation.proposedInterestRate}</p>
-                                      </div>
-                                    )}
-                                    {negotiation.proposedLoanDuration && (
-                                      <div>
-                                        <p className="text-muted-foreground text-xs">Duration</p>
-                                        <p className="font-semibold">{negotiation.proposedLoanDuration}</p>
-                                      </div>
-                                    )}
-                                  </>
-                                )}
-                                {negotiation.structureType === "equity" && (
-                                  <>
-                                    {negotiation.proposedEquityPercent && (
-                                      <div>
-                                        <p className="text-muted-foreground text-xs">Equity</p>
-                                        <p className="font-semibold text-blue-600">{negotiation.proposedEquityPercent}</p>
-                                      </div>
-                                    )}
-                                    {negotiation.proposedProfitSplit && (
-                                      <div>
-                                        <p className="text-muted-foreground text-xs">Profit Split</p>
-                                        <p className="font-semibold">{negotiation.proposedProfitSplit}</p>
-                                      </div>
-                                    )}
-                                  </>
-                                )}
-                              </div>
-                              
-                              {negotiation.notes && (
-                                <p className="text-sm text-muted-foreground mt-3 italic">
-                                  "{negotiation.notes}"
-                                </p>
-                              )}
-                              
-                              <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground">
-                                <Clock className="w-3 h-3" />
-                                {new Date(negotiation.createdAt).toLocaleDateString()}
-                              </div>
-                            </div>
-                            
-                            {negotiation.status === "pending" && negotiation.responderId === user?.id && (
-                              <div className="flex flex-col gap-2">
-                                <Button size="sm" variant="default" className="gap-1" data-testid={`button-accept-${negotiation.id}`}>
-                                  <CheckCircle2 className="w-3 h-3" />
-                                  Accept
-                                </Button>
-                                <Button size="sm" variant="outline" className="gap-1" data-testid={`button-counter-${negotiation.id}`}>
-                                  <MessageCircle className="w-3 h-3" />
-                                  Counter
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="investors" className="mt-6">
-                {commitments.length === 0 ? (
-                  <Card>
-                    <CardContent className="py-12 text-center text-muted-foreground">
-                      <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p className="font-medium">No participant records</p>
-                      <p className="text-sm">Participant status appears only after an authorized update.</p>
-                    </CardContent>
-                  </Card>
-                ) : (
-                  <div className="space-y-3">
-                    {commitments.map((commitment: any) => (
-                      <Card key={commitment.id}>
-                        <CardContent className="py-4">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                                <DollarSign className="w-5 h-5 text-primary" />
-                              </div>
-                              <div>
-                                <p className="font-medium">{formatCurrency(commitment.committedAmount)}</p>
-                                <p className="text-sm text-muted-foreground">{commitment.role}</p>
-                              </div>
-                            </div>
-                            <Badge>{commitment.status}</Badge>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
-          </div>
-
-          <div className="space-y-6">
-            <Card className="sticky top-20">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="w-5 h-5" />
-                  Capital Raise
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <div className="flex justify-between text-sm mb-2">
-                    <span className="text-muted-foreground">Funding Progress</span>
-                    <span className="font-semibold">{progress}%</span>
-                  </div>
-                  <Progress value={progress} className="h-3" />
-                </div>
-
-                <div className="flex justify-between items-end">
-                  <div>
-                    <p className="text-2xl font-bold text-green-600">
-                      {formatCurrency(project.amountRaised || 0)}
-                    </p>
-                    <p className="text-sm text-muted-foreground">raised</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xl font-semibold">
-                      {formatCurrency(project.fundingGoal)}
-                    </p>
-                    <p className="text-sm text-muted-foreground">goal</p>
-                  </div>
-                </div>
-
-                {/* Seeking Statement - aligned with investment details */}
-                <div className="p-4 rounded-md bg-gradient-to-r from-primary/10 via-amber-500/10 to-primary/10 border-2 border-primary/30 text-center">
-                  <p className="text-xs uppercase tracking-wide text-muted-foreground mb-1">Seeking</p>
-                  <p className="text-lg font-bold text-primary" data-testid="text-seeking-amount">
-                    {formatCurrency(project.fundingGoal)}
-                    {project.structure?.toLowerCase() === "debt" && project.askingInterestRate && (
-                      <span className="text-green-600"> at {project.askingInterestRate}</span>
-                    )}
-                    {project.structure?.toLowerCase() === "equity" && project.askingEquityPercent && (
-                      <span className="text-blue-600"> for {project.askingEquityPercent}% equity</span>
-                    )}
-                  </p>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {project.structure?.toLowerCase() === "debt" && project.askingLoanDuration 
-                      ? `${project.askingLoanDuration} term` 
-                      : project.askingProfitSplit 
-                        ? `${project.askingProfitSplit} profit split`
-                        : project.holdPeriod || "Flexible terms"
-                    }
-                  </p>
-                </div>
-
-                <div className="pt-4 border-t space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Minimum Capital</span>
-                    <span className="font-medium">{formatCurrency(project.minInvestment)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Structure</span>
-                    <span className="font-medium">{project.structure || "Not provided"}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Investors</span>
-                    <span className="font-medium">{project.investorCount || commitments.length}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Target Return</span>
-                    <span className="font-medium text-green-600">{project.projectedReturn || "Not provided"}</span>
-                  </div>
-                </div>
-
-                {project.status === "OPEN_FOR_INVESTMENT" && (
-                  <div className="space-y-2 pt-2">
-                    <p className="text-sm text-muted-foreground">
-                      This status is record context, not an invitation or executable offering.
-                    </p>
-                    <Link href="/capital#capital-introduction">
-                      <Button variant="outline" className="w-full" data-testid="button-capital-relationship-sidebar">
-                        <Info className="w-4 h-4 mr-2" />
-                        Relationship information
-                      </Button>
-                    </Link>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Calendar className="w-5 h-5" />
-                  Timeline
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <Clock className="w-5 h-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-medium">{project.holdPeriod || "Not provided"}</p>
-                    <p className="text-sm text-muted-foreground">Expected hold period</p>
-                  </div>
-                </div>
-                {milestones.length > 0 && (
-                  <div className="pt-3 border-t">
-                    <p className="text-sm text-muted-foreground mb-2">Milestone Progress</p>
-                    <Progress value={(completedMilestones / milestones.length) * 100} className="h-2" />
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {completedMilestones} of {milestones.length} complete
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Capital Raising Block - Operator Terms */}
-            <Card className="border-2 border-primary/40 bg-gradient-to-br from-primary/5 via-amber-500/5 to-primary/10 shadow-lg" data-testid="capital-raising-block">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-amber-600 flex items-center justify-center">
-                      <Target className="w-4 h-4 text-white" />
-                    </div>
-                    <span>Capital Raising Terms</span>
-                  </CardTitle>
-                  <Tooltip>
-                    <TooltipTrigger>
-                      <Info className="w-4 h-4 text-muted-foreground" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p className="max-w-xs text-xs">These are the operator's asking terms. Accept as-is or propose your own terms.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {(project.askingInterestRate || project.askingLoanDuration) && (
-                  <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
-                    <div className="flex items-center gap-2 mb-2">
-                      <DollarSign className="w-4 h-4 text-green-600" />
-                      <span className="text-sm font-semibold text-green-700 dark:text-green-400">Debt Structure</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      {project.askingInterestRate && (
-                        <div className="p-2 bg-white/50 dark:bg-black/20 rounded-md">
-                          <p className="text-muted-foreground text-xs">Interest Rate</p>
-                          <p className="text-lg font-bold text-green-600">{project.askingInterestRate}</p>
-                        </div>
-                      )}
-                      {project.askingLoanDuration && (
-                        <div className="p-2 bg-white/50 dark:bg-black/20 rounded-md">
-                          <p className="text-muted-foreground text-xs">Loan Duration</p>
-                          <p className="text-lg font-bold">{project.askingLoanDuration}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-                {(project.askingEquityPercent || project.askingProfitSplit) && (
-                  <div className="p-3 rounded-lg bg-blue-500/10 border border-blue-500/20">
-                    <div className="flex items-center gap-2 mb-2">
-                      <TrendingUp className="w-4 h-4 text-blue-600" />
-                      <span className="text-sm font-semibold text-blue-700 dark:text-blue-400">Equity Structure</span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
-                      {project.askingEquityPercent && (
-                        <div className="p-2 bg-white/50 dark:bg-black/20 rounded-md">
-                          <p className="text-muted-foreground text-xs">Equity Offered</p>
-                          <p className="text-lg font-bold text-blue-600">{project.askingEquityPercent}%</p>
-                        </div>
-                      )}
-                      {project.askingProfitSplit && (
-                        <div className="p-2 bg-white/50 dark:bg-black/20 rounded-md">
-                          <p className="text-muted-foreground text-xs">Profit Split</p>
-                          <p className="text-lg font-bold">{project.askingProfitSplit}</p>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-                
-                {!(project.askingInterestRate || project.askingLoanDuration || project.askingEquityPercent || project.askingProfitSplit) && (
-                  <div className="text-center py-4 text-muted-foreground">
-                    <p className="text-sm">Terms to be discussed</p>
-                    <p className="text-xs">No executable terms are available through this record.</p>
-                  </div>
-                )}
-                
-                {/* Action Buttons - Uses canonical form router */}
-                <div className="pt-2">
-                  <Link href="/capital#capital-introduction">
-                    <Button variant="outline" className="w-full" data-testid="button-capital-relationship-terms">
-                      <Info className="w-4 h-4 mr-2" />
-                      Relationship information
-                    </Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Award className="w-5 h-5 text-amber-500" />
-                  Operator
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-amber-500 flex items-center justify-center text-white font-bold text-lg">
-                    P
-                  </div>
-                  <div className="flex-1">
-                    <p className="font-semibold">Pegasus DreamScapes</p>
-                    <Badge variant="outline" className="text-xs mt-1">
-                      <Star className="w-3 h-3 mr-1 fill-amber-500 text-amber-500" />
-                      Certified Dreamscaper
-                    </Badge>
-                  </div>
-                </div>
-                <div className="mt-4 pt-4 border-t grid grid-cols-2 gap-3 text-center">
-                  <div>
-                    <p className="text-2xl font-bold">12</p>
-                    <p className="text-xs text-muted-foreground">Projects</p>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-green-600">98%</p>
-                    <p className="text-xs text-muted-foreground">Success Rate</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {projectId && (
-              <DealChat 
-                dealType="capital_project" 
-                dealId={projectId} 
-              />
-            )}
-          </div>
-        </div>
+        ) : null}
       </div>
-
     </DealflowLayout>
-  );
-}
-
-function getChemistryRating(value: number, max: number = 5): { label: string; color: string; textColor: string; description: string } {
-  const normalized = (value / max) * 5;
-  if (normalized >= 4.5) return { label: "Exceptional", color: "bg-green-500", textColor: "text-green-600", description: "Outstanding alignment with your investment profile" };
-  if (normalized >= 3.5) return { label: "Strong", color: "bg-emerald-500", textColor: "text-emerald-600", description: "Very good match for your preferences" };
-  if (normalized >= 2.5) return { label: "Good", color: "bg-amber-500", textColor: "text-amber-600", description: "Solid alignment with some considerations" };
-  if (normalized >= 1.5) return { label: "Fair", color: "bg-orange-500", textColor: "text-orange-600", description: "Partial match, review carefully" };
-  return { label: "Low", color: "bg-red-500", textColor: "text-red-600", description: "Limited alignment with preferences" };
-}
-
-function ChemistryBar({ 
-  label, 
-  value, 
-  max, 
-  color, 
-  icon,
-  description 
-}: { 
-  label: string; 
-  value: number; 
-  max: number;
-  color: string;
-  icon: JSX.Element;
-  description: string;
-}) {
-  const percentage = (value / max) * 100;
-  const rating = getChemistryRating(value, max);
-  
-  return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <div className="space-y-2 cursor-help p-3 bg-secondary/20 rounded-lg hover:bg-secondary/30 transition-colors">
-          <div className="flex items-center justify-between">
-            <span className="text-sm font-medium flex items-center gap-2">
-              {icon}
-              {label}
-            </span>
-            <Badge variant="outline" className={`${rating.textColor} font-semibold`}>
-              {rating.label}
-            </Badge>
-          </div>
-          <div className="h-3 bg-secondary rounded-full overflow-hidden">
-            <div 
-              className={`h-full rounded-full transition-all ${rating.color}`}
-              style={{ width: `${percentage}%` }}
-            />
-          </div>
-          <p className="text-xs text-muted-foreground">{rating.description}</p>
-        </div>
-      </TooltipTrigger>
-      <TooltipContent side="right" className="max-w-xs">
-        <p className="font-medium mb-1">{label}: {rating.label}</p>
-        <p className="text-sm text-muted-foreground">{description}</p>
-      </TooltipContent>
-    </Tooltip>
   );
 }

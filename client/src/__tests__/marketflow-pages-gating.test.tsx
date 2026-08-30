@@ -547,11 +547,16 @@ describe("marketflow-submit page gating", () => {
       "href",
       "/login",
     );
+    expect(screen.getByTestId("button-request-marketflow-access").closest("a")).toHaveAttribute(
+      "href",
+      "/marketflow/access",
+    );
+    expect(screen.getByText(/signing in or creating a preview account does not unlock submissions/i)).toBeInTheDocument();
     expect(screen.queryByTestId("text-submit-deal-title")).toBeNull();
     expect(screen.queryByTestId("wholesale-deal-form-stub")).toBeNull();
   });
 
-  it("investors are blocked with the role-locked screen, not given the form", async () => {
+  it("ordinary accounts are blocked because a self-selected role is interest, not approval", async () => {
     setAuthState("investor");
     const { default: MarketflowSubmit } = await import(
       "@/pages/marketflow-submit"
@@ -559,13 +564,40 @@ describe("marketflow-submit page gating", () => {
 
     renderWithProviders(<MarketflowSubmit />);
 
-    expect(screen.getByTestId("button-apply-wholesaler")).toBeInTheDocument();
+    expect(screen.getByTestId("button-request-marketflow-access")).toBeInTheDocument();
+    expect(screen.getByText(/declared interest only/i)).toBeInTheDocument();
     expect(screen.queryByTestId("text-submit-deal-title")).toBeNull();
     expect(screen.queryByTestId("wholesale-deal-form-stub")).toBeNull();
   });
 
-  it("wholesalers see the authenticated submit form", async () => {
+  it("self-selected wholesaler accounts do not receive submission privileges", async () => {
     setAuthState("wholesaler");
+    const { default: MarketflowSubmit } = await import(
+      "@/pages/marketflow-submit"
+    );
+
+    renderWithProviders(<MarketflowSubmit />);
+
+    expect(screen.getByTestId("button-request-marketflow-access")).toBeInTheDocument();
+    expect(screen.queryByTestId("text-submit-deal-title")).toBeNull();
+    expect(screen.queryByTestId("wholesale-deal-form-stub")).toBeNull();
+  });
+
+  it("self-selected DreamScaper accounts do not receive submission privileges", async () => {
+    setAuthState("dreamscaper");
+    const { default: MarketflowSubmit } = await import(
+      "@/pages/marketflow-submit"
+    );
+
+    renderWithProviders(<MarketflowSubmit />);
+
+    expect(screen.getByTestId("button-request-marketflow-access")).toBeInTheDocument();
+    expect(screen.queryByTestId("text-submit-deal-title")).toBeNull();
+    expect(screen.queryByTestId("wholesale-deal-form-stub")).toBeNull();
+  });
+
+  it("a governed Pegasus wholesaler can use the private submission workspace", async () => {
+    setAuthState("pegasusWholesaler");
     const { default: MarketflowSubmit } = await import(
       "@/pages/marketflow-submit"
     );
@@ -575,24 +607,11 @@ describe("marketflow-submit page gating", () => {
     expect(screen.getByTestId("text-submit-deal-title")).toBeInTheDocument();
     expect(screen.getByTestId("tab-submit-wholesale")).toBeInTheDocument();
     expect(screen.getByTestId("wholesale-deal-form-stub")).toBeInTheDocument();
-    expect(screen.queryByTestId("button-login-submit")).toBeNull();
-    expect(screen.queryByTestId("button-apply-wholesaler")).toBeNull();
-  });
-
-  it("dreamscapers see the authenticated submit form", async () => {
-    setAuthState("dreamscaper");
-    const { default: MarketflowSubmit } = await import(
-      "@/pages/marketflow-submit"
-    );
-
-    renderWithProviders(<MarketflowSubmit />);
-
-    expect(screen.getByTestId("text-submit-deal-title")).toBeInTheDocument();
-    expect(screen.getByTestId("wholesale-deal-form-stub")).toBeInTheDocument();
+    expect(screen.queryByTestId("button-request-marketflow-access")).toBeNull();
   });
 
   it("keeps capital projects relationship-only instead of exposing a broken raise form", async () => {
-    setAuthState("wholesaler");
+    setAuthState("pegasusWholesaler");
     const { default: MarketflowSubmit } = await import(
       "@/pages/marketflow-submit"
     );
@@ -611,7 +630,7 @@ describe("marketflow-submit page gating", () => {
   });
 
   it("describes review as a conditional sequence without SLAs or internal privileges", async () => {
-    setAuthState("wholesaler");
+    setAuthState("pegasusWholesaler");
     const { default: MarketflowSubmit } = await import(
       "@/pages/marketflow-submit"
     );
@@ -632,11 +651,11 @@ describe("marketflow-submit page gating", () => {
 
     renderWithProviders(<MarketflowSubmit />);
 
-    expect(screen.getByTestId("button-apply-wholesaler")).toBeInTheDocument();
+    expect(screen.getByTestId("button-request-marketflow-access")).toBeInTheDocument();
     expect(screen.queryByTestId("text-submit-deal-title")).toBeNull();
   });
 
-  it("guest mode renders the form in preview mode (no real submit lock)", async () => {
+  it("guest mode shows a preview-only hold and never renders a functional submission form", async () => {
     setAuthState("guest");
     const { default: MarketflowSubmit } = await import(
       "@/pages/marketflow-submit"
@@ -644,9 +663,11 @@ describe("marketflow-submit page gating", () => {
 
     renderWithProviders(<MarketflowSubmit />);
 
-    expect(screen.getByTestId("text-submit-deal-title")).toBeInTheDocument();
-    expect(screen.getByTestId("button-signup-preview")).toBeInTheDocument();
-    expect(screen.queryByTestId("button-login-submit")).toBeNull();
+    expect(screen.getByTestId("button-request-marketflow-access")).toBeInTheDocument();
+    expect(screen.getByText(/preview role does not create private access/i)).toBeInTheDocument();
+    expect(screen.queryByTestId("text-submit-deal-title")).toBeNull();
+    expect(screen.queryByTestId("button-signup-preview")).toBeNull();
+    expect(screen.queryByTestId("wholesale-deal-form-stub")).toBeNull();
   });
 });
 
@@ -842,11 +863,11 @@ describe("marketflow-deals page gating", () => {
       ["button-capital-undo", "Undo"],
       ["button-capital-pass", "Pass"],
       ["button-capital-save-swipe", "Save"],
-      ["button-capital-accept", "Commit capital"],
-      ["button-capital-counter", "Negotiate"],
     ]) {
       expect(screen.getByTestId(testId)).toHaveAccessibleName(name);
     }
+    expect(screen.queryByTestId("button-capital-accept")).toBeNull();
+    expect(screen.queryByTestId("button-capital-counter")).toBeNull();
   });
 
   it("serializes reduced-motion swipe actions and reaches both terminal states", async () => {
@@ -971,11 +992,9 @@ describe("marketflow-deals page gating", () => {
       const nextCapitalSave = screen.getByTestId("button-capital-save-swipe");
       expect(nextCapitalSave).toBeDisabled();
       expect(screen.getByTestId("button-view-capital-swipe")).toBeDisabled();
-      const capitalOfferStudio = screen.getByTestId(
-        "button-open-offer-studio-capital-602",
-      );
-      expect(capitalOfferStudio).toBeDisabled();
-      expect(capitalOfferStudio.closest("a")).toBeNull();
+      expect(screen.queryByTestId("button-open-offer-studio-capital-602")).toBeNull();
+      expect(screen.queryByTestId("button-accept-capital-swipe")).toBeNull();
+      expect(screen.queryByTestId("button-counter-capital-swipe")).toBeNull();
       fireEvent.click(nextCapitalSave);
       expect(marketplaceBoundary.toggleSaveItem).toHaveBeenCalledTimes(3);
 

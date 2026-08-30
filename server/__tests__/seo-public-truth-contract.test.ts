@@ -40,6 +40,11 @@ describe("public project SEO truth contract", () => {
     expect(SEO_ROUTES["/projects"].description).toContain("Nelson Drive");
   });
 
+  it("describes Contact as a general routing surface rather than property intake", () => {
+    expect(SEO_ROUTES["/contact"].description).toMatch(/general question|right public route/i);
+    expect(SEO_ROUTES["/contact"].description).not.toMatch(/share a property/i);
+  });
+
   it("does not promise a time to result for the directional Strategy Lab", () => {
     expect(SEO_ROUTES["/strategy-lab"].description).toContain(
       "directional only",

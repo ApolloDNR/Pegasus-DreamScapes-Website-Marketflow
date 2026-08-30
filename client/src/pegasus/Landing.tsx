@@ -53,6 +53,7 @@ export function Landing() {
   const [scrolled, setScrolled] = useState(false);
   const [peggyOpen, setPeggyOpen] = useState(false);
   const [peggyRole, setPeggyRole] = useState<string | null>(null);
+  const [peggyPrompt, setPeggyPrompt] = useState<string | null>(null);
   const [peggyHandoff, setPeggyHandoff] = useState<PeggyHandoff | null>(null);
   const progressRef = useRef<HTMLDivElement>(null);
   const parallaxRef = useRef<HTMLDivElement>(null);
@@ -64,15 +65,19 @@ export function Landing() {
   }, [setLocation]);
 
   const toggleTheme = useCallback(() => setTheme(theme === 'dark' ? 'light' : 'dark'), [setTheme, theme]);
-  const openPeggy = useCallback((role?: string) => {
+  const openPeggy = useCallback((role?: string, prompt?: string) => {
     // Keep this boundary defensive: a callback passed directly to onClick can
     // otherwise receive React's click event and mistake it for a visitor role.
     if (typeof role === 'string' && role) setPeggyRole(role);
+    if (typeof prompt === 'string' && prompt.trim()) setPeggyPrompt(prompt.trim());
     setPeggyOpen(true);
   }, []);
   const setPeggyPanel = useCallback((v: boolean) => {
     setPeggyOpen(v);
-    if (!v) setPeggyRole(null);
+    if (!v) {
+      setPeggyRole(null);
+      setPeggyPrompt(null);
+    }
   }, []);
   const toStrategyLab = useCallback(() => go('strategylab'), [go]);
   const toSubmit = useCallback((intent?: string) => {
@@ -174,7 +179,7 @@ export function Landing() {
 
       <Footer go={go} />
 
-      <Peggy open={peggyOpen} setOpen={setPeggyPanel} toStrategyLab={toStrategyLab} onHandoffToReview={onHandoffToReview} go={go} toSubmit={toSubmit} initialRole={peggyRole} />
+      <Peggy open={peggyOpen} setOpen={setPeggyPanel} toStrategyLab={toStrategyLab} onHandoffToReview={onHandoffToReview} go={go} toSubmit={toSubmit} initialRole={peggyRole} initialPrompt={peggyPrompt} />
     </div>
   );
 }

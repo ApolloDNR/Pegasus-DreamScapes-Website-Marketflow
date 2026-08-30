@@ -17,6 +17,7 @@ import {
 } from './forms';
 import { PremiumStrategyLab } from './strategy-lab-experience';
 import { PremiumMarketFlow } from './marketflow-experience';
+import { ConnectChooser } from '@/pages/connect';
 
 export { CategoryPage } from './category-page';
 export { CapitalPage } from './capital-page';
@@ -379,7 +380,8 @@ const PEGGY_PAGE_ROLES = PEGGY_PAGE_ROLE_KEYS
   .map((k) => PEGGY_ROLES.find((r) => r.role === k))
   .filter((r): r is (typeof PEGGY_ROLES)[number] => Boolean(r));
 
-export function PeggyPage({ go, openPeggy }: { go: Nav; openPeggy: (role?: string) => void }) {
+export function PeggyPage({ go, openPeggy }: { go: Nav; openPeggy: (role?: string, prompt?: string) => void }) {
+  const [prompt, setPrompt] = React.useState('');
   return (
     <>
       <PageHero eyebrow="Systems · The front door · Early access"
@@ -435,9 +437,22 @@ export function PeggyPage({ go, openPeggy }: { go: Nav; openPeggy: (role?: strin
                     </button>
                   ))}
                 </div>
-                <form className="peggy-input !relative !rounded-[3px]" onSubmit={(e) => { e.preventDefault(); openPeggy(); }}>
-                  <input type="text" aria-label="Describe your deal" placeholder="Describe your deal..." />
-                  <button type="submit" aria-label="Open Peggy"><Send className="w-4 h-4" strokeWidth={1.7} /></button>
+                <form
+                  className="peggy-input !relative !rounded-[3px]"
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const initialPrompt = prompt.trim();
+                    if (initialPrompt) openPeggy(undefined, initialPrompt);
+                  }}
+                >
+                  <input
+                    type="text"
+                    aria-label="Describe your deal"
+                    placeholder="Describe your deal..."
+                    value={prompt}
+                    onChange={(event) => setPrompt(event.target.value)}
+                  />
+                  <button type="submit" aria-label="Open Peggy" disabled={!prompt.trim()}><Send className="w-4 h-4" strokeWidth={1.7} /></button>
                 </form>
                 <div className="pg-label !text-[8px] !tracking-[0.14em] normal-case text-[var(--cream)]/40 mt-4 text-center">{PEGGY_SLA}</div>
               </div>
@@ -530,5 +545,8 @@ export function AboutPage({ go, openPeggy }: { go: Nav; openPeggy: () => void })
    CONTACT
    ================================================================ */
 export function ContactPage({ handoff = null }: { handoff?: PeggyHandoff | null }) {
-  return <LeadSection cfg={CONTACT_FORM} eyebrow="Start a property review" showRole tone="page" handoff={handoff} />;
+  if (handoff) {
+    return <LeadSection cfg={CONTACT_FORM} eyebrow="Continue the property handoff" showRole tone="page" handoff={handoff} />;
+  }
+  return <ConnectChooser />;
 }

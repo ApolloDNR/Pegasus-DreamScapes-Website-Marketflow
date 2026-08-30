@@ -363,6 +363,27 @@ describe("Pegasus public-shell navigation accessibility", () => {
       }),
     ).toHaveAttribute("aria-hidden", "false");
   });
+
+  it("carries the /peggy page prompt into the live Peggy composer", async () => {
+    const user = userEvent.setup({ delay: null });
+    renderLanding("/peggy");
+
+    const pagePrompt = await screen.findByRole("textbox", {
+      name: "Describe your deal",
+    });
+    await user.type(pagePrompt, "I inherited a duplex that needs major repairs");
+    await user.click(
+      within(pagePrompt.closest("form")!).getByRole("button", { name: "Open Peggy" }),
+    );
+
+    const dialog = screen.getByRole("dialog", {
+      name: "Peggy, the Pegasus intake concierge",
+    });
+    expect(dialog).toHaveAttribute("aria-hidden", "false");
+    expect(within(dialog).getByRole("textbox", { name: "Talk to Peggy" })).toHaveValue(
+      "I inherited a duplex that needs major repairs",
+    );
+  });
 });
 
 describe("Pegasus v6 Landing-shell choice controls", () => {

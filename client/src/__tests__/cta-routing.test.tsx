@@ -72,6 +72,7 @@ const KNOWN_EXTRA_PATHS = [
   // Explicit notice-at-collection links and the dedicated controlled-pilot desk.
   "/privacy",
   "/marketflow/access",
+  "/vendor-network",
 ];
 const KNOWN_PATHS = new Set<string>([
   ...Object.values(ROUTE_TO_URL),

@@ -78,15 +78,17 @@ const LANES: ConnectLane[] = [
   },
   {
     id: "deal-finder",
-    href: "/dealfinders",
+    href: "/deal-partners",
     audience: "Wholesaler or finder",
     routeCode: "DEAL FINDER",
     label: "I have a deal or lead",
     short: "Bring the opportunity once, with enough context to discuss a possible path.",
     detail:
       "Pegasus may consider a purchase, JV, or other path, but no buyer, review, source protection, response, or transaction is promised by this page.",
-    nextStep: "Submit the deal once there is enough context to protect the source and the path.",
-    standard: "We do not build trust by taking someone's lead around them.",
+    nextStep:
+      "Submit the known facts and your role. Any confidentiality, distribution, JV, or compensation rights require separate signed terms.",
+    standard:
+      "The intake records submitted source information but does not create a protection or non-circumvention agreement.",
     cta: "Bring the deal",
     icon: Handshake,
   },
@@ -107,15 +109,15 @@ const LANES: ConnectLane[] = [
   {
     id: "capital",
     href: "/capital",
-    audience: "Capital partner",
-    routeCode: "CAPITAL",
-    label: "I am exploring a capital relationship",
-    short: "Private, project-specific conversations only. No public investment offering.",
+    audience: "Introduced relationship",
+    routeCode: "CAPITAL INTRODUCTION",
+    label: "I have an existing relationship or personal introduction",
+    short: "Existing relationships and personal introductions only. This is not a general application.",
     detail:
-      "Capital conversations are handled privately and tied to specific projects, terms, risk, and suitability. This website does not offer securities or guaranteed returns.",
-    nextStep: "Start with a private conversation tied to a specific project or mandate.",
-    standard: "No blind pool promise. No guaranteed return language.",
-    cta: "Open capital page",
+      "Pegasus begins capital conversations only through an existing relationship or a personal introduction. The public page records relationship context; it does not offer a project or create access.",
+    nextStep: "Continue only if Apollo already knows you or someone personally connected you.",
+    standard: "No general application, public offering, access promise, or guaranteed return.",
+    cta: "Continue an introduction",
     icon: Banknote,
   },
   {
@@ -134,16 +136,16 @@ const LANES: ConnectLane[] = [
   },
   {
     id: "not-sure",
-    href: "/contact",
+    href: "mailto:apollo@pegasusdreamscapes.com",
     audience: "Not sure yet",
     routeCode: "PLAIN NOTE",
     label: "I need to explain it in plain English",
-    short: "If the lane is not obvious, start with the situation.",
+    short: "A general or non-property question can start with a direct note.",
     detail:
-      "A property problem does not always arrive neatly labeled. Send the note, make the call, or use Peggy to frame the intake before you choose a lane.",
-    nextStep: "Write the situation in plain English. The lane can be named after the facts are clear.",
-    standard: "Plain language is enough to begin.",
-    cta: "Send a note",
+      "Email Apollo when the request does not fit property intake, representation, buyer interest, MarketFlow access, capital introduction, or vendor consideration.",
+    nextStep: "Write the request in plain English and include only the context needed to identify the right lane.",
+    standard: "A note does not promise review, routing, service, or a response.",
+    cta: "Email Apollo",
     icon: MessageSquare,
   },
 ];
@@ -429,14 +431,18 @@ function StandardsBand() {
 }
 
 export default function ConnectPage() {
-  const [activeLane, setActiveLane] = useState<ConnectLane>(LANES[0]);
-
   useSEO({
     title: "Connect",
     description:
       "Choose the right Pegasus Dreamscapes starting point: property intake, representation, buyer strategy, deal finder path, development, capital, vendor work, or a direct note.",
     image: "/og/about.png",
   });
+
+  return <ConnectChooser />;
+}
+
+export function ConnectChooser() {
+  const [activeLane, setActiveLane] = useState<ConnectLane>(LANES[0]);
 
   return (
     <div className="connect-premium">

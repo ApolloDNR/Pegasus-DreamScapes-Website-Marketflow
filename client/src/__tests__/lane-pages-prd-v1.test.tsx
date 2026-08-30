@@ -78,20 +78,20 @@ afterEach(() => cleanup());
 const LANES: [string, string[], string, string | null][] = [
   [
     "/property-owners",
-    ["A difficult property does not always need a conventional solution."],
-    "Pegasus acquires selected properties directly and reviews situations involving condition",
+    ["A complex property starts with accurate facts, not a promised outcome."],
+    "Use the private intake to document condition, timing, ownership, occupancy",
     null,
   ],
   [
     "/deal-partners",
-    ["You found the opportunity. We help make it executable."],
-    "deal finders, wholesalers, agents, and operating sponsors",
-    "Source attribution is recorded at submission. Any JV, assignment, referral, or compensation structure must be agreed in writing before distribution.",
+    ["A credible deal submission makes the facts and the proposed role clear."],
+    "Deal finders, wholesalers, agents, and operating sponsors",
+    "Any joint venture, assignment, referral, distribution, representation, or compensation arrangement would require a separate written agreement before anyone relies on it.",
   ],
   [
     "/buyers",
     ["Buy with a strategy,", "not just a search."],
-    "you may ask about current licensed-representation availability",
+    "licensed buyer representation, investor-interest intake, or discretionary access to the controlled MarketFlow pilot",
     null,
   ],
   [

@@ -83,11 +83,11 @@ export const FAQ_SECTIONS: FaqSection[] = [
     items: [
       {
         q: "What are the Pegasus Buyboxes?",
-        a: "Public Buybox profiles describe interests within the controlled pilot. Saving or submitting an interest does not promise review, matching, notification, inventory, access, or a transaction.",
+        a: "The public Buybox page describes orientation criteria for controlled-pilot interest only. It does not publish public buyer profiles, offer public signup, or publish live inventory. No reviewed live inventory is published, and submitting interest does not promise review, access, matching, notification, or a transaction.",
       },
       {
-        q: "If I sign up for a Buybox, am I committing to buy?",
-        a: "No purchase obligation is created. A saved interest also does not promise a notification or matched property; available preference controls govern future messages.",
+        q: "Does submitting Buybox interest commit me to buy?",
+        a: "No. It records controlled-pilot interest only and creates no purchase obligation, public profile, account, access, notification, match, or transaction right.",
       },
     ],
   },

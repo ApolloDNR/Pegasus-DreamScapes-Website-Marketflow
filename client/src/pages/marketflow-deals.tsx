@@ -144,6 +144,8 @@ interface Listing {
   isFeatured?: boolean;
 }
 
+const MARKETFLOW_INVENTORY_STATUS = "No reviewed live inventory is published.";
+
 export default function MarketflowDeals() {
   useSEO({
     title: "MarketFlow Deals",
@@ -207,11 +209,12 @@ function MarketflowPrivateBetaHold({
             MarketFlow private beta
           </p>
           <h1 className="mb-5 font-serif text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
-            Reviewed opportunities are not shown as sample inventory.
+            {MARKETFLOW_INVENTORY_STATUS}
           </h1>
           <p className="mx-auto mb-8 max-w-xl text-base leading-relaxed text-muted-foreground">
-            MarketFlow is a private routing layer. Request access, submit a deal,
-            or sign in after approval to view live opportunities backed by real review data.
+            MarketFlow remains a controlled private pilot. You may request access or submit
+            an opportunity, but neither path promises approval, review, inventory, matching,
+            a transaction, or a response. Reviewed opportunities are not shown as sample inventory.
           </p>
           <div className="flex flex-col justify-center gap-3 sm:flex-row">
             <Link href="/marketflow/access">
@@ -409,6 +412,18 @@ function DealsPage() {
     <div className="space-y-6">
       {/* Beta Banner */}
       <BetaBanner section="marketflow" showFeatureLists={false} dismissible={true} />
+
+      <Card className="border-primary/25 bg-primary/5" data-testid="marketflow-inventory-publication-status">
+        <CardContent className="p-5 sm:p-6">
+          <p className="font-serif text-xl font-semibold tracking-tight">
+            {MARKETFLOW_INVENTORY_STATUS}
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            This controlled workspace is prepared for future reviewed records. Access does not
+            promise inventory, matching, an introduction, or a transaction.
+          </p>
+        </CardContent>
+      </Card>
       
       <ScrollReveal>
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
@@ -419,10 +434,10 @@ function DealsPage() {
             </h1>
             <p className="text-muted-foreground">
               {dealCategory === "wholesale" 
-                ? "Browse wholesale assignments. Find contracts to assign or JV partner on."
+                ? "Future reviewed wholesale records may appear here; none are published now."
                 : dealCategory === "capital"
-                  ? "Browse private, source-supplied project records. Capital actions are relationship information only."
-                  : "Browse ready-to-move-in properties. Request info or schedule showings."}
+                  ? "Future private project records may appear here. Capital context is relationship information only."
+                  : "Future reviewed listing records may appear here; none are published now."}
             </p>
           </div>
           
@@ -481,7 +496,7 @@ function DealsPage() {
                 <Eye className="w-5 h-5 text-amber-600" />
                 <div>
                   <h3 className="font-medium">Private beta preview: {guestRole?.replace(/_/g, ' ')}</h3>
-                  <p className="text-sm text-muted-foreground">Authorized participants can view reviewed records and take action when real inventory is available.</p>
+                  <p className="text-sm text-muted-foreground">{MARKETFLOW_INVENTORY_STATUS} Future reviewed records remain subject to authorization and availability.</p>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -648,15 +663,15 @@ function InventoryBoundary({
   const laneCopy = {
     wholesale: {
       noun: "wholesale opportunities",
-      emptyTitle: "No reviewed wholesale opportunities match this view.",
+      emptyTitle: MARKETFLOW_INVENTORY_STATUS,
     },
     capital: {
       noun: "capital opportunities",
-      emptyTitle: "No reviewed capital opportunities match this view.",
+      emptyTitle: MARKETFLOW_INVENTORY_STATUS,
     },
     listings: {
       noun: "property listings",
-      emptyTitle: "No reviewed property listings match this view.",
+      emptyTitle: MARKETFLOW_INVENTORY_STATUS,
     },
   }[lane];
 
@@ -674,10 +689,10 @@ function InventoryBoundary({
             MarketFlow review desk
           </p>
           <h2 className="mt-3 font-serif text-2xl font-semibold tracking-tight">
-            Loading reviewed {laneCopy.noun}
+            Checking the {laneCopy.noun} workspace
           </h2>
           <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
-            We are retrieving the current approved inventory. No sample records are substituted.
+            {MARKETFLOW_INVENTORY_STATUS} The workspace is checking for a future status update.
           </p>
         </div>
       </Card>
@@ -725,13 +740,13 @@ function InventoryBoundary({
       >
         <div className="mx-auto max-w-xl">
           <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-primary">
-            Reviewed inventory only
+            Publication status
           </p>
           <h2 className="mt-3 font-serif text-2xl font-semibold tracking-tight sm:text-3xl">
             {laneCopy.emptyTitle}
           </h2>
           <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
-            MarketFlow stays empty until a real opportunity clears review. Adjust the view or return when new inventory is approved.
+            MarketFlow stays empty until a real opportunity clears review and is authorized for publication. A submission does not promise that outcome.
           </p>
           <Link href="/bring-an-opportunity?intent=deal-jv">
             <Button variant="outline" className="mt-6">
@@ -814,10 +829,10 @@ function GridView({ deals, isLoading, onSave, onAction, onAcceptTerms, onCounter
           MarketFlow · Reviewed lane
         </p>
         <h3 className="font-serif text-3xl sm:text-4xl font-semibold mb-5 leading-tight tracking-tight">
-          First reviewed deals coming soon.
+          {MARKETFLOW_INVENTORY_STATUS}
         </h3>
         <p className="text-base text-muted-foreground mb-8 max-w-md mx-auto leading-relaxed">
-          MarketFlow only lists opportunities that have passed Pegasus HQ review. The first reviewed set is being prepared now.
+          The controlled workspace is prepared for future records that clear review and publication authorization. No timing is promised.
         </p>
         <div className="flex justify-center">
           <Link href="/marketflow">
@@ -999,10 +1014,10 @@ function SwipeView({ deals, onSave, onAcceptTerms, onCounterTerms }: SwipeViewPr
           MarketFlow · Reviewed lane
         </p>
         <h3 className="font-serif text-3xl sm:text-4xl font-semibold mb-5 leading-tight tracking-tight">
-          First reviewed deals coming soon.
+          {MARKETFLOW_INVENTORY_STATUS}
         </h3>
         <p className="text-base text-muted-foreground mb-8 max-w-md mx-auto leading-relaxed">
-          MarketFlow only lists opportunities that have passed Pegasus HQ review. The first reviewed set is being prepared now.
+          The controlled workspace is prepared for future records that clear review and publication authorization. No timing is promised.
         </p>
       </Card>
     );
