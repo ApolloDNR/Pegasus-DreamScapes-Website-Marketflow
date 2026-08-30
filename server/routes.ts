@@ -1,9517 +1,3874 @@
-import { randomUUID } from "node:crypto";
-import express, { type Express, type Request, type RequestHandler, type Response, type NextFunction } from "express";
-import { createServer, type Server } from "http";
-import { storage } from "./storage";
-import { 
-  insertSellerLeadSchema, 
-  insertInvestorLeadSchema, 
-  insertBuyerLeadSchema,
-  insertContactSchema,
-  insertProjectSchema,
-  insertWholesaleDealSchema,
-  insertWholesaleRequestSchema,
-  insertRetailListingSchema,
-  insertListingSchema,
-  insertBuyerInquirySchema,
-  insertInvestorProfileSchema,
-  insertWholesalerProfileSchema,
-  insertBuyerProfileSchema,
-  insertSavedPropertySchema,
-  insertBuyerOfferSchema,
-  insertCapitalProjectSchema,
-  insertProjectMilestoneSchema,
-  insertCommittedInvestmentSchema,
-  insertDealMatchSchema,
-  insertAnnouncementSchema,
-  insertNotificationSchema,
-  insertAdminAuditLogSchema,
-  insertLeadSchema,
-  insertCtaEventSchema,
-  insertSavedAnalysisSchema,
-  insertFaqSchema,
-  insertTestimonialSchema,
-  insertTeamMemberSchema,
-  insertMediaFileSchema,
-  insertSiteContentSchema,
-  insertArticleSchema,
-  insertLibraryBeginnerStepSchema,
-  insertLibraryGlossaryTermSchema,
-  STAFF_ROLES
-} from "@shared/schema";
-import { parsePeggyCalculatorRequest } from "@shared/peggy-calculator";
-
-import { z } from "zod";
-import { fromError } from "zod-validation-error";
-import { setupAuth, isAuthenticated } from "./replitAuth";
-import { registerOpportunityRoutes } from "./opportunityRoutes";
-import { registerUserProvisioningRoute } from "./user-provisioning-routes";
-import { registerUserProfileRoute } from "./user-profile-route";
-import { supabaseAuthMiddleware, extractSupabaseUser } from "./supabaseAuth";
-import { generateTermSheetPDF } from "./term-sheet-generator";
-import { generateCalculatorPDF, generateDealPacketPDF, generateSavedAnalysisPDF } from "./pdf";
-import { isPreviewHostname } from "@shared/preview-hosts";
-import peggy from "./peggy";
-import { registerPeggyIdentityRoutes } from "./peggy-route-auth";
-import { forward as hqForward, outreachReasonForLeadType, retryOutboxRow as hqRetryOutboxRow, drainPending as hqDrainPending, isHqHealthy } from "./integrations/hq-client";
-import { 
-  createUserProfile, 
-  createUserReputation, 
-  getUserProfile, 
-  getUserReputation, 
-  getUserBadges,
-  updateUserProfile
-} from "./lib/supabase";
-import { sendEmail, sendSellerLeadNotification, sendInvestorLeadNotification, sendBuyerLeadNotification, sendVendorLeadNotification, sendDealSubmissionNotification, sendMessageNotification, sendDealUpdateNotification, sendSavedAnalysisPDFEmail } from "./email";
-import {
-  buildGenericLeadNotificationData,
-  mergeLeadConsentAudit,
-  normalizeLeadConsent,
-  resolveStaffNotificationRecipient,
-  validateLeadConsentRequirement,
-} from "./lead-intake-policy";
-import { supabaseStorage } from "./supabase-storage";
-import { registerObjectStorageRoutes } from "./replit_integrations/object_storage";
-import { registerReadinessRoute } from "./readiness";
-import { registerPublicLibraryRetirementRoutes } from "./public-library-retirement";
-import { createListingInquiryRouteHandlers } from "./listing-inquiry-routes";
-import { createSavedItemRouteHandlers } from "./saved-item-route-handlers";
-import {
-  SITE_URL,
-  sitemapEntries,
-  isCrawlablePublicPath,
-  ROBOTS_DISALLOW,
-} from "../shared/seo-routes";
-import {
-  appendRedirectSearch,
-  QUERY_PRESERVING_INTAKE_PATHS,
-} from "../shared/redirects";
-import { publicIntakeRateLimit, rateLimit } from "./rate-limit";
-import {
-  createPeggyConversationAccessGuard,
-  createPeggyConversationAccessToken,
-  getPeggyConversationAccessSecret,
-  registerPeggyConversationAccessRefreshRoute,
-  verifyPeggyConversationAccessToken,
-} from "./peggy-access";
-import {
-  canAccessMarketflowOffer,
-  filterMarketflowOffersForUser,
-} from "./marketflow-access";
-import {
-  createRequireMarketflowInventoryAccess,
-  createResolveMarketflowInventoryAccessContext,
-  isReviewedMarketflowInventoryType,
-  type MarketflowInventoryAccessContext,
-} from "./marketflow-inventory-authorization";
-import {
-  isMarketflowNegotiationBoundToAuthoritativeDeal,
-  isMarketflowOfferConsistentWithNegotiation,
-} from "./marketflow-financial-integrity";
-import {
-  canDeleteLegacyWholesaleDocument,
-  filterLegacyCapitalInvestmentsForUser,
-  filterLegacyDocumentsForParticipant,
-  filterLegacyListingInquiriesForUser,
-  filterLegacyNegotiationsForUser,
-  filterLegacyWholesaleOffersForUser,
-  getLegacyDealTypeAliases,
-  isLegacyDealParticipant,
-  normalizeLegacyDealType,
-  type LegacyDealKind,
-} from "./legacy-private-access";
-import {
-  canRequestMarketflowJv,
-  isPublicCapitalProject,
-  isPublicListing,
-  isPublicWholesaleDeal,
-  resolveWholesaleDealOwnerId,
-  toPublicCapitalProject,
-  toPublicInvestorWantedDeal,
-  toPublicListing,
-  toPublicRetailListing,
-  toPublicUserProfile,
-  toPublicWholesaleDeal,
-} from "./public-marketplace";
-import {
-  canReadPrivateDealData,
-  requireCreatedSupabaseMarketplaceRecord,
-  resolveSupabaseMarketplaceIdentity,
-  toBuyerOfferDashboardDto,
-  toBuyerOfferIdentityColumns,
-  toCapitalCommitmentDashboardDto,
-  toCapitalCommitmentIdentityColumns,
-  toPublicSupabaseCapitalProject,
-  toPublicSupabaseListing,
-  toPublicSupabaseWholesaleDeal,
-} from "./supabase-marketplace-privacy";
-
-// Admin email allowlist for site editing
-const ADMIN_EMAILS = [
-  "apollosynd@gmail.com",
-  "admin@pegasusdreamscapes.com",
-];
-
-// Middleware to require staff roles for HQ access
-const requireStaffRole = async (req: any, res: Response, next: NextFunction) => {
-  try {
-    const userId = req.user?.claims?.sub;
-    const userEmail = req.user?.claims?.email || req.user?.email;
-    
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    
-    // Check admin email allowlist first
-    if (userEmail && ADMIN_EMAILS.includes(userEmail.toLowerCase())) {
-      return next();
-    }
-    
-    const hasStaffAccess = await storage.hasAnyStaffRole(userId);
-    if (!hasStaffAccess) {
-      return res.status(403).json({ message: "Forbidden: Staff access required" });
-    }
-    
-    next();
-  } catch (error) {
-    console.error("Error checking staff role:", error);
-    return res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-// Middleware to require specific roles
-const requireRole = (...roles: string[]) => async (req: any, res: Response, next: NextFunction) => {
-  try {
-    const userId = req.user?.claims?.sub;
-    if (!userId) {
-      return res.status(401).json({ message: "Unauthorized" });
-    }
-    
-    const userRoles = await storage.getUserRoles(userId);
-    const hasRequiredRole = userRoles.some(r => roles.includes(r.role));
-    
-    if (!hasRequiredRole) {
-      return res.status(403).json({ message: `Forbidden: Required roles: ${roles.join(", ")}` });
-    }
-    
-    next();
-  } catch (error) {
-    console.error("Error checking role:", error);
-    return res.status(500).json({ message: "Internal server error" });
-  }
-};
-
-const isHybridAuthenticated = async (req: any, res: Response, next: NextFunction) => {
-  if (req.user?.claims?.sub) {
-    return next();
-  }
-  
-  if (req.supabaseUser) {
-    req.user = { claims: req.supabaseUser.claims };
-    return next();
-  }
-  
-  const supabaseUser = await extractSupabaseUser(req);
-  if (supabaseUser) {
-    req.user = { claims: supabaseUser.claims };
-    req.supabaseUser = supabaseUser;
-    return next();
-  }
-  
-  return res.status(401).json({ message: "Unauthorized" });
-};
-
-// Extract the authenticated user ID from either supported auth system.
-const getAuthUserId = (req: any): string | null => {
-  if (req.user?.claims?.sub) {
-    return req.user.claims.sub;
-  }
-  if (req.supabaseUser?.id) {
-    return req.supabaseUser.id;
-  }
-  if (req.session?.user?.id) {
-    return req.session.user.id;
-  }
-  return null;
-};
-
-const getVerifiedPeggyUserId = (req: any): string | null => {
-  for (const candidate of [
-    req.user?.claims?.sub,
-    req.supabaseUser?.id,
-  ]) {
-    if (typeof candidate === "string" && candidate.trim()) {
-      return candidate.trim();
-    }
-  }
-  return null;
-};
-
-const hasMarketflowStaffAccess = async (req: any, userId: string) => {
-  const userEmail = req.user?.claims?.email || req.supabaseUser?.email;
-  if (userEmail && ADMIN_EMAILS.includes(String(userEmail).toLowerCase())) {
-    return true;
-  }
-
-  return storage.hasAnyStaffRole(userId);
-};
-
-const marketflowInventoryAccessDependencies = {
-  getUserProfile,
-  getUserRoles: (userId: string) => storage.getUserRoles(userId),
-  adminEmails: ADMIN_EMAILS,
-};
-const resolveMarketflowInventoryAccessContext =
-  createResolveMarketflowInventoryAccessContext(
-    marketflowInventoryAccessDependencies,
-  );
-const requireMarketflowInventoryAccess =
-  createRequireMarketflowInventoryAccess(
-    marketflowInventoryAccessDependencies,
-  );
-const loadMarketflowInventoryAccessContext = async (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
-  try {
-    const context = await resolveMarketflowInventoryAccessContext(req);
-    res.locals.marketflowInventoryAccessContext = context;
-    res.locals.canAccessReviewedMarketflowInventory =
-      context.canAccessReviewedInventory;
-  } catch (error) {
-    console.error("Unable to resolve optional MarketFlow inventory access:", error);
-    res.locals.canAccessReviewedMarketflowInventory = false;
-  }
-  next();
-};
-
-const getMarketflowInventoryAccessContext = (
-  res: Response,
-): MarketflowInventoryAccessContext | undefined =>
-  res.locals.marketflowInventoryAccessContext as
-    | MarketflowInventoryAccessContext
-    | undefined;
-
-const getMarketflowInventoryPrincipalId = (res: Response): string | null =>
-  getMarketflowInventoryAccessContext(res)?.userId ?? null;
-
-const canViewerInitiateMarketflowJv = (res: Response): boolean =>
-  getMarketflowInventoryAccessContext(res)?.canInitiateJv === true;
-
-const canAccessMarketflowItemType = (res: Response, rawType: unknown) =>
-  !isReviewedMarketflowInventoryType(rawType) ||
-  res.locals.canAccessReviewedMarketflowInventory === true;
-
-export async function registerRoutes(
-  httpServer: Server,
-  app: Express
-): Promise<Server> {
-  // Staging and branch previews are review surfaces, never canonical pages.
-  // Apply the header to HTML, API, and static responses so crawlers cannot
-  // index a preview even if they ignore robots.txt.
-  app.use((req, res, next) => {
-    const host = req.get("host") || "";
-    if (isPreviewHostname(host)) {
-      res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive, nosnippet");
-    }
-    next();
-  });
-
-  registerReadinessRoute(app);
-
-  app.get("/api/health", (_req, res) => {
-    res.status(200).json({ status: "ok" });
-  });
-
-  registerPublicLibraryRetirementRoutes(app);
-
-  
-  // Setup Replit Auth (legacy - for session-based auth)
-  await setupAuth(app);
-  
-  // Add Supabase auth middleware to extract user from JWT tokens
-  app.use(supabaseAuthMiddleware);
-
-  // Legacy 301 aliases for retired public routes. Keeps inbound links and
-  // search-engine equity flowing to the current path. Must be registered
-  // BEFORE the SPA / Vite catch-all so the redirect wins over the HTML
-  // shell. Mirror entries that exist in client/src/App.tsx legacyRedirects
-  // for SPA-internal navigation.
-  const legacyAliases: Array<[string, string]> = [];
-  for (const [from, to] of legacyAliases) {
-    app.get(from, (_req, res) => res.redirect(301, to));
-  }
-
-  // SEO: robots.txt â€” preview/dev hosts are fully disallowed so the
-  // Replit dev URL does not get indexed before launch. Production
-  // (pegasusdreamscapes.com) gets the full crawl policy.
-  app.get('/robots.txt', (req, res) => {
-    const rawHost = (req.get('host') || '').toLowerCase();
-    if (isPreviewHostname(rawHost)) {
-      res.type('text/plain').send(
-        ['User-agent: *', 'Disallow: /', ''].join('\n'),
-      );
-      return;
-    }
-
-    res.type('text/plain').send(
-      [
-        'User-agent: *',
-        'Allow: /',
-        ...ROBOTS_DISALLOW.map((p) => `Disallow: ${p}`),
-        '',
-        `Sitemap: ${SITE_URL}/sitemap.xml`,
-        '',
-      ].join('\n'),
-    );
-  });
-
-  // â”€â”€â”€ Empire Doctrine v1.0.1 legacy URL handling â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // Server-side 301 redirects for retired public funnel routes. These run
-  // before the Vite dev catch-all (registerRoutes is wired ahead of the
-  // SPA fallback in server/index.ts) and replace the prior client-side
-  // <Redirect> shim with a true HTTP redirect.
-  // Canonical 301 redirects â€” only kept for routes that map cleanly to a
-  // current v1 destination with preserved intent.
-  const LEGACY_REDIRECTS: Array<[string, string]> = [
-    // Master Blueprint v5.1 (Â§6): funnel entries land on their audience
-    // pages; the intake desk is canonical at /bring-an-opportunity.
-    ['/sell', '/property-owners'],
-    ['/submit-deal', '/bring-an-opportunity?intent=deal-jv'],
-    ['/submit-property', '/bring-an-opportunity'],
-    ['/submit', '/bring-an-opportunity'],
-    ['/wholesale', '/bring-an-opportunity?intent=deal-jv'],
-    ['/services', '/how-we-operate'],
-    ['/resources', '/strategy-lab'],
-    ['/invest', '/capital'],
-    ['/partner', '/deal-partners'],
-    // v5.1 spine renames â€” permanent forwards for the old canonical URLs.
-    ['/sellers', '/property-owners'],
-    ['/dealfinders', '/deal-partners'],
-    ['/deal-strategy', '/how-we-operate'],
-    ['/deal-architecture', '/how-we-operate'],
-  ];
-  for (const [from, to] of LEGACY_REDIRECTS) {
-    app.get(from, (req, res) => {
-      const incomingSearch = QUERY_PRESERVING_INTAKE_PATHS.has(from)
-        ? (req.originalUrl.split('?')[1] ?? '')
-        : '';
-      res.redirect(301, appendRedirectSearch(to, incomingSearch));
-    });
-  }
-
-  // The classic calculator suite was folded into the unified Strategy Lab.
-  // /calculators and /strategy-lab/classic now 301 to the Lab's Quick Tools
-  // surface, preserving a ?tab= deep link so previously shared calculator
-  // links keep landing on the right tool. Registered before the SPA fallback
-  // so direct hits / crawlers get a real redirect (not a 410 or a blank shell).
-  const CALC_TOOLS_URL = '/strategy-lab?tool=calculators';
-  for (const from of ['/calculators', '/strategy-lab/classic']) {
-    app.get(from, (req, res) => {
-      const tab = typeof req.query.tab === 'string' ? req.query.tab.trim() : '';
-      res.redirect(
-        301,
-        tab ? `${CALC_TOOLS_URL}&tab=${encodeURIComponent(tab)}` : CALC_TOOLS_URL,
-      );
-    });
-  }
-
-  // Retired-from-public routes: return 410 Gone for direct HTTP requests.
-  // Brief Â§1: these routes are gone from the v1 public surface entirely
-  // (no clean canonical successor that preserves the original intent).
-  // We answer with a small HTML page so a crawler / human gets the right
-  // signal without falling through to the SPA shell.
-  // NOTE: /ecosystem is NOT retired â€” the controlling Pegasus prototype
-  // (client/src/pegasus/) still owns it as a real public page, so it must
-  // resolve on direct HTTP hits, not 410. /buyers is demoted (not retired):
-  // it 302-redirects to /submit via V3_DEMOTION_REDIRECTS above, so it must
-  // not be 410'd here either.
-  const GONE_ROUTES = [
-    '/systems',
-    '/dreamspace',
-    '/capital-raising',
-  ];
-  const gonePage = (path: string) =>
-    `<!doctype html><html><head><meta charset="utf-8"><title>Page removed â€” Pegasus Dreamscapes</title><meta name="robots" content="noindex"></head><body style="font-family:Inter,system-ui,sans-serif;max-width:560px;margin:6rem auto;padding:0 1.5rem;color:#1A2332"><h1 style="font-family:'Cormorant Garamond',Georgia,serif;font-weight:600;font-size:2rem;margin:0 0 1rem">This page has been retired.</h1><p style="line-height:1.55;color:#475569"><code>${path}</code> is no longer part of the Pegasus Dreamscapes website. Start at <a href="/" style="color:#C87A3A">the home page</a> or <a href="/bring-an-opportunity" style="color:#C87A3A">bring an opportunity</a> directly.</p></body></html>`;
-  for (const path of GONE_ROUTES) {
-    app.get(path, (_req, res) => {
-      res.status(410).type('html').send(gonePage(path));
-    });
-  }
-
-  // SEO: sitemap.xml â€” generated from the canonical public route list in
-  // shared/seo-routes.ts (the same source the per-route metadata uses), plus
-  // any project case studies stored in the database. Admin, MarketFlow
-  // operator surfaces, auth, and legacy-redirect paths are filtered out by
-  // isCrawlablePublicPath so they never leak into the sitemap.
-  app.get('/sitemap.xml', async (_req, res) => {
-    const entries = sitemapEntries();
-    const seen = new Set(entries.map((e) => e.path));
-
-    // Append dynamic project case studies, skipping any path already present
-    // as a static SEO_ROUTES entry (e.g. /projects/nelson-dr).
-    try {
-      const projects = await storage.getProjects();
-      for (const p of projects) {
-        const path = `/projects/${p.slug}`;
-        if (seen.has(path) || !isCrawlablePublicPath(path)) continue;
-        seen.add(path);
-        entries.push({ path, priority: '0.7', changefreq: 'monthly' });
-      }
-    } catch (err) {
-      // A storage hiccup must never break the sitemap â€” ship the static set.
-    }
-
-    const urls = entries
-      .map(
-        (r) =>
-          `  <url><loc>${SITE_URL}${r.path}</loc><changefreq>${r.changefreq}</changefreq><priority>${r.priority}</priority></url>`,
-      )
-      .join('\n');
-
-    res
-      .type('application/xml')
-      .send(`<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls}\n</urlset>\n`);
-  });
-
-  // Register object storage routes for file uploads
-  registerObjectStorageRoutes(app, { requireAuth: isHybridAuthenticated });
-
-  // â”€â”€â”€ Empire Doctrine v1.0.1 Wave 3 â€” CTA attribution â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  // Public POST /api/events captures primary-surface CTA clicks. Rate-
-  // limited per-IP, payload validated, errors swallowed so a failed
-  // beacon never blocks navigation.
-  app.post(
-    "/api/events",
-    rateLimit(120, 60_000),
-    async (req: Request, res: Response) => {
-      try {
-        const parsed = insertCtaEventSchema.safeParse(req.body);
-        if (!parsed.success) {
-          // Swallow malformed payloads â€” telemetry must never surface a
-          // client-visible failure or block navigation.
-          return res.status(204).end();
-        }
-        await storage.createCtaEvent(parsed.data);
-        res.status(204).end();
-      } catch (err) {
-        console.error("[cta_events] failed to record", err);
-        res.status(204).end();
-      }
-    },
-  );
-
-  // Admin-only â€” last 30 days of CTA events, grouped and raw.
-  app.get(
-    "/api/hq/cta-events",
-    isHybridAuthenticated,
-    async (req: any, res: Response) => {
-      try {
-        const userEmail = (
-          req.user?.claims?.email ||
-          req.user?.email ||
-          req.supabaseUser?.email ||
-          ""
-        ).toLowerCase();
-        if (!userEmail || !ADMIN_EMAILS.includes(userEmail)) {
-          return res.status(403).json({ message: "Forbidden" });
-        }
-        const events = await storage.getCtaEvents(30);
-        res.json(events);
-      } catch (err) {
-        console.error("[cta_events] failed to load", err);
-        res.status(500).json({ message: "Failed to load events" });
-      }
-    },
-  );
-
-  // Public config endpoint - exposes only public/safe configuration
-  app.get('/api/config/supabase', (_req, res) => {
-    const url = process.env.SUPABASE_URL || '';
-    const anonKey = process.env.SUPABASE_ANON_KEY || '';
-    const isConfigured = Boolean(url && anonKey);
-    res.json({ url, anonKey, isConfigured });
-  });
-
-  // Google Maps API key for address autocomplete (public key)
-  app.get('/api/config/google-maps', (_req, res) => {
-    res.json({
-      apiKey: process.env.GOOGLE_MAPS_API_KEY || ''
-    });
-  });
-
-  // Signup may create only the authenticated user's non-governed role.
-  registerUserProvisioningRoute(app, {
-    isAuthenticated: isHybridAuthenticated,
-    createUserProfile,
-    createUserReputation,
-    getUserRoles: (userId) => storage.getUserRoles(userId),
-    addUserRole: (entry) => storage.addUserRole(entry),
-  });
-
-  // Raw profile reads are self-only; public profile cards use DTO routes.
-  registerUserProfileRoute(app, {
-    isAuthenticated: isHybridAuthenticated,
-    getAuthenticatedUserId: getAuthUserId,
-    loadUserProfile: async (userId) => {
-      try {
-        const profile = await getUserProfile(userId);
-        if (profile) {
-          return profile;
-        }
-      } catch {
-        console.info(
-          "Supabase profile fetch unavailable; using PostgreSQL fallback",
-        );
-      }
-
-      const pgUser = await storage.getUser(userId);
-      if (!pgUser) {
-        return null;
-      }
-
-      const userRoles = await storage.getUserRoles(userId);
-      const primaryRole = userRoles.length > 0 ? userRoles[0].role : "investor";
-      const isPegasus = primaryRole.startsWith("pegasus_");
-
-      return {
-        id: pgUser.id,
-        user_id: pgUser.id,
-        primary_role: primaryRole,
-        display_name:
-          `${pgUser.firstName || ""} ${pgUser.lastName || ""}`.trim() ||
-          pgUser.email?.split("@")[0] ||
-          "User",
-        avatar_url: pgUser.profileImageUrl || undefined,
-        is_pegasus_badged: isPegasus || pgUser.role === "admin",
-        pegasus_role_type: isPegasus ? primaryRole : undefined,
-        created_at: pgUser.createdAt?.toISOString() || new Date().toISOString(),
-        updated_at: pgUser.updatedAt?.toISOString() || new Date().toISOString(),
-      };
-    },
-  });
-
-  // Update user profile (own profile only)
-  app.patch('/api/supabase/profile', isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: 'Unauthorized' });
-      }
-      
-      const { displayName, companyName, location, bio, avatarUrl } = req.body;
-      
-      const updates: Record<string, any> = {};
-      if (displayName !== undefined) updates.display_name = displayName;
-      if (companyName !== undefined) updates.company_name = companyName;
-      if (location !== undefined) updates.location = location;
-      if (bio !== undefined) updates.bio = bio;
-      if (avatarUrl !== undefined) updates.avatar_url = avatarUrl;
-      
-      const profile = await updateUserProfile(userId, updates);
-      res.json(profile);
-    } catch (error) {
-      console.error('Error updating profile:', error);
-      res.status(500).json({ message: 'Failed to update profile' });
-    }
-  });
-
-  // Admin: Assign/update user role
-  app.patch('/api/supabase/assign-role/:userId', isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const adminUserId = getAuthUserId(req);
-      if (!adminUserId) {
-        return res.status(401).json({ message: 'Unauthorized' });
-      }
-      
-      // Check if requester is admin
-      const adminProfile = await getUserProfile(adminUserId);
-      if (!adminProfile || adminProfile.primary_role !== 'admin') {
-        return res.status(403).json({ message: 'Forbidden: Admin access required' });
-      }
-      
-      const { userId } = req.params;
-      const { role, isPegasusBadged, pegasusRoleType } = req.body;
-      
-      const validRoles = [
-        'admin', 'pegasus_wholesaler', 'wholesaler', 
-        'pegasus_dreamscaper', 'dreamscaper', 
-        'investor', 'buyer_retail', 'buyer_investment'
-      ];
-      
-      if (role && !validRoles.includes(role)) {
-        return res.status(400).json({ message: 'Invalid role' });
-      }
-      
-      const updates: Record<string, any> = {};
-      if (role) updates.primary_role = role;
-      if (isPegasusBadged !== undefined) updates.is_pegasus_badged = isPegasusBadged;
-      if (pegasusRoleType !== undefined) updates.pegasus_role_type = pegasusRoleType;
-      
-      const profile = await updateUserProfile(userId, updates);
-      res.json(profile);
-    } catch (error) {
-      console.error('Error assigning role:', error);
-      res.status(500).json({ message: 'Failed to assign role' });
-    }
-  });
-
-  // Get user reputation from Supabase
-  app.get('/api/supabase/reputation/:userId', async (req, res) => {
-    try {
-      const { userId } = req.params;
-      const reputation = await getUserReputation(userId);
-      
-      if (!reputation) {
-        return res.status(404).json({ message: 'Reputation not found' });
-      }
-      
-      res.json(reputation);
-    } catch (error) {
-      console.error('Error fetching reputation:', error);
-      res.status(500).json({ message: 'Failed to fetch reputation' });
-    }
-  });
-
-  // Get user badges from Supabase
-  app.get('/api/supabase/badges/:userId', async (req, res) => {
-    try {
-      const { userId } = req.params;
-      const badges = await getUserBadges(userId);
-      res.json(badges);
-    } catch (error) {
-      console.error('Error fetching badges:', error);
-      res.status(500).json({ message: 'Failed to fetch badges' });
-    }
-  });
-
-  // ========== SUPABASE MARKETPLACE ROUTES ==========
-  // These routes use Supabase for data persistence
-  // Import case transformation utilities
-  const getSupabaseStorage = async () => {
-    const module = await import('./supabase-storage');
-    return {
-      storage: module.supabaseStorage,
-      toCamelCase: module.toCamelCase,
-      toSnakeCase: module.toSnakeCase
-    };
-  };
-
-  type LegacyParticipantSources = {
-    negotiations?: readonly any[];
-    offers?: readonly any[];
-    inquiries?: readonly any[];
-    capitalInvestments?: readonly any[];
-  };
-
-  type LegacyDealAccess = {
-    kind: LegacyDealKind;
-    record: any;
-    ownerId: string | null;
-    isOwner: boolean;
-    isStaff: boolean;
-    isParticipant: boolean;
-  };
-
-  const resolveLegacyDealAccess = async (
-    req: any,
-    userId: string,
-    dealType: string,
-    dealId: number,
-    sources: LegacyParticipantSources = {},
-  ): Promise<LegacyDealAccess | null> => {
-    const kind = normalizeLegacyDealType(dealType);
-    if (!kind || !Number.isSafeInteger(dealId) || dealId <= 0) {
-      return null;
-    }
-
-    let record: any;
-    if (kind === "wholesale") {
-      record = await storage.getWholesaleDeal(dealId);
-    } else if (kind === "capital") {
-      record = await storage.getCapitalProject(dealId);
-    } else {
-      record = await storage.getListing(dealId);
-    }
-    if (!record) {
-      return null;
-    }
-
-    const ownerId =
-      kind === "wholesale"
-        ? record.submittedBy
-        : kind === "capital"
-          ? record.createdBy
-          : record.submittedBy;
-    const isOwner = ownerId === userId;
-    const isStaff = await hasMarketflowStaffAccess(req, userId);
-
-    if (isOwner || isStaff) {
-      return {
-        kind,
-        record,
-        ownerId: ownerId || null,
-        isOwner,
-        isStaff,
-        isParticipant: false,
-      };
-    }
-
-    let negotiations = sources.negotiations;
-    if (negotiations === undefined) {
-      const negotiationGroups = await Promise.all(
-        getLegacyDealTypeAliases(dealType).map((alias) =>
-          storage.getDealNegotiations(alias, dealId),
-        ),
-      );
-      negotiations = negotiationGroups.flat();
-    }
-
-    let offers = sources.offers;
-    if (kind === "wholesale" && offers === undefined) {
-      offers = await storage.getWholesaleDealOffers(dealId);
-    }
-
-    let inquiries = sources.inquiries;
-    if (kind === "listing" && inquiries === undefined) {
-      inquiries = await storage.getListingInquiries(dealId);
-    }
-
-    let capitalInvestments = sources.capitalInvestments;
-    if (kind === "capital" && capitalInvestments === undefined) {
-      const [offersByInvestor, commitmentsByInvestor] = await Promise.all([
-        storage.getInvestmentOffersByInvestor(userId),
-        storage.getCommittedInvestmentsByInvestor(userId),
-      ]);
-      capitalInvestments = [
-        ...offersByInvestor.filter((offer) => offer.projectId === dealId),
-        ...commitmentsByInvestor.filter(
-          (commitment) => commitment.projectId === dealId,
-        ),
-      ];
-    }
-
-    return {
-      kind,
-      record,
-      ownerId: ownerId || null,
-      isOwner,
-      isStaff,
-      isParticipant: isLegacyDealParticipant(userId, {
-        negotiations,
-        offers,
-        inquiries,
-        capitalInvestments,
-      }),
-    };
-  };
-
-  const isPublicLegacyDeal = (access: LegacyDealAccess): boolean => {
-    if (access.kind === "wholesale") {
-      return isPublicWholesaleDeal(access.record);
-    }
-    if (access.kind === "capital") {
-      return isPublicCapitalProject(access.record);
-    }
-    return isPublicListing(access.record);
-  };
-
-  const canInitiateLegacyDealInteraction = (
-    access: LegacyDealAccess,
-    res: Response,
-  ): boolean =>
-    !access.isOwner &&
-    (access.isParticipant ||
-      access.isStaff ||
-      (res.locals.canAccessReviewedMarketflowInventory === true &&
-        isPublicLegacyDeal(access)));
-
-  const listingInquiryHandlers = createListingInquiryRouteHandlers({
-    getAuthUserId,
-    hasReviewedInventoryAccess: (res) =>
-      res.locals.canAccessReviewedMarketflowInventory === true,
-    getListing: (listingId) => storage.getListing(listingId),
-    canInitiateInquiry: async (req, res, userId, listingId) => {
-      const access = await resolveLegacyDealAccess(
-        req,
-        userId,
-        "listing",
-        listingId,
-      );
-      return Boolean(
-        access && canInitiateLegacyDealInteraction(access, res),
-      );
-    },
-    createListingInquiry: (inquiry) =>
-      storage.createListingInquiry(inquiry),
-  });
-
-  const getPublicMarketplaceItem = async (
-    rawType: unknown,
-    rawId: unknown,
-  ): Promise<Record<string, unknown> | null> => {
-    const type =
-      typeof rawType === "string" ? rawType.trim().toLowerCase() : "";
-    const id = Number(rawId);
-    if (!Number.isSafeInteger(id) || id <= 0) {
-      return null;
-    }
-
-    if (type === "wholesale" || type === "wholesale_deal") {
-      const deal = await storage.getWholesaleDeal(id);
-      return deal && isPublicWholesaleDeal(deal)
-        ? toPublicWholesaleDeal(deal)
-        : null;
-    }
-    if (type === "capital" || type === "capital_project") {
-      const project = await storage.getCapitalProject(id);
-      return project && isPublicCapitalProject(project)
-        ? toPublicCapitalProject(project)
-        : null;
-    }
-    if (type === "listing") {
-      const listing = await storage.getListing(id);
-      return listing && isPublicListing(listing)
-        ? toPublicListing(listing)
-        : null;
-    }
-    if (type === "retail" || type === "retail_listing") {
-      const listing = await storage.getRetailListing(id);
-      return listing &&
-        (listing.status === "active" || listing.status === "coming_soon")
-        ? toPublicRetailListing(listing)
-        : null;
-    }
-    return null;
-  };
-
-  const savedItemHandlers = createSavedItemRouteHandlers({
-    getUserId: getAuthUserId,
-    canAccessItemType: (res, itemType) =>
-      canAccessMarketflowItemType(res, itemType),
-    saveItem: async (userId, itemType, itemId) => {
-      const { storage: savedStorage, toCamelCase } =
-        await getSupabaseStorage();
-      const savedItem = await savedStorage.saveItem(
-        userId,
-        itemType,
-        itemId,
-      );
-      return savedItem ? toCamelCase(savedItem) : null;
-    },
-    removeItem: async (userId, itemType, itemId) => {
-      const { storage: savedStorage } = await getSupabaseStorage();
-      return savedStorage.unsaveItem(userId, itemType, itemId);
-    },
-    logError: (message, error) => console.error(message, error),
-  });
-
-  // --- Saved Items ---
-  app.get('/api/supabase/saved-items', isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: 'User not authenticated' });
-      }
-      const { type } = req.query;
-      const { storage, toCamelCase } = await getSupabaseStorage();
-      const items = await storage.getSavedItems(userId, type as any);
-      const visibleItems = items.filter((item: any) =>
-        canAccessMarketflowItemType(
-          res,
-          item.item_type ?? item.itemType ?? type,
-        ),
-      );
-      res.json(toCamelCase(visibleItems));
-    } catch (error) {
-      console.error('Error fetching saved items:', error);
-      res.status(500).json({ message: 'Failed to fetch saved items' });
-    }
-  });
-
-  app.post('/api/supabase/saved-items', isHybridAuthenticated, loadMarketflowInventoryAccessContext, savedItemHandlers.post);
-
-  app.delete('/api/supabase/saved-items', isHybridAuthenticated, loadMarketflowInventoryAccessContext, savedItemHandlers.remove);
-
-  app.get('/api/supabase/saved-items/check', isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: 'User not authenticated' });
-      }
-      const { itemType, itemId } = req.query;
-      
-      if (!itemType || !itemId) {
-        return res.status(400).json({ message: 'Missing itemType or itemId' });
-      }
-      if (!canAccessMarketflowItemType(res, itemType)) {
-        return res.status(404).json({ message: 'Item not found' });
-      }
-      
-      const { storage } = await getSupabaseStorage();
-      const isSaved = await storage.isItemSaved(userId, itemType as any, itemId as string);
-      res.json({ isSaved });
-    } catch (error) {
-      console.error('Error checking saved status:', error);
-      res.status(500).json({ message: 'Failed to check saved status' });
-    }
-  });
-
-  // --- JV Requests (Supabase) ---
-  app.post('/api/supabase/jv-requests', isHybridAuthenticated, async (req: any, res) => {
-    return res.status(410).json({
-      message: 'This endpoint has moved to /api/marketplace/jv-requests.',
-    });
-  });
-
-  app.get('/api/supabase/jv-requests', isHybridAuthenticated, async (req: any, res) => {
-    return res.status(410).json({
-      message:
-        'This endpoint has moved to /api/marketplace/wholesaler/jv-requests.',
-    });
-  });
-
-  app.patch('/api/supabase/jv-requests/:id', isHybridAuthenticated, async (req: any, res) => {
-    return res.status(410).json({
-      message: 'This endpoint has moved to /api/marketplace/jv-requests/:id.',
-    });
-  });
-
-  // --- Capital Projects (Supabase) ---
-  app.get('/api/supabase/capital-projects', isHybridAuthenticated, requireMarketflowInventoryAccess, async (req: any, res) => {
-    try {
-      const { storage } = await getSupabaseStorage();
-      const projects = await storage.getPublicCapitalProjects();
-      res.json(
-        projects
-          .map(toPublicSupabaseCapitalProject)
-          .filter((project) => project !== null),
-      );
-    } catch (error) {
-      console.error('Error fetching capital projects:', error);
-      res.status(500).json({ message: 'Failed to fetch capital projects' });
-    }
-  });
-
-  app.get('/api/supabase/capital-projects/my', isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: 'User not authenticated' });
-      }
-      const { storage, toCamelCase } = await getSupabaseStorage();
-      const projects = await storage.getCapitalProjectsByUser(userId);
-      res.json(toCamelCase(projects));
-    } catch (error) {
-      console.error('Error fetching user projects:', error);
-      res.status(500).json({ message: 'Failed to fetch user projects' });
-    }
-  });
-
-  app.get('/api/supabase/capital-projects/:id', isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { storage } = await getSupabaseStorage();
-      const project = await storage.getCapitalProject(id);
-
-      const publicProject = project
-        ? toPublicSupabaseCapitalProject(project)
-        : null;
-      if (!publicProject) {
-        return res.status(404).json({ message: 'Project not found' });
-      }
-
-      res.json(publicProject);
-    } catch (error) {
-      console.error('Error fetching capital project:', error);
-      res.status(500).json({ message: 'Failed to fetch capital project' });
-    }
-  });
-
-  app.post('/api/supabase/capital-projects', isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const identity = resolveSupabaseMarketplaceIdentity(req);
-      if (!identity) {
-        return res.status(401).json({ message: 'User not authenticated' });
-      }
-      const { storage, toCamelCase } = await getSupabaseStorage();
-      const body = req.body ?? {};
-      const title =
-        typeof body.title === 'string' ? body.title.trim().slice(0, 255) : '';
-      const structure =
-        typeof body.structure === 'string'
-          ? body.structure.trim().toUpperCase()
-          : '';
-      const fundingGoal = Number(body.fundingGoal);
-      const minInvestment =
-        body.minInvestment == null ? undefined : Number(body.minInvestment);
-
-      if (
-        !title ||
-        !['EQUITY', 'DEBT', 'HYBRID'].includes(structure) ||
-        !Number.isFinite(fundingGoal) ||
-        fundingGoal <= 0 ||
-        (minInvestment !== undefined &&
-          (!Number.isFinite(minInvestment) || minInvestment < 0))
-      ) {
-        return res.status(400).json({ message: 'Invalid project details' });
-      }
-
-      const cleanText = (value: unknown, maxLength: number) =>
-        typeof value === 'string' && value.trim()
-          ? value.trim().slice(0, maxLength)
-          : undefined;
-      const photos = Array.isArray(body.photos)
-        ? body.photos
-            .filter((photo: unknown): photo is string => typeof photo === 'string')
-            .slice(0, 30)
-        : undefined;
-
-      const project = requireCreatedSupabaseMarketplaceRecord(
-        await storage.createCapitalProject({
-          owner_id: identity.kind === 'supabase' ? identity.userId : null,
-          external_owner_id:
-            identity.kind === 'external' ? identity.userId : null,
-          title,
-          description: cleanText(body.description, 10_000),
-          location: cleanText(body.location, 255),
-          property_type: cleanText(body.propertyType, 100),
-          structure: structure as 'EQUITY' | 'DEBT' | 'HYBRID',
-          funding_goal: fundingGoal,
-          min_investment: minInvestment,
-          projected_return: cleanText(body.projectedReturn, 100),
-          hold_period: cleanText(body.holdPeriod, 100),
-          photos,
-          status: 'ACTIVE',
-          is_public: false,
-        }),
-        'Failed to create project',
-      );
-      
-      res.status(201).json(toCamelCase(project));
-    } catch (error) {
-      console.error('Error creating capital project:', error);
-      res.status(500).json({ message: 'Failed to create capital project' });
-    }
-  });
-
-  const capitalProjectOwnerUpdateSchema = insertCapitalProjectSchema
-    .pick({
-      title: true,
-      fundingGoal: true,
-      minInvestment: true,
-      projectedReturn: true,
-      description: true,
-    })
-    .partial()
-    .strict();
-
-  // Update capital project (owner only) - uses PostgreSQL storage
-  app.patch('/api/supabase/capital-projects/:id', isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: 'User not authenticated' });
-      }
-      const projectId = Number(req.params.id);
-      if (!Number.isSafeInteger(projectId) || projectId <= 0) {
-        return res.status(400).json({ message: 'Invalid project ID' });
-      }
-      
-      // Check ownership using PostgreSQL storage
-      const existingProject = await storage.getCapitalProject(projectId);
-      if (!existingProject) {
-        return res.status(404).json({ message: 'Project not found' });
-      }
-      if (existingProject.createdBy !== userId) {
-        return res.status(403).json({ message: 'Not authorized to edit this project' });
-      }
-      
-      const updateResult = capitalProjectOwnerUpdateSchema.safeParse(req.body);
-      if (!updateResult.success) {
-        return res.status(400).json({
-          message: fromError(updateResult.error).toString(),
-        });
-      }
-      
-      const updatedProject = await storage.updateCapitalProject(projectId, updateResult.data);
-      res.json(updatedProject);
-    } catch (error) {
-      console.error('Error updating capital project:', error);
-      res.status(500).json({ message: 'Failed to update capital project' });
-    }
-  });
-
-  // --- Capital Commitments (Supabase) ---
-  app.post('/api/supabase/capital-commitments', isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
-    try {
-      const identity = resolveSupabaseMarketplaceIdentity(req);
-      if (!identity) {
-        return res.status(401).json({ message: 'User not authenticated' });
-      }
-      if (res.locals.canAccessReviewedMarketflowInventory !== true) {
-        return res.status(404).json({ message: 'Project not found' });
-      }
-      const { projectId, structurePreference, notes } = req.body;
-      const amount = Number(req.body?.amount);
-      
-      if (!projectId || !Number.isFinite(amount) || amount <= 0) {
-        return res.status(400).json({ message: 'Missing projectId or amount' });
-      }
-      
-      const { storage } = await getSupabaseStorage();
-      
-      const project = await storage.getCapitalProject(projectId);
-      const publicProject = project
-        ? toPublicSupabaseCapitalProject(project)
-        : null;
-      const ownerId = project?.owner_id || project?.external_owner_id || null;
-      if (!project || !publicProject || !ownerId || ownerId === identity.userId) {
-        return res.status(404).json({ message: 'Project not found' });
-      }
-      
-      const commitment = requireCreatedSupabaseMarketplaceRecord(
-        await storage.createCapitalCommitment({
-          project_id: projectId,
-          ...toCapitalCommitmentIdentityColumns(identity),
-          amount,
-          structure_preference: structurePreference,
-          notes,
-          status: 'pending'
-        }),
-        'Failed to create commitment',
-      );
-
-      await storage.createNotification({
-        user_id: project.owner_id || null,
-        external_user_id: project.external_owner_id || null,
-        type: 'capital_commitment',
-        title: 'New Investment Commitment',
-        message: `An investor has committed $${amount.toLocaleString()} to your project`,
-        link: `/marketplace/dreamscaper/projects/${projectId}`
-      });
-      
-      res.status(201).json(toCapitalCommitmentDashboardDto(commitment));
-    } catch (error) {
-      console.error('Error creating capital commitment:', error);
-      res.status(500).json({ message: 'Failed to create commitment' });
-    }
-  });
-
-  app.get('/api/supabase/capital-commitments', isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const identity = resolveSupabaseMarketplaceIdentity(req);
-      if (!identity) {
-        return res.status(401).json({ message: 'User not authenticated' });
-      }
-      const { storage } = await getSupabaseStorage();
-      const commitments = await storage.getCapitalCommitmentsByUser(identity);
-      res.json(commitments.map(toCapitalCommitmentDashboardDto));
-    } catch (error) {
-      console.error('Error fetching commitments:', error);
-      res.status(500).json({ message: 'Failed to fetch commitments' });
-    }
-  });
-
-  app.get('/api/supabase/capital-projects/:id/commitments', isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: 'Unauthorized' });
-      }
-
-      const { id } = req.params;
-      const { storage: supaStorage, toCamelCase } = await getSupabaseStorage();
-      const project = await supaStorage.getCapitalProject(id);
-      if (!project) {
-        return res.status(404).json({ message: 'Project not found' });
-      }
-
-      const commitments = await supaStorage.getCapitalCommitmentsByProject(id);
-      const isStaff = await hasMarketflowStaffAccess(req, userId);
-      const participantCommitments = commitments.filter((commitment: any) =>
-        [commitment.investor_id, commitment.external_investor_id].includes(
-          userId,
-        ),
-      );
-      if (
-        !canReadPrivateDealData({
-          userId,
-          ownerId: project.owner_id,
-          participantIds: participantCommitments.map(
-            (commitment: any) =>
-              commitment.investor_id || commitment.external_investor_id,
-          ),
-          isStaff,
-        })
-      ) {
-        return res.status(404).json({ message: 'Project not found' });
-      }
-
-      const visibleCommitments =
-        isStaff || project.owner_id === userId
-          ? commitments
-          : participantCommitments;
-      res.json(toCamelCase(visibleCommitments));
-    } catch (error) {
-      console.error('Error fetching project commitments:', error);
-      res.status(500).json({ message: 'Failed to fetch commitments' });
-    }
-  });
-
-  // --- Wholesale Deals (Supabase) ---
-  app.get('/api/supabase/wholesale-deals', isHybridAuthenticated, requireMarketflowInventoryAccess, async (req: any, res) => {
-    try {
-      const { storage } = await getSupabaseStorage();
-      const deals = await storage.getPublicWholesaleDeals();
-      res.json(
-        deals
-          .map(toPublicSupabaseWholesaleDeal)
-          .filter((deal) => deal !== null),
-      );
-    } catch (error) {
-      console.error('Error fetching wholesale deals:', error);
-      res.status(500).json({ message: 'Failed to fetch wholesale deals' });
-    }
-  });
-
-  app.get('/api/supabase/wholesale-deals/my', isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: 'User not authenticated' });
-      }
-      const { storage, toCamelCase } = await getSupabaseStorage();
-      const deals = await storage.getWholesaleDealsByUser(userId);
-      res.json(toCamelCase(deals));
-    } catch (error) {
-      console.error('Error fetching user deals:', error);
-      res.status(500).json({ message: 'Failed to fetch user deals' });
-    }
-  });
-
-  app.get('/api/supabase/wholesale-deals/:id', isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { storage } = await getSupabaseStorage();
-      const deal = await storage.getWholesaleDeal(id);
-
-      const publicDeal = deal ? toPublicSupabaseWholesaleDeal(deal) : null;
-      if (!publicDeal) {
-        return res.status(404).json({ message: 'Deal not found' });
-      }
-
-      res.json(publicDeal);
-    } catch (error) {
-      console.error('Error fetching wholesale deal:', error);
-      res.status(500).json({ message: 'Failed to fetch wholesale deal' });
-    }
-  });
-
-  app.post('/api/supabase/wholesale-deals', isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const identity = resolveSupabaseMarketplaceIdentity(req);
-      if (!identity) {
-        return res.status(401).json({ message: 'User not authenticated' });
-      }
-      const { storage, toCamelCase } = await getSupabaseStorage();
-      const body = req.body ?? {};
-      const address =
-        typeof body.address === 'string' ? body.address.trim().slice(0, 500) : '';
-      const arv = Number(body.arv);
-      const askingPrice = Number(body.askingPrice);
-      const repairEstimate = Number(body.repairEstimate);
-      const assignmentFee = Number(body.assignmentFee);
-      if (
-        !address ||
-        ![arv, askingPrice, repairEstimate, assignmentFee].every(
-          (value) => Number.isFinite(value) && value >= 0,
-        )
-      ) {
-        return res.status(400).json({ message: 'Invalid deal details' });
-      }
-
-      const cleanText = (value: unknown, maxLength: number) =>
-        typeof value === 'string' && value.trim()
-          ? value.trim().slice(0, maxLength)
-          : undefined;
-      const photos = Array.isArray(body.photos)
-        ? body.photos
-            .filter((photo: unknown): photo is string => typeof photo === 'string')
-            .slice(0, 30)
-        : undefined;
-
-      const deal = requireCreatedSupabaseMarketplaceRecord(
-        await storage.createWholesaleDeal({
-          wholesaler_id:
-            identity.kind === 'supabase' ? identity.userId : null,
-          external_wholesaler_id:
-            identity.kind === 'external' ? identity.userId : null,
-          address,
-          city: cleanText(body.city, 100),
-          state: cleanText(body.state, 50),
-          zip_code: cleanText(body.zipCode, 20),
-          property_type: cleanText(body.propertyType, 100),
-          arv,
-          asking_price: askingPrice,
-          repair_estimate: repairEstimate,
-          assignment_fee: assignmentFee,
-          photos,
-          occupancy: cleanText(body.occupancy, 100),
-          close_timeline: cleanText(body.closeTimeline, 100),
-          notes: cleanText(body.notes, 10_000),
-          status: 'Under Review',
-          is_public: false,
-          raising_capital: false,
-        }),
-        'Failed to create deal',
-      );
-      
-      res.status(201).json(toCamelCase(deal));
-    } catch (error) {
-      console.error('Error creating wholesale deal:', error);
-      res.status(500).json({ message: 'Failed to create wholesale deal' });
-    }
-  });
-
-  const wholesaleDealOwnerUpdateSchema = insertWholesaleDealSchema
-    .pick({
-      askingPrice: true,
-      arv: true,
-      estimatedRepairs: true,
-      description: true,
-      assignmentFee: true,
-    })
-    .partial()
-    .strict();
-
-  // Update wholesale deal (owner only)
-  app.patch('/api/supabase/wholesale-deals/:id', isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: 'User not authenticated' });
-      }
-      const dealId = Number(req.params.id);
-      if (!Number.isSafeInteger(dealId) || dealId <= 0) {
-        return res.status(400).json({ message: 'Invalid deal ID' });
-      }
-      
-      // Check ownership using PostgreSQL storage
-      const existingDeal = await storage.getWholesaleDeal(dealId);
-      if (!existingDeal) {
-        return res.status(404).json({ message: 'Deal not found' });
-      }
-      if (existingDeal.submittedBy !== userId) {
-        return res.status(403).json({ message: 'Not authorized to edit this deal' });
-      }
-      
-      const updateResult = wholesaleDealOwnerUpdateSchema.safeParse(req.body);
-      if (!updateResult.success) {
-        return res.status(400).json({
-          message: fromError(updateResult.error).toString(),
-        });
-      }
-      
-      const updatedDeal = await storage.updateWholesaleDeal(dealId, updateResult.data);
-      res.json(updatedDeal);
-    } catch (error) {
-      console.error('Error updating wholesale deal:', error);
-      res.status(500).json({ message: 'Failed to update wholesale deal' });
-    }
-  });
-
-  // --- Wholesale Deal Offers (Supabase) ---
-  app.post('/api/supabase/wholesale-offers', isHybridAuthenticated, async (req: any, res) => {
-    return res.status(501).json({
-      message:
-        'Legacy wholesale offers are read-only. Use MarketFlow Offer Studio for persisted offers.',
-    });
-  });
-
-  app.get('/api/supabase/wholesale-deals/:dealId/negotiations', isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: 'Unauthorized' });
-      }
-
-      const { dealId } = req.params;
-      const { storage: supaStorage, toCamelCase } = await getSupabaseStorage();
-      const deal = await supaStorage.getWholesaleDeal(dealId);
-      if (!deal) {
-        return res.status(404).json({ message: 'Deal not found' });
-      }
-
-      const isStaff = await hasMarketflowStaffAccess(req, userId);
-      const hasDealWideAccess = isStaff || deal.wholesaler_id === userId;
-      const negotiations = hasDealWideAccess
-        ? await supaStorage.getWholesaleDealNegotiations(dealId)
-        : await supaStorage.getWholesaleDealNegotiationsByParticipant(
-            dealId,
-            userId,
-          );
-      if (
-        !canReadPrivateDealData({
-          userId,
-          ownerId: deal.wholesaler_id,
-          participantIds: negotiations.length > 0 ? [userId] : [],
-          isStaff,
-        })
-      ) {
-        return res.status(404).json({ message: 'Deal not found' });
-      }
-
-      res.json(toCamelCase(negotiations || []));
-    } catch (error) {
-      console.error('Error fetching negotiations:', error);
-      res.json([]);
-    }
-  });
-
-  app.patch('/api/supabase/wholesale-offers/:id/status', isHybridAuthenticated, async (_req: any, res) => {
-    return res.status(501).json({
-      message:
-        'Legacy wholesale offers are read-only. Use MarketFlow Offer Studio for persisted offer responses.',
-    });
-  });
-
-  // --- Listings (Supabase) ---
-  app.get('/api/supabase/listings', isHybridAuthenticated, requireMarketflowInventoryAccess, async (req: any, res) => {
-    try {
-      const { storage } = await getSupabaseStorage();
-      const listings = await storage.getPublicListings();
-      res.json(
-        listings
-          .map(toPublicSupabaseListing)
-          .filter((listing) => listing !== null),
-      );
-    } catch (error) {
-      console.error('Error fetching listings:', error);
-      res.status(500).json({ message: 'Failed to fetch listings' });
-    }
-  });
-
-  app.get('/api/supabase/listings/:id', isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
-    try {
-      const { id } = req.params;
-      const { storage } = await getSupabaseStorage();
-      const listing = await storage.getListing(id);
-
-      const publicListing = listing
-        ? toPublicSupabaseListing(listing)
-        : null;
-      if (!publicListing) {
-        return res.status(404).json({ message: 'Listing not found' });
-      }
-
-      res.json(publicListing);
-    } catch (error) {
-      console.error('Error fetching listing:', error);
-      res.status(500).json({ message: 'Failed to fetch listing' });
-    }
-  });
-
-  // --- Unified Deal Context Endpoint ---
-  // Returns normalized deal data based on dealType for any deal/project/listing
-  // This is the single source of truth for all canonical forms
-  app.get(
-    "/api/deals/LISTING/:id/context",
-    isHybridAuthenticated,
-    loadMarketflowInventoryAccessContext,
-    listingInquiryHandlers.getContext,
-  );
-
-  app.get('/api/deals/:dealType/:id/context', isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const { dealType, id } = req.params;
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: 'Unauthorized' });
-      }
-      
-      let context: any = null;
-      
-      if (dealType === 'WHOLESALE_ASSIGNMENT' || dealType === 'wholesale') {
-        // Fetch wholesale deal from PostgreSQL storage
-        const deal = await storage.getWholesaleDeal(Number(id));
-        if (!deal) {
-          return res.status(404).json({ message: 'Deal not found' });
-        }
-        
-        // Fetch existing offers for this deal
-        const offers = await storage.getWholesaleDealOffers(Number(id));
-        const isStaff = await hasMarketflowStaffAccess(req, userId);
-        const participantOffers = offers.filter(
-          (offer: any) => offer.buyerId === userId,
-        );
-        if (
-          !canReadPrivateDealData({
-            userId,
-            ownerId: deal.submittedBy,
-            participantIds: participantOffers.map(
-              (offer: any) => offer.buyerId,
-            ),
-            isStaff,
-          })
-        ) {
-          return res.status(404).json({ message: 'Deal not found' });
-        }
-        const visibleOffers =
-          isStaff || deal.submittedBy === userId ? offers : participantOffers;
-        
-        context = {
-          dealType: 'WHOLESALE_ASSIGNMENT',
-          dealId: deal.id,
-          deal: {
-            id: deal.id,
-            propertyAddress: deal.propertyAddress,
-            city: deal.city,
-            state: deal.state,
-            zipCode: deal.zipCode,
-            propertyType: deal.propertyType,
-            bedrooms: deal.bedrooms,
-            bathrooms: deal.bathrooms,
-            sqft: deal.sqft,
-            yearBuilt: deal.yearBuilt,
-            images: deal.images,
-          },
-          // Wholesale-specific terms
-          wholesaleTerms: {
-            contractPrice: deal.contractPrice,
-            assignmentFee: deal.assignmentFee,
-            maxAssignmentFee: deal.maxAssignmentFee,
-            arv: deal.arv,
-            repairs: deal.estimatedRepairs,
-            closingDate: deal.closingDate,
-          },
-          // Existing offers/counters
-          existingOffers: visibleOffers.map((o: any) => ({
-            id: o.id,
-            buyerId: o.buyerId,
-            offerAmount: o.offerAmount,
-            earnestMoney: o.earnestMoney,
-            closingTimeline: o.closingTimeline,
-            status: o.status,
-            createdAt: o.createdAt,
-          })),
-          // User's existing offers on this deal
-          userOffers: participantOffers,
-          // Permissions
-          permissions: {
-            canOffer: userId !== deal.submittedBy,
-            canCounter: userId !== deal.submittedBy,
-            canRequestJV: userId !== deal.submittedBy,
-            isOwner: userId === deal.submittedBy,
-          },
-          submittedBy: deal.submittedBy,
-          status: deal.status,
-        };
-      } else if (dealType === 'CAPITAL_RAISE' || dealType === 'capital') {
-        // Fetch capital project
-        const project = await storage.getCapitalProject(Number(id));
-        if (!project) {
-          return res.status(404).json({ message: 'Project not found' });
-        }
-        
-        // Fetch existing investment offers for this project
-        const commitments = await storage.getInvestmentOffersByProject(Number(id));
-        const isStaff = await hasMarketflowStaffAccess(req, userId);
-        const participantCommitments = commitments.filter(
-          (commitment: any) => commitment.investorId === userId,
-        );
-        if (
-          !canReadPrivateDealData({
-            userId,
-            ownerId: project.createdBy,
-            participantIds: participantCommitments.map(
-              (commitment: any) => commitment.investorId,
-            ),
-            isStaff,
-          })
-        ) {
-          return res.status(404).json({ message: 'Project not found' });
-        }
-        const visibleCommitments =
-          isStaff || project.createdBy === userId
-            ? commitments
-            : participantCommitments;
-        
-        context = {
-          dealType: 'CAPITAL_RAISE',
-          dealId: project.id,
-          deal: {
-            id: project.id,
-            title: project.title,
-            description: project.description,
-            location: project.location,
-            images: project.images,
-          },
-          // Capital-specific terms
-          capitalTerms: {
-            fundingGoal: project.fundingGoal,
-            amountRaised: project.amountRaised,
-            remaining: project.fundingGoal - (project.amountRaised || 0),
-            minInvestment: project.minInvestment,
-            maxInvestmentPerInvestor: project.maxInvestmentPerInvestor,
-            structure: project.structure,
-            projectedReturn: project.projectedReturn,
-            holdPeriod: project.holdPeriod,
-            // Debt terms
-            askingInterestRate: project.askingInterestRate,
-            askingLoanDuration: project.askingLoanDuration,
-            askingPoints: project.askingPoints,
-            // Equity terms
-            askingEquityPercent: project.askingEquityPercent,
-            askingProfitSplit: project.askingProfitSplit,
-            askingPreferredReturn: project.askingPreferredReturn,
-            // Hybrid terms
-            askingDebtPortion: project.askingDebtPortion,
-            askingEquityPortion: project.askingEquityPortion,
-          },
-          capitalStack: {
-            purchasePrice: project.purchasePrice,
-            rehabBudget: project.rehabBudget,
-            softCosts: project.softCosts,
-            operatorEquity: project.operatorEquity,
-            contingency: project.contingency,
-            seniorLoan: project.seniorLoan,
-            projectedARV: project.projectedARV,
-            projectedProfit: project.projectedProfit,
-          },
-          // Existing commitments
-          existingCommitments: visibleCommitments.map((c: any) => ({
-            id: c.id,
-            investorId: c.investorId,
-            amount: c.amount,
-            structure: c.structure,
-            status: c.status,
-            createdAt: c.createdAt,
-          })),
-          // User's existing commitments
-          userCommitments: participantCommitments,
-          // Permissions
-          permissions: {
-            canInvest: userId !== project.createdBy,
-            canCounter: userId !== project.createdBy,
-            isOwner: userId === project.createdBy,
-          },
-          createdBy: project.createdBy,
-          status: project.status,
-        };
-      } else {
-        return res.status(400).json({
-          message:
-            "Invalid dealType. Must be WHOLESALE_ASSIGNMENT or CAPITAL_RAISE",
-        });
-      }
-      
-      res.json(context);
-    } catch (error) {
-      console.error('Error fetching deal context:', error);
-      res.status(500).json({ message: 'Failed to fetch deal context' });
-    }
-  });
-
-  // --- Buyer Offers (Supabase) ---
-  app.post('/api/supabase/buyer-offers', isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
-    try {
-      const identity = resolveSupabaseMarketplaceIdentity(req);
-      if (!identity) {
-        return res.status(401).json({ message: 'User not authenticated' });
-      }
-      if (res.locals.canAccessReviewedMarketflowInventory !== true) {
-        return res.status(404).json({ message: 'Listing not found' });
-      }
-      const { listingId, financingType } = req.body;
-      const offerAmount = Number(req.body?.offerAmount);
-      
-      if (!listingId || !Number.isFinite(offerAmount) || offerAmount <= 0) {
-        return res.status(400).json({ message: 'Missing listingId or offerAmount' });
-      }
-      
-      const { storage } = await getSupabaseStorage();
-      
-      const listing = await storage.getListing(listingId);
-      const publicListing = listing ? toPublicSupabaseListing(listing) : null;
-      const ownerId = listing?.owner_id || listing?.external_owner_id || null;
-      if (!listing || !publicListing || !ownerId || ownerId === identity.userId) {
-        return res.status(404).json({ message: 'Listing not found' });
-      }
-
-      const contingencies = Array.isArray(req.body?.contingencies)
-        ? req.body.contingencies
-            .filter((item: unknown): item is string => typeof item === 'string')
-            .slice(0, 20)
-        : undefined;
-      const message =
-        typeof req.body?.message === 'string'
-          ? req.body.message.trim().slice(0, 5_000)
-          : undefined;
-      
-      const offer = requireCreatedSupabaseMarketplaceRecord(
-        await storage.createBuyerOffer({
-          listing_id: listingId,
-          ...toBuyerOfferIdentityColumns(identity),
-          offer_amount: offerAmount,
-          financing_type: financingType,
-          contingencies,
-          message,
-          status: 'pending'
-        }),
-        'Failed to create offer',
-      );
-
-      await storage.createNotification({
-        user_id: listing.owner_id || null,
-        external_user_id: listing.external_owner_id || null,
-        type: 'buyer_offer',
-        title: 'New Offer Received',
-        message: `You received an offer of $${offerAmount.toLocaleString()} on your listing`,
-        link: `/marketplace/listings/${listingId}`
-      });
-      
-      res.status(201).json(toBuyerOfferDashboardDto(offer));
-    } catch (error) {
-      console.error('Error creating buyer offer:', error);
-      res.status(500).json({ message: 'Failed to create offer' });
-    }
-  });
-
-  app.get('/api/supabase/buyer-offers', isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const identity = resolveSupabaseMarketplaceIdentity(req);
-      if (!identity) {
-        return res.status(401).json({ message: 'User not authenticated' });
-      }
-      const { storage } = await getSupabaseStorage();
-      const offers = await storage.getBuyerOffersByUser(identity);
-      res.json(offers.map(toBuyerOfferDashboardDto));
-    } catch (error) {
-      console.error('Error fetching buyer offers:', error);
-      res.status(500).json({ message: 'Failed to fetch offers' });
-    }
-  });
-
-  // --- Negotiations (Accept/Counter for deals) ---
-  app.post('/api/negotiations/accept', isHybridAuthenticated, async (req: any, res) => {
-    return res.status(501).json({
-      message:
-        'This legacy negotiation action is unavailable. Use MarketFlow Offer Studio for persisted offers.',
-    });
-  });
-
-  app.post('/api/negotiations/counter', isHybridAuthenticated, async (req: any, res) => {
-    return res.status(501).json({
-      message:
-        'This legacy negotiation action is unavailable. Use MarketFlow Offer Studio for persisted offers.',
-    });
-  });
-
-  // --- Notifications (Supabase) ---
-  app.get('/api/supabase/notifications', isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: 'User not authenticated' });
-      }
-      const { unreadOnly } = req.query;
-      const { storage, toCamelCase } = await getSupabaseStorage();
-      const notifications = await storage.getNotifications(userId, unreadOnly === 'true');
-      res.json(toCamelCase(notifications));
-    } catch (error) {
-      console.error('Error fetching notifications:', error);
-      res.status(500).json({ message: 'Failed to fetch notifications' });
-    }
-  });
-
-  app.patch('/api/supabase/notifications/:id/read', isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const { id } = req.params;
-      const { storage } = await getSupabaseStorage();
-      const success = await storage.markNotificationRead(id);
-      res.json({ success });
-    } catch (error) {
-      console.error('Error marking notification read:', error);
-      res.status(500).json({ message: 'Failed to mark notification read' });
-    }
-  });
-
-  app.post('/api/supabase/notifications/mark-all-read', isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: 'User not authenticated' });
-      }
-      const { storage } = await getSupabaseStorage();
-      const success = await storage.markAllNotificationsRead(userId);
-      res.json({ success });
-    } catch (error) {
-      console.error('Error marking all notifications read:', error);
-      res.status(500).json({ message: 'Failed to mark notifications read' });
-    }
-  });
-
-  // Auth routes
-  app.get('/api/auth/user', isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const userEmail = (req.user.claims.email || "").toLowerCase();
-      
-      // Check if user is in admin email allowlist
-      const isAdminEmail = ADMIN_EMAILS.includes(userEmail);
-      
-      const supabaseProfile = await getUserProfile(userId);
-      
-      if (supabaseProfile) {
-        const role = supabaseProfile.primary_role;
-        const isPegasus = supabaseProfile.is_pegasus_badged || role?.startsWith('pegasus_');
-        
-        return res.json({
-          id: userId,
-          email: req.user.claims.email || supabaseProfile.display_name,
-          firstName: supabaseProfile.display_name?.split(' ')[0] || '',
-          lastName: supabaseProfile.display_name?.split(' ').slice(1).join(' ') || '',
-          profileImageUrl: supabaseProfile.avatar_url,
-          displayName: supabaseProfile.display_name,
-          primaryRole: role,
-          isPegasusBadged: isPegasus,
-          roles: [role],
-          isStaff: role === 'admin' || isPegasus || isAdminEmail,
-          isAdmin: isAdminEmail || role === 'admin',
-          isInvestor: role === 'investor',
-          isWholesaler: role === 'wholesaler' || role === 'pegasus_wholesaler',
-          isBuyer: role === 'buyer_retail' || role === 'buyer_investment',
-          isDreamscaper: role === 'dreamscaper' || role === 'pegasus_dreamscaper',
-          supabaseAuth: true
-        });
-      }
-      
-      const user = await storage.getUser(userId);
-      const roles = await storage.getUserRoles(userId);
-      const roleNames = roles.map(r => r.role);
-      const isStaff = roleNames.some(r => STAFF_ROLES.includes(r as any)) || isAdminEmail;
-      const isDreamscaper = roleNames.includes("dreamscaper") || roleNames.includes("operator");
-      
-      res.json({ 
-        ...user,
-        id: userId, // Always include id from claims
-        email: userEmail || user?.email || req.user.claims.email,
-        firstName: req.user.claims.first_name || user?.firstName || '',
-        lastName: req.user.claims.last_name || user?.lastName || '',
-        roles: roleNames,
-        isStaff,
-        isAdmin: isAdminEmail || roleNames.includes("admin"),
-        isInvestor: roleNames.includes("investor"),
-        isWholesaler: roleNames.includes("wholesaler"),
-        isBuyer: roleNames.includes("buyer"),
-        isDreamscaper,
-        supabaseAuth: false
-      });
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
-
-  // Dealflow stats route for authenticated users
-  app.get('/api/dealflow/stats', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      
-      // Get user's saved deals (liked)
-      const savedDeals = await storage.getUserLikedDeals(userId);
-      
-      // Get all wholesale deals to count active ones
-      const allDeals = await storage.getWholesaleDeals();
-      const activeDeals = allDeals.filter((d: any) => d.status === 'available').length;
-      
-      // Get all saved deals (not passed)
-      const allSaved = await storage.getUserSavedDeals(userId);
-      
-      res.json({
-        savedDeals: savedDeals.length,
-        activeDeals,
-        pendingDeals: allSaved.filter((b: any) => b.action === 'save').length
-      });
-    } catch (error) {
-      console.error("Error fetching dealflow stats:", error);
-      res.status(500).json({ message: "Failed to fetch stats" });
-    }
-  });
-
-  // Portal registration routes - investors and wholesalers can register
-  app.post('/api/portal/investor/register', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const result = insertInvestorProfileSchema.safeParse({ ...req.body, userId });
-      if (!result.success) {
-        return res.status(400).json({ message: fromError(result.error).toString() });
-      }
-      
-      // Create investor profile
-      const profile = await storage.upsertInvestorProfile(result.data);
-      
-      // Add investor role if not exists
-      const hasRole = await storage.hasRole(userId, "investor");
-      if (!hasRole) {
-        await storage.addUserRole({ userId, role: "investor" });
-      }
-      
-      return res.status(201).json(profile);
-    } catch (error) {
-      console.error("Error creating investor profile:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.post('/api/portal/wholesaler/register', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const result = insertWholesalerProfileSchema.safeParse({ ...req.body, userId });
-      if (!result.success) {
-        return res.status(400).json({ message: fromError(result.error).toString() });
-      }
-      
-      // Create wholesaler profile
-      const profile = await storage.upsertWholesalerProfile(result.data);
-      
-      // Add wholesaler role if not exists
-      const hasRole = await storage.hasRole(userId, "wholesaler");
-      if (!hasRole) {
-        await storage.addUserRole({ userId, role: "wholesaler" });
-      }
-      
-      return res.status(201).json(profile);
-    } catch (error) {
-      console.error("Error creating wholesaler profile:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.post('/api/portal/buyer/register', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const result = insertBuyerProfileSchema.safeParse({ ...req.body, userId });
-      if (!result.success) {
-        return res.status(400).json({ message: fromError(result.error).toString() });
-      }
-      
-      // Create buyer profile
-      const profile = await storage.upsertBuyerProfile(result.data);
-      
-      // Add buyer role if not exists
-      const hasRole = await storage.hasRole(userId, "buyer");
-      if (!hasRole) {
-        await storage.addUserRole({ userId, role: "buyer" });
-      }
-      
-      return res.status(201).json(profile);
-    } catch (error) {
-      console.error("Error creating buyer profile:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Portal-specific data routes
-  app.get('/api/portal/investor/profile', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const profile = await storage.getInvestorProfile(userId);
-      if (!profile) {
-        return res.status(404).json({ message: "Profile not found" });
-      }
-      return res.json(profile);
-    } catch (error) {
-      console.error("Error fetching investor profile:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Investor portfolio routes
-  app.get('/api/portal/investor/my-investments', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const investments = await storage.getCommittedInvestmentsByInvestor(userId);
-      return res.json(investments || []);
-    } catch (error) {
-      console.error("Error fetching investor investments:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.get('/api/portal/investor/my-offers', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const offers = await storage.getInvestmentOffersByInvestor(userId);
-      return res.json(offers || []);
-    } catch (error) {
-      console.error("Error fetching investor offers:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.get('/api/portal/wholesaler/profile', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const profile = await storage.getWholesalerProfile(userId);
-      if (!profile) {
-        return res.status(404).json({ message: "Profile not found" });
-      }
-      return res.json(profile);
-    } catch (error) {
-      console.error("Error fetching wholesaler profile:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.get('/api/portal/wholesaler/my-deals', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const deals = await storage.getWholesaleDealsBySubmitter(userId);
-      return res.json(deals);
-    } catch (error) {
-      console.error("Error fetching wholesaler deals:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get user's submitted listings
-  app.get('/api/portal/my-listings', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const listings = await storage.getListingsBySubmitter(userId);
-      return res.json(listings);
-    } catch (error) {
-      console.error("Error fetching user listings:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get user's capital projects
-  app.get('/api/portal/my-capital-projects', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const projects = await storage.getCapitalProjectsByCreator(userId);
-      return res.json(projects);
-    } catch (error) {
-      console.error("Error fetching user capital projects:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.get('/api/portal/buyer/profile', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const profile = await storage.getBuyerProfile(userId);
-      if (!profile) {
-        return res.status(404).json({ message: "Profile not found" });
-      }
-      return res.json(profile);
-    } catch (error) {
-      console.error("Error fetching buyer profile:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Saved Properties routes (for buyers)
-  app.get('/api/portal/buyer/saved-properties', isAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const saved = await storage.getSavedProperties(userId);
-      return res.json(
-        saved.filter((entry) =>
-          canAccessMarketflowItemType(res, entry.propertyType),
-        ),
-      );
-    } catch (error) {
-      console.error("Error fetching saved properties:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.post('/api/portal/buyer/saved-properties', isAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const result = insertSavedPropertySchema.safeParse({ ...req.body, userId });
-      if (!result.success) {
-        return res.status(400).json({ message: fromError(result.error).toString() });
-      }
-      if (!canAccessMarketflowItemType(res, result.data.propertyType)) {
-        return res.status(404).json({ message: "Property not found" });
-      }
-      const publicProperty = await getPublicMarketplaceItem(
-        result.data.propertyType,
-        result.data.propertyId,
-      );
-      if (!publicProperty) {
-        return res.status(404).json({ message: "Property not found" });
-      }
-      
-      // Check if already saved
-      const isSaved = await storage.isPropertySaved(userId, result.data.propertyType, result.data.propertyId);
-      if (isSaved) {
-        return res.status(400).json({ message: "Property already saved" });
-      }
-      
-      const saved = await storage.saveProperty(result.data);
-      return res.status(201).json(saved);
-    } catch (error) {
-      console.error("Error saving property:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.delete('/api/portal/buyer/saved-properties/:propertyType/:propertyId', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const { propertyType, propertyId } = req.params;
-      await storage.removeSavedProperty(userId, propertyType, parseInt(propertyId));
-      return res.status(204).send();
-    } catch (error) {
-      console.error("Error removing saved property:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Buyer Offers routes
-  app.get('/api/portal/buyer/offers', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const offers = await storage.getBuyerOffers(userId);
-      return res.json(offers);
-    } catch (error) {
-      console.error("Error fetching buyer offers:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.post('/api/portal/buyer/offers', isAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const result = insertBuyerOfferSchema.safeParse({ ...req.body, userId });
-      if (!result.success) {
-        return res.status(400).json({ message: fromError(result.error).toString() });
-      }
-      if (isReviewedMarketflowInventoryType(result.data.propertyType)) {
-        const access = await resolveLegacyDealAccess(
-          req,
-          userId,
-          result.data.propertyType,
-          result.data.propertyId,
-        );
-        if (!access || !canInitiateLegacyDealInteraction(access, res)) {
-          return res.status(404).json({ message: "Property not found" });
-        }
-      }
-      const publicProperty = await getPublicMarketplaceItem(
-        result.data.propertyType,
-        result.data.propertyId,
-      );
-      if (!publicProperty) {
-        return res.status(404).json({ message: "Property not found" });
-      }
-      
-      const offer = await storage.createBuyerOffer(result.data);
-      return res.status(201).json(offer);
-    } catch (error) {
-      console.error("Error creating buyer offer:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Dreamscaper (Operator) Portal Routes
-  app.get('/api/portal/dreamscaper/my-projects', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const roles = await storage.getUserRoles(userId);
-      const roleNames = roles.map(r => r.role);
-      const isDreamscaper = roleNames.includes("dreamscaper") || roleNames.includes("operator");
-      
-      if (!isDreamscaper) {
-        return res.status(403).json({ message: "Not authorized as a Dreamscaper" });
-      }
-      
-      const projects = await storage.getCapitalProjectsByCreator(userId);
-      return res.json(projects || []);
-    } catch (error) {
-      console.error("Error fetching dreamscaper projects:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.get('/api/portal/dreamscaper/pending-offers', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const roles = await storage.getUserRoles(userId);
-      const roleNames = roles.map(r => r.role);
-      const isDreamscaper = roleNames.includes("dreamscaper") || roleNames.includes("operator");
-      
-      if (!isDreamscaper) {
-        return res.status(403).json({ message: "Not authorized as a Dreamscaper" });
-      }
-      
-      const userProjects = await storage.getCapitalProjectsByCreator(userId);
-      const projectIds = userProjects.map(p => p.id);
-      
-      const allOffers = [];
-      for (const projectId of projectIds) {
-        const offers = await storage.getInvestmentOffersByProject(projectId);
-        const pendingOffers = offers.filter(o => o.status === 'PENDING');
-        allOffers.push(...pendingOffers);
-      }
-      
-      return res.json(allOffers);
-    } catch (error) {
-      console.error("Error fetching pending offers:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.get('/api/portal/dreamscaper/all-investments', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const roles = await storage.getUserRoles(userId);
-      const roleNames = roles.map(r => r.role);
-      const isDreamscaper = roleNames.includes("dreamscaper") || roleNames.includes("operator");
-      
-      if (!isDreamscaper) {
-        return res.status(403).json({ message: "Not authorized as a Dreamscaper" });
-      }
-      
-      const userProjects = await storage.getCapitalProjectsByCreator(userId);
-      const projectIds = userProjects.map(p => p.id);
-      
-      const allInvestments = [];
-      for (const projectId of projectIds) {
-        const investments = await storage.getCommittedInvestmentsByProject(projectId);
-        allInvestments.push(...investments);
-      }
-      
-      return res.json(allInvestments);
-    } catch (error) {
-      console.error("Error fetching all investments:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.post('/api/investment-offers/:offerId/accept', isAuthenticated, async (req: any, res) => {
-    return res.status(501).json({
-      message:
-        "Legacy investment offers are read-only. Use MarketFlow Offer Studio to respond.",
-    });
-  });
-
-  app.post('/api/investment-offers/:offerId/decline', isAuthenticated, async (req: any, res) => {
-    return res.status(501).json({
-      message:
-        "Legacy investment offers are read-only. Use MarketFlow Offer Studio to respond.",
-    });
-  });
-  
-  // Seller Lead Routes
-  // Public Website v1 (issue #22): structured opportunity intake + routing.
-  registerOpportunityRoutes(app, {
-    isAuthenticated,
-    requireStaffRole,
-    publicIntakeRateLimit,
-  });
-
-  app.post("/api/seller-leads", publicIntakeRateLimit, async (req, res) => {
-    try {
-      const result = insertSellerLeadSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ 
-          message: fromError(result.error).toString() 
-        });
-      }
-      
-      const lead = await storage.createSellerLead(result.data);
-      console.info("[intake] seller lead stored");
-      return res.status(201).json(lead);
-    } catch (error) {
-      console.error("Error creating seller lead:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Investor Lead Routes
-  app.post("/api/investor-leads", publicIntakeRateLimit, async (req, res) => {
-    try {
-      const result = insertInvestorLeadSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ 
-          message: fromError(result.error).toString() 
-        });
-      }
-      
-      const lead = await storage.createInvestorLead(result.data);
-      console.info("[intake] investor lead stored");
-      return res.status(201).json(lead);
-    } catch (error) {
-      console.error("Error creating investor lead:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Buyer Lead Routes
-  app.post("/api/buyer-leads", publicIntakeRateLimit, async (req, res) => {
-    try {
-      const result = insertBuyerLeadSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ 
-          message: fromError(result.error).toString() 
-        });
-      }
-      
-      const lead = await storage.createBuyerLead(result.data);
-      console.info("[intake] buyer lead stored");
-      return res.status(201).json(lead);
-    } catch (error) {
-      console.error("Error creating buyer lead:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Contact Routes
-  app.post("/api/contacts", publicIntakeRateLimit, async (req, res) => {
-    try {
-      const result = insertContactSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ 
-          message: fromError(result.error).toString() 
-        });
-      }
-      
-      const contact = await storage.createContact(result.data);
-      console.info("[intake] contact message stored");
-      return res.status(201).json(contact);
-    } catch (error) {
-      console.error("Error creating contact:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Admin: full Strategy Library management
-  app.get("/api/hq/articles", isAuthenticated, requireStaffRole, async (_req, res) => {
-    try {
-      const list = await storage.getArticles();
-      return res.json(list);
-    } catch (error) {
-      console.error("Error fetching all articles:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Accept ISO date strings from JSON clients by coercing publishedAt to Date.
-  const articleWriteSchema = insertArticleSchema.extend({
-    publishedAt: z.preprocess(
-      (v) => (typeof v === "string" && v.length > 0 ? new Date(v) : v),
-      z.date().nullable().optional(),
-    ),
-  });
-
-  app.post("/api/hq/articles", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const result = articleWriteSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ message: "Invalid article", errors: result.error.flatten() });
-      }
-      const data = { ...result.data };
-      if (data.published && !data.publishedAt) data.publishedAt = new Date();
-      const created = await storage.createArticle(data);
-      return res.status(201).json(created);
-    } catch (error) {
-      if ((error as { code?: string })?.code === "23505") {
-        return res.status(409).json({ message: "An article with that slug already exists" });
-      }
-      console.error("Error creating article:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.patch("/api/hq/articles/:id", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      if (Number.isNaN(id)) return res.status(400).json({ message: "Invalid id" });
-      const result = articleWriteSchema.partial().safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ message: "Invalid article patch", errors: result.error.flatten() });
-      }
-      const data = { ...result.data };
-      if (data.published && !data.publishedAt) data.publishedAt = new Date();
-      const updated = await storage.updateArticle(id, data);
-      if (!updated) return res.status(404).json({ message: "Article not found" });
-      return res.json(updated);
-    } catch (error) {
-      if ((error as { code?: string })?.code === "23505") {
-        return res.status(409).json({ message: "An article with that slug already exists" });
-      }
-      console.error("Error updating article:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.delete("/api/hq/articles/:id", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      if (Number.isNaN(id)) return res.status(400).json({ message: "Invalid id" });
-      const ok = await storage.deleteArticle(id);
-      if (!ok) return res.status(404).json({ message: "Article not found" });
-      return res.json({ success: true });
-    } catch (error) {
-      console.error("Error deleting article:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Admin: Beginner Path CRUD
-  app.get("/api/hq/library/beginner-path", isAuthenticated, requireStaffRole, async (_req, res) => {
-    try {
-      return res.json(await storage.getLibraryBeginnerSteps());
-    } catch (error) {
-      console.error("Error fetching beginner path (hq):", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.post("/api/hq/library/beginner-path", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const result = insertLibraryBeginnerStepSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ message: "Invalid step", errors: result.error.flatten() });
-      }
-      const created = await storage.createLibraryBeginnerStep(result.data);
-      return res.status(201).json(created);
-    } catch (error) {
-      console.error("Error creating beginner step:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.patch("/api/hq/library/beginner-path/:id", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      if (Number.isNaN(id)) return res.status(400).json({ message: "Invalid id" });
-      const result = insertLibraryBeginnerStepSchema.partial().safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ message: "Invalid patch", errors: result.error.flatten() });
-      }
-      const updated = await storage.updateLibraryBeginnerStep(id, result.data);
-      if (!updated) return res.status(404).json({ message: "Step not found" });
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error updating beginner step:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.delete("/api/hq/library/beginner-path/:id", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      if (Number.isNaN(id)) return res.status(400).json({ message: "Invalid id" });
-      const ok = await storage.deleteLibraryBeginnerStep(id);
-      if (!ok) return res.status(404).json({ message: "Step not found" });
-      return res.json({ success: true });
-    } catch (error) {
-      console.error("Error deleting beginner step:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Admin: Glossary CRUD
-  app.get("/api/hq/library/glossary", isAuthenticated, requireStaffRole, async (_req, res) => {
-    try {
-      return res.json(await storage.getLibraryGlossaryTerms());
-    } catch (error) {
-      console.error("Error fetching glossary (hq):", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.post("/api/hq/library/glossary", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const result = insertLibraryGlossaryTermSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ message: "Invalid term", errors: result.error.flatten() });
-      }
-      const created = await storage.createLibraryGlossaryTerm(result.data);
-      return res.status(201).json(created);
-    } catch (error) {
-      console.error("Error creating glossary term:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.patch("/api/hq/library/glossary/:id", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      if (Number.isNaN(id)) return res.status(400).json({ message: "Invalid id" });
-      const result = insertLibraryGlossaryTermSchema.partial().safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ message: "Invalid patch", errors: result.error.flatten() });
-      }
-      const updated = await storage.updateLibraryGlossaryTerm(id, result.data);
-      if (!updated) return res.status(404).json({ message: "Term not found" });
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error updating glossary term:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.delete("/api/hq/library/glossary/:id", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      if (Number.isNaN(id)) return res.status(400).json({ message: "Invalid id" });
-      const ok = await storage.deleteLibraryGlossaryTerm(id);
-      if (!ok) return res.status(404).json({ message: "Term not found" });
-      return res.json({ success: true });
-    } catch (error) {
-      console.error("Error deleting glossary term:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Protected HQ Routes (require staff role)
-  app.get("/api/hq/seller-leads", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const leads = await storage.getSellerLeads();
-      return res.json(leads);
-    } catch (error) {
-      console.error("Error fetching seller leads:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.get("/api/hq/investor-leads", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const leads = await storage.getInvestorLeads();
-      return res.json(leads);
-    } catch (error) {
-      console.error("Error fetching investor leads:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.get("/api/hq/buyer-leads", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const leads = await storage.getBuyerLeads();
-      return res.json(leads);
-    } catch (error) {
-      console.error("Error fetching buyer leads:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.patch("/api/hq/buyer-leads/:id/status", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const { status } = req.body;
-      const updated = await storage.updateBuyerLeadStatus(id, status);
-      if (!updated) {
-        return res.status(404).json({ message: "Lead not found" });
-      }
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error updating buyer lead status:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.get("/api/hq/contacts", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const contactsList = await storage.getContacts();
-      return res.json(contactsList);
-    } catch (error) {
-      console.error("Error fetching contacts:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.patch("/api/hq/seller-leads/:id/status", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const { status } = req.body;
-      const updated = await storage.updateSellerLeadStatus(id, status);
-      if (!updated) {
-        return res.status(404).json({ message: "Lead not found" });
-      }
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error updating seller lead status:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.patch("/api/hq/investor-leads/:id/status", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const { status } = req.body;
-      const updated = await storage.updateInvestorLeadStatus(id, status);
-      if (!updated) {
-        return res.status(404).json({ message: "Lead not found" });
-      }
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error updating investor lead status:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.patch("/api/hq/contacts/:id/status", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const { status } = req.body;
-      const updated = await storage.updateContactStatus(id, status);
-      if (!updated) {
-        return res.status(404).json({ message: "Contact not found" });
-      }
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error updating contact status:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Lead Activities Routes (for CRM - staff only)
-  app.get("/api/hq/activities/:leadType/:leadId", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const { leadType, leadId } = req.params;
-      const activities = await storage.getLeadActivities(leadType, parseInt(leadId));
-      return res.json(activities);
-    } catch (error) {
-      console.error("Error fetching lead activities:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.post("/api/hq/activities", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const { leadType, leadId, activityType, notes, followUpDate } = req.body;
-      const activity = await storage.createLeadActivity({
-        leadType,
-        leadId: parseInt(leadId),
-        activityType,
-        notes,
-        followUpDate: followUpDate ? new Date(followUpDate) : undefined,
-      });
-      return res.status(201).json(activity);
-    } catch (error) {
-      console.error("Error creating lead activity:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.patch("/api/hq/activities/:id/complete", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const updated = await storage.markActivityCompleted(id);
-      if (!updated) {
-        return res.status(404).json({ message: "Activity not found" });
-      }
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error marking activity as completed:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Queue Routes (for work queue/task management - staff only)
-  app.get("/api/hq/queue", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const queueItems = await storage.getQueueItems();
-      return res.json(queueItems);
-    } catch (error) {
-      console.error("Error fetching queue:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Projects Routes (public)
-  app.get("/api/projects", async (req, res) => {
-    try {
-      const projectsList = await storage.getProjects();
-      return res.json(projectsList);
-    } catch (error) {
-      console.error("Error fetching projects:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.get("/api/projects/:slug", async (req, res) => {
-    try {
-      const project = await storage.getProjectBySlug(req.params.slug);
-      if (!project) {
-        return res.status(404).json({ message: "Project not found" });
-      }
-      return res.json(project);
-    } catch (error) {
-      console.error("Error fetching project:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Reviewed MarketFlow inventory. Public marketing and intake routes remain
-  // separate; authentication alone does not grant private-beta data access.
-  app.get("/api/wholesale-deals", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
-    try {
-      const userId = getMarketflowInventoryPrincipalId(res);
-      const deals = await storage.getAvailableWholesaleDeals();
-      return res.json(
-        deals
-          .filter(isPublicWholesaleDeal)
-          .map((deal) =>
-            toPublicWholesaleDeal(
-              deal,
-              userId,
-              canViewerInitiateMarketflowJv(res),
-            ),
-          ),
-      );
-    } catch (error) {
-      console.error("Error fetching wholesale deals:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.get("/api/wholesale-deals-active", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
-    try {
-      const userId = getMarketflowInventoryPrincipalId(res);
-      const deals = await storage.getAvailableWholesaleDeals();
-      return res.json(
-        deals
-          .filter(isPublicWholesaleDeal)
-          .map((deal) =>
-            toPublicWholesaleDeal(
-              deal,
-              userId,
-              canViewerInitiateMarketflowJv(res),
-            ),
-          ),
-      );
-    } catch (error) {
-      console.error("Error fetching active wholesale deals:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.get("/api/wholesale-deals/:id", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
-    try {
-      const userId = getMarketflowInventoryPrincipalId(res);
-      const deal = await storage.getWholesaleDeal(parseInt(req.params.id));
-      if (!deal || !isPublicWholesaleDeal(deal)) {
-        return res.status(404).json({ message: "Deal not found" });
-      }
-      return res.json(
-        toPublicWholesaleDeal(
-          deal,
-          userId,
-          canViewerInitiateMarketflowJv(res),
-        ),
-      );
-    } catch (error) {
-      console.error("Error fetching wholesale deal:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Wholesale Request (public - investors can request deals)
-  app.post("/api/wholesale-requests", publicIntakeRateLimit, async (req, res) => {
-    try {
-      const result = insertWholesaleRequestSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ 
-          message: fromError(result.error).toString() 
-        });
-      }
-      
-      const request = await storage.createWholesaleRequest(result.data);
-      console.info("[intake] wholesale request stored");
-      return res.status(201).json(request);
-    } catch (error) {
-      console.error("Error creating wholesale request:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Wholesaler deal submission (authenticated wholesalers)
-  app.post("/api/wholesale-deals", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      
-      // Check if user has a wholesaler profile
-      const profile = await storage.getWholesalerProfile(userId);
-      if (!profile) {
-        return res.status(403).json({ message: "Please complete your wholesaler profile first" });
-      }
-      
-      const result = insertWholesaleDealSchema.safeParse({
-        ...req.body,
-        submittedBy: userId,
-        status: "under_review", // All submitted deals start under review
-      });
-      
-      if (!result.success) {
-        return res.status(400).json({ 
-          message: fromError(result.error).toString() 
-        });
-      }
-      
-      const deal = await storage.createWholesaleDeal(result.data);
-      console.info("[dealflow] wholesale deal submitted");
-      
-      // Send email notification (non-blocking)
-      sendDealSubmissionNotification({
-        propertyAddress: deal.propertyAddress,
-        city: deal.city,
-        state: deal.state,
-        contractPrice: deal.contractPrice,
-        assignmentFee: deal.assignmentFee,
-        arv: deal.arv || undefined,
-        submittedBy: profile.company || userId,
-      }).catch(err => console.error('Failed to send deal submission notification:', err));
-      
-      return res.status(201).json(deal);
-    } catch (error) {
-      console.error("Error submitting wholesale deal:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // User-owned wholesale deal update (owner only)
-  app.patch("/api/wholesale-deals/:id", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub;
-      const dealId = Number(req.params.id);
-      if (!Number.isSafeInteger(dealId) || dealId <= 0) {
-        return res.status(400).json({ message: "Invalid deal ID" });
-      }
-
-      const existing = await storage.getWholesaleDeal(dealId);
-      if (!existing) {
-        return res.status(404).json({ message: "Deal not found" });
-      }
-
-      // Check ownership
-      if (existing.submittedBy !== userId) {
-        return res.status(403).json({ message: "Not authorized to edit this deal" });
-      }
-
-      const updateResult = wholesaleDealOwnerUpdateSchema.safeParse(req.body);
-      if (!updateResult.success) {
-        return res.status(400).json({
-          message: fromError(updateResult.error).toString(),
-        });
-      }
-
-      const updated = await storage.updateWholesaleDeal(dealId, updateResult.data);
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error updating wholesale deal:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // User-owned capital project update (owner only)
-  app.patch("/api/capital-projects/:id", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub;
-      const projectId = Number(req.params.id);
-      if (!Number.isSafeInteger(projectId) || projectId <= 0) {
-        return res.status(400).json({ message: "Invalid project ID" });
-      }
-
-      const existing = await storage.getCapitalProject(projectId);
-      if (!existing) {
-        return res.status(404).json({ message: "Project not found" });
-      }
-
-      // Check ownership
-      if (existing.createdBy !== userId) {
-        return res.status(403).json({ message: "Not authorized to edit this project" });
-      }
-
-      const updateResult = capitalProjectOwnerUpdateSchema.safeParse(req.body);
-      if (!updateResult.success) {
-        return res.status(400).json({
-          message: fromError(updateResult.error).toString(),
-        });
-      }
-
-      const updated = await storage.updateCapitalProject(projectId, updateResult.data);
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error updating capital project:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Admin Featured Deals API
-  app.get("/api/admin/featured-deals", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const featuredDeals = await storage.getFeaturedDeals();
-      return res.json(featuredDeals);
-    } catch (error) {
-      console.error("Error fetching featured deals:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.post("/api/admin/featured-deals", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const { dealType, dealId, priority, isActive } = req.body;
-      
-      if (!dealType || !dealId) {
-        return res.status(400).json({ message: "dealType and dealId are required" });
-      }
-
-      const featuredDeal = await storage.createFeaturedDeal({
-        dealType,
-        dealId,
-        priority: priority || 1,
-        isActive: isActive !== false,
-      });
-      
-      console.log("Featured deal created:", { dealType, dealId });
-      return res.status(201).json(featuredDeal);
-    } catch (error) {
-      console.error("Error featuring deal:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.delete("/api/admin/featured-deals/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      await storage.deleteFeaturedDeal(id);
-      return res.status(204).send();
-    } catch (error) {
-      console.error("Error removing featured deal:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Analytics Tracking API - requires authentication
-  const validActivityTypes = ["view", "save", "offer", "message", "share", "click"];
-  const validResourceTypes = ["deal", "project", "listing", "user", "page"];
-
-  app.post("/api/analytics/track", isAuthenticated, rateLimit(100, 60000), async (req: any, res) => {
-    try {
-      const { activityType, resourceType, resourceId, metadata } = req.body;
-      const userId = req.user?.claims?.sub;
-      
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
-
-      if (!activityType || !resourceType || resourceId === undefined) {
-        return res.status(400).json({ message: "activityType, resourceType, and resourceId are required" });
-      }
-
-      if (!validActivityTypes.includes(activityType)) {
-        return res.status(400).json({ message: `Invalid activityType. Must be one of: ${validActivityTypes.join(", ")}` });
-      }
-
-      if (!validResourceTypes.includes(resourceType)) {
-        return res.status(400).json({ message: `Invalid resourceType. Must be one of: ${validResourceTypes.join(", ")}` });
-      }
-
-      const parsedResourceId = parseInt(String(resourceId), 10);
-      if (isNaN(parsedResourceId) || parsedResourceId < 0) {
-        return res.status(400).json({ message: "resourceId must be a valid positive integer" });
-      }
-
-      let sanitizedMetadata: string | undefined;
-      if (metadata) {
-        const metadataStr = JSON.stringify(metadata);
-        if (metadataStr.length > 1000) {
-          return res.status(400).json({ message: "metadata exceeds maximum size of 1000 characters" });
-        }
-        sanitizedMetadata = metadataStr;
-      }
-
-      const activity = await storage.createUserActivity({
-        userId,
-        activityType,
-        resourceType,
-        resourceId: parsedResourceId,
-        metadata: sanitizedMetadata,
-      });
-
-      return res.status(201).json(activity);
-    } catch (error) {
-      console.error("Error tracking activity:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.get("/api/admin/analytics/stats", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const stats = await storage.getActivityStats();
-      return res.json(stats);
-    } catch (error) {
-      console.error("Error fetching analytics stats:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Saved Searches API - user-defined search filters for MarketFlow
-  app.get("/api/saved-searches", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub;
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
-      const searches = await storage.getSavedSearches(userId);
-      return res.json(searches);
-    } catch (error) {
-      console.error("Error fetching saved searches:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.post("/api/saved-searches", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub;
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
-
-      const { name, lane, filters, emailAlerts, alertFrequency } = req.body;
-      
-      if (!name || !lane || !filters) {
-        return res.status(400).json({ message: "name, lane, and filters are required" });
-      }
-
-      if (!["wholesale", "capital", "listings"].includes(lane)) {
-        return res.status(400).json({ message: "lane must be wholesale, capital, or listings" });
-      }
-
-      const savedSearch = await storage.createSavedSearch({
-        userId,
-        name: name.slice(0, 100),
-        lane,
-        filters,
-        emailAlerts: emailAlerts || false,
-        alertFrequency: alertFrequency || "daily",
-        isActive: true,
-      });
-
-      return res.status(201).json(savedSearch);
-    } catch (error) {
-      console.error("Error creating saved search:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.patch("/api/saved-searches/:id", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub;
-      const searchId = parseInt(req.params.id);
-      
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
-
-      const existing = await storage.getSavedSearchById(searchId);
-      if (!existing || existing.userId !== userId) {
-        return res.status(404).json({ message: "Saved search not found" });
-      }
-
-      const { name, filters, emailAlerts, alertFrequency, isActive, lastUsedAt } = req.body;
-      const updated = await storage.updateSavedSearch(searchId, {
-        name: name?.slice(0, 100),
-        filters,
-        emailAlerts,
-        alertFrequency,
-        isActive,
-        lastUsedAt: lastUsedAt ? new Date(lastUsedAt) : undefined,
-      });
-
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error updating saved search:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.delete("/api/saved-searches/:id", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub;
-      const searchId = parseInt(req.params.id);
-      
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
-
-      const existing = await storage.getSavedSearchById(searchId);
-      if (!existing || existing.userId !== userId) {
-        return res.status(404).json({ message: "Saved search not found" });
-      }
-
-      await storage.deleteSavedSearch(searchId);
-      return res.status(204).send();
-    } catch (error) {
-      console.error("Error deleting saved search:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Homepage Content API - public endpoint returns only active content
-  app.get("/api/homepage-content", async (req, res) => {
-    try {
-      const content = await storage.getHomepageContent();
-      const activeContent = content.filter(item => item.isActive !== false);
-      const contentMap = activeContent.reduce((acc, item) => {
-        acc[item.sectionKey] = item.content;
-        return acc;
-      }, {} as Record<string, string>);
-      return res.json(contentMap);
-    } catch (error) {
-      console.error("Error fetching homepage content:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.get("/api/admin/homepage-content", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const content = await storage.getHomepageContent();
-      return res.json(content);
-    } catch (error) {
-      console.error("Error fetching homepage content:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  const validSectionKeys = ["hero_title", "hero_subtitle", "hero_cta", "featured_title", "featured_subtitle"];
-  const validContentTypes = ["text", "html", "json"];
-
-  app.post("/api/admin/homepage-content", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const { sectionKey, content, contentType } = req.body;
-      const userId = req.user?.claims?.sub;
-
-      if (!sectionKey || !content) {
-        return res.status(400).json({ message: "sectionKey and content are required" });
-      }
-
-      if (!validSectionKeys.includes(sectionKey)) {
-        return res.status(400).json({ message: `Invalid sectionKey. Must be one of: ${validSectionKeys.join(", ")}` });
-      }
-
-      if (content.length > 2000) {
-        return res.status(400).json({ message: "Content exceeds maximum length of 2000 characters" });
-      }
-
-      const safeContentType = contentType && validContentTypes.includes(contentType) ? contentType : "text";
-
-      const savedContent = await storage.upsertHomepageContent({
-        sectionKey,
-        content,
-        contentType: safeContentType,
-        updatedBy: userId,
-      });
-
-      console.log("Homepage content updated:", sectionKey);
-      return res.status(201).json(savedContent);
-    } catch (error) {
-      console.error("Error saving homepage content:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // ============================================
-  // FAQs - Admin Content Management
-  // ============================================
-
-  // Public: Get all FAQs
-  app.get("/api/faqs", async (req, res) => {
-    try {
-      const allFaqs = await storage.getFaqs();
-      return res.json(allFaqs);
-    } catch (error) {
-      console.error("Error fetching FAQs:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Admin: Create FAQ
-  app.post("/api/admin/faqs", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const result = insertFaqSchema.safeParse({ ...req.body, isActive: true });
-      if (!result.success) {
-        return res.status(400).json({ message: fromError(result.error).toString() });
-      }
-      const faq = await storage.createFaq(result.data);
-      return res.status(201).json(faq);
-    } catch (error) {
-      console.error("Error creating FAQ:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Admin: Update FAQ
-  app.patch("/api/admin/faqs/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const partialSchema = insertFaqSchema.partial();
-      const result = partialSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ message: fromError(result.error).toString() });
-      }
-      const updated = await storage.updateFaq(id, result.data);
-      if (!updated) {
-        return res.status(404).json({ message: "FAQ not found" });
-      }
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error updating FAQ:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Admin: Delete FAQ
-  app.delete("/api/admin/faqs/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      await storage.deleteFaq(id);
-      return res.status(204).send();
-    } catch (error) {
-      console.error("Error deleting FAQ:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // ============================================
-  // TESTIMONIALS - Admin Content Management
-  // ============================================
-
-  // Public: Get all testimonials
-  app.get("/api/testimonials", async (req, res) => {
-    try {
-      const allTestimonials = await storage.getTestimonials();
-      return res.json(allTestimonials);
-    } catch (error) {
-      console.error("Error fetching testimonials:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Admin: Create testimonial
-  app.post("/api/admin/testimonials", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const result = insertTestimonialSchema.safeParse({ ...req.body, isActive: true });
-      if (!result.success) {
-        return res.status(400).json({ message: fromError(result.error).toString() });
-      }
-      const testimonial = await storage.createTestimonial(result.data);
-      return res.status(201).json(testimonial);
-    } catch (error) {
-      console.error("Error creating testimonial:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Admin: Update testimonial
-  app.patch("/api/admin/testimonials/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const partialSchema = insertTestimonialSchema.partial();
-      const result = partialSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ message: fromError(result.error).toString() });
-      }
-      const updated = await storage.updateTestimonial(id, result.data);
-      if (!updated) {
-        return res.status(404).json({ message: "Testimonial not found" });
-      }
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error updating testimonial:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Admin: Delete testimonial
-  app.delete("/api/admin/testimonials/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      await storage.deleteTestimonial(id);
-      return res.status(204).send();
-    } catch (error) {
-      console.error("Error deleting testimonial:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // ============================================
-  // TEAM MEMBERS - Admin Content Management
-  // ============================================
-
-  // Public: Get all team members
-  app.get("/api/team", async (req, res) => {
-    try {
-      const allMembers = await storage.getTeamMembers();
-      return res.json(allMembers);
-    } catch (error) {
-      console.error("Error fetching team members:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Admin: Create team member
-  app.post("/api/admin/team", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const result = insertTeamMemberSchema.safeParse({ ...req.body, isActive: true });
-      if (!result.success) {
-        return res.status(400).json({ message: fromError(result.error).toString() });
-      }
-      const member = await storage.createTeamMember(result.data);
-      return res.status(201).json(member);
-    } catch (error) {
-      console.error("Error creating team member:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Admin: Update team member
-  app.patch("/api/admin/team/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const partialSchema = insertTeamMemberSchema.partial();
-      const result = partialSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ message: fromError(result.error).toString() });
-      }
-      const updated = await storage.updateTeamMember(id, result.data);
-      if (!updated) {
-        return res.status(404).json({ message: "Team member not found" });
-      }
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error updating team member:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Admin: Delete team member
-  app.delete("/api/admin/team/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      await storage.deleteTeamMember(id);
-      return res.status(204).send();
-    } catch (error) {
-      console.error("Error deleting team member:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // ============================================
-  // MEDIA FILES - Admin Content Management
-  // ============================================
-
-  // Admin: Get all media files
-  app.get("/api/admin/media", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const allMedia = await storage.getMediaFiles();
-      return res.json(allMedia);
-    } catch (error) {
-      console.error("Error fetching media files:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Admin: Create media file record (after upload completes)
-  app.post("/api/admin/media", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const result = insertMediaFileSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ message: fromError(result.error).toString() });
-      }
-      const media = await storage.createMediaFile(result.data);
-      return res.status(201).json(media);
-    } catch (error) {
-      console.error("Error creating media file record:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Admin: Delete media file
-  app.delete("/api/admin/media/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      await storage.deleteMediaFile(id);
-      return res.status(204).send();
-    } catch (error) {
-      console.error("Error deleting media file:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // ============================================
-  // SITE CONTENT - Inline Edit Mode
-  // ============================================
-
-  // Public: Get all site content (for initial load)
-  app.get("/api/site-content", async (req, res) => {
-    try {
-      const allContent = await storage.getAllSiteContent();
-      return res.json(allContent);
-    } catch (error) {
-      console.error("Error fetching site content:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Public: Get specific site content by key
-  app.get("/api/site-content/:key", async (req, res) => {
-    try {
-      const content = await storage.getSiteContent(req.params.key);
-      if (!content) {
-        return res.status(404).json({ message: "Content not found" });
-      }
-      return res.json(content);
-    } catch (error) {
-      console.error("Error fetching site content:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Admin: Upsert site content (create or update)
-  app.put("/api/admin/site-content", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const result = insertSiteContentSchema.safeParse({
-        ...req.body,
-        updatedBy: req.user?.claims?.email || req.user?.email || req.user?.claims?.sub,
-      });
-      if (!result.success) {
-        return res.status(400).json({ message: fromError(result.error).toString() });
-      }
-      const content = await storage.upsertSiteContent(result.data);
-      return res.json(content);
-    } catch (error) {
-      console.error("Error upserting site content:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Admin: Delete site content
-  app.delete("/api/admin/site-content/:key", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      await storage.deleteSiteContent(req.params.key);
-      return res.status(204).send();
-    } catch (error) {
-      console.error("Error deleting site content:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Protected HQ Wholesale Routes (staff only)
-  app.get("/api/hq/wholesale-deals", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const deals = await storage.getWholesaleDeals();
-      return res.json(deals);
-    } catch (error) {
-      console.error("Error fetching all wholesale deals:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.post("/api/hq/wholesale-deals", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const result = insertWholesaleDealSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ 
-          message: fromError(result.error).toString() 
-        });
-      }
-      
-      const deal = await storage.createWholesaleDeal(result.data);
-      console.info("[dealflow] wholesale deal created");
-      return res.status(201).json(deal);
-    } catch (error) {
-      console.error("Error creating wholesale deal:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.patch("/api/hq/wholesale-deals/:id/status", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const { status, notes } = req.body;
-      const updated = await storage.updateWholesaleDealStatus(id, status, notes);
-      if (!updated) {
-        return res.status(404).json({ message: "Deal not found" });
-      }
-      
-      // Send deal update notification email
-      sendDealUpdateNotification({
-        recipientEmail: process.env.STAFF_NOTIFICATION_EMAIL || 'deals@pegasusdreamscapes.com',
-        recipientName: 'Deal Subscriber',
-        dealTitle: updated.propertyAddress || `Wholesale Deal #${id}`,
-        updateType: 'status_change',
-        oldValue: 'previous status',
-        newValue: status,
-        message: notes || undefined,
-      }).catch(err => console.error('Failed to send deal update email:', err));
-      
-      // Broadcast real-time update via WebSocket (to watchers if implemented)
-      const broadcastToUser = (app as any).broadcastToUser;
-      if (broadcastToUser && updated.submittedBy) {
-        broadcastToUser(updated.submittedBy, {
-          type: 'deal_update',
-          payload: { dealId: id, status, propertyAddress: updated.propertyAddress }
-        });
-      }
-      
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error updating wholesale deal status:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.patch("/api/hq/wholesale-deals/:id", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const updated = await storage.updateWholesaleDeal(id, req.body);
-      if (!updated) {
-        return res.status(404).json({ message: "Deal not found" });
-      }
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error updating wholesale deal:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.get("/api/hq/wholesale-requests", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const requests = await storage.getWholesaleRequests();
-      return res.json(requests);
-    } catch (error) {
-      console.error("Error fetching wholesale requests:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.get("/api/hq/wholesale-deals/:id/requests", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const dealId = parseInt(req.params.id);
-      const requests = await storage.getWholesaleRequestsByDeal(dealId);
-      return res.json(requests);
-    } catch (error) {
-      console.error("Error fetching deal requests:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.patch("/api/hq/wholesale-requests/:id/status", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const { status } = req.body;
-      const updated = await storage.updateWholesaleRequestStatus(id, status);
-      if (!updated) {
-        return res.status(404).json({ message: "Request not found" });
-      }
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error updating wholesale request status:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // ============ RETAIL LISTINGS ROUTES ============
-
-  // Public marketing listings. These are distinct from the private legacy
-  // /api/listings MarketFlow inventory below.
-  app.get("/api/retail-listings", async (req, res) => {
-    try {
-      const listings = await storage.getActiveRetailListings();
-      return res.json(listings.map(toPublicRetailListing));
-    } catch (error) {
-      console.error("Error fetching retail listings:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.get("/api/retail-listings/:slug", async (req, res) => {
-    try {
-      const listing = await storage.getRetailListingBySlug(req.params.slug);
-      if (!listing || (listing.status !== "active" && listing.status !== "coming_soon")) {
-        return res.status(404).json({ message: "Listing not found" });
-      }
-      return res.json(toPublicRetailListing(listing));
-    } catch (error) {
-      console.error("Error fetching retail listing:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Buyer Inquiries (public)
-  app.post("/api/buyer-inquiries", publicIntakeRateLimit, async (req, res) => {
-    try {
-      const result = insertBuyerInquirySchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ message: fromError(result.error).toString() });
-      }
-      
-      const inquiry = await storage.createBuyerInquiry(result.data);
-      console.info("[intake] buyer inquiry stored");
-      return res.status(201).json(inquiry);
-    } catch (error) {
-      console.error("Error creating buyer inquiry:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // LISTING dealType endpoints
-  app.get("/api/listings", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
-    try {
-      const activeListings = await storage.getActiveListings();
-      return res.json(
-        activeListings.filter(isPublicListing).map(toPublicListing),
-      );
-    } catch (error) {
-      console.error("Error fetching listings:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.get("/api/listings/:id", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
-    try {
-      const listing = await storage.getListing(parseInt(req.params.id));
-      if (!listing || !isPublicListing(listing)) {
-        return res.status(404).json({ message: "Listing not found" });
-      }
-      return res.json(toPublicListing(listing));
-    } catch (error) {
-      console.error("Error fetching listing:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Create new listing
-  app.post("/api/listings", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub;
-      if (!userId) {
-        return res.status(401).json({ message: "User not authenticated" });
-      }
-
-      const listingData = {
-        ...req.body,
-        submittedBy: userId,
-        status: "pending",
-      };
-
-      const result = insertListingSchema.safeParse(listingData);
-      if (!result.success) {
-        return res.status(400).json({ message: fromError(result.error).toString() });
-      }
-
-      const listing = await storage.createListing(result.data);
-      console.info("[listings] listing created");
-      return res.status(201).json(listing);
-    } catch (error) {
-      console.error("Error creating listing:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  const listingOwnerUpdateSchema = insertListingSchema
-    .pick({
-      listPrice: true,
-      bedrooms: true,
-      bathrooms: true,
-      sqft: true,
-      description: true,
-    })
-    .partial()
-    .strict();
-
-  // Update listing (owner only)
-  app.patch("/api/listings/:id", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub;
-      const listingId = Number(req.params.id);
-      if (!Number.isSafeInteger(listingId) || listingId <= 0) {
-        return res.status(400).json({ message: "Invalid listing ID" });
-      }
-
-      const existing = await storage.getListing(listingId);
-      if (!existing) {
-        return res.status(404).json({ message: "Listing not found" });
-      }
-
-      // Check ownership
-      if (existing.submittedBy !== userId) {
-        return res.status(403).json({ message: "Not authorized to edit this listing" });
-      }
-
-      const updateResult = listingOwnerUpdateSchema.safeParse(req.body);
-      if (!updateResult.success) {
-        return res.status(400).json({
-          message: fromError(updateResult.error).toString(),
-        });
-      }
-
-      const updated = await storage.updateListing(listingId, updateResult.data);
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error updating listing:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.post("/api/listing-inquiries",
-    isHybridAuthenticated,
-    listingInquiryHandlers.validateInquiry,
-    loadMarketflowInventoryAccessContext,
-    listingInquiryHandlers.postInquiry,
-  );
-
-  app.get("/api/listings/:id/inquiries", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const listingId = Number(req.params.id);
-      const inquiries = Number.isSafeInteger(listingId) && listingId > 0
-        ? await storage.getListingInquiries(listingId)
-        : [];
-      const access = await resolveLegacyDealAccess(
-        req,
-        userId,
-        "listing",
-        listingId,
-        { inquiries },
-      );
-      if (!access) {
-        return res.status(404).json({ message: "Listing not found" });
-      }
-
-      if (access.isOwner || access.isStaff) {
-        return res.json(inquiries);
-      }
-
-      const visibleInquiries = filterLegacyListingInquiriesForUser(
-        userId,
-        inquiries,
-      );
-      if (!access.isParticipant || visibleInquiries.length === 0) {
-        return res.status(404).json({ message: "Listing not found" });
-      }
-      return res.json(visibleInquiries);
-    } catch (error) {
-      console.error("Error fetching listing inquiries:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Protected HQ Routes for Retail Listings (staff only)
-  app.get("/api/hq/retail-listings", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const listings = await storage.getRetailListings();
-      return res.json(listings);
-    } catch (error) {
-      console.error("Error fetching all retail listings:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.post("/api/hq/retail-listings", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const result = insertRetailListingSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ message: fromError(result.error).toString() });
-      }
-      
-      const listing = await storage.createRetailListing(result.data);
-      console.info("[retail-listings] listing created");
-      return res.status(201).json(listing);
-    } catch (error) {
-      console.error("Error creating retail listing:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.patch("/api/hq/retail-listings/:id", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const updated = await storage.updateRetailListing(id, req.body);
-      if (!updated) {
-        return res.status(404).json({ message: "Listing not found" });
-      }
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error updating retail listing:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.patch("/api/hq/retail-listings/:id/status", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const { status } = req.body;
-      const updated = await storage.updateRetailListingStatus(id, status);
-      if (!updated) {
-        return res.status(404).json({ message: "Listing not found" });
-      }
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error updating retail listing status:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Protected HQ Routes for Buyer Inquiries (staff only)
-  app.get("/api/hq/buyer-inquiries", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const inquiries = await storage.getBuyerInquiries();
-      return res.json(inquiries);
-    } catch (error) {
-      console.error("Error fetching buyer inquiries:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.patch("/api/hq/buyer-inquiries/:id/status", isAuthenticated, requireStaffRole, async (req, res) => {
-    try {
-      const id = parseInt(req.params.id);
-      const { status } = req.body;
-      const updated = await storage.updateBuyerInquiryStatus(id, status);
-      if (!updated) {
-        return res.status(404).json({ message: "Inquiry not found" });
-      }
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error updating buyer inquiry status:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // ============ ADMIN ROUTES FOR USER/ROLE MANAGEMENT ============
-
-  // Admin-only routes for managing staff and portal users
-  app.get("/api/hq/users/roles", isAuthenticated, requireRole("admin"), async (req, res) => {
-    try {
-      const allUsers = await storage.getAllStaffProfiles();
-      const investors = await storage.getAllInvestorProfiles();
-      const wholesalers = await storage.getAllWholesalerProfiles();
-      return res.json({ staff: allUsers, investors, wholesalers });
-    } catch (error) {
-      console.error("Error fetching user profiles:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.get("/api/hq/investor-profiles", isAuthenticated, requireRole("admin"), async (req, res) => {
-    try {
-      const profiles = await storage.getAllInvestorProfiles();
-      return res.json(profiles);
-    } catch (error) {
-      console.error("Error fetching investor profiles:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.get("/api/hq/wholesaler-profiles", isAuthenticated, requireRole("admin"), async (req, res) => {
-    try {
-      const profiles = await storage.getAllWholesalerProfiles();
-      return res.json(profiles);
-    } catch (error) {
-      console.error("Error fetching wholesaler profiles:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.get("/api/hq/buyer-profiles", isAuthenticated, requireRole("admin"), async (req, res) => {
-    try {
-      const profiles = await storage.getAllBuyerProfiles();
-      return res.json(profiles);
-    } catch (error) {
-      console.error("Error fetching buyer profiles:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.post("/api/hq/users/:userId/roles", isAuthenticated, requireRole("admin"), async (req, res) => {
-    try {
-      const { userId } = req.params;
-      const { role } = req.body;
-      
-      // Check if role already exists
-      const hasRole = await storage.hasRole(userId, role);
-      if (hasRole) {
-        return res.status(400).json({ message: "User already has this role" });
-      }
-      
-      const userRole = await storage.addUserRole({ userId, role });
-      return res.status(201).json(userRole);
-    } catch (error) {
-      console.error("Error adding user role:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.delete("/api/hq/users/:userId/roles/:role", isAuthenticated, requireRole("admin"), async (req, res) => {
-    try {
-      const { userId, role } = req.params;
-      await storage.removeUserRole(userId, role);
-      return res.json({ message: "Role removed successfully" });
-    } catch (error) {
-      console.error("Error removing user role:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.patch("/api/hq/investors/:userId/approve", isAuthenticated, requireRole("admin"), async (req, res) => {
-    try {
-      const { userId } = req.params;
-      const { isApproved } = req.body;
-      const updated = await storage.updateInvestorApproval(userId, isApproved);
-      if (!updated) {
-        return res.status(404).json({ message: "Investor profile not found" });
-      }
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error updating investor approval:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.patch("/api/hq/wholesalers/:userId/approve", isAuthenticated, requireRole("admin"), async (req, res) => {
-    try {
-      const { userId } = req.params;
-      const { isApproved } = req.body;
-      const updated = await storage.updateWholesalerApproval(userId, isApproved);
-      if (!updated) {
-        return res.status(404).json({ message: "Wholesaler profile not found" });
-      }
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error updating wholesaler approval:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  app.patch("/api/hq/buyers/:userId/approve", isAuthenticated, requireRole("admin"), async (req, res) => {
-    try {
-      const { userId } = req.params;
-      const { isApproved } = req.body;
-      const updated = await storage.updateBuyerApproval(userId, isApproved);
-      if (!updated) {
-        return res.status(404).json({ message: "Buyer profile not found" });
-      }
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error updating buyer approval:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Check staff access route (for frontend to verify before accessing HQ)
-  app.get("/api/auth/check-staff", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const isStaff = await storage.hasAnyStaffRole(userId);
-      return res.json({ isStaff });
-    } catch (error) {
-      console.error("Error checking staff access:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // =====================================================
-  // Community Routes
-  // =====================================================
-  
-  // Get all community categories
-  app.get("/api/community/categories", async (req, res) => {
-    try {
-      const categories = await storage.getCommunityCategories();
-      return res.json(categories);
-    } catch (error) {
-      console.error("Error fetching community categories:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get community category by slug
-  app.get("/api/community/categories/:slug", async (req, res) => {
-    try {
-      const { slug } = req.params;
-      const category = await storage.getCommunityCategory(slug);
-      if (!category) {
-        return res.status(404).json({ message: "Category not found" });
-      }
-      return res.json(category);
-    } catch (error) {
-      console.error("Error fetching community category:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Create community category (admin only)
-  app.post("/api/community/categories", isAuthenticated, requireRole("admin"), async (req, res) => {
-    try {
-      const { name, slug, description, icon, color, order } = req.body;
-      const category = await storage.createCommunityCategory({ name, slug, description, icon, color, order });
-      return res.status(201).json(category);
-    } catch (error) {
-      console.error("Error creating community category:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get community posts (optionally filtered by category)
-  app.get("/api/community/posts", async (req, res) => {
-    try {
-      const categoryId = req.query.categoryId ? Number(req.query.categoryId) : undefined;
-      const posts = await storage.getCommunityPosts(categoryId);
-      return res.json(posts);
-    } catch (error) {
-      console.error("Error fetching community posts:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get single community post
-  app.get("/api/community/posts/:id", async (req, res) => {
-    try {
-      const id = Number(req.params.id);
-      const post = await storage.getCommunityPost(id);
-      if (!post) {
-        return res.status(404).json({ message: "Post not found" });
-      }
-      // Increment view count
-      await storage.incrementPostViews(id);
-      return res.json(post);
-    } catch (error) {
-      console.error("Error fetching community post:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Create community post (authenticated users only)
-  app.post("/api/community/posts", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const { categoryId, title, content } = req.body;
-      
-      const post = await storage.createCommunityPost({
-        categoryId,
-        userId,
-        title,
-        content,
-        isPinned: false,
-        isLocked: false,
-      });
-      return res.status(201).json(post);
-    } catch (error) {
-      console.error("Error creating community post:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Update community post (owner or admin)
-  app.patch("/api/community/posts/:id", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const id = Number(req.params.id);
-      if (!Number.isSafeInteger(id) || id <= 0) {
-        return res.status(404).json({ message: "Post not found" });
-      }
-      const post = await storage.getCommunityPost(id);
-      
-      if (!post) {
-        return res.status(404).json({ message: "Post not found" });
-      }
-      
-      // Check if user is owner or admin
-      const userRoles = await storage.getUserRoles(userId);
-      const isAdmin = userRoles.some(r => r.role === "admin");
-      if (post.userId !== userId && !isAdmin) {
-        return res.status(403).json({ message: "Not authorized to edit this post" });
-      }
-      
-      const { title, content, isPinned, isLocked } = req.body;
-      const updateData: {
-        title?: string;
-        content?: string;
-        isPinned?: boolean;
-        isLocked?: boolean;
-      } = {
-        title,
-        content,
-      };
-      if (isAdmin) {
-        if (typeof isPinned === "boolean") {
-          updateData.isPinned = isPinned;
-        }
-        if (typeof isLocked === "boolean") {
-          updateData.isLocked = isLocked;
-        }
-      }
-      const updated = await storage.updateCommunityPost(id, updateData);
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error updating community post:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get replies for a post
-  app.get("/api/community/posts/:id/replies", async (req, res) => {
-    try {
-      const postId = Number(req.params.id);
-      const replies = await storage.getCommunityReplies(postId);
-      return res.json(replies);
-    } catch (error) {
-      console.error("Error fetching community replies:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Create reply to a post (authenticated users only)
-  app.post("/api/community/posts/:id/replies", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const postId = Number(req.params.id);
-      const { content } = req.body;
-      
-      // Check if post exists and isn't locked
-      const post = await storage.getCommunityPost(postId);
-      if (!post) {
-        return res.status(404).json({ message: "Post not found" });
-      }
-      if (post.isLocked) {
-        return res.status(403).json({ message: "This thread is locked" });
-      }
-      
-      const reply = await storage.createCommunityReply({
-        postId,
-        userId,
-        content
-      });
-      return res.status(201).json(reply);
-    } catch (error) {
-      console.error("Error creating community reply:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Social Feed - get all posts across categories
-  app.get("/api/community/feed", async (req, res) => {
-    try {
-      const limit = Number(req.query.limit) || 50;
-      const posts = await storage.getSocialFeedPosts(limit);
-      return res.json(posts);
-    } catch (error) {
-      console.error("Error fetching social feed:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Toggle like on a post
-  app.post("/api/community/posts/:id/like", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const postId = Number(req.params.id);
-      const result = await storage.togglePostLike(postId, userId);
-      return res.json(result);
-    } catch (error) {
-      console.error("Error toggling like:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Check if user has liked a post
-  app.get("/api/community/posts/:id/liked", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const postId = Number(req.params.id);
-      const liked = await storage.isPostLiked(postId, userId);
-      return res.json({ liked });
-    } catch (error) {
-      console.error("Error checking like:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Toggle bookmark on a post
-  app.post("/api/community/posts/:id/bookmark", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const postId = Number(req.params.id);
-      const result = await storage.togglePostBookmark(postId, userId);
-      return res.json(result);
-    } catch (error) {
-      console.error("Error toggling bookmark:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Check if user has bookmarked a post
-  app.get("/api/community/posts/:id/bookmarked", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const postId = Number(req.params.id);
-      const bookmarked = await storage.isPostBookmarked(postId, userId);
-      return res.json({ bookmarked });
-    } catch (error) {
-      console.error("Error checking bookmark:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get user's bookmarked posts
-  app.get("/api/community/bookmarks", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const posts = await storage.getUserBookmarks(userId);
-      return res.json(posts);
-    } catch (error) {
-      console.error("Error fetching bookmarks:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // =====================================================
-  // Deal Bookmark Routes
-  // =====================================================
-
-  // Save/like/pass on a deal
-  app.post("/api/deals/action", isAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const { dealType, dealId, action } = req.body;
-      
-      if (!dealType || !dealId || !action) {
-        return res.status(400).json({ message: "Missing required fields" });
-      }
-      if (!["save", "like", "pass"].includes(String(action))) {
-        return res.status(400).json({ message: "Invalid action" });
-      }
-      if (!canAccessMarketflowItemType(res, dealType)) {
-        return res.status(404).json({ message: "Deal not found" });
-      }
-      const publicDeal = await getPublicMarketplaceItem(dealType, dealId);
-      if (!publicDeal) {
-        return res.status(404).json({ message: "Deal not found" });
-      }
-      
-      const result = await storage.saveDeal(
-        userId,
-        String(dealType),
-        Number(dealId),
-        action,
-      );
-      return res.json(result);
-    } catch (error) {
-      console.error("Error saving deal action:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get user's saved deals
-  app.get("/api/deals/saved", isAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const savedDeals = await storage.getUserSavedDeals(userId);
-      
-      // Enrich with deal details
-      const enrichedDeals = (
-        await Promise.all(
-          savedDeals
-            .filter((bookmark) =>
-              canAccessMarketflowItemType(res, bookmark.dealType),
-            )
-            .map(async (bookmark) => {
-            const deal = await getPublicMarketplaceItem(
-              bookmark.dealType,
-              bookmark.dealId,
-            );
-            return deal ? { ...bookmark, deal } : null;
-          }),
-        )
-      ).filter((entry) => entry !== null);
-      
-      return res.json(enrichedDeals);
-    } catch (error) {
-      console.error("Error fetching saved deals:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get user's liked deals (matches)
-  app.get("/api/deals/liked", isAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const likedDeals = await storage.getUserLikedDeals(userId);
-      
-      // Enrich with deal details
-      const enrichedDeals = (
-        await Promise.all(
-          likedDeals
-            .filter((bookmark) =>
-              canAccessMarketflowItemType(res, bookmark.dealType),
-            )
-            .map(async (bookmark) => {
-            const deal = await getPublicMarketplaceItem(
-              bookmark.dealType,
-              bookmark.dealId,
-            );
-            return deal ? { ...bookmark, deal } : null;
-          }),
-        )
-      ).filter((entry) => entry !== null);
-      
-      return res.json(enrichedDeals);
-    } catch (error) {
-      console.error("Error fetching liked deals:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Remove a saved deal
-  app.delete("/api/deals/:dealType/:dealId/saved", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const { dealType, dealId } = req.params;
-      
-      await storage.removeDealBookmark(userId, dealType, Number(dealId));
-      return res.json({ success: true });
-    } catch (error) {
-      console.error("Error removing saved deal:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // =====================================================
-  // Direct Messaging Routes
-  // =====================================================
-  
-  // Get user's messages
-  app.get("/api/messages", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const messages = await storage.getDirectMessages(userId);
-      return res.json(messages);
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get conversation with another user
-  app.get("/api/messages/conversation/:otherUserId", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const { otherUserId } = req.params;
-      const messages = await storage.getConversation(userId, otherUserId);
-      return res.json(messages);
-    } catch (error) {
-      console.error("Error fetching conversation:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Send a message
-  app.post("/api/messages", isAuthenticated, async (req: any, res) => {
-    try {
-      const senderId = req.user.claims.sub;
-      const { receiverId, subject, content, parentId } = req.body;
-      
-      const message = await storage.createDirectMessage({
-        senderId,
-        receiverId,
-        subject,
-        content,
-        parentId
-      });
-      
-      // Send email notification for new message (async, don't block response)
-      sendMessageNotification({
-        recipientEmail: process.env.STAFF_NOTIFICATION_EMAIL || 'messages@pegasusdreamscapes.com',
-        recipientName: 'User',
-        senderName: req.user.claims.name || 'A user',
-        messagePreview: content?.substring(0, 200) || '',
-        dealTitle: subject,
-      }).catch(err => console.error('Failed to send message email:', err));
-      
-      // Send real-time notification to receiver via WebSocket
-      const broadcastToUser = (app as any).broadcastToUser;
-      if (broadcastToUser && receiverId) {
-        broadcastToUser(receiverId, {
-          type: 'new_message',
-          payload: { messageId: message.id, senderId, subject }
-        });
-      }
-      
-      return res.status(201).json(message);
-    } catch (error) {
-      console.error("Error sending message:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Mark message as read
-  app.patch("/api/messages/:id/read", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const id = Number(req.params.id);
-      
-      // Verify the message belongs to this user
-      const messages = await storage.getDirectMessages(userId);
-      const message = messages.find(m => m.id === id);
-      if (!message || message.receiverId !== userId) {
-        return res.status(404).json({ message: "Message not found" });
-      }
-      
-      const updated = await storage.markMessageRead(id);
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error marking message as read:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get unread message count
-  app.get("/api/messages/unread-count", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const count = await storage.getUnreadMessageCount(userId);
-      return res.json({ count });
-    } catch (error) {
-      console.error("Error getting unread count:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // =====================================================
-  // Capital Projects Routes (Staff only for management)
-  // =====================================================
-  
-  // Get all capital projects
-  app.get("/api/capital-projects", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
-    try {
-      const projects = await storage.getCapitalProjects();
-      return res.json(
-        projects.filter(isPublicCapitalProject).map(toPublicCapitalProject),
-      );
-    } catch (error) {
-      console.error("Error fetching capital projects:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get active capital projects for investors
-  app.get("/api/capital-projects/active", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
-    try {
-      const projects = await storage.getActiveCapitalProjects();
-      return res.json(
-        projects.filter(isPublicCapitalProject).map(toPublicCapitalProject),
-      );
-    } catch (error) {
-      console.error("Error fetching active capital projects:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get single capital project
-  app.get("/api/capital-projects/:id", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req, res) => {
-    try {
-      const id = Number(req.params.id);
-      const project = await storage.getCapitalProject(id);
-      if (!project) {
-        return res.status(404).json({ message: "Capital project not found" });
-      }
-      if (!isPublicCapitalProject(project)) {
-        return res.status(404).json({ message: "Capital project not found" });
-      }
-      return res.json(toPublicCapitalProject(project));
-    } catch (error) {
-      console.error("Error fetching capital project:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get all capital projects (Staff only - for HQ)
-  app.get("/api/hq/capital-projects", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const projects = await storage.getCapitalProjects();
-      return res.json(projects);
-    } catch (error) {
-      console.error("Error fetching capital projects:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get all investment offers (Staff only - for HQ)
-  app.get("/api/hq/investment-offers", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const offers = await storage.getInvestmentOffers();
-      return res.json(offers);
-    } catch (error) {
-      console.error("Error fetching investment offers:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Create capital project (Staff only)
-  app.post("/api/hq/capital-projects", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const result = insertCapitalProjectSchema.safeParse({ ...req.body, createdBy: userId });
-      if (!result.success) {
-        return res.status(400).json({ message: fromError(result.error).toString() });
-      }
-      const project = await storage.createCapitalProject(result.data);
-      return res.status(201).json(project);
-    } catch (error) {
-      console.error("Error creating capital project:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Update capital project (Staff only)
-  app.patch("/api/hq/capital-projects/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const id = Number(req.params.id);
-      const project = await storage.updateCapitalProject(id, req.body);
-      if (!project) {
-        return res.status(404).json({ message: "Capital project not found" });
-      }
-      return res.json(project);
-    } catch (error) {
-      console.error("Error updating capital project:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // =====================================================
-  // Milestones Routes
-  // =====================================================
-  
-  // Get milestones for a capital project
-  app.get("/api/capital-projects/:projectId/milestones", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
-    try {
-      const projectId = Number(req.params.projectId);
-      const project = Number.isSafeInteger(projectId) && projectId > 0
-        ? await storage.getCapitalProject(projectId)
-        : undefined;
-      if (!project) {
-        return res.status(404).json({ message: "Capital project not found" });
-      }
-
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(404).json({ message: "Capital project not found" });
-      }
-      const access = await resolveLegacyDealAccess(
-        req,
-        userId,
-        "capital_project",
-        projectId,
-      );
-      if (
-        !access ||
-        (!access.isOwner &&
-          !access.isParticipant &&
-          !access.isStaff &&
-          !(res.locals.canAccessReviewedMarketflowInventory === true &&
-            isPublicCapitalProject(project)))
-      ) {
-        return res.status(404).json({ message: "Capital project not found" });
-      }
-
-      const milestones = await storage.getProjectMilestones(projectId);
-      return res.json(milestones);
-    } catch (error) {
-      console.error("Error fetching milestones:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Create milestone (Staff only)
-  app.post("/api/hq/capital-projects/:projectId/milestones", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const projectId = Number(req.params.projectId);
-      const result = insertProjectMilestoneSchema.safeParse({ ...req.body, projectId });
-      if (!result.success) {
-        return res.status(400).json({ message: fromError(result.error).toString() });
-      }
-      const milestone = await storage.createProjectMilestone(result.data);
-      return res.status(201).json(milestone);
-    } catch (error) {
-      console.error("Error creating milestone:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Update milestone (Staff only)
-  app.patch("/api/hq/milestones/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const id = Number(req.params.id);
-      const milestone = await storage.updateProjectMilestone(id, req.body);
-      if (!milestone) {
-        return res.status(404).json({ message: "Milestone not found" });
-      }
-      return res.json(milestone);
-    } catch (error) {
-      console.error("Error updating milestone:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // =====================================================
-  // Investment Offers Routes (Negotiation)
-  // =====================================================
-  
-  // Get investment offers for a project (Staff sees all, investors see theirs)
-  app.get("/api/capital-projects/:projectId/offers", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      const projectId = Number(req.params.projectId);
-      const investorOffers = await storage.getInvestmentOffersByInvestor(userId);
-      const visibleOffers = filterLegacyCapitalInvestmentsForUser(
-        userId,
-        investorOffers.filter((offer) => offer.projectId === projectId),
-      );
-      const access = await resolveLegacyDealAccess(
-        req,
-        userId,
-        "capital_project",
-        projectId,
-        { capitalInvestments: visibleOffers },
-      );
-      if (!access) {
-        return res.status(404).json({ message: "Capital project not found" });
-      }
-
-      if (access.isStaff || access.isOwner) {
-        const offers = await storage.getInvestmentOffersByProject(projectId);
-        return res.json(offers);
-      }
-
-      if (!access.isParticipant || visibleOffers.length === 0) {
-        return res.status(404).json({ message: "Capital project not found" });
-      }
-      return res.json(visibleOffers);
-    } catch (error) {
-      console.error("Error fetching investment offers:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get my investment offers (for investors)
-  app.get("/api/my-investment-offers", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const offers = await storage.getInvestmentOffersByInvestor(userId);
-      return res.json(offers);
-    } catch (error) {
-      console.error("Error fetching my investment offers:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Create investment offer (Investors)
-  app.post("/api/investment-offers", isHybridAuthenticated, async (req: any, res) => {
-    return res.status(501).json({
-      message:
-        "Legacy investment offers are read-only. Use MarketFlow Offer Studio for persisted offers.",
-    });
-  });
-
-  // Respond to investment offer (Staff only - accept/decline/counter)
-  app.post("/api/hq/investment-offers/:id/respond", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    return res.status(501).json({
-      message:
-        "Legacy investment offers are read-only. Use MarketFlow Offer Studio to respond.",
-    });
-  });
-
-  // =====================================================
-  // Committed Investments Routes
-  // =====================================================
-  
-  // Get committed investments for a project
-  app.get("/api/capital-projects/:projectId/commitments", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      const projectId = Number(req.params.projectId);
-      const investorCommitments =
-        await storage.getCommittedInvestmentsByInvestor(userId);
-      const visibleCommitments = filterLegacyCapitalInvestmentsForUser(
-        userId,
-        investorCommitments.filter(
-          (commitment) => commitment.projectId === projectId,
-        ),
-      );
-      const access = await resolveLegacyDealAccess(
-        req,
-        userId,
-        "capital_project",
-        projectId,
-        { capitalInvestments: visibleCommitments },
-      );
-      if (!access) {
-        return res.status(404).json({ message: "Capital project not found" });
-      }
-
-      if (access.isStaff || access.isOwner) {
-        const commitments = await storage.getCommittedInvestmentsByProject(projectId);
-        return res.json(commitments);
-      }
-
-      if (!access.isParticipant || visibleCommitments.length === 0) {
-        return res.status(404).json({ message: "Capital project not found" });
-      }
-      return res.json(visibleCommitments);
-    } catch (error) {
-      console.error("Error fetching committed investments:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get my committed investments
-  app.get("/api/my-committed-investments", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const commitments = await storage.getCommittedInvestmentsByInvestor(userId);
-      return res.json(commitments);
-    } catch (error) {
-      console.error("Error fetching my committed investments:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // =====================================================
-  // Term Sheet PDF Generation Routes
-  // =====================================================
-  
-  // Generate term sheet PDF for an investment
-  app.post("/api/investments/:investmentId/term-sheet", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const investmentId = Number(req.params.investmentId);
-      
-      // Get the investment offer
-      const offers = await storage.getInvestmentOffersByInvestor(userId);
-      const offer = offers.find(o => o.id === investmentId);
-      
-      if (!offer) {
-        return res.status(404).json({ message: "Investment offer not found" });
-      }
-
-      // Get the project
-      const project = await storage.getCapitalProject(offer.projectId);
-      if (!project) {
-        return res.status(404).json({ message: "Project not found" });
-      }
-      
-      // Get the user
-      const user = await storage.getUser(userId);
-      
-      // Generate PDF
-      const { buffer, filename } = await generateTermSheetPDF(
-        project,
-        { 
-          firstName: user?.firstName, 
-          lastName: user?.lastName, 
-          email: user?.email 
-        },
-        {
-          investmentAmount: offer.amountOffered,
-          structureType: (offer.structureType as "equity" | "debt" | "hybrid") || "equity",
-          role: offer.requestedRole,
-          equityPercent: offer.proposedEquityPercent || undefined,
-          profitSplit: offer.proposedProfitSplit || undefined,
-          interestRate: offer.proposedInterestRate || undefined,
-          loanDuration: offer.proposedLoanDuration || undefined,
-          isAcceptingOperatorTerms: offer.isAcceptingOperatorTerms || false
-        }
-      );
-      
-      res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
-      res.send(buffer);
-    } catch (error) {
-      console.error("Error generating term sheet:", error);
-      return res.status(500).json({ message: "Failed to generate term sheet" });
-    }
-  });
-  
-  // Generate preview term sheet PDF (before confirming investment)
-  app.post("/api/capital-projects/:projectId/term-sheet-preview", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      const projectId = Number(req.params.projectId);
-      const { investmentAmount, structureType, role, equityPercent, profitSplit, interestRate, loanDuration, isAcceptingOperatorTerms } = req.body;
-
-      if (!Number.isSafeInteger(projectId) || projectId <= 0) {
-        return res.status(404).json({ message: "Project not found" });
-      }
-
-      const access = await resolveLegacyDealAccess(
-        req,
-        userId,
-        "capital_project",
-        projectId,
-      );
-      if (!access || !canInitiateLegacyDealInteraction(access, res)) {
-        return res.status(404).json({ message: "Project not found" });
-      }
-
-      // Get the project
-      const project = await storage.getCapitalProject(projectId);
-      if (!project) {
-        return res.status(404).json({ message: "Project not found" });
-      }
-      
-      // Get the user
-      const user = await storage.getUser(userId);
-      
-      // Generate PDF
-      const { buffer, filename } = await generateTermSheetPDF(
-        project,
-        { 
-          firstName: user?.firstName, 
-          lastName: user?.lastName, 
-          email: user?.email 
-        },
-        {
-          investmentAmount: investmentAmount || 0,
-          structureType: structureType || "equity",
-          role: role || "LP",
-          equityPercent,
-          profitSplit,
-          interestRate,
-          loanDuration,
-          isAcceptingOperatorTerms: isAcceptingOperatorTerms || false
-        }
-      );
-      
-      res.setHeader("Content-Type", "application/pdf");
-      res.setHeader("Content-Disposition", `inline; filename="${filename}"`);
-      res.send(buffer);
-    } catch (error) {
-      console.error("Error generating term sheet preview:", error);
-      return res.status(500).json({ message: "Failed to generate term sheet preview" });
-    }
-  });
-
-  // =====================================================
-  // Deal Matches Routes
-  // =====================================================
-  
-  // Get deal matches for staff
-  app.get("/api/hq/deal-matches", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const matches = await storage.getDealMatches();
-      return res.json(matches);
-    } catch (error) {
-      console.error("Error fetching deal matches:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get my deal matches (buyers/investors)
-  app.get("/api/my-deal-matches", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const matches = await storage.getDealMatchesByUser(userId);
-      return res.json(matches);
-    } catch (error) {
-      console.error("Error fetching my deal matches:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Create deal match (Staff only)
-  app.post("/api/hq/deal-matches", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const result = insertDealMatchSchema.safeParse({ ...req.body, matchedBy: userId });
-      if (!result.success) {
-        return res.status(400).json({ message: fromError(result.error).toString() });
-      }
-      const match = await storage.createDealMatch(result.data);
-      return res.status(201).json(match);
-    } catch (error) {
-      console.error("Error creating deal match:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Update deal match status
-  app.patch("/api/deal-matches/:id/status", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const id = Number(req.params.id);
-      const { status } = req.body;
-      
-      // Verify user can update this match
-      const matches = await storage.getDealMatchesByUser(userId);
-      const isStaff = await storage.hasAnyStaffRole(userId);
-      const match = matches.find(m => m.id === id);
-      
-      if (!match && !isStaff) {
-        return res.status(403).json({ message: "Not authorized to update this match" });
-      }
-      
-      const updated = await storage.updateDealMatchStatus(id, status);
-      if (!updated) {
-        return res.status(404).json({ message: "Deal match not found" });
-      }
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error updating deal match status:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // =====================================================
-  // Announcements Routes
-  // =====================================================
-  
-  // Get announcements for current user's role
-  app.get("/api/announcements", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const roles = await storage.getUserRoles(userId);
-      const roleNames = roles.map(r => r.role);
-      
-      // Determine audience based on roles
-      let audience = "ALL";
-      if (roleNames.some(r => STAFF_ROLES.includes(r as any))) {
-        audience = "STAFF";
-      } else if (roleNames.includes("investor")) {
-        audience = "INVESTORS";
-      } else if (roleNames.includes("wholesaler")) {
-        audience = "WHOLESALERS";
-      } else if (roleNames.includes("buyer")) {
-        audience = "BUYERS";
-      }
-      
-      const announcements = await storage.getAnnouncementsForAudience(audience);
-      return res.json(announcements);
-    } catch (error) {
-      console.error("Error fetching announcements:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get all announcements (Staff only)
-  app.get("/api/hq/announcements", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const announcements = await storage.getAnnouncements();
-      return res.json(announcements);
-    } catch (error) {
-      console.error("Error fetching all announcements:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Create announcement (Staff only)
-  app.post("/api/hq/announcements", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const result = insertAnnouncementSchema.safeParse({ ...req.body, createdBy: userId });
-      if (!result.success) {
-        return res.status(400).json({ message: fromError(result.error).toString() });
-      }
-      const announcement = await storage.createAnnouncement(result.data);
-      return res.status(201).json(announcement);
-    } catch (error) {
-      console.error("Error creating announcement:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Update announcement (Staff only)
-  app.patch("/api/hq/announcements/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const id = Number(req.params.id);
-      const announcement = await storage.updateAnnouncement(id, req.body);
-      if (!announcement) {
-        return res.status(404).json({ message: "Announcement not found" });
-      }
-      return res.json(announcement);
-    } catch (error) {
-      console.error("Error updating announcement:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Delete announcement (Staff only)
-  app.delete("/api/hq/announcements/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const id = Number(req.params.id);
-      await storage.deleteAnnouncement(id);
-      return res.status(204).send();
-    } catch (error) {
-      console.error("Error deleting announcement:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // =====================================================
-  // Staff Management Routes (Admin only)
-  // =====================================================
-  
-  // Get all staff members with their roles
-  app.get("/api/hq/staff", isAuthenticated, requireRole("admin"), async (req: any, res) => {
-    try {
-      const profiles = await storage.getAllStaffProfiles();
-      // Get roles for each staff member
-      const staffWithRoles = await Promise.all(
-        profiles.map(async (profile) => {
-          const user = await storage.getUser(profile.userId);
-          const roles = await storage.getUserRoles(profile.userId);
-          return {
-            ...profile,
-            user,
-            roles: roles.map(r => r.role),
-          };
-        })
-      );
-      return res.json(staffWithRoles);
-    } catch (error) {
-      console.error("Error fetching staff:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get all users with staff roles (for listing team)
-  app.get("/api/hq/staff/all-users", isAuthenticated, requireRole("admin"), async (req: any, res) => {
-    try {
-      const allUsers = await storage.getAllUsers();
-      // Get roles for each user
-      const usersWithRoles = await Promise.all(
-        allUsers.map(async (user) => {
-          const roles = await storage.getUserRoles(user.id);
-          return {
-            ...user,
-            roles: roles.map(r => r.role),
-          };
-        })
-      );
-      return res.json(usersWithRoles);
-    } catch (error) {
-      console.error("Error fetching all users:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Add role to user
-  app.post("/api/hq/staff/roles", isAuthenticated, requireRole("admin"), async (req: any, res) => {
-    try {
-      const { userId, role } = req.body;
-      if (!userId || !role) {
-        return res.status(400).json({ message: "userId and role are required" });
-      }
-      
-      // Check if user exists
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      
-      // Add the role
-      await storage.addUserRole({ userId, role });
-      
-      // Return updated roles
-      const roles = await storage.getUserRoles(userId);
-      return res.json({ userId, roles: roles.map(r => r.role) });
-    } catch (error) {
-      console.error("Error adding role:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Remove role from user
-  app.delete("/api/hq/staff/roles", isAuthenticated, requireRole("admin"), async (req: any, res) => {
-    try {
-      const { userId, role } = req.body;
-      if (!userId || !role) {
-        return res.status(400).json({ message: "userId and role are required" });
-      }
-      
-      // Remove the role
-      await storage.removeUserRole(userId, role);
-      
-      // Return updated roles
-      const roles = await storage.getUserRoles(userId);
-      return res.json({ userId, roles: roles.map(r => r.role) });
-    } catch (error) {
-      console.error("Error removing role:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Create or update staff profile
-  app.post("/api/hq/staff/profile", isAuthenticated, requireRole("admin"), async (req: any, res) => {
-    try {
-      const profile = await storage.upsertStaffProfile(req.body);
-      return res.json(profile);
-    } catch (error) {
-      console.error("Error creating/updating staff profile:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // =====================================================
-  // Notifications Routes
-  // =====================================================
-  
-  // Get my notifications
-  app.get("/api/notifications", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const notifications = await storage.getNotifications(userId);
-      return res.json(notifications);
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get unread notifications
-  app.get("/api/notifications/unread", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const notifications = await storage.getUnreadNotifications(userId);
-      return res.json(notifications);
-    } catch (error) {
-      console.error("Error fetching unread notifications:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get unread notification count
-  app.get("/api/notifications/unread-count", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const count = await storage.getUnreadNotificationCount(userId);
-      return res.json({ count });
-    } catch (error) {
-      console.error("Error getting unread notification count:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Mark notification as read
-  app.patch("/api/notifications/:id/read", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const id = Number(req.params.id);
-      
-      // Verify notification belongs to user
-      const notifications = await storage.getNotifications(userId);
-      const notification = notifications.find(n => n.id === id);
-      if (!notification) {
-        return res.status(404).json({ message: "Notification not found" });
-      }
-      
-      const updated = await storage.markNotificationRead(id);
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error marking notification as read:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Mark all notifications as read
-  app.post("/api/notifications/mark-all-read", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      await storage.markAllNotificationsRead(userId);
-      return res.json({ success: true });
-    } catch (error) {
-      console.error("Error marking all notifications as read:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Create notification (Staff only - for manual notifications)
-  app.post("/api/hq/notifications", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const result = insertNotificationSchema.safeParse(req.body);
-      if (!result.success) {
-        return res.status(400).json({ message: fromError(result.error).toString() });
-      }
-      const notification = await storage.createNotification(result.data);
-      return res.status(201).json(notification);
-    } catch (error) {
-      console.error("Error creating notification:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // =====================================================
-  // Investor Activity Feed Routes
-  // =====================================================
-  
-  // Get user's activity feed
-  app.get("/api/investor-activity", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const activities = await storage.getInvestorActivity(userId);
-      return res.json(activities);
-    } catch (error) {
-      console.error("Error fetching investor activity:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Add activity to feed
-  app.post("/api/investor-activity", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const { type, title, description, link, relatedType, relatedId } = req.body;
-      
-      if (!type || !title) {
-        return res.status(400).json({ message: "Type and title are required" });
-      }
-      
-      const activity = await storage.createInvestorActivity({
-        userId,
-        activityType: type,
-        title,
-        description,
-        link,
-        relatedType,
-        relatedId
-      });
-      
-      return res.status(201).json(activity);
-    } catch (error) {
-      console.error("Error creating investor activity:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // =====================================================
-  // Investor Wanted Deals Routes
-  // =====================================================
-  
-  // Get all active investor wanted deals (public)
-  app.get("/api/investor-wanted-deals", async (req, res) => {
-    try {
-      const deals = await storage.getActiveInvestorWantedDeals();
-      return res.json(
-        deals
-          .filter(
-            (deal) => deal.isPublic !== false && deal.activelyLooking !== false,
-          )
-          .map(toPublicInvestorWantedDeal),
-      );
-    } catch (error) {
-      console.error("Error fetching investor wanted deals:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get my investor wanted deals
-  app.get("/api/my-investor-wanted-deals", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const deals = await storage.getInvestorWantedDealsByUser(userId);
-      return res.json(deals);
-    } catch (error) {
-      console.error("Error fetching my investor wanted deals:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get user's investment preferences (for matching)
-  app.get("/api/my-investor-preferences", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const deals = await storage.getInvestorWantedDealsByUser(userId);
-      
-      if (deals.length === 0) {
-        return res.json({});
-      }
-      
-      const primaryDeal = deals.find(d => d.activelyLooking) || deals[0];
-      
-      return res.json({
-        propertyTypes: primaryDeal.propertyTypes || [],
-        strategies: primaryDeal.strategies || [],
-        locations: primaryDeal.locations || [],
-        minBudget: primaryDeal.minBudget,
-        maxBudget: primaryDeal.maxBudget,
-        targetReturnMin: primaryDeal.targetReturnMin,
-        targetReturnMax: primaryDeal.targetReturnMax,
-        preferredStructure: primaryDeal.preferredStructure,
-        holdPeriodPreference: primaryDeal.holdPeriodPreference,
-      });
-    } catch (error) {
-      console.error("Error fetching investor preferences:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get single investor wanted deal
-  app.get("/api/investor-wanted-deals/:id", async (req, res) => {
-    try {
-      const id = Number(req.params.id);
-      const deal = await storage.getInvestorWantedDeal(id);
-      if (
-        !deal ||
-        deal.isPublic === false ||
-        deal.activelyLooking === false
-      ) {
-        return res.status(404).json({ message: "Investor wanted deal not found" });
-      }
-      return res.json(toPublicInvestorWantedDeal(deal));
-    } catch (error) {
-      console.error("Error fetching investor wanted deal:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Create investor wanted deal
-  app.post("/api/investor-wanted-deals", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const deal = await storage.createInvestorWantedDeal({ ...req.body, userId });
-      return res.status(201).json(deal);
-    } catch (error) {
-      console.error("Error creating investor wanted deal:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Update investor wanted deal
-  app.patch("/api/investor-wanted-deals/:id", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const id = Number(req.params.id);
-      
-      // Verify ownership
-      const existingDeal = await storage.getInvestorWantedDeal(id);
-      if (!existingDeal) {
-        return res.status(404).json({ message: "Investor wanted deal not found" });
-      }
-      if (existingDeal.userId !== userId) {
-        return res.status(403).json({ message: "Not authorized to update this deal" });
-      }
-      
-      const deal = await storage.updateInvestorWantedDeal(id, req.body);
-      return res.json(deal);
-    } catch (error) {
-      console.error("Error updating investor wanted deal:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Delete investor wanted deal
-  app.delete("/api/investor-wanted-deals/:id", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const id = Number(req.params.id);
-      
-      // Verify ownership
-      const existingDeal = await storage.getInvestorWantedDeal(id);
-      if (!existingDeal) {
-        return res.status(404).json({ message: "Investor wanted deal not found" });
-      }
-      if (existingDeal.userId !== userId) {
-        const isStaff = await storage.hasAnyStaffRole(userId);
-        if (!isStaff) {
-          return res.status(403).json({ message: "Not authorized to delete this deal" });
-        }
-      }
-      
-      await storage.deleteInvestorWantedDeal(id);
-      return res.status(204).send();
-    } catch (error) {
-      console.error("Error deleting investor wanted deal:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // =====================================================
-  // User Profile Routes
-  // =====================================================
-  
-  // Get user profile by ID
-  app.get("/api/users/:userId", async (req, res) => {
-    try {
-      const { userId } = req.params;
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      return res.json(toPublicUserProfile(user));
-    } catch (error) {
-      console.error("Error fetching user profile:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // =====================================================
-  // User Reviews Routes
-  // =====================================================
-  
-  // Get reviews for a user
-  app.get("/api/users/:userId/reviews", async (req, res) => {
-    try {
-      const { userId } = req.params;
-      const reviews = await storage.getUserReviews(userId);
-      return res.json(reviews.filter((review) => review.isPublic === true));
-    } catch (error) {
-      console.error("Error fetching user reviews:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get my given reviews
-  app.get("/api/my-reviews", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const reviews = await storage.getReviewsByReviewer(userId);
-      return res.json(reviews);
-    } catch (error) {
-      console.error("Error fetching my reviews:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Create review
-  app.post("/api/reviews", isAuthenticated, async (req: any, res) => {
-    return res.status(501).json({
-      message:
-        "Reviews are unavailable until Pegasus can verify a completed transaction.",
-    });
-  });
-
-  // Respond to review (reviewee only)
-  app.post("/api/reviews/:id/respond", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const id = Number(req.params.id);
-      const { response } = req.body;
-      
-      // Verify this is the reviewee
-      const review = await storage.getUserReview(id);
-      if (!review) {
-        return res.status(404).json({ message: "Review not found" });
-      }
-      if (review.revieweeId !== userId) {
-        return res.status(403).json({ message: "Only the reviewee can respond to this review" });
-      }
-      
-      const updated = await storage.respondToReview(id, response);
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error responding to review:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // =====================================================
-  // User Stats Routes
-  // =====================================================
-  
-  // Get user stats
-  app.get("/api/users/:userId/stats", async (req, res) => {
-    try {
-      const { userId } = req.params;
-      const stats = await storage.getUserStats(userId);
-      return res.json(stats || {});
-    } catch (error) {
-      console.error("Error fetching user stats:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get user activity (timeline of recent actions)
-  app.get("/api/users/:userId/activity", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const { userId } = req.params;
-      const requestingUserId =
-        req.user?.claims?.sub || req.supabaseUser?.id;
-      if (!requestingUserId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      if (
-        requestingUserId !== userId &&
-        !(await hasMarketflowStaffAccess(req, requestingUserId))
-      ) {
-        return res.status(404).json({ message: "User not found" });
-      }
-
-      const activities = await storage.getUserActivity(userId);
-      return res.json(activities);
-    } catch (error) {
-      console.error("Error fetching user activity:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get user reputation
-  app.get("/api/users/:userId/reputation", async (req, res) => {
-    try {
-      const { userId } = req.params;
-      if (!userId || userId.length < 1 || userId.length > 100) {
-        return res.status(400).json({ message: "Invalid user ID" });
-      }
-      const reputation = await storage.getUserReputation(userId);
-      return res.json(reputation || null);
-    } catch (error) {
-      console.error("Error fetching user reputation:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get user badges
-  app.get("/api/users/:userId/badges", async (req, res) => {
-    try {
-      const { userId } = req.params;
-      if (!userId || userId.length < 1 || userId.length > 100) {
-        return res.status(400).json({ message: "Invalid user ID" });
-      }
-      const badges = await storage.getUserBadges(userId);
-      return res.json(badges || []);
-    } catch (error) {
-      console.error("Error fetching user badges:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // =====================================================
-  // Deal Negotiations Routes
-  // =====================================================
-  
-  // Get negotiations for a deal
-  app.get("/api/negotiations/:dealType/:dealId(\\d+)", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      const { dealType, dealId } = req.params;
-      const numericDealId = Number(dealId);
-      const negotiations = await storage.getDealNegotiations(
-        dealType,
-        numericDealId,
-      );
-      const access = await resolveLegacyDealAccess(
-        req,
-        userId,
-        dealType,
-        numericDealId,
-        { negotiations },
-      );
-      if (
-        !access ||
-        (!access.isOwner && !access.isParticipant && !access.isStaff)
-      ) {
-        return res.status(404).json({ message: "Deal not found" });
-      }
-
-      if (access.isOwner || access.isStaff) {
-        return res.json(negotiations);
-      }
-      const visibleNegotiations = filterLegacyNegotiationsForUser(
-        userId,
-        negotiations,
-      );
-      if (visibleNegotiations.length === 0) {
-        return res.status(404).json({ message: "Deal not found" });
-      }
-      return res.json(visibleNegotiations);
-    } catch (error) {
-      console.error("Error fetching deal negotiations:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get my negotiations
-  app.get("/api/my-negotiations", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      const negotiations = await storage.getNegotiationsByUser(userId);
-      return res.json(negotiations);
-    } catch (error) {
-      console.error("Error fetching my negotiations:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Create negotiation (make offer/counter-offer)
-  app.post("/api/negotiations", isHybridAuthenticated, async (req: any, res) => {
-    return res.status(501).json({
-      message:
-        "Legacy negotiations are read-only. Use MarketFlow Offer Studio for new or counter offers.",
-    });
-  });
-
-  // Get negotiation thread (original + all counter-offers)
-  app.get("/api/negotiations/:id/thread", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      const id = Number(req.params.id);
-      const negotiation = Number.isSafeInteger(id) && id > 0
-        ? await storage.getDealNegotiation(id)
-        : undefined;
-      if (!negotiation) {
-        return res.status(404).json({ message: "Negotiation not found" });
-      }
-      const access = await resolveLegacyDealAccess(
-        req,
-        userId,
-        negotiation.dealType,
-        negotiation.dealId,
-        { negotiations: [negotiation] },
-      );
-      if (
-        !access ||
-        (!access.isOwner && !access.isParticipant && !access.isStaff)
-      ) {
-        return res.status(404).json({ message: "Negotiation not found" });
-      }
-
-      const thread = await storage.getNegotiationThread(id);
-      if (access.isOwner || access.isStaff) {
-        return res.json(thread);
-      }
-      const visibleThread = filterLegacyNegotiationsForUser(userId, thread);
-      if (
-        !isLegacyDealParticipant(userId, { negotiations: [negotiation] }) ||
-        visibleThread.length === 0
-      ) {
-        return res.status(404).json({ message: "Negotiation not found" });
-      }
-      return res.json(visibleThread);
-    } catch (error) {
-      console.error("Error fetching negotiation thread:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Respond to negotiation (accept/decline/counter)
-  app.post("/api/negotiations/:id/respond", isHybridAuthenticated, async (req: any, res) => {
-    return res.status(501).json({
-      message:
-        "Legacy negotiations are read-only. Use MarketFlow Offer Studio to respond.",
-    });
-  });
-
-  // =====================================================
-  // Deal Messages (Chat) Routes
-  // =====================================================
-  
-  // Get messages for a deal
-  app.get("/api/deal-messages/:dealType/:dealId", isHybridAuthenticated, async (req: any, res) => {
-    return res.status(501).json({
-      message:
-        "Legacy deal chat is unavailable. Use the conversation attached to a MarketFlow offer.",
-    });
-  });
-  
-  // Send a message
-  app.post("/api/deal-messages", isHybridAuthenticated, async (req: any, res) => {
-    return res.status(501).json({
-      message:
-        "Legacy deal chat is unavailable. Use the conversation attached to a MarketFlow offer.",
-    });
-  });
-  
-  // Get unread message count
-  app.get("/api/deal-messages/:dealType/:dealId/unread", isHybridAuthenticated, async (req: any, res) => {
-    return res.status(501).json({
-      message:
-        "Legacy deal chat is unavailable. Use the conversation attached to a MarketFlow offer.",
-    });
-  });
-
-  // =====================================================
-  // Wholesale Deal Documents Routes
-  // =====================================================
-  
-  // Get documents for a wholesale deal
-  app.get("/api/wholesale-deals/:dealId/documents", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      const dealId = Number(req.params.dealId);
-      const access = await resolveLegacyDealAccess(
-        req,
-        userId,
-        "wholesale_deal",
-        dealId,
-      );
-      if (
-        !access ||
-        (!access.isOwner && !access.isParticipant && !access.isStaff)
-      ) {
-        return res.status(404).json({ message: "Wholesale deal not found" });
-      }
-
-      const documents = await storage.getWholesaleDealDocuments(dealId);
-      if (!access.isOwner && !access.isStaff) {
-        return res.json(filterLegacyDocumentsForParticipant(documents));
-      }
-      return res.json(documents);
-    } catch (error) {
-      console.error("Error fetching wholesale deal documents:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Upload document (wholesaler only)
-  app.post("/api/wholesale-deals/:dealId/documents", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      const dealId = Number(req.params.dealId);
-      
-      const access = await resolveLegacyDealAccess(
-        req,
-        userId,
-        "wholesale_deal",
-        dealId,
-      );
-      if (!access || (!access.isOwner && !access.isStaff)) {
-        return res.status(404).json({ message: "Wholesale deal not found" });
-      }
-      
-      const document = await storage.createWholesaleDealDocument({
-        ...req.body,
-        dealId,
-        uploadedBy: userId,
-      });
-      return res.status(201).json(document);
-    } catch (error) {
-      console.error("Error uploading document:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Delete document
-  app.delete("/api/wholesale-deal-documents/:id", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      const id = Number(req.params.id);
-      const document = Number.isSafeInteger(id) && id > 0
-        ? await storage.getWholesaleDealDocument(id)
-        : undefined;
-      if (!document) {
-        return res.status(404).json({ message: "Document not found" });
-      }
-      const access = await resolveLegacyDealAccess(
-        req,
-        userId,
-        "wholesale_deal",
-        document.dealId,
-      );
-      if (
-        !access ||
-        !canDeleteLegacyWholesaleDocument({
-          userId,
-          dealOwnerId: access.ownerId,
-          uploadedBy: document.uploadedBy,
-          isStaff: access.isStaff,
-        })
-      ) {
-        return res.status(404).json({ message: "Document not found" });
-      }
-
-      await storage.deleteWholesaleDealDocument(id);
-      return res.status(204).send();
-    } catch (error) {
-      console.error("Error deleting document:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // =====================================================
-  // Deal Analyzer Routes
-  // =====================================================
-  
-  // Get my analyzer results
-  app.get("/api/my-deal-analyses", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const results = await storage.getDealAnalyzerResults(userId);
-      return res.json(results);
-    } catch (error) {
-      console.error("Error fetching deal analyses:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Save analyzer result
-  app.post("/api/deal-analyses", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const result = await storage.createDealAnalyzerResult({
-        userId,
-        ...req.body
-      });
-      return res.status(201).json(result);
-    } catch (error) {
-      console.error("Error saving deal analysis:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Delete analyzer result
-  app.delete("/api/deal-analyses/:id", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const id = Number(req.params.id);
-      
-      // Verify ownership
-      const result = await storage.getDealAnalyzerResult(id);
-      if (!result) {
-        return res.status(404).json({ message: "Analysis not found" });
-      }
-      if (result.userId !== userId) {
-        return res.status(403).json({ message: "Not authorized to delete this analysis" });
-      }
-      
-      await storage.deleteDealAnalyzerResult(id);
-      return res.status(204).send();
-    } catch (error) {
-      console.error("Error deleting deal analysis:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // =====================================================
-  // PEGGY AI ASSISTANT ROUTES
-  // =====================================================
-
-  const requirePeggyConversationAccess =
-    createPeggyConversationAccessGuard({
-      getConversation: (id) => storage.getPeggyConversation(id),
-      getVerifiedUserId: getVerifiedPeggyUserId,
-    });
-
-  const peggyIdentityNoStore: RequestHandler = (_req, res, next) => {
-    res.set("Cache-Control", "no-store");
-    next();
-  };
-  const peggyCalculatorRateLimit = rateLimit(10, 60_000);
-
-  registerPeggyIdentityRoutes(app, {
-    noStore: peggyIdentityNoStore,
-    publicCreateRateLimit: publicIntakeRateLimit,
-    calculatorRateLimit: peggyCalculatorRateLimit,
-    isHybridAuthenticated,
-    getVerifiedPeggyUserId,
-    randomUUID,
-    getAccessSecret: getPeggyConversationAccessSecret,
-    createAccessToken: createPeggyConversationAccessToken,
-    startWebConversation: peggy.startWebConversation,
-    parseCalculatorRequest: parsePeggyCalculatorRequest,
-    analyzeCalculator: peggy.analyzeCalculatorResults,
-  });
-
-  registerPeggyConversationAccessRefreshRoute(app, {
-    noStore: peggyIdentityNoStore,
-    rateLimit: publicIntakeRateLimit,
-    getConversation: (id) => storage.getPeggyConversation(id),
-    getVerifiedUserId: getVerifiedPeggyUserId,
-    getSecret: getPeggyConversationAccessSecret,
-    verifyAccessToken: verifyPeggyConversationAccessToken,
-    createAccessToken: createPeggyConversationAccessToken,
-  });
-
-  app.use("/api/peggy", peggyIdentityNoStore);
-  app.use("/api/admin/peggy", peggyIdentityNoStore);
-
-  // Get conversation history
-  app.get("/api/peggy/conversations/:id", requirePeggyConversationAccess, async (req: any, res) => {
-    try {
-      const conversation = res.locals.peggyConversation;
-      const conversationId = conversation.id;
-      const messages = await storage.getPeggyMessages(conversationId);
-      return res.json({ conversation, messages });
-    } catch (error) {
-      console.error("Error fetching Peggy conversation:", error);
-      return res.status(500).json({ message: "Failed to fetch conversation" });
-    }
-  });
-
-  // Get user's conversations list
-  app.get("/api/peggy/conversations", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub;
-      const conversations = await storage.getPeggyConversations(userId);
-      return res.json(conversations);
-    } catch (error) {
-      console.error("Error fetching Peggy conversations:", error);
-      return res.status(500).json({ message: "Failed to fetch conversations" });
-    }
-  });
-
-  // Send a message to Peggy
-  // Task #151 â€” bumped from 20/60s to 30/60s per Amendment 2 Â§D.
-  app.post("/api/peggy/chat", rateLimit(30, 60000), requirePeggyConversationAccess, async (req: any, res) => {
-    try {
-      const { conversationId, message, context } = req.body;
-
-      if (!conversationId || !message) {
-        return res.status(400).json({ message: "conversationId and message are required" });
-      }
-
-      const result = await peggy.chat(message, conversationId, context);
-      return res.json(result);
-    } catch (error) {
-      console.error("Error in Peggy chat:", error);
-      return res.status(500).json({ message: "Failed to get response from Peggy" });
-    }
-  });
-
-  // Task #151 â€” mark a conversation done. Triggers final intake extraction
-  // pass and (if disposition resolved to human_required) an immediate email.
-  app.post("/api/peggy/conversations/:id/finish", publicIntakeRateLimit, requirePeggyConversationAccess, async (req: any, res) => {
-    try {
-      const conversation = res.locals.peggyConversation;
-      const id = conversation.id;
-      const messages = await storage.getPeggyMessages(id);
-      const transcript = messages
-        .filter(m => m.role !== "system")
-        .map(m => ({ role: m.role as "user" | "assistant", content: m.content }));
-
-      const extracted = await peggy.extractIntake(transcript);
-      const patch: any = { endedAt: new Date() };
-      if (extracted) {
-        patch.intake = extracted.intake;
-        patch.disposition = extracted.disposition || conversation.disposition || undefined;
-        patch.summary = extracted.summary || conversation.summary || undefined;
-        if (extracted.intake.identity?.name) patch.contactName = extracted.intake.identity.name;
-        if (extracted.intake.identity?.email) patch.contactEmail = extracted.intake.identity.email;
-        if (extracted.intake.identity?.phone) patch.contactPhone = extracted.intake.identity.phone;
-      }
-      const updated = await storage.updatePeggyConversation(id, patch);
-
-      // If this conversation ended on human_required, make sure Apollo got an email
-      if (updated?.disposition === "human_required" && !updated?.reportedAt) {
-        const { sendPeggyHumanRequired } = await import("./email");
-        await sendPeggyHumanRequired({
-          conversation: updated,
-          transcript: messages,
-          reason: updated.humanRequiredReason || "manual_finish",
-        });
-      }
-
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error finishing Peggy conversation:", error);
-      return res.status(500).json({ message: "Failed to finish conversation" });
-    }
-  });
-
-  // Task #152 â€” Peggy phone webhook (vendor-agnostic; see server/peggy-phone.ts).
-  // Vendor (Vapi / Bland / Retell) POSTs each caller turn here and posts the
-  // end-of-call event here. We verify the HMAC signature, route to the right
-  // handler, and return a JSON instruction packet for the vendor to execute.
-  //
-  // Apollo-side setup: set PEGGY_PHONE_WEBHOOK_SECRET, point vendor's webhook
-  // URL at /api/peggy/phone/webhook, and configure the vendor to sign with the
-  // same secret (HMAC-SHA256 over the raw body, sent in x-peggy-signature).
-  app.post(
-    "/api/peggy/phone/webhook",
-    express.raw({ type: "application/json", limit: "256kb" }),
-    async (req: any, res) => {
-      try {
-        const rawBody = (req.body instanceof Buffer ? req.body : Buffer.from(req.body || ""))
-          .toString("utf8");
-        const signature =
-          (req.headers["x-peggy-signature"] as string | undefined) ||
-          (req.headers["x-vapi-secret"] as string | undefined);
-        const phone = await import("./peggy-phone");
-        if (!phone.verifyPhoneWebhookSignature(rawBody, signature)) {
-          return res.status(401).json({ message: "Invalid signature" });
-        }
-        const payload = JSON.parse(rawBody);
-        if (payload.event === "turn") {
-          const result = await phone.handlePhoneTurn(payload);
-          return res.json(result);
-        }
-        if (payload.event === "end" || payload.event === "call_ended") {
-          await phone.handlePhoneEnd(payload);
-          return res.json({ ok: true });
-        }
-        // Unknown event â€” acknowledge to keep the vendor happy, log for review.
-        console.warn("[peggy-phone] Unknown webhook event:", payload.event);
-        return res.json({ ok: true });
-      } catch (error) {
-        console.error("Error in Peggy phone webhook:", error);
-        res.status(500).json({ message: "Phone webhook failure" });
-      }
-    },
-  );
-
-  // Task #151 â€” admin: list last 30 days of Peggy conversations.
-  app.get("/api/admin/peggy/conversations", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userEmail = (req.user?.claims?.email || req.user?.email || "").toLowerCase();
-      if (!userEmail || !ADMIN_EMAILS.includes(userEmail)) {
-        return res.status(403).json({ message: "Admin access required" });
-      }
-      const sinceMs = Date.now() - 30 * 24 * 60 * 60 * 1000;
-      const conversations = await storage.getPeggyConversationsSince(sinceMs);
-      res.json(conversations);
-    } catch (error) {
-      console.error("Error listing Peggy conversations:", error);
-      res.status(500).json({ message: "Failed to list conversations" });
-    }
-  });
-
-  // Task #151 â€” admin: fetch a single conversation + transcript.
-  app.get("/api/admin/peggy/conversations/:id", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userEmail = (req.user?.claims?.email || req.user?.email || "").toLowerCase();
-      if (!userEmail || !ADMIN_EMAILS.includes(userEmail)) {
-        return res.status(403).json({ message: "Admin access required" });
-      }
-      const id = Number(req.params.id);
-      const conversation = await storage.getPeggyConversation(id);
-      if (!conversation) return res.status(404).json({ message: "Conversation not found" });
-      const messages = await storage.getPeggyMessages(id);
-      res.json({ conversation, messages });
-    } catch (error) {
-      console.error("Error fetching Peggy conversation:", error);
-      res.status(500).json({ message: "Failed to fetch conversation" });
-    }
-  });
-
-  // Get context-aware suggestions
-  app.post("/api/peggy/suggestions", async (req: any, res) => {
-    try {
-      const context = req.body.context || {};
-      const suggestions = peggy.getSuggestions(context);
-      res.json({ suggestions });
-    } catch (error) {
-      console.error("Error getting Peggy suggestions:", error);
-      res.status(500).json({ message: "Failed to get suggestions" });
-    }
-  });
-
-  // Provide feedback on a message
-  app.post("/api/peggy/messages/:id/feedback", publicIntakeRateLimit, requirePeggyConversationAccess, async (req: any, res) => {
-    try {
-      const messageId = Number(req.params.id);
-      const { feedback, feedbackNotes } = req.body;
-      
-      if (!feedback || !['helpful', 'not_helpful'].includes(feedback)) {
-        return res.status(400).json({ message: "Valid feedback (helpful/not_helpful) is required" });
-      }
-
-      const conversation = res.locals.peggyConversation;
-      const conversationMessages = await storage.getPeggyMessages(conversation.id);
-      if (!conversationMessages.some((message) => message.id === messageId)) {
-        return res.status(404).json({ message: "Message not found" });
-      }
-      
-      const message = await storage.updatePeggyMessageFeedback(messageId, feedback, feedbackNotes);
-      return res.json(message);
-    } catch (error) {
-      console.error("Error saving Peggy message feedback:", error);
-      return res.status(500).json({ message: "Failed to save feedback" });
-    }
-  });
-
-  // =====================================================
-  // UNIFIED LEADS PIPELINE ROUTES
-  // =====================================================
-
-  // Get all leads (staff only)
-  app.get("/api/hq/leads", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const leadType = req.query.leadType as string | undefined;
-      const stage = req.query.stage as string | undefined;
-      const assignedTo = req.query.assignedTo as string | undefined;
-      
-      const leads = await storage.getLeads({ leadType, stage, assignedTo });
-      res.json(leads);
-    } catch (error) {
-      console.error("Error fetching leads:", error);
-      res.status(500).json({ message: "Failed to fetch leads" });
-    }
-  });
-
-  // Get single lead (staff only)
-  app.get("/api/hq/leads/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const id = Number(req.params.id);
-      const lead = await storage.getLead(id);
-      
-      if (!lead) {
-        return res.status(404).json({ message: "Lead not found" });
-      }
-      
-      res.json(lead);
-    } catch (error) {
-      console.error("Error fetching lead:", error);
-      res.status(500).json({ message: "Failed to fetch lead" });
-    }
-  });
-
-  // Create a new lead (public or authenticated)
-  app.post("/api/leads", publicIntakeRateLimit, async (req: any, res) => {
-    try {
-      // Empire Doctrine v1.0.1 â€” server-truth anti-spam for /submit and
-      // /marketflow/access submissions. Honeypot hp_company must be empty;
-      // ts_elapsed_ms must be at least 3000 (3-second time-on-form).
-      // Client-side checks exist for UX, but the server is the
-      // authoritative gate so a scripted POST bypassing the React form
-      // cannot reach storage.
-      const lt = req.body?.leadType;
-      if (lt === "submit" || lt === "marketflow_access") {
-        const hp = req.body?.leadData?.hp_company ?? req.body?.hp_company ?? "";
-        if (typeof hp === "string" && hp.trim().length > 0) {
-          return res.status(400).json({ message: "Submission rejected." });
-        }
-        const elapsed = Number(
-          req.body?.leadData?.ts_elapsed_ms ?? req.body?.ts_elapsed_ms ?? 0,
-        );
-        if (!Number.isFinite(elapsed) || elapsed < 3000) {
-          return res.status(400).json({
-            message: "Form submitted too fast. Please try again.",
-          });
-        }
-        // Strip honeypot before persisting so it never lands in storage.
-        if (req.body?.leadData && typeof req.body.leadData === "object") {
-          delete req.body.leadData.hp_company;
-        }
-      }
-
-      // Consent is a factual, versioned part of the intake record. Only an
-      // explicit boolean counts; contact permission never doubles as a privacy
-      // acknowledgement. Migrated public surfaces must provide it before the
-      // lead is stored or forwarded.
-      const normalizedConsent = normalizeLeadConsent(req.body);
-      const consentRequirement = validateLeadConsentRequirement(lt, normalizedConsent);
-      if (!consentRequirement.ok) {
-        return res.status(400).json({ message: consentRequirement.message });
-      }
-      req.body.leadData = mergeLeadConsentAudit(req.body?.leadData, normalizedConsent, {
-        leadType: lt,
-        source: req.body?.source,
-      });
-
-      // Empire Doctrine v1.0.1 â€” explicit boundary mapping for MarketFlow
-      // access requests. /api/leads is the persistence path of record, but
-      // marketflow_access submissions are conceptually a distinct
-      // canonical shape â€” `marketflow_access_requests` â€” and we project
-      // them into that shape server-side so downstream consumers
-      // (analytics, future dedicated table) can subscribe to a stable
-      // contract independent of the underlying leads table.
-      if (lt === "marketflow_access") {
-        const ld: any = req.body?.leadData ?? {};
-        const marketflow_access_request = {
-          shape: "marketflow_access_requests",
-          version: 1,
-          firstName: req.body?.firstName ?? "",
-          lastName: req.body?.lastName ?? "",
-          email: req.body?.email ?? "",
-          role: ld.role ?? "",
-          introducedBy: ld.introducedBy ?? "",
-          notes: ld.notes ?? "",
-          consentContact: normalizedConsent.consentContact,
-          consentCcpaAcknowledged: normalizedConsent.consentCcpaAcknowledged,
-          source: req.body?.source ?? "marketflow_access_page",
-          submittedAt: new Date().toISOString(),
-        };
-        console.info("[marketflow_access_requests] accepted");
-        // Persist the canonical shape inside leadData under a versioned
-        // key so the leads row carries the full access-request envelope.
-        if (req.body?.leadData && typeof req.body.leadData === "object") {
-          req.body.leadData.marketflow_access_request = marketflow_access_request;
-        }
-      }
-
-      // Empire Doctrine v1.0.2 Amendment 1 C.8 â€” Pegasus Buyboxes free
-      // interest list. Submissions arrive as email-only signals; insert
-      // the canonical placeholder firstName + source so the request
-      // satisfies the leads schema without forcing the public form to
-      // ask for a name. The buybox identity lives in leadData.buyboxId.
-      if (lt === "buybox_interest") {
-        if (!req.body.firstName || typeof req.body.firstName !== "string" || !req.body.firstName.trim()) {
-          req.body.firstName = "Buybox Subscriber";
-        }
-        if (!req.body.source || typeof req.body.source !== "string" || !req.body.source.trim()) {
-          req.body.source = "buyboxes";
-        }
-      }
-
-      const parseResult = insertLeadSchema.safeParse(req.body);
-      if (!parseResult.success) {
-        return res.status(400).json({ 
-          message: "Invalid lead data", 
-          errors: fromError(parseResult.error).toString() 
-        });
-      }
-      
-      const lead = await storage.createLead(parseResult.data);
-
-      // Task #153 â€” Forward to Pegasus HQ. Outbox-first: this always
-      // queues; the network call is fire-and-forget. The site never
-      // blocks on HQ availability. leadType maps to outreachReason per
-      // the locked replit.md contract.
-      try {
-        const surface: "lead" | "vendor" | "buybox" =
-          parseResult.data.leadType === "vendor"
-            ? "vendor"
-            : parseResult.data.leadType === "buybox_interest"
-              ? "buybox"
-              : "lead";
-        await hqForward({
-          surface,
-          sourceId: lead.id,
-          payload: {
-            propertyAddress: parseResult.data.address || undefined,
-            contactName: `${parseResult.data.firstName || ""} ${parseResult.data.lastName || ""}`.trim() || "Unknown",
-            contactEmail: parseResult.data.email || undefined,
-            contactPhone: parseResult.data.phone || undefined,
-            outreachReason: outreachReasonForLeadType(parseResult.data.leadType),
-            sourceChannel: `website:${parseResult.data.source || parseResult.data.leadType}`,
-            consentContact: normalizedConsent.consentContact,
-            consentCcpaAcknowledged: normalizedConsent.consentCcpaAcknowledged,
-            extra: {
-              leadType: parseResult.data.leadType,
-              leadData: parseResult.data.leadData,
-              notes: parseResult.data.notes,
-            },
-          },
-        });
-      } catch (err) {
-        console.error("[hq-forward] queue error (non-blocking):", err);
-      }
-
-      // Send email notification based on lead type (non-blocking)
-      const leadData = parseResult.data;
-      const fullName = `${leadData.firstName || ''} ${leadData.lastName || ''}`.trim() || 'Unknown';
-      
-      if (leadData.leadType === 'seller') {
-        sendSellerLeadNotification({
-          name: fullName,
-          email: leadData.email || '',
-          phone: leadData.phone || '',
-          address: leadData.address || '',
-          propertyType: (leadData.leadData as any)?.propertyType || 'Unknown',
-          condition: (leadData.leadData as any)?.condition || 'Unknown',
-          timeline: (leadData.leadData as any)?.timeline || 'Unknown',
-          notes: leadData.notes || undefined,
-        }).catch(err => console.error('Failed to send seller lead notification:', err));
-      } else if (leadData.leadType === 'investor') {
-        sendInvestorLeadNotification({
-          name: fullName,
-          email: leadData.email || '',
-          phone: leadData.phone || '',
-          investmentRange: (leadData.leadData as any)?.investmentRange || 'Unknown',
-          strategy: (leadData.leadData as any)?.strategy || 'Unknown',
-          notes: leadData.notes || undefined,
-        }).catch(err => console.error('Failed to send investor lead notification:', err));
-      } else if (leadData.leadType === 'buyer') {
-        sendBuyerLeadNotification({
-          name: fullName,
-          email: leadData.email || '',
-          phone: leadData.phone || '',
-          buyerType: (leadData.leadData as any)?.buyerType || 'Unknown',
-          priceRange: (leadData.leadData as any)?.priceRange || 'Unknown',
-          locations: (leadData.leadData as any)?.locations,
-          notes: leadData.notes || undefined,
-        }).catch(err => console.error('Failed to send buyer lead notification:', err));
-      } else if (leadData.leadType === 'vendor') {
-        sendVendorLeadNotification({
-          name: fullName,
-          email: leadData.email || '',
-          phone: leadData.phone || '',
-          company: (leadData.leadData as any)?.company || (leadData.leadData as any)?.companyName,
-          trade: (leadData.leadData as any)?.trade || (leadData.leadData as any)?.tradeCategory || (leadData.leadData as any)?.category,
-          license: (leadData.leadData as any)?.license || (leadData.leadData as any)?.licenseNumber,
-          serviceArea: (leadData.leadData as any)?.serviceArea || (leadData.leadData as any)?.area,
-          notes: leadData.notes || undefined,
-        }).catch(err => console.error('Failed to send vendor lead notification:', err));
-      } else {
-        const notification = buildGenericLeadNotificationData({
-          ...leadData,
-          id: lead.id,
-        });
-        void sendEmail({
-          to: resolveStaffNotificationRecipient(),
-          subject: notification.subject,
-          text: notification.text,
-        })
-          .then((result) => {
-            if (!result.success) {
-              console.error('[lead-email] delivery failed:', result.error);
-            }
-          })
-          .catch((error) => console.error('[lead-email] delivery failed:', error));
-      }
-      
-      res.status(201).json(lead);
-    } catch (error) {
-      console.error("Error creating lead:", error);
-      res.status(500).json({ message: "Failed to create lead" });
-    }
-  });
-
-  // Task #153 â€” Pegasus HQ outbox admin. Read pending/failed/forwarded
-  // payloads, retry a failed row, drain all pending. Gated to admins.
-  const requireAdminEmail = async (req: any, res: Response, next: NextFunction) => {
-    const email = (req.user?.claims?.email || req.user?.email || "").toLowerCase();
-    if (!email || !ADMIN_EMAILS.includes(email)) {
-      return res.status(403).json({ message: "Forbidden" });
-    }
-    next();
-  };
-
-  app.get("/api/admin/hq-outbox", isHybridAuthenticated, requireAdminEmail, async (req, res) => {
-    try {
-      const status = (req.query.status as string) || undefined;
-      const limit = Number(req.query.limit) || 100;
-      const rows = await storage.getHqOutboxList({ status, limit });
-      const healthy = await isHqHealthy();
-      res.json({ rows, hqHealthy: healthy });
-    } catch (err) {
-      console.error("hq-outbox list error:", err);
-      res.status(500).json({ message: "Failed to load outbox" });
-    }
-  });
-
-  app.post("/api/admin/hq-outbox/:id/retry", isHybridAuthenticated, requireAdminEmail, async (req, res) => {
-    try {
-      const id = Number(req.params.id);
-      const result = await hqRetryOutboxRow(id);
-      res.json({ ok: !!result?.hq_submission_id, result });
-    } catch (err) {
-      console.error("hq-outbox retry error:", err);
-      res.status(500).json({ message: "Retry failed" });
-    }
-  });
-
-  app.post("/api/admin/hq-outbox/drain", isHybridAuthenticated, requireAdminEmail, async (_req, res) => {
-    try {
-      const result = await hqDrainPending(50);
-      res.json(result);
-    } catch (err) {
-      console.error("hq-outbox drain error:", err);
-      res.status(500).json({ message: "Drain failed" });
-    }
-  });
-
-  // HQ: list vendor applications submitted via /vendor-network
-  app.get("/api/hq/vendors", isAuthenticated, requireStaffRole, async (_req, res) => {
-    try {
-      const vendors = await storage.getLeads({ leadType: "vendor" });
-      return res.json(vendors);
-    } catch (error) {
-      console.error("Error fetching vendor leads:", error);
-      return res.status(500).json({ message: "Failed to fetch vendor applications" });
-    }
-  });
-
-  // Update lead (staff only)
-  app.patch("/api/hq/leads/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const id = Number(req.params.id);
-      const lead = await storage.updateLead(id, req.body);
-      
-      if (!lead) {
-        return res.status(404).json({ message: "Lead not found" });
-      }
-      
-      res.json(lead);
-    } catch (error) {
-      console.error("Error updating lead:", error);
-      res.status(500).json({ message: "Failed to update lead" });
-    }
-  });
-
-  // Update lead stage (staff only)
-  app.patch("/api/hq/leads/:id/stage", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const id = Number(req.params.id);
-      const { stage } = req.body;
-      
-      if (!stage) {
-        return res.status(400).json({ message: "Stage is required" });
-      }
-      
-      const lead = await storage.updateLeadStage(id, stage);
-      
-      if (!lead) {
-        return res.status(404).json({ message: "Lead not found" });
-      }
-      
-      res.json(lead);
-    } catch (error) {
-      console.error("Error updating lead stage:", error);
-      res.status(500).json({ message: "Failed to update lead stage" });
-    }
-  });
-
-  // Assign lead (staff only)
-  app.patch("/api/hq/leads/:id/assign", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const id = Number(req.params.id);
-      const { assignedTo } = req.body;
-      
-      if (!assignedTo) {
-        return res.status(400).json({ message: "assignedTo is required" });
-      }
-      
-      const lead = await storage.assignLead(id, assignedTo);
-      
-      if (!lead) {
-        return res.status(404).json({ message: "Lead not found" });
-      }
-      
-      res.json(lead);
-    } catch (error) {
-      console.error("Error assigning lead:", error);
-      res.status(500).json({ message: "Failed to assign lead" });
-    }
-  });
-
-  // =====================================================
-  // SAVED ANALYSES ROUTES (Enhanced Calculator Saves)
-  // =====================================================
-
-  // Get user's saved analyses
-  app.get("/api/saved-analyses", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const calculatorType = req.query.calculatorType as string | undefined;
-      
-      const analyses = await storage.getSavedAnalyses(userId, calculatorType);
-      res.json(analyses);
-    } catch (error) {
-      console.error("Error fetching saved analyses:", error);
-      res.status(500).json({ message: "Failed to fetch analyses" });
-    }
-  });
-
-  // Get single saved analysis
-  app.get("/api/saved-analyses/:id", isAuthenticated, async (req: any, res) => {
-    try {
-      const id = Number(req.params.id);
-      const analysis = await storage.getSavedAnalysis(id);
-      
-      if (!analysis) {
-        return res.status(404).json({ message: "Analysis not found" });
-      }
-      
-      // Check ownership
-      if (analysis.userId !== req.user.claims.sub) {
-        return res.status(403).json({ message: "Not authorized" });
-      }
-      
-      res.json(analysis);
-    } catch (error) {
-      console.error("Error fetching analysis:", error);
-      res.status(500).json({ message: "Failed to fetch analysis" });
-    }
-  });
-
-  // Owner-only: who has this analysis been emailed to (most recent first).
-  // Implementation lives in ./analysisSendHistoryRoutes so the ownership
-  // check + storage wiring can be exercised by integration tests.
-  const { registerAnalysisSendHistoryRoutes } = await import(
-    "./analysisSendHistoryRoutes"
-  );
-  registerAnalysisSendHistoryRoutes(app, { isAuthenticated });
-
-  // Snapshot share endpoints â€” extracted into a dedicated module so the
-  // PATCH allowlist + token mint + public-read flow can be exercised by
-  // the integration tests in server/__tests__/saved-analyses-share.test.ts
-  // without booting the full Express app.
-  const { registerSavedAnalysesShareRoutes } = await import(
-    "./savedAnalysesShareRoutes"
-  );
-  registerSavedAnalysesShareRoutes(app, { isAuthenticated });
-
-  // Create saved analysis
-  app.post("/api/saved-analyses", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      
-      const parseResult = insertSavedAnalysisSchema.safeParse({
-        ...req.body,
-        userId
-      });
-      
-      if (!parseResult.success) {
-        return res.status(400).json({ 
-          message: "Invalid analysis data", 
-          errors: fromError(parseResult.error).toString() 
-        });
-      }
-      
-      const analysis = await storage.createSavedAnalysis(parseResult.data);
-      res.status(201).json(analysis);
-    } catch (error) {
-      console.error("Error saving analysis:", error);
-      res.status(500).json({ message: "Failed to save analysis" });
-    }
-  });
-
-  // PATCH /api/saved-analyses/:id is registered above via
-  // registerSavedAnalysesShareRoutes â€” do not redeclare it here.
-
-  // Delete saved analysis
-  app.delete("/api/saved-analyses/:id", isAuthenticated, async (req: any, res) => {
-    try {
-      const id = Number(req.params.id);
-      const userId = req.user.claims.sub;
-      
-      // Verify ownership
-      const existing = await storage.getSavedAnalysis(id);
-      if (!existing) {
-        return res.status(404).json({ message: "Analysis not found" });
-      }
-      if (existing.userId !== userId) {
-        return res.status(403).json({ message: "Not authorized" });
-      }
-      
-      await storage.deleteSavedAnalysis(id);
-      res.status(204).send();
-    } catch (error) {
-      console.error("Error deleting analysis:", error);
-      res.status(500).json({ message: "Failed to delete analysis" });
-    }
-  });
-
-  // =====================================================
-  // WHOLESALE DEAL OFFERS ROUTES
-  // =====================================================
-
-  // Get offers for a deal
-  app.get("/api/wholesale-deals/:dealId/offers", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      const dealId = Number(req.params.dealId);
-      const offers = await storage.getWholesaleDealOffers(dealId);
-      const access = await resolveLegacyDealAccess(
-        req,
-        userId,
-        "wholesale_deal",
-        dealId,
-        { offers },
-      );
-      if (
-        !access ||
-        (!access.isOwner && !access.isParticipant && !access.isStaff)
-      ) {
-        return res.status(404).json({ message: "Wholesale deal not found" });
-      }
-
-      if (access.isOwner || access.isStaff) {
-        return res.json(offers);
-      }
-      const visibleOffers = filterLegacyWholesaleOffersForUser(userId, offers);
-      if (visibleOffers.length === 0) {
-        return res.status(404).json({ message: "Wholesale deal not found" });
-      }
-      return res.json(visibleOffers);
-    } catch (error) {
-      console.error("Error fetching deal offers:", error);
-      res.status(500).json({ message: "Failed to fetch offers" });
-    }
-  });
-
-  // Get my offers
-  app.get("/api/my-wholesale-offers", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const offers = await storage.getWholesaleDealOffersByBuyer(userId);
-      res.json(offers);
-    } catch (error) {
-      console.error("Error fetching my offers:", error);
-      res.status(500).json({ message: "Failed to fetch offers" });
-    }
-  });
-
-  // Create offer on a deal
-  app.post("/api/wholesale-deals/:dealId/offers", isHybridAuthenticated, async (_req: any, res) => {
-    return res.status(501).json({
-      message:
-        "Legacy wholesale offers are read-only. Use MarketFlow Offer Studio for persisted offers.",
-    });
-  });
-
-  // Update offer status (wholesaler accepting/rejecting)
-  app.patch("/api/wholesale-offers/:id/status", isHybridAuthenticated, async (_req: any, res) => {
-    return res.status(501).json({
-      message:
-        "Legacy wholesale offers are read-only. Use MarketFlow Offer Studio for persisted offer responses.",
-    });
-  });
-
-  // Counter an offer
-  app.post("/api/wholesale-offers/:id/counter", isHybridAuthenticated, async (_req: any, res) => {
-    return res.status(501).json({
-      message:
-        "Legacy wholesale offers are read-only. Use MarketFlow Offer Studio for persisted counteroffers.",
-    });
-  });
-
-  // ============== PDF GENERATION ROUTES ==============
-  
-  // Generate calculator analysis PDF.
-  // Three input modes (in priority order):
-  //   1. { id }          â†’ render a saved analysis owned by the caller (auth required)
-  //   2. { shareToken }  â†’ render a publicly shared saved analysis (no auth)
-  //   3. { calculatorType, inputs, outputs } â†’ render an ad-hoc calculator run
-  app.post("/api/pdf/calculator", async (req: any, res) => {
-    try {
-      const { id, shareToken, calculatorType, inputs, outputs } = req.body ?? {};
-
-      // Mode 1: render by saved analysis id (owner-only)
-      if (id !== undefined && id !== null) {
-        const numericId = Number(id);
-        if (!Number.isFinite(numericId)) {
-          return res.status(400).json({ message: "Invalid id" });
-        }
-        const userId = getAuthUserId(req) ?? (await extractSupabaseUser(req))?.id ?? null;
-        if (!userId) {
-          return res.status(401).json({ message: "Unauthorized" });
-        }
-        const analysis = await storage.getSavedAnalysis(numericId);
-        if (!analysis) {
-          return res.status(404).json({ message: "Analysis not found" });
-        }
-        if (analysis.userId !== userId) {
-          return res.status(403).json({ message: "Not authorized" });
-        }
-        const buffer = await generateSavedAnalysisPDF({
-          name: analysis.name,
-          calculatorType: analysis.calculatorType,
-          propertyAddress: analysis.propertyAddress,
-          inputs: (analysis.inputs ?? {}) as Record<string, unknown>,
-          results: (analysis.results ?? {}) as Record<string, unknown>,
-          primaryMetric: analysis.primaryMetric,
-          primaryValue: analysis.primaryValue,
-          secondaryMetric: analysis.secondaryMetric,
-          secondaryValue: analysis.secondaryValue,
-          dealGrade: analysis.dealGrade,
-          scenarioLabel: analysis.scenarioLabel,
-          notes: analysis.notes,
-          createdAt: analysis.createdAt,
-        });
-        const safeName = analysis.name.replace(/[^a-zA-Z0-9-_]+/g, "-").slice(0, 60) || "analysis";
-        res.setHeader("Content-Type", "application/pdf");
-        res.setHeader("Content-Disposition", `attachment; filename="pegasus-${safeName}.pdf"`);
-        return res.send(buffer);
-      }
-
-      // Mode 2: render by public share token
-      if (typeof shareToken === "string" && shareToken.length > 0) {
-        // PDF export should not inflate snapshot viewCount analytics.
-        const analysis = await storage.getSavedAnalysisByShareToken(shareToken, {
-          incrementViewCount: false,
-        });
-        if (!analysis) {
-          return res.status(404).json({ message: "Shared analysis not found" });
-        }
-        const buffer = await generateSavedAnalysisPDF({
-          name: analysis.name,
-          calculatorType: analysis.calculatorType,
-          propertyAddress: analysis.propertyAddress,
-          inputs: (analysis.inputs ?? {}) as Record<string, unknown>,
-          results: (analysis.results ?? {}) as Record<string, unknown>,
-          primaryMetric: analysis.primaryMetric,
-          primaryValue: analysis.primaryValue,
-          secondaryMetric: analysis.secondaryMetric,
-          secondaryValue: analysis.secondaryValue,
-          dealGrade: analysis.dealGrade,
-          scenarioLabel: analysis.scenarioLabel,
-          notes: analysis.notes,
-          createdAt: analysis.createdAt,
-        });
-        const safeName = analysis.name.replace(/[^a-zA-Z0-9-_]+/g, "-").slice(0, 60) || "analysis";
-        res.setHeader("Content-Type", "application/pdf");
-        res.setHeader("Content-Disposition", `attachment; filename="pegasus-${safeName}.pdf"`);
-        return res.send(buffer);
-      }
-
-      // Mode 3: ad-hoc calculator run (legacy)
-      if (!calculatorType || !inputs || !outputs) {
-        return res.status(400).json({
-          message: "Provide id, shareToken, or calculatorType+inputs+outputs",
-        });
-      }
-
-      const buffer = await generateCalculatorPDF(calculatorType, inputs, outputs);
-      res.setHeader("Content-Type", "application/pdf");
-      res.setHeader(
-        "Content-Disposition",
-        `attachment; filename="${calculatorType}-analysis-${Date.now()}.pdf"`
-      );
-      res.send(buffer);
-    } catch (error) {
-      console.error("Error generating calculator PDF:", error);
-      res.status(500).json({ message: "Failed to generate PDF" });
-    }
-  });
-
-  // Generate branded PDF for a saved analysis (owner only) â€” convenience GET
-  // wrapper around POST /api/pdf/calculator { id } for direct-download links.
-  app.get("/api/pdf/calculator/by-id/:id", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const id = Number(req.params.id);
-      if (!Number.isFinite(id)) {
-        return res.status(400).json({ message: "Invalid id" });
-      }
-      const userId = getAuthUserId(req);
-      const analysis = await storage.getSavedAnalysis(id);
-      if (!analysis) {
-        return res.status(404).json({ message: "Analysis not found" });
-      }
-      if (analysis.userId !== userId) {
-        return res.status(403).json({ message: "Not authorized" });
-      }
-
-      const buffer = await generateSavedAnalysisPDF({
-        name: analysis.name,
-        calculatorType: analysis.calculatorType,
-        propertyAddress: analysis.propertyAddress,
-        inputs: (analysis.inputs ?? {}) as Record<string, unknown>,
-        results: (analysis.results ?? {}) as Record<string, unknown>,
-        primaryMetric: analysis.primaryMetric,
-        primaryValue: analysis.primaryValue,
-        secondaryMetric: analysis.secondaryMetric,
-        secondaryValue: analysis.secondaryValue,
-        dealGrade: analysis.dealGrade,
-        scenarioLabel: analysis.scenarioLabel,
-        notes: analysis.notes,
-        createdAt: analysis.createdAt,
-      });
-
-      const safeName = analysis.name.replace(/[^a-zA-Z0-9-_]+/g, "-").slice(0, 60) || "analysis";
-      res.setHeader("Content-Type", "application/pdf");
-      res.setHeader(
-        "Content-Disposition",
-        `attachment; filename="pegasus-${safeName}.pdf"`
-      );
-      res.send(buffer);
-    } catch (error) {
-      console.error("Error generating saved-analysis PDF (by id):", error);
-      res.status(500).json({ message: "Failed to generate PDF" });
-    }
-  });
-
-  // Generate branded PDF for a publicly shared analysis (no auth required)
-  app.get("/api/pdf/calculator/by-token/:token", async (req, res) => {
-    try {
-      const token = req.params.token;
-      const analysis = await storage.getSavedAnalysisByShareToken(token, {
-        incrementViewCount: false,
-      });
-      if (!analysis) {
-        return res.status(404).json({ message: "Shared analysis not found" });
-      }
-
-      const buffer = await generateSavedAnalysisPDF({
-        name: analysis.name,
-        calculatorType: analysis.calculatorType,
-        propertyAddress: analysis.propertyAddress,
-        inputs: (analysis.inputs ?? {}) as Record<string, unknown>,
-        results: (analysis.results ?? {}) as Record<string, unknown>,
-        primaryMetric: analysis.primaryMetric,
-        primaryValue: analysis.primaryValue,
-        secondaryMetric: analysis.secondaryMetric,
-        secondaryValue: analysis.secondaryValue,
-        dealGrade: analysis.dealGrade,
-        scenarioLabel: analysis.scenarioLabel,
-        notes: analysis.notes,
-        createdAt: analysis.createdAt,
-      });
-
-      const safeName = analysis.name.replace(/[^a-zA-Z0-9-_]+/g, "-").slice(0, 60) || "analysis";
-      res.setHeader("Content-Type", "application/pdf");
-      res.setHeader(
-        "Content-Disposition",
-        `attachment; filename="pegasus-${safeName}.pdf"`
-      );
-      res.send(buffer);
-    } catch (error) {
-      console.error("Error generating saved-analysis PDF (by token):", error);
-      res.status(500).json({ message: "Failed to generate PDF" });
-    }
-  });
-
-  // Email a saved-analysis PDF to a recipient (lender, JV partner, seller, etc.).
-  // Two input modes:
-  //   1. { id, recipientName, recipientEmail, note? } â†’ owner-only (auth required)
-  //   2. { shareToken, recipientName, recipientEmail, note? } â†’ public, rate-limited
-  const sendPdfEmailSchema = z.object({
-    id: z.number().int().positive().optional(),
-    shareToken: z.string().min(1).optional(),
-    recipientName: z.string().trim().min(1, "Recipient name is required").max(120),
-    recipientEmail: z.string().trim().email("Invalid email").max(254),
-    note: z.string().max(2000).optional(),
-  }).refine(
-    (v) => v.id !== undefined || v.shareToken !== undefined,
-    { message: "Provide id or shareToken" },
-  );
-
-  const CALC_EMAIL_LABELS: Record<string, string> = {
-    arv: "ARV / Flip Analysis",
-    roi: "Investment ROI Analysis",
-    brrrr: "BRRRR Strategy Analysis",
-    cashflow: "Cash Flow Analysis",
-    mao: "Wholesale (MAO) Analysis",
-    wholesale: "Wholesale Deal Analysis",
-    piti: "Mortgage / PITI Analysis",
-    ownvsrent: "Own vs Rent Analysis",
-    hardmoney: "Hard Money Analysis",
-  };
-
-  app.post(
-    "/api/pdf/calculator/email",
-    rateLimit(10, 60_000),
-    async (req: any, res) => {
-      try {
-        const parsed = sendPdfEmailSchema.safeParse(req.body ?? {});
-        if (!parsed.success) {
-          return res.status(400).json({
-            message: fromError(parsed.error).toString(),
-          });
-        }
-        const { id, shareToken, recipientName, recipientEmail, note } = parsed.data;
-
-        let analysis: Awaited<ReturnType<typeof storage.getSavedAnalysis>> | undefined;
-
-        if (id !== undefined) {
-          // Owner-only path
-          const userId =
-            getAuthUserId(req) ?? (await extractSupabaseUser(req))?.id ?? null;
-          if (!userId) {
-            return res.status(401).json({ message: "Unauthorized" });
-          }
-          const found = await storage.getSavedAnalysis(id);
-          if (!found) {
-            return res.status(404).json({ message: "Analysis not found" });
-          }
-          if (found.userId !== userId) {
-            return res.status(403).json({ message: "Not authorized" });
-          }
-          analysis = found;
-        } else if (shareToken) {
-          const found = await storage.getSavedAnalysisByShareToken(shareToken, {
-            incrementViewCount: false,
-          });
-          if (!found) {
-            return res
-              .status(404)
-              .json({ message: "Shared analysis not found" });
-          }
-          analysis = found;
-        }
-
-        if (!analysis) {
-          return res.status(400).json({ message: "Analysis not resolved" });
-        }
-
-        const buffer = await generateSavedAnalysisPDF({
-          name: analysis.name,
-          calculatorType: analysis.calculatorType,
-          propertyAddress: analysis.propertyAddress,
-          inputs: (analysis.inputs ?? {}) as Record<string, unknown>,
-          results: (analysis.results ?? {}) as Record<string, unknown>,
-          primaryMetric: analysis.primaryMetric,
-          primaryValue: analysis.primaryValue,
-          secondaryMetric: analysis.secondaryMetric,
-          secondaryValue: analysis.secondaryValue,
-          dealGrade: analysis.dealGrade,
-          scenarioLabel: analysis.scenarioLabel,
-          notes: analysis.notes,
-          createdAt: analysis.createdAt,
-        });
-
-        const safeName =
-          analysis.name.replace(/[^a-zA-Z0-9-_]+/g, "-").slice(0, 60) ||
-          "analysis";
-
-        // Sender attribution: use the authenticated user's profile when available.
-        let senderName: string | undefined;
-        let senderEmail: string | undefined;
-        const senderUserId =
-          getAuthUserId(req) ?? (await extractSupabaseUser(req))?.id ?? null;
-        if (senderUserId) {
-          try {
-            const sender = await storage.getUser(senderUserId);
-            if (sender) {
-              const fullName = [sender.firstName, sender.lastName]
-                .filter(Boolean)
-                .join(" ")
-                .trim();
-              senderName = fullName || sender.email || undefined;
-              senderEmail = sender.email || undefined;
-            }
-          } catch {
-            // non-fatal: still send without sender attribution
-          }
-        }
-
-        const result = await sendSavedAnalysisPDFEmail({
-          recipientName,
-          recipientEmail,
-          senderName,
-          senderEmail,
-          analysisName: analysis.name,
-          calculatorLabel:
-            CALC_EMAIL_LABELS[analysis.calculatorType] ?? "Strategy Analysis",
-          propertyAddress: analysis.propertyAddress,
-          primaryMetric: analysis.primaryMetric,
-          primaryValue: analysis.primaryValue,
-          note,
-          pdfBuffer: buffer,
-          pdfFilename: `pegasus-${safeName}.pdf`,
-        });
-
-        if (!result.success) {
-          return res.status(502).json({
-            message: result.error ?? "Failed to send email",
-          });
-        }
-
-        // Persist a send-history row only for owner-originated sends.
-        // The email has already been delivered; if persistence fails we
-        // still return success with `historyPersisted: false` so the
-        // client doesn't trigger a duplicate retry. Public-share-token
-        // sends from anonymous viewers are intentionally not recorded.
-        const { recordOwnerOriginatedSend } = await import(
-          "./analysisSendHistoryRoutes"
-        );
-        const { recorded, ownerOriginated } = await recordOwnerOriginatedSend({
-          analysisId: analysis.id,
-          analysisOwnerId: analysis.userId,
-          senderUserId,
-          recipientName,
-          recipientEmail,
-        });
-
-        return res.json({
-          success: true,
-          fallback: result.fallback ?? false,
-          // true if persisted; for non-owner sends, true (no row was
-          // expected). Only flips false when the send WAS owner-originated
-          // but storage threw.
-          historyPersisted: !ownerOriginated || recorded,
-        });
-      } catch (error) {
-        console.error("Error emailing saved-analysis PDF:", error);
-        res.status(500).json({ message: "Failed to email PDF" });
-      }
-    },
-  );
-
-  // Generate deal packet PDF
-  app.post("/api/pdf/deal-packet", async (req, res) => {
-    try {
-      const dealData = req.body;
-      
-      if (!dealData.title || !dealData.type || !dealData.propertyAddress) {
-        return res.status(400).json({ 
-          message: "title, type, and propertyAddress are required" 
-        });
-      }
-      
-      const buffer = await generateDealPacketPDF(dealData);
-      
-      res.setHeader("Content-Type", "application/pdf");
-      res.setHeader(
-        "Content-Disposition", 
-        `attachment; filename="deal-packet-${Date.now()}.pdf"`
-      );
-      res.send(buffer);
-    } catch (error) {
-      console.error("Error generating deal packet PDF:", error);
-      res.status(500).json({ message: "Failed to generate PDF" });
-    }
-  });
-
-  // Generate wholesale deal PDF
-  app.get("/api/pdf/wholesale-deal/:id", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub || req.supabaseUser?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const dealId = Number(req.params.id);
-      const deal = await storage.getWholesaleDeal(dealId);
-      
-      if (!deal) {
-        return res.status(404).json({ message: "Deal not found" });
-      }
-      if (
-        deal.submittedBy !== userId &&
-        !(await hasMarketflowStaffAccess(req, userId))
-      ) {
-        return res.status(404).json({ message: "Deal not found" });
-      }
-      
-      const buffer = await generateDealPacketPDF({
-        title: deal.propertyAddress,
-        type: "wholesale",
-        propertyAddress: deal.propertyAddress,
-        city: deal.city || undefined,
-        state: deal.state || undefined,
-        propertyType: deal.propertyType || undefined,
-        beds: deal.bedrooms || undefined,
-        baths: deal.bathrooms ? parseFloat(deal.bathrooms) : undefined,
-        sqft: deal.sqft || undefined,
-        arv: deal.arv || undefined,
-        purchasePrice: deal.askingPrice || undefined,
-        rehabCost: deal.estimatedRepairs || undefined,
-        assignmentFee: deal.assignmentFee || undefined,
-        description: deal.description || undefined,
-        highlights: deal.sellerSituation ? [deal.sellerSituation] : undefined,
-      });
-      
-      res.setHeader("Content-Type", "application/pdf");
-      res.setHeader(
-        "Content-Disposition", 
-        `attachment; filename="wholesale-deal-${dealId}-${Date.now()}.pdf"`
-      );
-      res.send(buffer);
-    } catch (error) {
-      console.error("Error generating wholesale deal PDF:", error);
-      res.status(500).json({ message: "Failed to generate PDF" });
-    }
-  });
-
-  // ========================================
-  // MARKETPLACE DASHBOARD API ENDPOINTS
-  // ========================================
-
-  // Wholesaler Dashboard Stats
-  app.get("/api/marketplace/wholesaler/stats", async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const wholesaleDeals = await storage.getWholesaleDealsBySubmitter(userId);
-      
-      const stats = {
-        active: wholesaleDeals.filter(d => d.status === "listed" || d.status === "approved").length,
-        pending: wholesaleDeals.filter(d => d.status === "pending_review" || d.status === "under_review").length,
-        sold: wholesaleDeals.filter(d => d.status === "sold" || d.status === "closed").length,
-        totalVolume: wholesaleDeals
-          .filter(d => d.status === "sold" || d.status === "closed")
-          .reduce((sum, d) => sum + (d.assignmentFee || 0), 0),
-      };
-
-      res.json(stats);
-    } catch (error) {
-      console.error("Error fetching wholesaler stats:", error);
-      res.status(500).json({ message: "Failed to fetch stats" });
-    }
-  });
-
-  // Wholesaler Recent Deals
-  app.get("/api/marketplace/wholesaler/deals", async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const deals = await storage.getWholesaleDealsBySubmitter(userId);
-      res.json(deals.slice(0, 10));
-    } catch (error) {
-      console.error("Error fetching wholesaler deals:", error);
-      res.status(500).json({ message: "Failed to fetch deals" });
-    }
-  });
-
-  // Wholesaler JV Requests (requests on their deals)
-  app.get("/api/marketplace/wholesaler/jv-requests", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const requests = await storage.getJvRequestsByWholesaler(userId);
-      res.json(requests);
-    } catch (error) {
-      console.error("Error fetching wholesaler JV requests:", error);
-      res.status(500).json({ message: "Failed to fetch JV requests" });
-    }
-  });
-
-  // Update JV Request Status (accept/reject)
-  app.patch("/api/marketplace/jv-requests/:id", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const requestId = Number(req.params.id);
-      const { status } = req.body;
-
-      if (!Number.isSafeInteger(requestId) || requestId <= 0) {
-        return res.status(404).json({ message: "JV request not found" });
-      }
-      if (!["accepted", "rejected"].includes(status)) {
-        return res.status(400).json({ message: "Invalid status" });
-      }
-
-      const jvRequest = await storage.getJvRequest(requestId);
-      if (!jvRequest) {
-        return res.status(404).json({ message: "JV request not found" });
-      }
-
-      // Verify the user is the wholesaler for this deal
-      if (
-        jvRequest.wholesalerId !== userId ||
-        jvRequest.status !== "pending"
-      ) {
-        return res.status(404).json({ message: "JV request not found" });
-      }
-
-      const updated = await storage.updateJvRequestStatus(requestId, status);
-      if (!updated) {
-        return res.status(409).json({
-          message: "This JV request has already been answered.",
-        });
-      }
-      res.json(updated);
-    } catch (error) {
-      console.error("Error updating JV request:", error);
-      res.status(500).json({ message: "Failed to update JV request" });
-    }
-  });
-
-  // Investor Dashboard Stats
-  app.get("/api/marketplace/investor/stats", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const investorProfile = await storage.getInvestorProfile(userId);
-      const investmentOffers = await storage.getInvestmentOffersByInvestor(userId);
-      const savedDeals = await storage.getUserSavedDeals(userId);
-      const visibleSavedDeals = savedDeals.filter((entry) =>
-        canAccessMarketflowItemType(res, entry.dealType),
-      );
-
-      const stats = {
-        totalInvested: investmentOffers
-          .filter(o => o.status === "accepted")
-          .reduce((sum, o) => sum + (o.amountOffered || 0), 0),
-        activeDeals: investmentOffers.filter(o => o.status === "accepted" && o.projectId).length,
-        savedDeals: visibleSavedDeals.length,
-        pendingOffers: investmentOffers.filter(o => o.status === "pending").length,
-      };
-
-      res.json(stats);
-    } catch (error) {
-      console.error("Error fetching investor stats:", error);
-      res.status(500).json({ message: "Failed to fetch stats" });
-    }
-  });
-
-  // Investor Saved/Bookmarked Deals
-  app.get("/api/marketplace/investor/saved", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const bookmarks = await storage.getUserSavedDeals(userId);
-      res.json(
-        bookmarks.filter((entry) =>
-          canAccessMarketflowItemType(res, entry.dealType),
-        ),
-      );
-    } catch (error) {
-      console.error("Error fetching investor saved deals:", error);
-      res.status(500).json({ message: "Failed to fetch saved deals" });
-    }
-  });
-
-  // Investor Commitments - Get investments with project details
-  app.get("/api/marketplace/investor/commitments", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const commitments = await storage.getCommittedInvestmentsByInvestor(userId);
-      
-      // Enrich with project details
-      const enrichedCommitments = await Promise.all(
-        commitments.map(async (commitment) => {
-          const project = await storage.getCapitalProject(commitment.projectId);
-          return {
-            ...commitment,
-            project: project ? toPublicCapitalProject(project) : null,
-          };
-        })
-      );
-      
-      res.json(enrichedCommitments);
-    } catch (error) {
-      console.error("Error fetching investor commitments:", error);
-      res.status(500).json({ message: "Failed to fetch commitments" });
-    }
-  });
-
-  // Dreamscaper Dashboard Stats  
-  app.get("/api/marketplace/dreamscaper/stats", async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const projects = await storage.getCapitalProjectsByCreator(userId);
-      
-      const stats = {
-        activeProjects: projects.filter(p => p.status === "funding" || p.status === "active").length,
-        totalRaised: projects.reduce((sum, p) => sum + (p.amountRaised || 0), 0),
-        totalFundingGoal: projects.reduce((sum, p) => sum + (p.fundingGoal || 0), 0),
-        projectsCompleted: projects.filter(p => p.status === "completed" || p.status === "exited").length,
-      };
-
-      res.json(stats);
-    } catch (error) {
-      console.error("Error fetching dreamscaper stats:", error);
-      res.status(500).json({ message: "Failed to fetch stats" });
-    }
-  });
-
-  // Dreamscaper Recent Projects
-  app.get("/api/marketplace/dreamscaper/projects", async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const projects = await storage.getCapitalProjectsByCreator(userId);
-      res.json(projects.slice(0, 10));
-    } catch (error) {
-      console.error("Error fetching dreamscaper projects:", error);
-      res.status(500).json({ message: "Failed to fetch projects" });
-    }
-  });
-
-  // Buyer Dashboard Stats
-  app.get("/api/marketplace/buyer/stats", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const savedProperties = await storage.getSavedProperties(userId);
-      const offers = await storage.getBuyerOffers(userId);
-      const visibleSavedProperties = savedProperties.filter((entry) =>
-        canAccessMarketflowItemType(res, entry.propertyType),
-      );
-      const stats = {
-        savedProperties: visibleSavedProperties.length,
-        pendingOffers: offers.filter(o => o.status === "pending").length,
-        acceptedOffers: offers.filter(o => o.status === "accepted").length,
-        totalPurchases: offers.filter(o => o.status === "closed").length,
-      };
-
-      res.json(stats);
-    } catch (error) {
-      console.error("Error fetching buyer stats:", error);
-      res.status(500).json({ message: "Failed to fetch stats" });
-    }
-  });
-
-  // Buyer Saved Properties
-  app.get("/api/marketplace/buyer/saved", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const savedProperties = await storage.getSavedProperties(userId);
-      const enrichedProperties = (
-        await Promise.all(
-          savedProperties
-            .filter((saved) =>
-              canAccessMarketflowItemType(res, saved.propertyType),
-            )
-            .map(async (saved) => {
-            const property = await getPublicMarketplaceItem(
-              saved.propertyType,
-              saved.propertyId,
-            );
-            if (!property) {
-              return null;
-            }
-            return saved.propertyType === "retail"
-              ? { ...saved, listing: property }
-              : { ...saved, deal: property };
-          }),
-        )
-      ).filter((entry) => entry !== null);
-      res.json(enrichedProperties);
-    } catch (error) {
-      console.error("Error fetching buyer saved properties:", error);
-      res.status(500).json({ message: "Failed to fetch saved properties" });
-    }
-  });
-
-  // Buyer Offers - get user's offers
-  app.get("/api/marketplace/buyer/offers", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const offers = await storage.getBuyerOffers(userId);
-      // Enrich with property details
-      const enrichedOffers = (
-        await Promise.all(
-          offers.map(async (offer) => {
-            const property = await getPublicMarketplaceItem(
-              offer.propertyType,
-              offer.propertyId,
-            );
-            if (!property) {
-              return null;
-            }
-            return offer.propertyType === "retail"
-              ? { ...offer, listing: property }
-              : { ...offer, deal: property };
-          }),
-        )
-      ).filter((entry) => entry !== null);
-      res.json(enrichedOffers);
-    } catch (error) {
-      console.error("Error fetching buyer offers:", error);
-      res.status(500).json({ message: "Failed to fetch offers" });
-    }
-  });
-
-  // Submit a buyer offer
-  app.post("/api/marketplace/buyer/offers", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const { propertyType, propertyId, offerAmount, fundingType, closingTimeline, message } = req.body;
-      
-      if (!propertyType || !propertyId || !offerAmount || !fundingType) {
-        return res.status(400).json({ message: "Missing required fields" });
-      }
-      if (isReviewedMarketflowInventoryType(propertyType)) {
-        const access = await resolveLegacyDealAccess(
-          req,
-          userId,
-          propertyType,
-          propertyId,
-        );
-        if (!access || !canInitiateLegacyDealInteraction(access, res)) {
-          return res.status(404).json({ message: "Property not found" });
-        }
-      }
-      const publicProperty = await getPublicMarketplaceItem(
-        propertyType,
-        propertyId,
-      );
-      if (!publicProperty) {
-        return res.status(404).json({ message: "Property not found" });
-      }
-
-      const offer = await storage.createBuyerOffer({
-        userId,
-        propertyType,
-        propertyId: Number(propertyId),
-        offerAmount: Number(offerAmount),
-        fundingType,
-        closingTimeline: closingTimeline || null,
-        message: message || null,
-        proofOfFunds: null,
-      });
-
-      res.status(201).json(offer);
-    } catch (error) {
-      console.error("Error creating buyer offer:", error);
-      res.status(500).json({ message: "Failed to submit offer" });
-    }
-  });
-
-  // Toggle save/unsave a property
-  app.post("/api/marketplace/buyer/save", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const { propertyType, propertyId } = req.body;
-      
-      if (!propertyType || !propertyId) {
-        return res.status(400).json({ message: "Missing required fields" });
-      }
-      if (!canAccessMarketflowItemType(res, propertyType)) {
-        return res.status(404).json({ message: "Property not found" });
-      }
-      const publicProperty = await getPublicMarketplaceItem(
-        propertyType,
-        propertyId,
-      );
-      if (!publicProperty) {
-        return res.status(404).json({ message: "Property not found" });
-      }
-
-      const saved = await storage.toggleSavedProperty(userId, propertyType, Number(propertyId));
-      res.json({ saved });
-    } catch (error) {
-      console.error("Error toggling saved property:", error);
-      res.status(500).json({ message: "Failed to toggle saved property" });
-    }
-  });
-
-  // Submit buyer inquiry (schedule showing, ask question)
-  app.post("/api/marketplace/buyer/inquiries", publicIntakeRateLimit, loadMarketflowInventoryAccessContext, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      const { propertyType, propertyId, name, email, phone, message, requestType } = req.body;
-
-      if (!propertyType || !propertyId || !name || !email || !requestType) {
-        return res.status(400).json({ message: "Missing required fields" });
-      }
-      if (isReviewedMarketflowInventoryType(propertyType)) {
-        if (!userId) {
-          return res.status(404).json({ message: "Property not found" });
-        }
-        const access = await resolveLegacyDealAccess(
-          req,
-          userId,
-          propertyType,
-          propertyId,
-        );
-        if (!access || !canInitiateLegacyDealInteraction(access, res)) {
-          return res.status(404).json({ message: "Property not found" });
-        }
-      }
-      const publicProperty = await getPublicMarketplaceItem(
-        propertyType,
-        propertyId,
-      );
-      if (!publicProperty) {
-        return res.status(404).json({ message: "Property not found" });
-      }
-
-      const inquiry = await storage.createBuyerInquiry({
-        listingType: propertyType,
-        listingId: Number(propertyId),
-        name,
-        email,
-        phone: phone || '',
-        buyerType: requestType || 'investor',
-        message: message || null,
-      });
-
-      res.json(inquiry);
-    } catch (error) {
-      console.error("Error creating buyer inquiry:", error);
-      res.status(500).json({ message: "Failed to submit inquiry" });
-    }
-  });
-
-  // Get retail listings (public browse)
-  app.get("/api/marketplace/properties", async (req: any, res) => {
-    try {
-      const listings = await storage.getRetailListings();
-      const activeListings = listings
-        .filter(
-          (listing) =>
-            listing.status === "active" || listing.status === "coming_soon",
-        )
-        .map(toPublicRetailListing);
-      res.json(activeListings);
-    } catch (error) {
-      console.error("Error fetching retail listings:", error);
-      res.status(500).json({ message: "Failed to fetch properties" });
-    }
-  });
-
-  // Get single retail listing
-  app.get("/api/marketplace/properties/:id", async (req: any, res) => {
-    try {
-      const listingId = Number(req.params.id);
-      if (isNaN(listingId)) {
-        return res.status(400).json({ message: "Invalid listing ID" });
-      }
-      
-      const listing = await storage.getRetailListing(listingId);
-      if (
-        !listing ||
-        (listing.status !== "active" && listing.status !== "coming_soon")
-      ) {
-        return res.status(404).json({ message: "Property not found" });
-      }
-      
-      res.json(toPublicRetailListing(listing));
-    } catch (error) {
-      console.error("Error fetching retail listing:", error);
-      res.status(500).json({ message: "Failed to fetch property" });
-    }
-  });
-
-  // Analytics Dashboard Data - comprehensive platform metrics
-  app.get("/api/admin/analytics/dashboard", requireStaffRole, async (req: any, res) => {
-    try {
-      const [wholesaleDeals, projects, users, listings] = await Promise.all([
-        storage.getWholesaleDeals(),
-        storage.getCapitalProjects(),
-        storage.getAllUsers(),
-        storage.getListings(),
-      ]);
-
-      // Calculate total volume from deals
-      const totalVolume = wholesaleDeals.reduce((sum, d) => sum + (d.contractPrice || 0) + (d.assignmentFee || 0), 0);
-      
-      // Get user roles for distribution
-      const userRolesPromises = users.map(u => storage.getUserRoles(u.id));
-      const allUserRoles = await Promise.all(userRolesPromises);
-      
-      // Count users by role
-      const roleCounts: Record<string, number> = { investor: 0, wholesaler: 0, dreamscaper: 0, buyer: 0 };
-      allUserRoles.forEach(roles => {
-        roles.forEach(r => {
-          if (r.role.includes('investor')) roleCounts.investor++;
-          if (r.role.includes('wholesaler')) roleCounts.wholesaler++;
-          if (r.role.includes('dreamscaper')) roleCounts.dreamscaper++;
-          if (r.role.includes('buyer')) roleCounts.buyer++;
-        });
-      });
-
-      // Generate monthly data (last 8 months)
-      const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      const now = new Date();
-      const dealVolumeData = [];
-      for (let i = 7; i >= 0; i--) {
-        const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
-        const monthStr = monthNames[monthDate.getMonth()];
-        const monthDeals = wholesaleDeals.filter(d => {
-          const dealDate = new Date(d.createdAt || 0);
-          return dealDate.getMonth() === monthDate.getMonth() && dealDate.getFullYear() === monthDate.getFullYear();
-        });
-        const monthVolume = monthDeals.reduce((sum, d) => sum + ((d.contractPrice || 0) + (d.assignmentFee || 0)) / 1000, 0);
-        dealVolumeData.push({ month: monthStr, deals: monthDeals.length, volume: Math.round(monthVolume) });
-      }
-
-      // Deal status breakdown
-      const statusCounts: Record<string, number> = {};
-      wholesaleDeals.forEach(d => {
-        const status = d.status || 'unknown';
-        statusCounts[status] = (statusCounts[status] || 0) + 1;
-      });
-
-      const dealStatus = [
-        { status: 'Under Review', count: (statusCounts['pending_review'] || 0) + (statusCounts['under_review'] || 0) + (statusCounts['submitted'] || 0), color: '#f59e0b' },
-        { status: 'Listed', count: (statusCounts['listed'] || 0) + (statusCounts['approved'] || 0), color: '#3b82f6' },
-        { status: 'Under Contract', count: statusCounts['under_contract'] || 0, color: '#8b5cf6' },
-        { status: 'Sold', count: (statusCounts['sold'] || 0) + (statusCounts['closed'] || 0), color: '#10b981' },
-        { status: 'Withdrawn', count: (statusCounts['withdrawn'] || 0) + (statusCounts['expired'] || 0), color: '#ef4444' },
-      ].filter(s => s.count > 0);
-
-      // Funding progress for top projects
-      const fundingProgress = projects
-        .filter(p => p.status === 'funding' || p.status === 'active')
-        .slice(0, 4)
-        .map(p => ({
-          project: p.title || 'Untitled Project',
-          raised: p.amountRaised || 0,
-          goal: p.fundingGoal || 0,
-        }));
-
-      const stats = {
-        totalDeals: wholesaleDeals.length,
-        totalVolume,
-        activeProjects: projects.filter(p => p.status === 'funding' || p.status === 'active').length,
-        totalUsers: users.length,
-      };
-
-      const roleDistribution = [
-        { role: 'Investors', count: roleCounts.investor, color: '#c9a55c' },
-        { role: 'Wholesalers', count: roleCounts.wholesaler, color: '#2563eb' },
-        { role: 'Dreamscapers', count: roleCounts.dreamscaper, color: '#16a34a' },
-        { role: 'Buyers', count: roleCounts.buyer, color: '#dc2626' },
-      ].filter((role) => role.count > 0);
-
-      res.json({
-        stats,
-        laneStats: {
-          wholesale: wholesaleDeals.length,
-          capital: projects.length,
-          listings: listings.length,
-        },
-        dealVolumeData,
-        roleDistribution,
-        fundingProgress,
-        dealStatus,
-      });
-    } catch (error) {
-      console.error("Error fetching analytics data:", error);
-      res.status(500).json({ message: "Failed to fetch analytics data" });
-    }
-  });
-
-  // Admin Dashboard Stats
-  app.get("/api/marketplace/admin/stats", requireStaffRole, async (req: any, res) => {
-    try {
-      const [sellerLeads, investorLeads, wholesaleDeals, projects] = await Promise.all([
-        storage.getSellerLeads(),
-        storage.getInvestorLeads(),
-        storage.getWholesaleDeals(),
-        storage.getCapitalProjects(),
-      ]);
-
-      const stats = {
-        totalSellerLeads: sellerLeads.length,
-        pendingSellerLeads: sellerLeads.filter(l => l.status === "new" || l.status === "pending").length,
-        totalInvestorLeads: investorLeads.length,
-        activeWholesaleDeals: wholesaleDeals.filter(d => d.status === "listed" || d.status === "approved").length,
-        activeCapitalProjects: projects.filter(p => p.status === "funding" || p.status === "active").length,
-      };
-
-      res.json(stats);
-    } catch (error) {
-      console.error("Error fetching admin stats:", error);
-      res.status(500).json({ message: "Failed to fetch stats" });
-    }
-  });
-
-  // Get pending items requiring admin action
-  app.get("/api/marketplace/admin/pending", requireStaffRole, async (req: any, res) => {
-    try {
-      const [wholesaleDeals, projects, users] = await Promise.all([
-        storage.getWholesaleDeals(),
-        storage.getCapitalProjects(),
-        storage.getAllUsers(),
-      ]);
-      
-      const pendingDeals = wholesaleDeals
-        .filter(d => d.status === "pending_review" || d.status === "under_review" || d.status === "submitted")
-        .slice(0, 10);
-      
-      const pendingProjects = projects
-        .filter(p => p.status === "pending_approval" || p.status === "submitted")
-        .slice(0, 10);
-      
-      const pendingItems = [
-        ...pendingDeals.map(d => ({
-          id: d.id,
-          type: "wholesale_deal" as const,
-          title: "Wholesale Deal Submission",
-          description: d.propertyAddress || "New deal submission",
-          submittedBy: d.submittedBy,
-          createdAt: d.createdAt,
-        })),
-        ...pendingProjects.map(p => ({
-          id: p.id,
-          type: "capital_project" as const,
-          title: "Capital Project Submission",
-          description: p.title || "New project submission",
-          submittedBy: p.createdBy,
-          createdAt: p.createdAt,
-        })),
-      ].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-      
-      res.json(pendingItems);
-    } catch (error) {
-      console.error("Error fetching pending items:", error);
-      res.status(500).json({ message: "Failed to fetch pending items" });
-    }
-  });
-
-  // Get recent users for admin
-  app.get("/api/marketplace/admin/users", requireStaffRole, async (req: any, res) => {
-    try {
-      const users = await storage.getAllUsers();
-      const usersWithRoles = await Promise.all(
-        users.slice(0, 20).map(async (user) => {
-          const roles = await storage.getUserRoles(user.id);
-          return {
-            ...user,
-            roles: roles.map(r => r.role),
-          };
-        })
-      );
-      res.json(usersWithRoles);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      res.status(500).json({ message: "Failed to fetch users" });
-    }
-  });
-
-  // Get recent leads for admin
-  app.get("/api/marketplace/admin/leads", requireStaffRole, async (req: any, res) => {
-    try {
-      const [sellerLeads, investorLeads] = await Promise.all([
-        storage.getSellerLeads(),
-        storage.getInvestorLeads(),
-      ]);
-      
-      const leads = [
-        ...sellerLeads.slice(0, 10).map(l => ({
-          id: l.id,
-          type: "seller" as const,
-          name: l.name || "Property Owner",
-          description: `${l.propertyAddress || "Property"} | ${l.timeline || "Inquiry"}`,
-          status: l.status,
-          createdAt: l.createdAt,
-        })),
-        ...investorLeads.slice(0, 10).map(l => ({
-          id: l.id,
-          type: "investor" as const,
-          name: l.name || "Investor",
-          description: `Budget: ${l.capitalRange || "TBD"} | ${l.investmentPreference || "Various"}`,
-          status: l.status,
-          createdAt: l.createdAt,
-        })),
-      ].sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
-      
-      res.json(leads.slice(0, 15));
-    } catch (error) {
-      console.error("Error fetching leads:", error);
-      res.status(500).json({ message: "Failed to fetch leads" });
-    }
-  });
-
-  // Approve or reject a wholesale deal
-  app.patch("/api/marketplace/admin/deals/:id/status", requireStaffRole, async (req: any, res) => {
-    try {
-      const dealId = Number(req.params.id);
-      const { status, rejectionReason } = req.body;
-      
-      if (!["approved", "listed", "rejected", "under_review"].includes(status)) {
-        return res.status(400).json({ message: "Invalid status" });
-      }
-      
-      const deal = await storage.getWholesaleDeal(dealId);
-      if (!deal) {
-        return res.status(404).json({ message: "Deal not found" });
-      }
-      
-      const updated = await storage.updateWholesaleDeal(dealId, { 
-        status,
-        ...(rejectionReason && { notes: rejectionReason })
-      });
-      
-      if (deal.submittedBy) {
-        const notificationType = status === "approved" || status === "listed" ? "deal_update" : "deal_update";
-        const notificationTitle = status === "approved" || status === "listed" 
-          ? `Your deal at ${deal.propertyAddress || "property"} has been approved!`
-          : status === "rejected"
-          ? `Your deal submission requires attention`
-          : `Your deal status has been updated`;
-        const notificationMessage = status === "rejected" && rejectionReason
-          ? `Reason: ${rejectionReason}`
-          : status === "approved" || status === "listed"
-          ? "Your deal is now live on the marketplace."
-          : undefined;
-        
-        await storage.createNotification({
-          userId: deal.submittedBy,
-          type: notificationType,
-          title: notificationTitle,
-          message: notificationMessage,
-          relatedType: "deal",
-          relatedId: dealId,
-          link: `/marketplace/wholesaler/deals`,
-        });
-      }
-      
-      res.json(updated);
-    } catch (error) {
-      console.error("Error updating deal status:", error);
-      res.status(500).json({ message: "Failed to update deal status" });
-    }
-  });
-
-  // Approve or reject a capital project
-  app.patch("/api/marketplace/admin/projects/:id/status", requireStaffRole, async (req: any, res) => {
-    try {
-      const projectId = Number(req.params.id);
-      const { status, rejectionReason } = req.body;
-      
-      if (!["approved", "funding", "rejected", "under_review"].includes(status)) {
-        return res.status(400).json({ message: "Invalid status" });
-      }
-      
-      const project = await storage.getCapitalProject(projectId);
-      if (!project) {
-        return res.status(404).json({ message: "Project not found" });
-      }
-      
-      const updated = await storage.updateCapitalProject(projectId, { 
-        status,
-        ...(rejectionReason && { notes: rejectionReason })
-      });
-      
-      if (project.createdBy) {
-        const notificationTitle = status === "approved" || status === "funding" 
-          ? `Your project "${project.title}" has been approved!`
-          : status === "rejected"
-          ? `Your project submission requires attention`
-          : `Your project status has been updated`;
-        const notificationMessage = status === "rejected" && rejectionReason
-          ? `Reason: ${rejectionReason}`
-          : status === "approved" || status === "funding"
-          ? "Your project is now open for capital review."
-          : undefined;
-        
-        await storage.createNotification({
-          userId: project.createdBy,
-          type: "deal_update",
-          title: notificationTitle,
-          message: notificationMessage,
-          relatedType: "project",
-          relatedId: projectId,
-          link: `/marketplace/dreamscaper/projects`,
-        });
-      }
-      
-      res.json(updated);
-    } catch (error) {
-      console.error("Error updating project status:", error);
-      res.status(500).json({ message: "Failed to update project status" });
-    }
-  });
-
-  // ========================================
-  // SUPABASE-BASED STATS ENDPOINTS (with hybrid auth support)
-  // ========================================
-
-  // Helper to check if user authenticated via Replit Auth (uses external_user_id columns)
-  const isReplitAuthUser = (req: any): boolean => {
-    return !!req.user?.claims?.sub && !req.supabaseUser;
-  };
-
-  // Supabase Wholesaler Stats
-  app.get("/api/supabase/marketplace/wholesaler/stats", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const { storage } = await getSupabaseStorage();
-      
-      // For Replit Auth users, try external_user_id columns first, then fall back to regular
-      // For Supabase Auth users, use regular columns
-      let deals = await storage.getWholesaleDealsByUser(userId);
-      if (deals.length === 0 && isReplitAuthUser(req)) {
-        deals = await supabaseStorage.getWholesaleDealsByExternalUser(userId);
-      }
-      
-      let jvRequests = await storage.getJVRequestsByUser(userId);
-      if (jvRequests.length === 0 && isReplitAuthUser(req)) {
-        jvRequests = await supabaseStorage.getJVRequestsForWholesalerByExternalId(userId);
-      }
-
-      const stats = {
-        active: deals.filter(d => d.status === "listed" || d.status === "approved" || d.status === "ACTIVE" || d.status === "Available").length,
-        pending: deals.filter(d => d.status === "pending_review" || d.status === "under_review" || d.status === "PENDING" || d.status === "Under Review").length,
-        sold: deals.filter(d => d.status === "sold" || d.status === "closed" || d.status === "CLOSED" || d.status === "Sold").length,
-        totalVolume: deals
-          .filter(d => d.status === "sold" || d.status === "closed" || d.status === "CLOSED" || d.status === "Sold")
-          .reduce((sum, d) => sum + (d.assignment_fee || 0), 0),
-        jvRequestsReceived: jvRequests.length,
-        jvRequestsPending: jvRequests.filter(r => r.status === "pending" || r.status === "PENDING").length,
-      };
-
-      res.json(stats);
-    } catch (error) {
-      console.error("Error fetching Supabase wholesaler stats:", error);
-      res.status(500).json({ message: "Failed to fetch stats" });
-    }
-  });
-
-  // Supabase Wholesaler Deals
-  app.get("/api/supabase/marketplace/wholesaler/deals", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const { storage, toCamelCase } = await getSupabaseStorage();
-      let deals = await storage.getWholesaleDealsByUser(userId);
-      if (deals.length === 0 && isReplitAuthUser(req)) {
-        deals = await supabaseStorage.getWholesaleDealsByExternalUser(userId);
-      }
-      res.json(toCamelCase(deals));
-    } catch (error) {
-      console.error("Error fetching Supabase wholesaler deals:", error);
-      res.status(500).json({ message: "Failed to fetch deals" });
-    }
-  });
-
-  // Supabase Investor Stats
-  app.get("/api/supabase/marketplace/investor/stats", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const { storage } = await getSupabaseStorage();
-      let commitments = await storage.getCapitalCommitmentsByUser(userId);
-      if (commitments.length === 0 && isReplitAuthUser(req)) {
-        commitments = await supabaseStorage.getCapitalCommitmentsByExternalUser(userId);
-      }
-      
-      let savedItems = await storage.getSavedItems(userId);
-      if (savedItems.length === 0 && isReplitAuthUser(req)) {
-        savedItems = await supabaseStorage.getSavedItemsByExternalUser(userId);
-      }
-      const visibleSavedItems = savedItems.filter((entry) =>
-        canAccessMarketflowItemType(res, entry.item_type),
-      );
-
-      const stats = {
-        totalInvested: commitments
-          .filter(c => c.status === "accepted" || c.status === "ACCEPTED" || c.status === "committed" || c.status === "Accepted")
-          .reduce((sum, c) => sum + (c.amount || 0), 0),
-        activeDeals: commitments.filter(c => 
-          c.status === "accepted" || c.status === "ACCEPTED" || c.status === "committed" || c.status === "Accepted"
-        ).length,
-        savedDeals: visibleSavedItems.length,
-        pendingOffers: commitments.filter(c => 
-          c.status === "pending" || c.status === "PENDING" || c.status === "Pending"
-        ).length,
-      };
-
-      res.json(stats);
-    } catch (error) {
-      console.error("Error fetching Supabase investor stats:", error);
-      res.status(500).json({ message: "Failed to fetch stats" });
-    }
-  });
-
-  // Supabase Investor Commitments
-  app.get("/api/supabase/marketplace/investor/commitments", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const { storage, toCamelCase } = await getSupabaseStorage();
-      let commitments = await storage.getCapitalCommitmentsByUser(userId);
-      if (commitments.length === 0 && isReplitAuthUser(req)) {
-        commitments = await supabaseStorage.getCapitalCommitmentsByExternalUser(userId);
-      }
-      res.json(toCamelCase(commitments));
-    } catch (error) {
-      console.error("Error fetching Supabase investor commitments:", error);
-      res.status(500).json({ message: "Failed to fetch commitments" });
-    }
-  });
-
-  // Supabase Dreamscaper Stats
-  app.get("/api/supabase/marketplace/dreamscaper/stats", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const { storage } = await getSupabaseStorage();
-      let projects = await storage.getCapitalProjectsByUser(userId);
-      if (projects.length === 0 && isReplitAuthUser(req)) {
-        projects = await supabaseStorage.getCapitalProjectsByExternalUser(userId);
-      }
-      
-      let jvRequests = await storage.getJVRequestsByUser(userId);
-      if (jvRequests.length === 0 && isReplitAuthUser(req)) {
-        jvRequests = await supabaseStorage.getJVRequestsByExternalUser(userId);
-      }
-
-      const stats = {
-        activeProjects: projects.filter(p => 
-          p.status === "funding" || p.status === "active" || p.status === "ACTIVE" || p.status === "FUNDING" || p.status === "Funding"
-        ).length,
-        totalRaised: projects.reduce((sum, p) => sum + (p.amount_raised || 0), 0),
-        totalFundingGoal: projects.reduce((sum, p) => sum + (p.funding_goal || 0), 0),
-        projectsCompleted: projects.filter(p => 
-          p.status === "completed" || p.status === "exited" || p.status === "COMPLETED" || p.status === "Completed"
-        ).length,
-        jvRequestsSent: jvRequests.length,
-      };
-
-      res.json(stats);
-    } catch (error) {
-      console.error("Error fetching Supabase dreamscaper stats:", error);
-      res.status(500).json({ message: "Failed to fetch stats" });
-    }
-  });
-
-  // Supabase Dreamscaper Projects
-  app.get("/api/supabase/marketplace/dreamscaper/projects", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const { storage, toCamelCase } = await getSupabaseStorage();
-      let projects = await storage.getCapitalProjectsByUser(userId);
-      if (projects.length === 0 && isReplitAuthUser(req)) {
-        projects = await supabaseStorage.getCapitalProjectsByExternalUser(userId);
-      }
-      res.json(toCamelCase(projects));
-    } catch (error) {
-      console.error("Error fetching Supabase dreamscaper projects:", error);
-      res.status(500).json({ message: "Failed to fetch projects" });
-    }
-  });
-
-  // Supabase Buyer Stats
-  app.get("/api/supabase/marketplace/buyer/stats", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const { storage } = await getSupabaseStorage();
-      let offers = await storage.getBuyerOffersByUser(userId);
-      if (offers.length === 0 && isReplitAuthUser(req)) {
-        offers = await supabaseStorage.getBuyerOffersByExternalUser(userId);
-      }
-      
-      let savedItems = await storage.getSavedItems(userId);
-      if (savedItems.length === 0 && isReplitAuthUser(req)) {
-        savedItems = await supabaseStorage.getSavedItemsByExternalUser(userId);
-      }
-      const visibleSavedItems = savedItems.filter((entry) =>
-        canAccessMarketflowItemType(res, entry.item_type),
-      );
-
-      const stats = {
-        savedProperties: visibleSavedItems.filter((saved) =>
-          [
-            "listing",
-            "wholesale_deal",
-            "retail",
-            "retail_listing",
-          ].includes(saved.item_type)
-        ).length,
-        pendingOffers: offers.filter(o => o.status === "pending" || o.status === "PENDING" || o.status === "Pending").length,
-        acceptedOffers: offers.filter(o => o.status === "accepted" || o.status === "ACCEPTED" || o.status === "Accepted").length,
-        totalPurchases: offers.filter(o => o.status === "closed" || o.status === "CLOSED" || o.status === "Closed").length,
-      };
-
-      res.json(stats);
-    } catch (error) {
-      console.error("Error fetching Supabase buyer stats:", error);
-      res.status(500).json({ message: "Failed to fetch stats" });
-    }
-  });
-
-  // Supabase Buyer Offers
-  app.get("/api/supabase/marketplace/buyer/offers", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const { storage, toCamelCase } = await getSupabaseStorage();
-      let offers = await storage.getBuyerOffersByUser(userId);
-      if (offers.length === 0 && isReplitAuthUser(req)) {
-        offers = await supabaseStorage.getBuyerOffersByExternalUser(userId);
-      }
-      res.json(toCamelCase(offers));
-    } catch (error) {
-      console.error("Error fetching Supabase buyer offers:", error);
-      res.status(500).json({ message: "Failed to fetch offers" });
-    }
-  });
-
-  // Supabase Saved Items
-  app.get("/api/supabase/marketplace/saved", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const { storage, toCamelCase } = await getSupabaseStorage();
-      let savedItems = await storage.getSavedItems(userId);
-      if (savedItems.length === 0 && isReplitAuthUser(req)) {
-        savedItems = await supabaseStorage.getSavedItemsByExternalUser(userId);
-      }
-      res.json(
-        toCamelCase(
-          savedItems.filter((entry) =>
-            canAccessMarketflowItemType(res, entry.item_type),
-          ),
-        ),
-      );
-    } catch (error) {
-      console.error("Error fetching saved items:", error);
-      res.status(500).json({ message: "Failed to fetch saved items" });
-    }
-  });
-
-  // ========================================
-  // MARKETPLACE BROWSE API ENDPOINTS
-  // ========================================
-
-  // Get all reviewed/listed wholesale deals for approved browsing
-  app.get("/api/marketplace/deals", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req: any, res) => {
-    try {
-      const userId = getMarketflowInventoryPrincipalId(res);
-      const deals = await storage.getWholesaleDeals();
-      
-      const filteredDeals = deals.filter(isPublicWholesaleDeal);
-      
-      const uniqueSubmitterIds = Array.from(new Set(filteredDeals.map(d => d.submittedBy).filter(Boolean))) as string[];
-      
-      let userMap = new Map<string, any>();
-      let rolesMap = new Map<string, any[]>();
-      let reputationMap = new Map<string, any>();
-      let badgesMap = new Map<string, any[]>();
-      
-      try {
-        const [usersResult, roles, reputations, badges] = await Promise.all([
-          storage.getUsersByIds(uniqueSubmitterIds),
-          storage.getRolesForUsers(uniqueSubmitterIds),
-          storage.getReputationsForUsers(uniqueSubmitterIds),
-          storage.getBadgesForUsers(uniqueSubmitterIds)
-        ]);
-        userMap = usersResult;
-        rolesMap = roles;
-        reputationMap = reputations;
-        badgesMap = badges;
-      } catch (err) {
-        console.warn("Warning: Failed to fetch some user data for deals:", err);
-      }
-      
-      const pegasusUserIds = new Set<string>();
-      const rolesEntries = Array.from(rolesMap.entries());
-      for (const [id, roles] of rolesEntries) {
-        if (roles && Array.isArray(roles) && roles.some((r: any) => r.role?.startsWith("pegasus_"))) {
-          pegasusUserIds.add(id);
-        }
-      }
-      
-      const publicDeals = filteredDeals.map((d) => {
-        const submitter = d.submittedBy ? userMap.get(d.submittedBy) : null;
-        const reputation = d.submittedBy ? reputationMap.get(d.submittedBy) || null : null;
-        const badges = d.submittedBy ? badgesMap.get(d.submittedBy) || [] : [];
-        
-        return {
-          ...toPublicWholesaleDeal(
-            d,
-            userId,
-            canViewerInitiateMarketflowJv(res),
-          ),
-          isPegasusDeal: d.submittedBy ? pegasusUserIds.has(d.submittedBy) : false,
-          wholesalerInfo: submitter ? {
-            id: submitter.id,
-            firstName: submitter.firstName,
-            lastName: submitter.lastName,
-            profileImageUrl: submitter.profileImageUrl,
-          } : null,
-          wholesalerReputation: reputation ? {
-            trustScore: reputation.trustScore ?? null,
-            rating: reputation.rating ?? null,
-            dealsClosedCount: reputation.dealsClosedCount ?? null,
-            onTimeClosingsCount: reputation.onTimeClosingsCount ?? null,
-          } : null,
-          wholesalerBadges: Array.isArray(badges) ? badges.filter((b: any) => b?.isActive).map((b: any) => ({
-            type: b.badgeType,
-            label: b.label,
-            icon: b.icon,
-            color: b.color,
-          })) : [],
-        };
-      });
-      
-      const sortedDeals = publicDeals.sort((a, b) => {
-        if (a.isPegasusDeal && !b.isPegasusDeal) return -1;
-        if (!a.isPegasusDeal && b.isPegasusDeal) return 1;
-        return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
-      });
-      
-      res.json(sortedDeals);
-    } catch (error) {
-      console.error("Error fetching marketplace deals:", error);
-      res.status(500).json({ message: "Failed to fetch deals" });
-    }
-  });
-
-  // Get a single wholesale deal by ID
-  app.get("/api/marketplace/deals/:id", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req: any, res) => {
-    try {
-      const userId = getMarketflowInventoryPrincipalId(res);
-      const dealId = Number(req.params.id);
-      if (isNaN(dealId)) {
-        return res.status(400).json({ message: "Invalid deal ID" });
-      }
-      
-      const deal = await storage.getWholesaleDeal(dealId);
-      if (!deal || !isPublicWholesaleDeal(deal)) {
-        return res.status(404).json({ message: "Deal not found" });
-      }
-      
-      res.json(
-        toPublicWholesaleDeal(
-          deal,
-          userId,
-          canViewerInitiateMarketflowJv(res),
-        ),
-      );
-    } catch (error) {
-      console.error("Error fetching deal:", error);
-      res.status(500).json({ message: "Failed to fetch deal" });
-    }
-  });
-
-  // Submit a JV request for a deal
-  app.post("/api/marketplace/jv-requests", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
-    try {
-      const userId = getMarketflowInventoryPrincipalId(res);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const dealId = Number(req.body?.dealId);
-      if (!Number.isSafeInteger(dealId) || dealId <= 0) {
-        return res.status(404).json({ message: "Deal not found" });
-      }
-
-      const deal = await storage.getWholesaleDeal(dealId);
-      const access = await resolveLegacyDealAccess(
-        req,
-        userId,
-        "wholesale_deal",
-        dealId,
-      );
-      const dealOwnerId = deal
-        ? resolveWholesaleDealOwnerId(deal)
-        : null;
-      if (
-        !deal ||
-        !access ||
-        !canInitiateLegacyDealInteraction(access, res) ||
-        !dealOwnerId ||
-        !canRequestMarketflowJv({
-          viewerId: userId,
-          ownerId: dealOwnerId,
-          canInitiateJv: canViewerInitiateMarketflowJv(res),
-        })
-      ) {
-        return res.status(404).json({ message: "Deal not found" });
-      }
-
-      const existingRequests = await storage.getJvRequestsByDeal(dealId);
-      if (
-        existingRequests.some(
-          (request) =>
-            request.dreamscaperId === userId && request.status === "pending",
-        )
-      ) {
-        return res.status(409).json({
-          message: "You already have a pending JV request for this deal.",
-        });
-      }
-
-      const cleanOptionalText = (value: unknown, maxLength: number) =>
-        typeof value === "string" && value.trim()
-          ? value.trim().slice(0, maxLength)
-          : null;
-      const splitPercent = Number(req.body?.assignmentSplitPercent);
-      const proposedAssignmentFee = Number(req.body?.proposedAssignmentFee);
-      
-      const jvRequest = await storage.createJvRequest({
-        dealId,
-        dreamscaperId: userId,
-        wholesalerId: dealOwnerId,
-        message: cleanOptionalText(req.body?.message, 2_000),
-        intendedStrategy: cleanOptionalText(
-          req.body?.intendedStrategy ?? req.body?.partnerRole,
-          100,
-        ),
-        fundingSource: cleanOptionalText(req.body?.fundingSource, 100),
-        proposedAssignmentFee:
-          Number.isFinite(proposedAssignmentFee) &&
-          proposedAssignmentFee >= 0
-            ? proposedAssignmentFee
-            : null,
-        proposedJVSplit:
-          Number.isFinite(splitPercent) &&
-          splitPercent >= 0 &&
-          splitPercent <= 100
-            ? `${splitPercent}/${100 - splitPercent}`
-            : null,
-        proposedTimeline: cleanOptionalText(
-          req.body?.proposedTimeline,
-          100,
-        ),
-        experienceNotes: Array.isArray(req.body?.contributions)
-          ? req.body.contributions
-              .filter((item: unknown): item is string => typeof item === "string")
-              .slice(0, 12)
-              .join(", ")
-              .slice(0, 2_000) || null
-          : null,
-      });
-
-      if (deal && deal.submittedBy) {
-        await storage.createNotification({
-          userId: deal.submittedBy,
-          type: "deal_interest",
-          title: `New JV request on your deal`,
-          message: deal.propertyAddress ? `A dreamscaper is interested in ${deal.propertyAddress}` : "Someone is interested in your wholesale deal",
-          relatedType: "deal",
-          relatedId: dealId,
-          link: `/marketplace/wholesaler/deals`,
-        });
-      }
-
-      res.status(201).json(jvRequest);
-    } catch (error) {
-      console.error("Error creating JV request:", error);
-      res.status(500).json({ message: "Failed to submit JV request" });
-    }
-  });
-
-  // Get all reviewed capital projects for approved browsing
-  app.get("/api/marketplace/projects", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req: any, res) => {
-    try {
-      const projects = await storage.getCapitalProjects();
-      const users = await storage.getAllUsers();
-      
-      const pegasusUserIds = new Set<string>();
-      for (const user of users) {
-        const roles = await storage.getUserRoles(user.id);
-        const hasPegasusRole = roles.some(r => r.role.startsWith("pegasus_"));
-        if (hasPegasusRole) {
-          pegasusUserIds.add(user.id);
-        }
-      }
-      
-      const publicProjects = projects
-        .filter(isPublicCapitalProject)
-        .map(p => ({
-          ...toPublicCapitalProject(p),
-          isPegasusProject: p.createdBy ? pegasusUserIds.has(p.createdBy) : false,
-        }))
-        .sort((a, b) => {
-          if (a.isPegasusProject && !b.isPegasusProject) return -1;
-          if (!a.isPegasusProject && b.isPegasusProject) return 1;
-          return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
-        });
-      
-      res.json(publicProjects);
-    } catch (error) {
-      console.error("Error fetching marketplace projects:", error);
-      res.status(500).json({ message: "Failed to fetch projects" });
-    }
-  });
-
-  // Get a single capital project by ID
-  app.get("/api/marketplace/projects/:id", isHybridAuthenticated, requireMarketflowInventoryAccess, async (req: any, res) => {
-    try {
-      const projectId = Number(req.params.id);
-      if (isNaN(projectId)) {
-        return res.status(400).json({ message: "Invalid project ID" });
-      }
-      
-      const project = await storage.getCapitalProject(projectId);
-      if (!project || !isPublicCapitalProject(project)) {
-        return res.status(404).json({ message: "Project not found" });
-      }
-      
-      res.json(toPublicCapitalProject(project));
-    } catch (error) {
-      console.error("Error fetching project:", error);
-      res.status(500).json({ message: "Failed to fetch project" });
-    }
-  });
-
-  // Submit investment interest for a capital project
-  app.post("/api/marketplace/investment-interest", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Authentication required" });
-      }
-
-      const { projectId, amount, structurePreference, notes } = req.body;
-      
-      if (!projectId || !amount) {
-        return res.status(400).json({ message: "Project ID and amount are required" });
-      }
-
-      const project = await storage.getCapitalProject(Number(projectId));
-      const access = await resolveLegacyDealAccess(
-        req,
-        userId,
-        "capital_project",
-        Number(projectId),
-      );
-      if (!project || !access || !canInitiateLegacyDealInteraction(access, res)) {
-        return res.status(404).json({ message: "Project not found" });
-      }
-
-      if (amount < (project.minInvestment || 0)) {
-        return res.status(400).json({ 
-          message: `Minimum investment is $${project.minInvestment?.toLocaleString()}` 
-        });
-      }
-
-      // Create an investment offer
-      const offer = await storage.createInvestmentOffer({
-        projectId: Number(projectId),
-        investorId: userId,
-        amountOffered: Number(amount),
-        structureType: structurePreference || project.structure,
-        notes: notes || null,
-        requestedRole: "LP",
-        proposedInterestRate: null,
-        proposedEquityPercent: null,
-        proposedProfitSplit: null,
-        proposedLoanDuration: null,
-      });
-
-      if (project.createdBy) {
-        await storage.createNotification({
-          userId: project.createdBy,
-          type: "investment_offer",
-          title: `New investment interest in "${project.title}"`,
-          message: `An investor is interested in investing $${Number(amount).toLocaleString()}`,
-          relatedType: "project",
-          relatedId: Number(projectId),
-          link: `/marketplace/dreamscaper/projects`,
-        });
-      }
-
-      res.status(201).json({ 
-        message: "Investment interest submitted successfully",
-        offerId: offer.id 
-      });
-    } catch (error) {
-      console.error("Error submitting investment interest:", error);
-      res.status(500).json({ message: "Failed to submit investment interest" });
-    }
-  });
-
-  // ========================================
-  // END MARKETPLACE DASHBOARD API ENDPOINTS
-  // ========================================
-
-  // ========================================
-  // ADMIN AUDIT LOG ENDPOINTS
-  // ========================================
-
-  // Get audit logs (admin only)
-  app.get("/api/audit-logs", async (req, res) => {
-    try {
-      const user = req.user as any;
-      if (!user) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-
-      // Check admin permission via Supabase profile
-      const profile = await getUserProfile(user.id);
-      if (!profile || profile.primary_role !== "admin") {
-        return res.status(403).json({ message: "Admin access required" });
-      }
-
-      const { limit = "50", offset = "0", actionType, adminUserId } = req.query;
-      
-      // Validate pagination with reasonable bounds
-      const parsedLimit = Math.min(Math.max(1, Number(limit) || 50), 100);
-      const parsedOffset = Math.max(0, Number(offset) || 0);
-      
-      const logs = await storage.getAuditLogs({
-        limit: parsedLimit,
-        offset: parsedOffset,
-        actionType: actionType as string | undefined,
-        adminUserId: adminUserId as string | undefined,
-      });
-
-      const total = await storage.getAuditLogCount({
-        actionType: actionType as string | undefined,
-        adminUserId: adminUserId as string | undefined,
-      });
-
-      res.json({ logs, total, limit: parsedLimit, offset: parsedOffset });
-    } catch (error) {
-      console.error("Error fetching audit logs:", error);
-      res.status(500).json({ message: "Failed to fetch audit logs" });
-    }
-  });
-
-  // Get single audit log entry (admin only)
-  app.get("/api/audit-logs/:id", async (req, res) => {
-    try {
-      const user = req.user as any;
-      if (!user) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-
-      const profile = await getUserProfile(user.id);
-      if (!profile || profile.primary_role !== "admin") {
-        return res.status(403).json({ message: "Admin access required" });
-      }
-
-      const id = Number(req.params.id);
-      const log = await storage.getAuditLogById(id);
-
-      if (!log) {
-        return res.status(404).json({ message: "Audit log not found" });
-      }
-
-      res.json(log);
-    } catch (error) {
-      console.error("Error fetching audit log:", error);
-      res.status(500).json({ message: "Failed to fetch audit log" });
-    }
-  });
-
-  // Create audit log entry (internal use, admin-triggered actions)
-  app.post("/api/audit-logs", async (req, res) => {
-    try {
-      const user = req.user as any;
-      if (!user) {
-        return res.status(401).json({ message: "Not authenticated" });
-      }
-
-      const profile = await getUserProfile(user.id);
-      if (!profile || profile.primary_role !== "admin") {
-        return res.status(403).json({ message: "Admin access required" });
-      }
-
-      const auditLogData = {
-        adminUserId: user.id,
-        adminEmail: user.email || null,
-        adminName: user.firstName ? `${user.firstName} ${user.lastName || ""}`.trim() : user.username || null,
-        actionType: req.body.actionType,
-        resourceType: req.body.resourceType || null,
-        resourceId: req.body.resourceId || null,
-        description: req.body.description,
-        previousValue: req.body.previousValue ? JSON.stringify(req.body.previousValue) : null,
-        newValue: req.body.newValue ? JSON.stringify(req.body.newValue) : null,
-        ipAddress: req.ip || null,
-        userAgent: req.headers["user-agent"] || null,
-      };
-
-      const validation = insertAdminAuditLogSchema.safeParse(auditLogData);
-      if (!validation.success) {
-        return res.status(400).json({ 
-          message: "Invalid audit log data", 
-          errors: fromError(validation.error).toString() 
-        });
-      }
-
-      const log = await storage.createAuditLog(validation.data);
-
-      res.status(201).json(log);
-    } catch (error) {
-      console.error("Error creating audit log:", error);
-      res.status(500).json({ message: "Failed to create audit log" });
-    }
-  });
-
-  // ========================================
-  // END ADMIN AUDIT LOG ENDPOINTS
-  // ========================================
-
-  // ========================================
-  // ANALYTICS & DASHBOARD ENDPOINTS
-  // ========================================
-
-  // Get user dashboard analytics
-  app.get("/api/analytics/dashboard/:userId?", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      const requestedUserId = req.params.userId;
-      if (
-        !userId ||
-        (requestedUserId &&
-          requestedUserId !== userId &&
-          !(await hasMarketflowStaffAccess(req, userId)))
-      ) {
-        return res.status(404).json({ message: "Analytics not found" });
-      }
-      
-      const stats = {
-        totalDealsViewed: 0,
-        dealsSaved: 0,
-        offersSubmitted: 0,
-        dealsWon: 0,
-        totalInvested: 0,
-        totalReturns: 0,
-        avgROI: 0,
-        activeNegotiations: 0,
-        pendingOffers: 0,
-        monthlyGrowth: 0,
-      };
-
-      res.json(stats);
-    } catch (error) {
-      console.error("Error fetching dashboard analytics:", error);
-      res.status(500).json({ message: "Failed to fetch analytics" });
-    }
-  });
-
-  // Get user activity feed
-  app.get("/api/analytics/activity/:userId?", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      const requestedUserId = req.params.userId;
-      if (
-        !userId ||
-        (requestedUserId &&
-          requestedUserId !== userId &&
-          !(await hasMarketflowStaffAccess(req, userId)))
-      ) {
-        return res.status(404).json({ message: "Activity not found" });
-      }
-      res.json([]);
-    } catch (error) {
-      console.error("Error fetching activity:", error);
-      res.status(500).json({ message: "Failed to fetch activity" });
-    }
-  });
-
-  // Get market insights
-  app.get("/api/analytics/market-insights", isHybridAuthenticated, async (_req, res) => {
-    try {
-      res.json([]);
-    } catch (error) {
-      console.error("Error fetching market insights:", error);
-      res.status(500).json({ message: "Failed to fetch insights" });
-    }
-  });
-
-  // Get negotiation analytics
-  app.get("/api/analytics/negotiations/:userId?", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      const requestedUserId = req.params.userId;
-      if (
-        !userId ||
-        (requestedUserId &&
-          requestedUserId !== userId &&
-          !(await hasMarketflowStaffAccess(req, userId)))
-      ) {
-        return res.status(404).json({ message: "Negotiation analytics not found" });
-      }
-      const stats = {
-        totalNegotiations: 0,
-        successRate: 0,
-        averageCounters: 0,
-        averageTimeToClose: 0,
-        averageDiscount: 0,
-        bestDealSaved: 0,
-        recentTrend: "stable",
-        strategyScore: 0,
-      };
-      res.json(stats);
-    } catch (error) {
-      console.error("Error fetching negotiation analytics:", error);
-      res.status(500).json({ message: "Failed to fetch negotiation analytics" });
-    }
-  });
-
-  // Get negotiation insights
-  app.get("/api/analytics/negotiation-insights/:userId?", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      const requestedUserId = req.params.userId;
-      if (
-        !userId ||
-        (requestedUserId &&
-          requestedUserId !== userId &&
-          !(await hasMarketflowStaffAccess(req, userId)))
-      ) {
-        return res.status(404).json({ message: "Negotiation insights not found" });
-      }
-      res.json([]);
-    } catch (error) {
-      console.error("Error fetching negotiation insights:", error);
-      res.status(500).json({ message: "Failed to fetch negotiation insights" });
-    }
-  });
-
-  // ========================================
-  // AI CURATION ENDPOINTS
-  // ========================================
-
-  // Get AI curated deals
-  app.get("/api/ai/curated-deals/:userId?", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      const requestedUserId = req.params.userId;
-      if (
-        !userId ||
-        (requestedUserId &&
-          requestedUserId !== userId &&
-          !(await hasMarketflowStaffAccess(req, userId)))
-      ) {
-        return res.status(404).json({ message: "Curated deals not found" });
-      }
-      res.json([]);
-    } catch (error) {
-      console.error("Error fetching curated deals:", error);
-      res.status(500).json({ message: "Failed to fetch curated deals" });
-    }
-  });
-
-  // Submit curation feedback
-  app.post("/api/ai/curation-feedback", isHybridAuthenticated, async (_req, res) => {
-    try {
-      res.status(501).json({ message: "Curation feedback is not available yet" });
-    } catch (error) {
-      console.error("Error saving curation feedback:", error);
-      res.status(500).json({ message: "Failed to save feedback" });
-    }
-  });
-
-  // ========================================
-  // SHARED WATCHLIST ENDPOINTS
-  // ========================================
-
-  // Get shared watchlists
-  app.get("/api/watchlists/shared/:userId?", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      const requestedUserId = req.params.userId;
-      if (
-        !userId ||
-        (requestedUserId &&
-          requestedUserId !== userId &&
-          !(await hasMarketflowStaffAccess(req, userId)))
-      ) {
-        return res.status(404).json({ message: "Watchlists not found" });
-      }
-      res.json([]);
-    } catch (error) {
-      console.error("Error fetching shared watchlists:", error);
-      res.status(500).json({ message: "Failed to fetch watchlists" });
-    }
-  });
-
-  // Create shared watchlist
-  app.post("/api/watchlists/shared", isHybridAuthenticated, async (_req, res) => {
-    try {
-      res.status(501).json({ message: "Shared watchlists are not available yet" });
-    } catch (error) {
-      console.error("Error creating shared watchlist:", error);
-      res.status(500).json({ message: "Failed to create watchlist" });
-    }
-  });
-
-  // Get watchlist deals
-  app.get("/api/watchlists/shared/:watchlistId/deals", isHybridAuthenticated, async (_req, res) => {
-    try {
-      res.status(404).json({ message: "Watchlist not found" });
-    } catch (error) {
-      console.error("Error fetching watchlist deals:", error);
-      res.status(500).json({ message: "Failed to fetch watchlist deals" });
-    }
-  });
-
-  // ========================================
-  // USER ONBOARDING ENDPOINTS
-  // ========================================
-
-  // Save onboarding data
-  app.post("/api/user/onboarding", isHybridAuthenticated, async (_req, res) => {
-    try {
-      res.status(501).json({ message: "Onboarding preferences are not available yet" });
-    } catch (error) {
-      console.error("Error saving onboarding data:", error);
-      res.status(500).json({ message: "Failed to save onboarding data" });
-    }
-  });
-
-  // ========================================
-  // DOCUMENT UPLOAD ENDPOINTS
-  // ========================================
-
-  // Get documents for a deal
-  app.get("/api/documents/:dealId/:dealType?", isHybridAuthenticated, async (_req, res) => {
-    try {
-      res.status(501).json({ message: "Use the authorized deal data room for documents" });
-    } catch (error) {
-      console.error("Error fetching documents:", error);
-      res.status(500).json({ message: "Failed to fetch documents" });
-    }
-  });
-
-  // Upload document (handled by object storage routes)
-  app.post("/api/documents/upload", isHybridAuthenticated, async (_req, res) => {
-    try {
-      res.status(501).json({ message: "Use the authorized deal data room for uploads" });
-    } catch (error) {
-      console.error("Error uploading document:", error);
-      res.status(500).json({ message: "Failed to upload document" });
-    }
-  });
-
-  // Delete document
-  app.delete("/api/documents/:documentId", isHybridAuthenticated, async (_req, res) => {
-    try {
-      res.status(501).json({ message: "Use the authorized deal data room to manage documents" });
-    } catch (error) {
-      console.error("Error deleting document:", error);
-      res.status(500).json({ message: "Failed to delete document" });
-    }
-  });
-
-  // ========================================
-  // END ANALYTICS & FEATURE ENDPOINTS
-  // ========================================
-
-  // Generate capital project PDF
-  app.get("/api/pdf/capital-project/:id", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub || req.supabaseUser?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const projectId = Number(req.params.id);
-      const project = await storage.getCapitalProject(projectId);
-      
-      if (!project) {
-        return res.status(404).json({ message: "Project not found" });
-      }
-      if (
-        project.createdBy !== userId &&
-        !(await hasMarketflowStaffAccess(req, userId))
-      ) {
-        return res.status(404).json({ message: "Project not found" });
-      }
-      
-      const buffer = await generateDealPacketPDF({
-        title: project.title,
-        type: "capital",
-        propertyAddress: project.location || "",
-        propertyType: project.propertyType || undefined,
-        arv: project.projectedARV || undefined,
-        purchasePrice: project.purchasePrice || undefined,
-        rehabCost: project.rehabBudget || undefined,
-        expectedProfit: project.projectedReturn ? 
-          (project.fundingGoal || 0) * (parseFloat(project.projectedReturn) / 100) : 
-          undefined,
-        description: project.description || undefined,
-        highlights: undefined,
-        timeline: project.holdPeriod || undefined,
-        operatorName: project.createdBy || "Dreamscaper Operator",
-      });
-      
-      res.setHeader("Content-Type", "application/pdf");
-      res.setHeader(
-        "Content-Disposition", 
-        `attachment; filename="capital-project-${projectId}-${Date.now()}.pdf"`
-      );
-      res.send(buffer);
-    } catch (error) {
-      console.error("Error generating capital project PDF:", error);
-      res.status(500).json({ message: "Failed to generate PDF" });
-    }
-  });
-
-  // =====================================================
-  // MARKETFLOW CANONICAL OFFER & NEGOTIATION API
-  // =====================================================
-
-  // Create a new offer (unified across all lanes)
-  app.post("/api/marketflow/offers", isHybridAuthenticated, loadMarketflowInventoryAccessContext, async (req: any, res) => {
-    try {
-      const userId = getAuthUserId(req);
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const { lane, dealId, offerKind, payload, expiresAt } = req.body;
-      const normalizedLane =
-        typeof lane === "string" ? lane.trim().toUpperCase() : "";
-      const numericDealId = Number(dealId);
-      
-      if (
-        !["WHOLESALE", "CAPITAL", "LISTING"].includes(normalizedLane) ||
-        !Number.isSafeInteger(numericDealId) ||
-        numericDealId <= 0 ||
-        typeof offerKind !== "string" ||
-        !payload ||
-        typeof payload !== "object" ||
-        Array.isArray(payload)
-      ) {
-        return res.status(400).json({ message: "Invalid offer details" });
-      }
-
-      const allowedKinds: Record<string, readonly string[]> = {
-        WHOLESALE: ["WHOLESALE_ASSIGNMENT", "WHOLESALE_JV"],
-        CAPITAL: ["CAPITAL_INVESTMENT"],
-        LISTING: ["LISTING_INQUIRY", "SHOWING_REQUEST"],
-      };
-      if (!allowedKinds[normalizedLane].includes(offerKind)) {
-        return res.status(400).json({ message: "Invalid offer details" });
-      }
-
-      const parsedExpiry =
-        typeof expiresAt === "string" && expiresAt
-          ? new Date(expiresAt)
-          : null;
-      const offerCreatedAt = new Date();
-      if (
-        parsedExpiry &&
-        (Number.isNaN(parsedExpiry.getTime()) ||
-          parsedExpiry.getTime() <= offerCreatedAt.getTime())
-      ) {
-        return res.status(400).json({ message: "Invalid offer details" });
-      }
-
-      const access = await resolveLegacyDealAccess(
-        req,
-        userId,
-        normalizedLane,
-        numericDealId,
-      );
-      if (
-        !access ||
-        !access.ownerId ||
-        (!access.isOwner &&
-          !access.isParticipant &&
-          !access.isStaff &&
-          !(res.locals.canAccessReviewedMarketflowInventory === true &&
-            isPublicLegacyDeal(access)))
-      ) {
-        return res.status(404).json({ message: "Deal not found" });
-      }
-
-      const dealNegotiations = await storage.getMarketflowNegotiationsByDeal(
-        normalizedLane,
-        numericDealId,
-      );
-      const authoritativeNegotiations = dealNegotiations.filter(
-        (entry) =>
-          isMarketflowNegotiationBoundToAuthoritativeDeal(entry, {
-            lane: normalizedLane,
-            dealId: numericDealId,
-            ownerId: access.ownerId!,
-          }) &&
-          (entry.posterId === userId || entry.counterpartyId === userId),
-      );
-      if (authoritativeNegotiations.length > 1) {
-        return res.status(409).json({
-          message: "Offer state changed. Refresh and try again",
-        });
-      }
-      const existingNegotiation = authoritativeNegotiations[0];
-      if (existingNegotiation) {
-        if (existingNegotiation.status !== "active") {
-          return res.status(409).json({ message: "Negotiation is not active" });
-        }
-      } else if (access.isOwner) {
-        // A deal owner cannot choose an arbitrary recipient through this
-        // deal-level endpoint.
-        return res.status(404).json({ message: "Deal not found" });
-      }
-
-      const recipientId = existingNegotiation
-        ? existingNegotiation.posterId === userId
-          ? existingNegotiation.counterpartyId
-          : existingNegotiation.posterId
-        : access.ownerId;
-      const counterpartyId =
-        existingNegotiation?.counterpartyId ?? userId;
-
-      // Public DTOs intentionally omit owner IDs. The storage transaction
-      // receives the owner resolved from the authoritative deal record, never
-      // a participant identity copied from a pre-fix negotiation row.
-      const createResult = await storage.createCurrentMarketflowOffer({
-        lane: normalizedLane,
-        dealId: numericDealId,
-        posterId: access.ownerId,
-        counterpartyId,
-        createdBy: userId,
-        recipientId,
-        offerKind,
-        payload,
-        expiresAt: parsedExpiry,
-        now: offerCreatedAt,
-      });
-      if (!createResult.ok) {
-        if (createResult.reason === "invalid_payload") {
-          return res.status(400).json({ message: "Invalid offer terms" });
-        }
-        if (createResult.reason === "invalid_expiry") {
-          return res.status(400).json({ message: "Invalid offer details" });
-        }
-        if (createResult.reason === "invalid_participants") {
-          return res.status(404).json({ message: "Deal not found" });
-        }
-        if (createResult.reason === "negotiation_inactive") {
-          return res.status(409).json({ message: "Negotiation is not active" });
-        }
-        if (createResult.reason === "active_offer_exists") {
-          return res.status(409).json({
-            message: "A current offer is already awaiting a response",
-          });
-        }
-        return res.status(409).json({
-          message: "Offer state changed. Refresh and try again",
-        });
-      }
-      const { offer, negotiation } = createResult;
-
-      // Broadcast to recipient via WebSocket
-      const broadcastToUser = (app as any).broadcastToUser;
-      if (broadcastToUser) {
-        broadcastToUser(recipientId, {
-          type: 'offer_update',
-          payload: {
-            offerId: offer.id,
-            negotiationId: negotiation.id,
-            lane: normalizedLane,
-            offerKind,
-            status: 'sent',
-          }
-        });
-      }
-
-      res.status(201).json({ offer, negotiation });
-    } catch (error) {
-      console.error("Error creating offer:", error);
-      res.status(500).json({ message: "Failed to create offer" });
-    }
-  });
-
-  // Get offers for a deal
-  app.get("/api/marketflow/offers/deal/:lane/:dealId", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub || req.supabaseUser?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const { lane, dealId } = req.params;
-      const offers = await storage.getMarketflowOffersByDeal(lane, parseInt(dealId));
-      const visibleOffers = await hasMarketflowStaffAccess(req, userId)
-        ? offers
-        : filterMarketflowOffersForUser(userId, offers);
-      res.json(visibleOffers);
-    } catch (error) {
-      console.error("Error fetching offers:", error);
-      res.status(500).json({ message: "Failed to fetch offers" });
-    }
-  });
-
-  // Get my offers
-  app.get("/api/marketflow/offers/my", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub || req.supabaseUser?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const sent = await storage.getMarketflowOffersByUser(userId);
-      const received = await storage.getMarketflowOffersReceivedByUser(userId);
-      
-      res.json({ sent, received });
-    } catch (error) {
-      console.error("Error fetching my offers:", error);
-      res.status(500).json({ message: "Failed to fetch offers" });
-    }
-  });
-
-  // Get single offer
-  app.get("/api/marketflow/offers/:offerId", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub || req.supabaseUser?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const offerId = parseInt(req.params.offerId);
-      const offer = await storage.getMarketflowOffer(offerId);
-      
-      if (!offer) {
-        return res.status(404).json({ message: "Offer not found" });
-      }
-
-      const mayReadOffer =
-        canAccessMarketflowOffer(userId, offer) ||
-        (await hasMarketflowStaffAccess(req, userId));
-      if (!mayReadOffer) {
-        return res.status(404).json({ message: "Offer not found" });
-      }
-      
-      res.json(offer);
-    } catch (error) {
-      console.error("Error fetching offer:", error);
-      res.status(500).json({ message: "Failed to fetch offer" });
-    }
-  });
-
-  // Respond to an offer (accept, reject, counter)
-  app.post("/api/marketflow/offers/:offerId/respond", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub || req.supabaseUser?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const offerId = Number(req.params.offerId);
-      const { action, counterPayload } = req.body;
-      if (!Number.isSafeInteger(offerId) || offerId <= 0) {
-        return res.status(404).json({ message: "Offer not found" });
-      }
-      if (!["accept", "reject", "counter"].includes(action)) {
-        return res.status(400).json({
-          message: "Invalid action. Must be 'accept', 'reject', or 'counter'",
-        });
-      }
-      if (
-        action === "counter" &&
-        (!counterPayload ||
-          typeof counterPayload !== "object" ||
-          Array.isArray(counterPayload))
-      ) {
-        return res.status(400).json({
-          message: "A valid counter offer is required",
-        });
-      }
-
-      const offer = await storage.getMarketflowOffer(offerId);
-      if (!offer) {
-        return res.status(404).json({ message: "Offer not found" });
-      }
-
-      // Only the current recipient may accept, reject, or counter. The
-      // creator can view or withdraw an offer, but cannot accept their own
-      // terms on the other party's behalf.
-      if (offer.recipientId !== userId) {
-        return res.status(404).json({ message: "Offer not found" });
-      }
-
-      const negotiation =
-        offer.negotiationId !== null
-          ? await storage.getMarketflowNegotiation(offer.negotiationId)
-          : undefined;
-      const access = await resolveLegacyDealAccess(
-        req,
-        userId,
-        offer.lane,
-        offer.dealId,
-      );
-      if (
-        !negotiation ||
-        !access ||
-        !access.ownerId ||
-        (!access.isOwner &&
-          !access.isParticipant &&
-          !access.isStaff &&
-          !isPublicLegacyDeal(access)) ||
-        !isMarketflowNegotiationBoundToAuthoritativeDeal(negotiation, {
-          lane: offer.lane,
-          dealId: offer.dealId,
-          ownerId: access.ownerId,
-        }) ||
-        !isMarketflowOfferConsistentWithNegotiation(offer, negotiation)
-      ) {
-        return res.status(404).json({ message: "Offer not found" });
-      }
-
-      const responseResult = await storage.respondToCurrentMarketflowOffer({
-        offerId,
-        userId,
-        action: action as "accept" | "reject" | "counter",
-        counterPayload,
-        authoritativeOwnerId: access.ownerId,
-      });
-      if (!responseResult.ok) {
-        if (
-          responseResult.reason === "not_found" ||
-          responseResult.reason === "not_recipient"
-        ) {
-          return res.status(404).json({ message: "Offer not found" });
-        }
-        if (responseResult.reason === "invalid_counter") {
-          return res.status(400).json({
-            message: "A valid counter offer is required",
-          });
-        }
-        if (responseResult.reason === "invalid_offer_payload") {
-          return res.status(409).json({
-            message: "Offer terms are invalid and cannot be accepted",
-          });
-        }
-        if (responseResult.reason === "offer_expired") {
-          return res.status(409).json({ message: "Offer has expired" });
-        }
-        if (responseResult.reason === "negotiation_inactive") {
-          return res.status(409).json({ message: "Negotiation is not active" });
-        }
-        if (responseResult.reason === "stale_offer") {
-          return res.status(409).json({
-            message: "Offer is no longer the current offer",
-          });
-        }
-        if (responseResult.reason === "already_resolved") {
-          return res.status(409).json({
-            message: "Offer has already been resolved",
-          });
-        }
-        return res.status(409).json({
-          message: "Offer state changed. Refresh and try again",
-        });
-      }
-
-      if (responseResult.action === "countered") {
-        // Broadcast to original offerer
-        const broadcastToUser = (app as any).broadcastToUser;
-        if (broadcastToUser) {
-          broadcastToUser(responseResult.offer.recipientId, {
-            type: 'offer_update',
-            payload: {
-              offerId: responseResult.offer.id,
-              negotiationId: responseResult.negotiation.id,
-              lane: responseResult.offer.lane,
-              offerKind: responseResult.offer.offerKind,
-              status: 'countered',
-            }
-          });
-        }
-      }
-
-      res.json({
-        offer: responseResult.offer,
-        action: responseResult.action,
-      });
-    } catch (error) {
-      console.error("Error responding to offer:", error);
-      res.status(500).json({ message: "Failed to respond to offer" });
-    }
-  });
-
-  // Get negotiation by ID
-  app.get("/api/marketflow/negotiations/:negotiationId(\\d+)", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub || req.supabaseUser?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const negotiationId = parseInt(req.params.negotiationId);
-      
-      const negotiation = await storage.getMarketflowNegotiation(negotiationId);
-      if (!negotiation) {
-        return res.status(404).json({ message: "Negotiation not found" });
-      }
-
-      const isParticipant =
-        negotiation.posterId === userId || negotiation.counterpartyId === userId;
-      if (!isParticipant && !(await hasMarketflowStaffAccess(req, userId))) {
-        return res.status(404).json({ message: "Negotiation not found" });
-      }
-
-      // Get all offers in this negotiation
-      const offers = await storage.getMarketflowOffersByNegotiation(negotiationId);
-      
-      // Get messages
-      const messages = await storage.getNegotiationMessages(negotiationId);
-      
-      res.json({ negotiation, offers, messages });
-    } catch (error) {
-      console.error("Error fetching negotiation:", error);
-      res.status(500).json({ message: "Failed to fetch negotiation" });
-    }
-  });
-
-  // Get my negotiations
-  app.get("/api/marketflow/negotiations/my", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub || req.supabaseUser?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const negotiations = await storage.getMarketflowNegotiationsByUser(userId);
-      res.json(negotiations);
-    } catch (error) {
-      console.error("Error fetching negotiations:", error);
-      res.status(500).json({ message: "Failed to fetch negotiations" });
-    }
-  });
-
-  // Get negotiations for a deal
-  app.get("/api/marketflow/negotiations/deal/:lane/:dealId", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub || req.supabaseUser?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-      
-      const { lane, dealId } = req.params;
-      const negotiations = await storage.getMarketflowNegotiationsByDeal(lane, parseInt(dealId));
-      
-      const userNegotiations = await hasMarketflowStaffAccess(req, userId)
-        ? negotiations
-        : negotiations.filter(
-            (n: any) => n.posterId === userId || n.counterpartyId === userId,
-          );
-      
-      res.json(userNegotiations);
-    } catch (error) {
-      console.error("Error fetching negotiations:", error);
-      res.status(500).json({ message: "Failed to fetch negotiations" });
-    }
-  });
-
-  // Send message in negotiation room
-  app.post("/api/marketflow/negotiations/:negotiationId/messages", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub || req.supabaseUser?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const negotiationId = parseInt(req.params.negotiationId);
-      const content =
-        typeof req.body?.content === "string" ? req.body.content.trim() : "";
-      if (!content || content.length > 5_000) {
-        return res.status(400).json({ message: "Message is required" });
-      }
-
-      const negotiation = await storage.getMarketflowNegotiation(negotiationId);
-      if (!negotiation) {
-        return res.status(404).json({ message: "Negotiation not found" });
-      }
-
-      // Check access
-      if (negotiation.posterId !== userId && negotiation.counterpartyId !== userId) {
-        return res.status(404).json({ message: "Negotiation not found" });
-      }
-
-      const message = await storage.createNegotiationMessage({
-        negotiationId,
-        senderId: userId,
-        content,
-        messageType: "text",
-        relatedOfferId: null,
-      });
-
-      // Broadcast to the other party
-      const recipientId = negotiation.posterId === userId ? negotiation.counterpartyId : negotiation.posterId;
-      const broadcastToUser = (app as any).broadcastToUser;
-      if (broadcastToUser) {
-        broadcastToUser(recipientId, {
-          type: 'new_message',
-          payload: {
-            negotiationId,
-            messageId: message.id,
-            senderId: userId,
-            content,
-          }
-        });
-      }
-
-      res.status(201).json(message);
-    } catch (error) {
-      console.error("Error sending message:", error);
-      res.status(500).json({ message: "Failed to send message" });
-    }
-  });
-
-  // Mark messages as read
-  app.post("/api/marketflow/negotiations/:negotiationId/read", isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user?.claims?.sub || req.supabaseUser?.id;
-      if (!userId) {
-        return res.status(401).json({ message: "Unauthorized" });
-      }
-
-      const negotiationId = parseInt(req.params.negotiationId);
-      const negotiation = await storage.getMarketflowNegotiation(negotiationId);
-      if (
-        !negotiation ||
-        (negotiation.posterId !== userId &&
-          negotiation.counterpartyId !== userId)
-      ) {
-        return res.status(404).json({ message: "Negotiation not found" });
-      }
-
-      await storage.markNegotiationMessagesAsRead(negotiationId, userId);
-      
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Error marking messages as read:", error);
-      res.status(500).json({ message: "Failed to mark messages as read" });
-    }
-  });
-
-  // Strategy Lab â€” Property Analysis routes (Task #84)
-  const { registerPropertyAnalysisRoutes } = await import("./propertyAnalysisRoutes");
-  registerPropertyAnalysisRoutes(app, { isAuthenticated: isHybridAuthenticated });
-
-  const { registerStrategyLabRoutes } = await import("./strategyLabRoutes");
-  registerStrategyLabRoutes(app, { isAuthenticated: isHybridAuthenticated, adminEmails: ADMIN_EMAILS });
-
-  return httpServer;
-}
+YªçŠx-®éÜj×¢ëiºÚ+Š§j[h‘éÜ¢éí×^öãdèµ©hºÚn¶X§zÍZ[\ÜÈ˜[™ÛUURQHœ›ÛH››ÙN˜Üž\ÈŽÂš[\Ü^™\ÜËÈ\H^™\ÜË\H™\]Y\Ý\H™\]Y\Ý[™\‹\H™\ÜÛœÙK\H™^[˜Ý[ÛˆHœ›ÛH™^™\ÜÈŽÂš[\ÜÈÜ™X]TÙ\™\‹\HÙ\™\ˆHœ›ÛHšŽÂš[\ÜÈÝÜ˜YÙHHœ›ÛH‹‹ÜÝÜ˜YÙHŽÂš[\ÜÈˆ[œÙ\Ù[\“XYØÚ[XKˆ[œÙ\[™\ÝÜ“XYØÚ[XKˆ[œÙ\^Y\“XYØÚ[XKˆ[œÙ\ÛÛXÝØÚ[XKˆ[œÙ\›Ú™XÝØÚ[XKˆ[œÙ\ÚÛ\Ø[QX[ØÚ[XKˆ[œÙ\ÚÛ\Ø[T™\]Y\ÝØÚ[XKˆ[œÙ\™]Z[\Ý[™ÔØÚ[XKˆ[œÙ\\Ý[™ÔØÚ[XKˆ[œÙ\^Y\’[œ]Z\žTØÚ[XKˆ[œÙ\[™\ÝÜ”›Ùš[TØÚ[XKˆ[œÙ\ÚÛ\Ø[\”›Ùš[TØÚ[XKˆ[œÙ\^Y\”›Ùš[TØÚ[XKˆ[œÙ\Ø]™Y›Ü\TØÚ[XKˆ[œÙ\^Y\“Ù™™\”ØÚ[XKˆ[œÙ\Ø\][›Ú™XÝØÚ[XKˆ[œÙ\›Ú™XÝZ[\ÝÛ™TØÚ[XKˆ[œÙ\ÛÛ[Z]Y[™\ÝY[ØÚ[XKˆ[œÙ\X[X]ÚØÚ[XKˆ[œÙ\[››Ý[˜Ù[Y[ØÚ[XKˆ[œÙ\›ÝYšXØ][Û”ØÚ[XKˆ[œÙ\YZ[]Y]ÙÔØÚ[XKˆ[œÙ\XYØÚ[XKˆ[œÙ\ÝQ]™[ØÚ[XKˆ[œÙ\Ø]™Y[˜[\Ú\ÔØÚ[XKˆ[œÙ\˜\TØÚ[XKˆ[œÙ\\Ý[[ÛšX[ØÚ[XKˆ[œÙ\X[SY[X™\”ØÚ[XKˆ[œÙ\YYXQš[TØÚ[XKˆ[œÙ\Ú]PÛÛ[ØÚ[XKˆ[œÙ\\XÛTØÚ[XKˆ[œÙ\Xœ˜\žP™YÚ[›™\”Ý\ØÚ[XKˆ[œÙ\Xœ˜\žQÛÜÜØ\žU\›TØÚ[XKˆÕQ‘—Ô“ÓTÂŸHœ›ÛHÚ\™YÜØÚ[XHŽÂš[\ÜÈ\œÙTYÙÞPØ[Ý[]Ü”™\]Y\ÝHœ›ÛHÚ\™YÜYÙÞKXØ[Ý[]ÜˆŽÂš[\ÜÈ›Ü›X[^™TYØ\Ý\ÓXYÝX›Z\ÜÚ[ÛˆHœ›ÛHÚ\™YÛXY\›Ý][™ÈŽÂš[\ÜÈ›Ü›X[^™SX\šÙ]›ÝÕÚÛ\Ø[TÝX›Z\ÜÚ[ÛˆHœ›ÛHÚ\™YÛX\šÙ]›ÝË]ÚÛ\Ø[K\ÝX›Z\ÜÚ[ÛˆŽÂ‚š[\ÜÈˆHœ›ÛHž›ÙŽÂš[\ÜÈœ›ÛQ\œ›ÜˆHœ›ÛHž›Ù]˜[Y][Û‹Y\œ›ÜˆŽÂš[\ÜÈÙ]\]]\Ð]][XØ]YHœ›ÛH‹‹Ü™\]]]ŽÂš[\ÜÈ™YÚ\Ý\“ÜÜ[š]T›Ý]\ÈHœ›ÛH‹‹ÛÜÜ[š]T›Ý]\ÈŽÂš[\ÜÈ™YÚ\Ý\•\Ù\”›Ýš\Ú[Ûš[™Ô›Ý]HHœ›ÛH‹‹Ý\Ù\‹\›Ýš\Ú[Ûš[™Ë\›Ý]\ÈŽÂš[\ÜÈ™YÚ\Ý\•\Ù\”›Ùš[T›Ý]HHœ›ÛH‹‹Ý\Ù\‹\›Ùš[K\›Ý]HŽÂš[\ÜÈÝ\X˜\ÙP]]ZY]Ø\™K^˜XÝÝ\X˜\ÙU\Ù\ˆHœ›ÛH‹‹ÜÝ\X˜\ÙP]]ŽÂš[\ÜÈÙ[™\˜]U\›TÚY]ˆHœ›ÛH‹‹Ý\›K\ÚY]YÙ[™\˜]ÜˆŽÂš[\ÜÈÙ[™\˜]PØ[Ý[]Ü”‹Ù[™\˜]QX[XÚÙ]‹Ù[™\˜]TØ]™Y[˜[\Ú\ÔˆHœ›ÛH‹‹ÜˆŽÂš[\ÜÈ\Ô™]šY]ÒÜÝ˜[YHHœ›ÛHÚ\™YÜ™]šY]ËZÜÝÈŽÂš[\ÜYÙÞHœ›ÛH‹‹ÜYÙÞHŽÂš[\ÜÈ™YÚ\Ý\”YÙÞRY[]T›Ý]\ÈHœ›ÛH‹‹ÜYÙÞK\›Ý]KX]]ŽÂš[\ÜÈ›ÜØ\™\ÈQ›ÜØ\™Ý]™XXÚ™X\ÛÛ‘›Ü“XY\K™]žSÝ]›Þ›ÝÈ\ÈT™]žSÝ]›Þ›ÝË˜Z[”[™[™È\ÈQ˜Z[”[™[™Ë\ÒRX[HHœ›ÛH‹‹Ú[YÜ˜][ÛœËÚKXÛY[ŽÂš[\ÜÈˆÜ™X]U\Ù\”›Ùš[KˆÜ™X]U\Ù\”™\]][Û‹ˆÙ]\Ù\”›Ùš[KˆÙ]\Ù\”™\]][Û‹ˆÙ]\Ù\˜YÙ\Ëˆ\]U\Ù\”›Ùš[BŸHœ›ÛH‹‹ÛX‹ÜÝ\X˜\ÙHŽÂš[\ÜÈÙ[™[XZ[Ù[™Ù[\“XY›ÝYšXØ][Û‹Ù[™[™\ÝÜ“XY›ÝYšXØ][Û‹Ù[™^Y\“XY›ÝYšXØ][Û‹Ù[™™[™Ü“XY›ÝYšXØ][Û‹Ù[™X[ÝX›Z\ÜÚ[Û“›ÝYšXØ][Û‹Ù[™Y\ÜØYÙS›ÝYšXØ][Û‹Ù[™X[\]S›ÝYšXØ][Û‹Ù[™Ø]™Y[˜[\Ú\Ô‘[XZ[Hœ›ÛH‹‹Ù[XZ[ŽÂš[\ÜÂˆZ[Ù[™\šXÓXY›ÝYšXØ][Û‘]KˆY\™ÙSXYÛÛœÙ[]Y]ˆ›Ü›X[^™SXYÛÛœÙ[ˆ™\ÛÛ™TÝY™“›ÝYšXØ][Û”™XÚ\Y[ˆ˜[Y]SXYÛÛœÙ[™\]Z\™[Y[ŸHœ›ÛH‹‹ÛXYZ[ZÙK\ÛXÞHŽÂš[\ÜÈÝ\X˜\ÙTÝÜ˜YÙHHœ›ÛH‹‹ÜÝ\X˜\ÙK\ÝÜ˜YÙHŽÂš[\ÜÈ™YÚ\Ý\“Øš™XÝÝÜ˜YÙT›Ý]\ÈHœ›ÛH‹‹Ü™\]Ú[YÜ˜][ÛœËÛØš™XÝÜÝÜ˜YÙHŽÂš[\ÜÈ™YÚ\Ý\”™XY[™\ÜÔ›Ý]HHœ›ÛH‹‹Ü™XY[™\ÜÈŽÂš[\ÜÈ™YÚ\Ý\”X›XÓXœ˜\žT™]\™[Y[›Ý]\ÈHœ›ÛH‹‹ÜX›XË[Xœ˜\žK\™]\™[Y[ŽÂš[\ÜÈÜ™X]S\Ý[™Ò[œ]Z\žT›Ý]R[™\œÈHœ›ÛH‹‹Û\Ý[™ËZ[œ]Z\žK\›Ý]\ÈŽÂš[\ÜÈÜ™X]TØ]™Y][T›Ý]R[™\œÈHœ›ÛH‹‹ÜØ]™YZ][K\›Ý]KZ[™\œÈŽÂš[\ÜÂˆÒUWÕT“ˆÚ][X\[šY\Ëˆ\ÐÜ˜]ÛX›TX›XÔ]ˆ“Ð“Õ×ÑTÐSÕËŸHœ›ÛH‹‹‹ÜÚ\™YÜÙ[Ë\›Ý]\ÈŽÂš[\ÜÂˆš[\”X›\ÚY›Ú™XÝËˆ\ÔX›\ÚY›Ú™XÝÛYËŸHœ›ÛH‹‹‹ÜÚ\™YÜX›XË\›Ú™XÝÈŽÂš[\ÜÂˆ™YÚ\Ý\“YØXÞTÜT™Y\™XÝËŸHœ›ÛH‹‹ÛYØXÞK\ÜK\™Y\™XÝÈŽÂš[\ÜÈX›XÒ[ZÙT˜]S[Z]˜]S[Z]Hœ›ÛH‹‹Ü˜]K[[Z]ŽÂš[\ÜÂˆÜ™X]TYÙÞPÛÛ™\œØ][ÛXØÙ\ÜÑÝX\™ˆÜ™X]TYÙÞPÛÛ™\œØ][ÛXØÙ\ÜÕÚÙ[‹ˆÙ]YÙÞPÛÛ™\œØ][ÛXØÙ\ÜÔÙXÜ™]ˆ™YÚ\Ý\”YÙÞPÛÛ™\œØ][ÛXØÙ\ÜÔ™Yœ™\Ú›Ý]Kˆ™\šYžTYÙÞPÛÛ™\œØ][ÛXØÙ\ÜÕÚÙ[‹ŸHœ›ÛH‹‹ÜYÙÞKXXØÙ\ÜÈŽÂš[\ÜÂˆØ[XØÙ\ÜÓX\šÙ]›ÝÓÙ™™\‹ˆš[\“X\šÙ]›ÝÓÙ™™\œÑ›Ü•\Ù\‹ŸHœ›ÛH‹‹ÛX\šÙ]›ÝËXXØÙ\ÜÈŽÂš[\ÜÂˆÜ™X]T™\]Z\™SX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜËˆÜ™X]T™\ÛÛ™SX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^ˆ\Ô™]šY]ÙYX\šÙ]›ÝÒ[™[ÜžU\Kˆ\HX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^ŸHœ›ÛH‹‹ÛX\šÙ]›ÝËZ[™[ÜžKX]]Üš^˜][ÛˆŽÂš[\ÜÂˆ\ÓX\šÙ]›ÝÓ™YÛÝX][Û›Ý[™Ð]]Üš]]]™QX[ˆ\ÓX\šÙ]›ÝÓÙ™™\ÛÛœÚ\Ý[Ú]™YÛÝX][Û‹ŸHœ›ÛH‹‹ÛX\šÙ]›ÝËYš[˜[˜ÚX[Z[YÜš]HŽÂš[\ÜÂˆØ[‘[]SYØXÞUÚÛ\Ø[QØÝ[Y[ˆš[\“YØXÞPØ\][[™\ÝY[Ñ›Ü•\Ù\‹ˆš[\“YØXÞQØÝ[Y[Ñ›Ü”\XÚ\[ˆš[\“YØXÞS\Ý[™Ò[œ]Z\šY\Ñ›Ü•\Ù\‹ˆš[\“YØXÞS™YÛÝX][ÛœÑ›Ü•\Ù\‹ˆš[\“YØXÞUÚÛ\Ø[SÙ™™\œÑ›Ü•\Ù\‹ˆÙ]YØXÞQX[\P[X\Ù\Ëˆ\ÓYØXÞQX[\XÚ\[ˆ›Ü›X[^™SYØXÞQX[\Kˆ\HYØXÞQX[Ú[™ŸHœ›ÛH‹‹ÛYØXÞK\š]˜]KXXØÙ\ÜÈŽÂš[\ÜÂˆØ[”™\]Y\ÝX\šÙ]›ÝÒ‹ˆ\ÔX›XÐØ\][›Ú™XÝˆ\ÔX›XÓ\Ý[™Ëˆ\ÔX›XÕÚÛ\Ø[QX[ˆ™\ÛÛ™UÚÛ\Ø[QX[ÝÛ™\’YˆÔX›XÐØ\][›Ú™XÝˆÔX›XÒ[™\ÝÜ•Ø[YX[ˆÔX›XÓ\Ý[™ËˆÔX›XÔ™]Z[\Ý[™ËˆÔX›XÕ\Ù\”›Ùš[KˆÔX›XÕÚÛ\Ø[QX[ŸHœ›ÛH‹‹ÜX›XË[X\šÙ]XÙHŽÂš[\ÜÂˆØ[”™XYš]˜]QX[]Kˆ™\]Z\™PÜ™X]YÝ\X˜\ÙSX\šÙ]XÙT™XÛÜ™ˆ™\ÛÛ™TÝ\X˜\ÙSX\šÙ]XÙRY[]KˆÐ^Y\“Ù™™\‘\Ú›Ø\™ËˆÐ^Y\“Ù™™\’Y[]PÛÛ[[œËˆÐØ\][ÛÛ[Z]Y[\Ú›Ø\™ËˆÐØ\][ÛÛ[Z]Y[Y[]PÛÛ[[œËˆÔX›XÔÝ\X˜\ÙPØ\][›Ú™XÝˆÔX›XÔÝ\X˜\ÙS\Ý[™ËˆÔX›XÔÝ\X˜\ÙUÚÛ\Ø[QX[ŸHœ›ÛH‹‹ÜÝ\X˜\ÙK[X\šÙ]XÙK\š]˜XÞHŽÂ‚‹ËÈYZ[ˆ[XZ[[ÝÛ\Ý›ÜˆÚ]HY][™Â˜ÛÛœÝQRS—ÑSPRSÈHÂˆ˜\ÛÜÞ[™ÛXZ[˜ÛÛH‹ˆ˜YZ[YØ\Ý\Ù™X[\ØØ\\Ë˜ÛÛH‹—NÂ‚‹ËÈZY]Ø\™HÈ™\]Z\™HÝY™ˆ›Û\È›ÜˆHXØÙ\ÜÂ˜ÛÛœÝ™\]Z\™TÝY™”›ÛHH\Þ[˜È
+™\Nˆ[žK™\Îˆ™\ÜÛœÙK™^ˆ™^[˜Ý[ÛŠHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\Ë˜ÛZ[\ÏËœÝXŽÂˆÛÛœÝ\Ù\‘[XZ[H™\K\Ù\Ë˜ÛZ[\ÏË™[XZ[™\K\Ù\Ë™[XZ[ÂˆˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆBˆˆËÈÚXÚÈYZ[ˆ[XZ[[ÝÛ\Ýš\œÝˆYˆ
+\Ù\‘[XZ[	‰ˆQRS—ÑSPRSËš[˜ÛY\Ê\Ù\‘[XZ[ÓÝÙ\Ø\ÙJ
+JJHÂˆ™]\›ˆ™^
+
+NÂˆBˆˆÛÛœÝ\ÔÝY™XØÙ\ÜÈH]ØZ]ÝÜ˜YÙKš\Ð[žTÝY™”›ÛJ\Ù\’Y
+NÂˆYˆ
+Z\ÔÝY™XØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\ÊÊKšœÛÛŠÈY\ÜØYÙNˆ‘›Ü˜šY[ŽˆÝY™ˆXØÙ\ÜÈ™\]Z\™YˆJNÂˆBˆˆ™^
+
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÚXÚÚ[™ÈÝY™ˆ›ÛNˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBŸNÂ‚‹ËÈZY]Ø\™HÈ™\]Z\™HÜXÚYšXÈ›Û\Â˜ÛÛœÝ™\]Z\™T›ÛHH
+‹‹œ›Û\ÎˆÝš[™Ö×JHOˆ\Þ[˜È
+™\Nˆ[žK™\Îˆ™\ÜÛœÙK™^ˆ™^[˜Ý[ÛŠHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\Ë˜ÛZ[\ÏËœÝXŽÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆBˆˆÛÛœÝ\Ù\”›Û\ÈH]ØZ]ÝÜ˜YÙK™Ù]\Ù\”›Û\Ê\Ù\’Y
+NÂˆÛÛœÝ\Ô™\]Z\™Y›ÛHH\Ù\”›Û\ËœÛÛYJˆOˆ›Û\Ëš[˜ÛY\Ê‹œ›ÛJJNÂˆˆYˆ
+Z\Ô™\]Z\™Y›ÛJHÂˆ™]\›ˆ™\ËœÝ]\ÊÊKšœÛÛŠÈY\ÜØYÙNˆ›Ü˜šY[Žˆ™\]Z\™Y›Û\Îˆ	Ü›Û\Ëš›Ú[Š‹Š_XJNÂˆBˆˆ™^
+
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÚXÚÚ[™È›ÛNˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBŸNÂ‚˜ÛÛœÝ\ÒXœšY]][XØ]YH\Þ[˜È
+™\Nˆ[žK™\Îˆ™\ÜÛœÙK™^ˆ™^[˜Ý[ÛŠHOˆÂˆYˆ
+™\K\Ù\Ë˜ÛZ[\ÏËœÝXŠHÂˆ™]\›ˆ™^
+
+NÂˆBˆˆYˆ
+™\KœÝ\X˜\ÙU\Ù\ŠHÂˆ™\K\Ù\ˆHÈÛZ[\Îˆ™\KœÝ\X˜\ÙU\Ù\‹˜ÛZ[\ÈNÂˆ™]\›ˆ™^
+
+NÂˆBˆˆÛÛœÝÝ\X˜\ÙU\Ù\ˆH]ØZ]^˜XÝÝ\X˜\ÙU\Ù\Š™\JNÂˆYˆ
+Ý\X˜\ÙU\Ù\ŠHÂˆ™\K\Ù\ˆHÈÛZ[\ÎˆÝ\X˜\ÙU\Ù\‹˜ÛZ[\ÈNÂˆ™\KœÝ\X˜\ÙU\Ù\ˆHÝ\X˜\ÙU\Ù\ŽÂˆ™]\›ˆ™^
+
+NÂˆBˆˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂŸNÂ‚‹ËÈ^˜XÝH]][XØ]Y\Ù\ˆQœ›ÛHZ]\ˆÝ\ÜY]]Þ\Ý[K‚˜ÛÛœÝÙ]]]\Ù\’YH
+™\Nˆ[žJNˆÝš[™È[OˆÂˆYˆ
+™\K\Ù\Ë˜ÛZ[\ÏËœÝXŠHÂˆ™]\›ˆ™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆBˆYˆ
+™\KœÝ\X˜\ÙU\Ù\ËšY
+HÂˆ™]\›ˆ™\KœÝ\X˜\ÙU\Ù\‹šYÂˆBˆYˆ
+™\KœÙ\ÜÚ[ÛË\Ù\ËšY
+HÂˆ™]\›ˆ™\KœÙ\ÜÚ[Û‹\Ù\‹šYÂˆBˆ™]\›ˆ[ÂŸNÂ‚˜ÛÛœÝÙ]™\šYšYYYÙÞU\Ù\’YH
+™\Nˆ[žJNˆÝš[™È[OˆÂˆ›Üˆ
+ÛÛœÝØ[™Y]HÙˆÂˆ™\K\Ù\Ë˜ÛZ[\ÏËœÝX‹ˆ™\KœÝ\X˜\ÙU\Ù\ËšYˆJHÂˆYˆ
+\[ÙˆØ[™Y]HOOHœÝš[™Èˆ	‰ˆØ[™Y]Kš[J
+JHÂˆ™]\›ˆØ[™Y]Kš[J
+NÂˆBˆBˆ™]\›ˆ[ÂŸNÂ‚˜ÛÛœÝ\ÓX\šÙ]›ÝÔÝY™XØÙ\ÜÈH\Þ[˜È
+™\Nˆ[žK\Ù\’YˆÝš[™ÊHOˆÂˆÛÛœÝ\Ù\‘[XZ[H™\K\Ù\Ë˜ÛZ[\ÏË™[XZ[™\KœÝ\X˜\ÙU\Ù\Ë™[XZ[ÂˆYˆ
+\Ù\‘[XZ[	‰ˆQRS—ÑSPRSËš[˜ÛY\ÊÝš[™Ê\Ù\‘[XZ[
+KÓÝÙ\Ø\ÙJ
+JJHÂˆ™]\›ˆYNÂˆB‚ˆ™]\›ˆÝÜ˜YÙKš\Ð[žTÝY™”›ÛJ\Ù\’Y
+NÂŸNÂ‚˜ÛÛœÝX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÑ\[™[˜ÚY\ÈHÂˆÙ]\Ù\”›Ùš[KˆÙ]\Ù\”›Û\Îˆ
+\Ù\’YˆÝš[™ÊHOˆÝÜ˜YÙK™Ù]\Ù\”›Û\Ê\Ù\’Y
+KˆYZ[‘[XZ[ÎˆQRS—ÑSPRSËŸNÂ˜ÛÛœÝ™\ÛÛ™SX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^BˆÜ™X]T™\ÛÛ™SX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^
+ˆX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÑ\[™[˜ÚY\Ëˆ
+NÂ˜ÛÛœÝ™\]Z\™SX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÈBˆÜ™X]T™\]Z\™SX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÊˆX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÑ\[™[˜ÚY\Ëˆ
+NÂ˜ÛÛœÝØYX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^H\Þ[˜È
+ˆ™\Nˆ™\]Y\Ýˆ™\Îˆ™\ÜÛœÙKˆ™^ˆ™^[˜Ý[Û‹ŠHOˆÂˆžHÂˆÛÛœÝÛÛ^H]ØZ]™\ÛÛ™SX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^
+™\JNÂˆ™\Ë›ØØ[Ë›X\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^HÛÛ^Âˆ™\Ë›ØØ[Ë˜Ø[XØÙ\ÜÔ™]šY]ÙYX\šÙ]›ÝÒ[™[ÜžHBˆÛÛ^˜Ø[XØÙ\ÜÔ™]šY]ÙY[™[ÜžNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ•[˜X›HÈ™\ÛÛ™HÜ[Û˜[X\šÙ]›ÝÈ[™[ÜžHXØÙ\ÜÎˆ‹\œ›ÜŠNÂˆ™\Ë›ØØ[Ë˜Ø[XØÙ\ÜÔ™]šY]ÙYX\šÙ]›ÝÒ[™[ÜžHH˜[ÙNÂˆBˆ™^
+
+NÂŸNÂ‚˜ÛÛœÝÙ]X\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^H
+ˆ™\Îˆ™\ÜÛœÙKŠNˆX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^[™Yš[™YO‚ˆ™\Ë›ØØ[Ë›X\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^\ÂˆX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^ˆ[™Yš[™YÂ‚˜ÛÛœÝÙ]X\šÙ]›ÝÒ[™[ÜžTš[˜Ú\[YH
+™\Îˆ™\ÜÛœÙJNˆÝš[™È[O‚ˆÙ]X\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^
+™\ÊOË\Ù\’YÏÈ[Â‚˜ÛÛœÝØ[•šY]Ù\’[š]X]SX\šÙ]›ÝÒˆH
+™\Îˆ™\ÜÛœÙJNˆ›ÛÛX[ˆO‚ˆÙ]X\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^
+™\ÊOË˜Ø[’[š]X]RˆOOHYNÂ‚˜ÛÛœÝØ[XØÙ\ÜÓX\šÙ]›ÝÒ][U\HH
+™\Îˆ™\ÜÛœÙK˜]Õ\Nˆ[šÛ›ÝÛŠHO‚ˆZ\Ô™]šY]ÙYX\šÙ]›ÝÒ[™[ÜžU\J˜]Õ\JHˆ™\Ë›ØØ[Ë˜Ø[XØÙ\ÜÔ™]šY]ÙYX\šÙ]›ÝÒ[™[ÜžHOOHYNÂ‚™^Ü\Þ[˜È[˜Ý[Ûˆ™YÚ\Ý\”›Ý]\ÊˆÙ\™\ŽˆÙ\™\‹ˆ\ˆ^™\ÜÂŠNˆ›ÛZ\ÙOÙ\™\ˆÂˆËÈÝYÚ[™È[™œ˜[˜Ú™]šY]ÜÈ\™H™]šY]ÈÝ\™˜XÙ\Ë™]™\ˆØ[›ÛšXØ[YÙ\Ë‚ˆËÈ\HHXY\ˆÈSTK[™Ý]XÈ™\ÜÛœÙ\ÈÛÈÜ˜]Û\œÈØ[››ÝˆËÈ[™^H™]šY]È]™[ˆYˆ^HYÛ›Ü™H›Ø›ÝË‚ˆ\\ÙJ
+™\K™\Ë™^
+HOˆÂˆÛÛœÝÜÝH™\K™Ù]
+šÜÝŠHˆŽÂˆYˆ
+\Ô™]šY]ÒÜÝ˜[YJÜÝ
+JHÂˆ™\ËœÙ]XY\Š–T›Ø›ÝËUYÈ‹››Ú[™^›Ù›ÛÝË›Ø\˜Ú]™K›ÜÛš\]ŠNÂˆBˆ™^
+
+NÂˆJNÂ‚ˆ™YÚ\Ý\”™XY[™\ÜÔ›Ý]J\
+NÂ‚ˆ\™Ù]
+‹Ø\KÚX[‹
+Ü™\K™\ÊHOˆÂˆ™\ËœÝ]\ÊŒ
+KšœÛÛŠÈÝ]\Îˆ›ÚÈˆJNÂˆJNÂ‚ˆ™YÚ\Ý\”X›XÓXœ˜\žT™]\™[Y[›Ý]\Ê\
+NÂ‚ˆˆËÈÙ]\™\]]]
+YØXÞHH›ÜˆÙ\ÜÚ[Û‹X˜\ÙY]]
+Bˆ]ØZ]Ù]\]]
+\
+NÂˆˆËÈYÝ\X˜\ÙH]]ZY]Ø\™HÈ^˜XÝ\Ù\ˆœ›ÛH•ÕÚÙ[œÂˆ\\ÙJÝ\X˜\ÙP]]ZY]Ø\™JNÂ‚ˆËÈÑSÎˆ›Ø›ÝË8 %™]šY]ËÙ]ˆÜÝÈ\™H[H\Ø[ÝÙYÛÈBˆËÈ™\]]ˆT“Ù\È›ÝÙ][™^Y™Y›Ü™H][˜Úˆ›ÙXÝ[Û‚ˆËÈ
+YØ\Ý\Ù™X[\ØØ\\Ë˜ÛÛJHÙ]ÈH[Ü˜]ÛÛXÞK‚ˆ\™Ù]
+	ËÜ›Ø›ÝË	Ë
+™\K™\ÊHOˆÂˆÛÛœÝ˜]ÒÜÝH
+™\K™Ù]
+	ÚÜÝ	ÊH	ÉÊKÓÝÙ\Ø\ÙJ
+NÂˆYˆ
+\Ô™]šY]ÒÜÝ˜[YJ˜]ÒÜÝ
+JHÂˆ™\Ë\J	Ý^ÜZ[‰ÊKœÙ[™
+ˆÉÕ\Ù\‹XYÙ[ˆ
+‰Ë	Ñ\Ø[ÝÎˆÉË	É×Kš›Ú[Š	×‰ÊKˆ
+NÂˆ™]\›ŽÂˆB‚ˆ™\Ë\J	Ý^ÜZ[‰ÊKœÙ[™
+ˆÂˆ	Õ\Ù\‹XYÙ[ˆ
+‰Ëˆ	Ð[ÝÎˆÉËˆ‹‹”“Ð“Õ×ÑTÐSÕË›X\
+
+
+HOˆ\Ø[ÝÎˆ	ÜX
+Kˆ	ÉËˆÚ][X\ˆ	ÔÒUWÕT“KÜÚ][X\ž[ˆ	ÉËˆKš›Ú[Š	×‰ÊKˆ
+NÂˆJNÂ‚ˆËÈ™X[Ì\ÈZ\œ›ÜˆHœ›ÝÜÙ\ˆ[X\ÈX›K[˜ÛY[™È™\ÝYYØXÞBˆËÈÜ\˜]Üˆ]Ëˆ^H\™H™YÚ\Ý\™Y™Y›Ü™HHÔKÕš]HØ]ÚX[‚ˆ™YÚ\Ý\“YØXÞTÜT™Y\™XÝÊ\
+NÂ‚ˆËÈHÛ\ÜÚXÈØ[Ý[]ÜˆÝZ]HØ\È›ÛY[ÈH[šYšYYÝ˜]YÞHX‹‚ˆËÈØØ[Ý[]ÜœÈ[™ÜÝ˜]YÞK[X‹ØÛ\ÜÚXÈ›ÝÈÌHÈHX‰ÜÈ]ZXÚÈÛÛÂˆËÈÝ\™˜XÙK™\Ù\š[™ÈHÝXHY\[šÈÛÈ™]š[Ý\ÛHÚ\™YØ[Ý[]Ü‚ˆËÈ[šÜÈÙY\[™[™ÈÛˆHšYÚÛÛˆ™YÚ\Ý\™Y™Y›Ü™HHÔH˜[˜XÚÂˆËÈÛÈ\™XÝ]ÈÈÜ˜]Û\œÈÙ]H™X[™Y\™XÝ
+›ÝHLÜˆH›[šÈÚ[
+K‚ˆÛÛœÝÐS×ÕÓÓ×ÕT“H	ËÜÝ˜]YÞK[XÝÛÛXØ[Ý[]ÜœÉÎÂˆ›Üˆ
+ÛÛœÝœ›ÛHÙˆÉËØØ[Ý[]ÜœÉË	ËÜÝ˜]YÞK[X‹ØÛ\ÜÚXÉ×JHÂˆ\™Ù]
+œ›ÛK
+™\K™\ÊHOˆÂˆÛÛœÝXˆH\[Ùˆ™\Kœ]Y\žKXˆOOH	ÜÝš[™ÉÈÈ™\Kœ]Y\žKX‹š[J
+Hˆ	ÉÎÂˆ™\Ëœ™Y\™XÝ
+ˆÌKˆXˆÈ	ÐÐS×ÕÓÓ×ÕT“IXIÙ[˜ÛÙUT’PÛÛ\Û™[
+XŠ_XˆÐS×ÕÓÓ×ÕT“ˆ
+NÂˆJNÂˆB‚ˆËÈ™]\™YYœ›ÛK\X›XÈ›Ý]\Îˆ™]\›ˆLÛÛ™H›Üˆ\™XÝ™\]Y\ÝË‚ˆËÈœšYYˆ0©ÌNˆ\ÙH›Ý]\È\™HÛÛ™Hœ›ÛHHŒHX›XÈÝ\™˜XÙH[\™[BˆËÈ
+›ÈÛX[ˆØ[›ÛšXØ[ÝXØÙ\ÜÛÜˆ]™\Ù\™\ÈHÜšYÚ[˜[[[
+K‚ˆËÈÙH[œÝÙ\ˆÚ]HÛX[SYÙHÛÈHÜ˜]Û\ˆÈ[X[ˆÙ]ÈHšYÚˆËÈÚYÛ˜[Ú]Ý]˜[[™È›ÝYÚÈHÔHÚ[‚ˆËÈ“ÕNˆÙXÛÜÞ\Ý[H\È“Õ™]\™Y8 %HÛÛ›Û[™ÈYØ\Ý\È›ÝÝ\BˆËÈ
+ÛY[ÜÜ˜ËÜYØ\Ý\ËÊHÝ[ÝÛœÈ]\ÈH™X[X›XÈYÙKÛÈ]]\ÝˆËÈ™\ÛÛ™HÛˆ\™XÝ]Ë›ÝLˆØ^Y\œÈ\È[[ÝY
+›Ý™]\™Y
+N‚ˆËÈ]Ì‹\™Y\™XÝÈÈÜÝX›Z]šXHŒ×ÑSSÕSÓ—Ô‘QT‘PÕÈX›Ý™KÛÈ]]\ÝˆËÈ›Ý™HL	Ù\™HZ]\‹‚ˆÛÛœÝÓÓ‘WÔ“ÕUTÈHÂˆ	ËÜÞ\Ý[\ÉËˆ	ËÙ™X[\ÜXÙIËˆ	ËØØ\][\˜Z\Ú[™ÉËˆNÂˆÛÛœÝÛÛ™TYÙHH
+]ˆÝš[™ÊHO‚ˆYØÝ\H[[XYY]HÚ\œÙ]H]‹N]O”YÙH™[[Ý™Y8 %YØ\Ý\È™X[\ØØ\\ÏÝ]OY]H˜[YOHœ›Ø›ÝÈˆÛÛ[H››Ú[™^ÚXY›ÙHÝ[OH™›ÛY˜[Z[N’[\‹Þ\Ý[K]ZKØ[œË\Ù\šYŽÛX^]ÚYMŒÛX\™Ú[Žœ™[H]]ÎÜY[™ÎŒK\™[NØÛÛÜŽˆÌPLŒÌÌˆHÝ[OH™›ÛY˜[Z[N‰ÐÛÜ›[Ü˜[Ø\˜[[Û™	ËÙ[Ü™ÚXKÙ\šYŽÙ›Û]ÙZYÚŒÙ›Û\Ú^™NŒœ™[NÛX\™Ú[ŽŒ\™[H•\ÈYÙH\È™Y[ˆ™]\™YÚOÝ[OH›[™KZZYÚŒKMNØÛÛÜŽˆÍÍMMŽHÛÙO‰Ü]OØÛÙOˆ\È›ÈÛ™Ù\ˆ\ÙˆHYØ\Ý\È™X[\ØØ\\ÈÙXœÚ]KˆÝ\]H™YH‹ÈˆÝ[OH˜ÛÛÜŽˆÐÎÐLÐHHÛYHYÙOØOˆÜˆH™YH‹Øœš[™ËX[‹[ÜÜ[š]HˆÝ[OH˜ÛÛÜŽˆÐÎÐLÐH˜œš[™È[ˆÜÜ[š]OØOˆ\™XÝKÜØ›ÙOÚ[˜Âˆ›Üˆ
+ÛÛœÝ]ÙˆÓÓ‘WÔ“ÕUTÊHÂˆ\™Ù]
+]
+Ü™\K™\ÊHOˆÂˆ™\ËœÝ]\ÊL
+K\J	Ú[	ÊKœÙ[™
+ÛÛ™TYÙJ]
+JNÂˆJNÂˆB‚ˆËÈÑSÎˆÚ][X\ž[8 %Ù[™\˜]Yœ›ÛHHØ[›ÛšXØ[X›XÈ›Ý]H\Ý[‚ˆËÈÚ\™YÜÙ[Ë\›Ý]\ËÈ
+HØ[YHÛÝ\˜ÙHH\‹\›Ý]HY]Y]H\Ù\ÊK\ÂˆËÈ[žH›Ú™XÝØ\ÙHÝYY\ÈÝÜ™Y[ˆH]X˜\ÙKˆYZ[‹X\šÙ]›ÝÂˆËÈÜ\˜]ÜˆÝ\™˜XÙ\Ë]][™YØXÞK\™Y\™XÝ]È\™Hš[\™YÝ]žBˆËÈ\ÐÜ˜]ÛX›TX›XÔ]ÛÈ^H™]™\ˆXZÈ[ÈHÚ][X\‚ˆ\™Ù]
+	ËÜÚ][X\ž[	Ë\Þ[˜È
+Ü™\K™\ÊHOˆÂˆÛÛœÝ[šY\ÈHÚ][X\[šY\Ê
+NÂˆÛÛœÝÙY[ˆH™]ÈÙ]
+[šY\Ë›X\
+
+JHOˆKœ]
+JNÂ‚ˆËÈ\[™Û›H]šY[˜ÙK\™]šY]ÙY›Ú™XÝØ\ÙHÝYY\ËˆH]X˜\ÙH›ÝÈ\ÂˆËÈ›Ý]Ù[ˆHX›XØ][ÛˆÚYÛ˜[ÈH^XÚ]™YÚ\ÝžHÙY\È\ÂˆËÈX›XÈÝ\™˜XÙH˜Z[XÛÜÙYˆÚÚ\]È[™XYH™\Ù[\ÈÝ]XÂˆËÈÑS×Ô“ÕUTÈ[šY\È
+K™ËˆÜ›Ú™XÝËÛ™[ÛÛ‹YŠK‚ˆžHÂˆÛÛœÝ›Ú™XÝÈHš[\”X›\ÚY›Ú™XÝÊ]ØZ]ÝÜ˜YÙK™Ù]›Ú™XÝÊ
+JNÂˆ›Üˆ
+ÛÛœÝÙˆ›Ú™XÝÊHÂˆÛÛœÝ]HÜ›Ú™XÝËÉÜœÛYßXÂˆYˆ
+ÙY[‹š\Ê]
+HZ\ÐÜ˜]ÛX›TX›XÔ]
+]
+JHÛÛ[YNÂˆÙY[‹˜Y
+]
+NÂˆ[šY\Ëœ\Ú
+È]š[Üš]Nˆ	ÌÉËÚ[™ÙYœ™\Nˆ	Û[ÛIÈJNÂˆBˆHØ]Ú
+\œŠHÂˆËÈHÝÜ˜YÙHXØÝ\]\Ý™]™\ˆœ™XZÈHÚ][X\8 %Ú\HÝ]XÈÙ]‚ˆB‚ˆÛÛœÝ\›ÈH[šY\Âˆ›X\
+ˆ
+ŠHO‚ˆ\›ØÏ‰ÔÒUWÕT“IÜ‹œ]OÛØÏÚ[™ÙYœ™\O‰Ü‹˜Ú[™ÙYœ™\_OØÚ[™ÙYœ™\Oš[Üš]O‰Ü‹œš[Üš]_OÜš[Üš]OÝ\›˜ˆ
+Bˆš›Ú[Š	×‰ÊNÂ‚ˆ™\Âˆ\J	Ø\XØ][Û‹Þ[	ÊBˆœÙ[™
+Þ[™\œÚ[ÛHŒKŒˆ[˜ÛÙ[™ÏH•U‹NÏ—\›Ù][œÏHš‹ËÝÝÝËœÚ][X\Ë›Ü™ËÜØÚ[X\ËÜÚ][X\ÌŽH—‰Ý\›ßWÝ\›Ù]—˜
+NÂˆJNÂ‚ˆËÈ™YÚ\Ý\ˆØš™XÝÝÜ˜YÙH›Ý]\È›Üˆš[H\ØYÂˆ™YÚ\Ý\“Øš™XÝÝÜ˜YÙT›Ý]\Ê\È™\]Z\™P]]ˆ\ÒXœšY]][XØ]YJNÂ‚ˆËÈ8¥ 8¥ 8¥ [\\™HØÝš[™HŒKŒŒHØ]™HÈ8 %ÕH]šX][Ûˆ8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ 8¥ ˆËÈX›XÈÔÕØ\KÙ]™[ÈØ\\™\Èš[X\žK\Ý\™˜XÙHÕHÛXÚÜËˆ˜]KBˆËÈ[Z]Y\‹RT^[ØY˜[Y]Y\œ›ÜœÈÝØ[ÝÙYÛÈH˜Z[YˆËÈ™XXÛÛˆ™]™\ˆ›ØÚÜÈ˜]šYØ][Û‹‚ˆ\œÜÝ
+ˆ‹Ø\KÙ]™[È‹ˆ˜]S[Z]
+LŒŒÌ
+Kˆ\Þ[˜È
+™\Nˆ™\]Y\Ý™\Îˆ™\ÜÛœÙJHOˆÂˆžHÂˆÛÛœÝ\œÙYH[œÙ\ÝQ]™[ØÚ[XKœØY™T\œÙJ™\K˜›ÙJNÂˆYˆ
+\\œÙYœÝXØÙ\ÜÊHÂˆËÈÝØ[ÝÈX[›Ü›YY^[ØYÈ8 %[[Y]žH]\Ý™]™\ˆÝ\™˜XÙHBˆËÈÛY[]š\ÚX›H˜Z[\™HÜˆ›ØÚÈ˜]šYØ][Û‹‚ˆ™]\›ˆ™\ËœÝ]\ÊŒ
+K™[™
+
+NÂˆBˆ]ØZ]ÝÜ˜YÙK˜Ü™X]PÝQ]™[
+\œÙY™]JNÂˆ™\ËœÝ]\ÊŒ
+K™[™
+
+NÂˆHØ]Ú
+\œŠHÂˆÛÛœÛÛK™\œ›ÜŠ–ØÝWÙ]™[×H˜Z[YÈ™XÛÜ™‹\œŠNÂˆ™\ËœÝ]\ÊŒ
+K™[™
+
+NÂˆBˆKˆ
+NÂ‚ˆËÈYZ[‹[Û›H8 %\ÝÌ^\ÈÙˆÕH]™[ËÜ›Ý\Y[™˜]Ë‚ˆ\™Ù]
+ˆ‹Ø\KÚKØÝKY]™[È‹ˆ\ÒXœšY]][XØ]Yˆ\Þ[˜È
+™\Nˆ[žK™\Îˆ™\ÜÛœÙJHOˆÂˆžHÂˆÛÛœÝ\Ù\‘[XZ[H
+ˆ™\K\Ù\Ë˜ÛZ[\ÏË™[XZ[ˆ™\K\Ù\Ë™[XZ[ˆ™\KœÝ\X˜\ÙU\Ù\Ë™[XZ[ˆˆ‚ˆ
+KÓÝÙ\Ø\ÙJ
+NÂˆYˆ
+]\Ù\‘[XZ[PQRS—ÑSPRSËš[˜ÛY\Ê\Ù\‘[XZ[
+JHÂˆ™]\›ˆ™\ËœÝ]\ÊÊKšœÛÛŠÈY\ÜØYÙNˆ‘›Ü˜šY[ˆˆJNÂˆBˆÛÛœÝ]™[ÈH]ØZ]ÝÜ˜YÙK™Ù]ÝQ]™[ÊÌ
+NÂˆ™\ËšœÛÛŠ]™[ÊNÂˆHØ]Ú
+\œŠHÂˆÛÛœÛÛK™\œ›ÜŠ–ØÝWÙ]™[×H˜Z[YÈØY‹\œŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈØY]™[ÈˆJNÂˆBˆKˆ
+NÂ‚ˆËÈX›XÈÛÛ™šYÈ[™Ú[H^ÜÙ\ÈÛ›HX›XËÜØY™HÛÛ™šYÝ\˜][Û‚ˆ\™Ù]
+	ËØ\KØÛÛ™šYËÜÝ\X˜\ÙIË
+Ü™\K™\ÊHOˆÂˆÛÛœÝ\›H›ØÙ\ÜË™[‹”ÕTPTÑWÕT“	ÉÎÂˆÛÛœÝ[›Û’Ù^HH›ØÙ\ÜË™[‹”ÕTPTÑWÐS“Ó—ÒÑVH	ÉÎÂˆÛÛœÝ\ÐÛÛ™šYÝ\™YH›ÛÛX[Š\›	‰ˆ[›Û’Ù^JNÂˆ™\ËšœÛÛŠÈ\›[›Û’Ù^K\ÐÛÛ™šYÝ\™YJNÂˆJNÂ‚ˆËÈÛÛÙÛHX\ÈTHÙ^H›ÜˆY™\ÜÈ]]ØÛÛ\]H
+X›XÈÙ^JBˆ\™Ù]
+	ËØ\KØÛÛ™šYËÙÛÛÙÛK[X\ÉË
+Ü™\K™\ÊHOˆÂˆ™\ËšœÛÛŠÂˆ\RÙ^Nˆ›ØÙ\ÜË™[‹‘ÓÓÑÓWÓPT×ÐTWÒÑVH	ÉÂˆJNÂˆJNÂ‚ˆËÈÚYÛ\X^HÜ™X]HÛ›HH]][XØ]Y\Ù\‰ÜÈ›Û‹YÛÝ™\›™Y›ÛK‚ˆ™YÚ\Ý\•\Ù\”›Ýš\Ú[Ûš[™Ô›Ý]J\Âˆ\Ð]][XØ]Yˆ\ÒXœšY]][XØ]YˆÜ™X]U\Ù\”›Ùš[KˆÜ™X]U\Ù\”™\]][Û‹ˆÙ]\Ù\”›Û\Îˆ
+\Ù\’Y
+HOˆÝÜ˜YÙK™Ù]\Ù\”›Û\Ê\Ù\’Y
+KˆY\Ù\”›ÛNˆ
+[žJHOˆÝÜ˜YÙK˜Y\Ù\”›ÛJ[žJKˆJNÂ‚ˆËÈ˜]È›Ùš[H™XYÈ\™HÙ[‹[Û›NÈX›XÈ›Ùš[HØ\™È\ÙHÈ›Ý]\Ë‚ˆ™YÚ\Ý\•\Ù\”›Ùš[T›Ý]J\Âˆ\Ð]][XØ]Yˆ\ÒXœšY]][XØ]YˆÙ]]][XØ]Y\Ù\’YˆÙ]]]\Ù\’YˆØY\Ù\”›Ùš[Nˆ\Þ[˜È
+\Ù\’Y
+HOˆÂˆžHÂˆÛÛœÝ›Ùš[HH]ØZ]Ù]\Ù\”›Ùš[J\Ù\’Y
+NÂˆYˆ
+›Ùš[JHÂˆ™]\›ˆ›Ùš[NÂˆBˆHØ]ÚÂˆÛÛœÛÛKš[™›Êˆ”Ý\X˜\ÙH›Ùš[H™]Ú[˜]˜Z[X›NÈ\Ú[™ÈÜÝÜ™TÔS˜[˜XÚÈ‹ˆ
+NÂˆB‚ˆÛÛœÝÕ\Ù\ˆH]ØZ]ÝÜ˜YÙK™Ù]\Ù\Š\Ù\’Y
+NÂˆYˆ
+\Õ\Ù\ŠHÂˆ™]\›ˆ[ÂˆB‚ˆÛÛœÝ\Ù\”›Û\ÈH]ØZ]ÝÜ˜YÙK™Ù]\Ù\”›Û\Ê\Ù\’Y
+NÂˆÛÛœÝš[X\žT›ÛHH\Ù\”›Û\Ë›[™ÝˆÈ\Ù\”›Û\ÖÌKœ›ÛHˆš[™\ÝÜˆŽÂˆÛÛœÝ\ÔYØ\Ý\ÈHš[X\žT›ÛKœÝ\ÕÚ]
+œYØ\Ý\×ÈŠNÂ‚ˆ™]\›ˆÂˆYˆÕ\Ù\‹šYˆ\Ù\—ÚYˆÕ\Ù\‹šYˆš[X\žWÜ›ÛNˆš[X\žT›ÛKˆ\Ü^WÛ˜[YN‚ˆ	ÜÕ\Ù\‹™š\œÝ˜[YHˆŸH	ÜÕ\Ù\‹›\Ý˜[YHˆŸXš[J
+HˆÕ\Ù\‹™[XZ[ËœÜ]
+ŠVÌHˆ•\Ù\ˆ‹ˆ]˜]\—Ý\›ˆÕ\Ù\‹œ›Ùš[R[XYÙU\›[™Yš[™Yˆ\×ÜYØ\Ý\×Ø˜YÙYˆ\ÔYØ\Ý\ÈÕ\Ù\‹œ›ÛHOOH˜YZ[ˆ‹ˆYØ\Ý\×Ü›ÛWÝ\Nˆ\ÔYØ\Ý\ÈÈš[X\žT›ÛHˆ[™Yš[™YˆÜ™X]YØ]ˆÕ\Ù\‹˜Ü™X]Y]ËÒTÓÔÝš[™Ê
+H™]È]J
+KÒTÓÔÝš[™Ê
+Kˆ\]YØ]ˆÕ\Ù\‹\]Y]ËÒTÓÔÝš[™Ê
+H™]È]J
+KÒTÓÔÝš[™Ê
+KˆNÂˆKˆJNÂ‚ˆËÈ\]H\Ù\ˆ›Ùš[H
+ÝÛˆ›Ùš[HÛ›JBˆ\œ]Ú
+	ËØ\KÜÝ\X˜\ÙKÜ›Ùš[IË\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ	Õ[˜]]Üš^™Y	ÈJNÂˆBˆˆÛÛœÝÈ\Ü^S˜[YKÛÛ\[žS˜[YKØØ][Û‹š[Ë]˜]\•\›HH™\K˜›ÙNÂˆˆÛÛœÝ\]\Îˆ™XÛÜ™Ýš[™Ë[žOˆHßNÂˆYˆ
+\Ü^S˜[YHOOH[™Yš[™Y
+H\]\Ë™\Ü^WÛ˜[YHH\Ü^S˜[YNÂˆYˆ
+ÛÛ\[žS˜[YHOOH[™Yš[™Y
+H\]\Ë˜ÛÛ\[žWÛ˜[YHHÛÛ\[žS˜[YNÂˆYˆ
+ØØ][ÛˆOOH[™Yš[™Y
+H\]\Ë›ØØ][ÛˆHØØ][ÛŽÂˆYˆ
+š[ÈOOH[™Yš[™Y
+H\]\Ë˜š[ÈHš[ÎÂˆYˆ
+]˜]\•\›OOH[™Yš[™Y
+H\]\Ë˜]˜]\—Ý\›H]˜]\•\›ÂˆˆÛÛœÝ›Ùš[HH]ØZ]\]U\Ù\”›Ùš[J\Ù\’Y\]\ÊNÂˆ™\ËšœÛÛŠ›Ùš[JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ	Ñ\œ›Üˆ\][™È›Ùš[N‰Ë\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ	Ñ˜Z[YÈ\]H›Ùš[IÈJNÂˆBˆJNÂ‚ˆËÈYZ[Žˆ\ÜÚYÛ‹Ý\]H\Ù\ˆ›ÛBˆ\œ]Ú
+	ËØ\KÜÝ\X˜\ÙKØ\ÜÚYÛ‹\›ÛKÎ\Ù\’Y	Ë\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝYZ[•\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+XYZ[•\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ	Õ[˜]]Üš^™Y	ÈJNÂˆBˆˆËÈÚXÚÈYˆ™\]Y\Ý\ˆ\ÈYZ[‚ˆÛÛœÝYZ[”›Ùš[HH]ØZ]Ù]\Ù\”›Ùš[JYZ[•\Ù\’Y
+NÂˆYˆ
+XYZ[”›Ùš[HYZ[”›Ùš[Kœš[X\žWÜ›ÛHOOH	ØYZ[‰ÊHÂˆ™]\›ˆ™\ËœÝ]\ÊÊKšœÛÛŠÈY\ÜØYÙNˆ	Ñ›Ü˜šY[ŽˆYZ[ˆXØÙ\ÜÈ™\]Z\™Y	ÈJNÂˆBˆˆÛÛœÝÈ\Ù\’YHH™\Kœ\˜[\ÎÂˆÛÛœÝÈ›ÛK\ÔYØ\Ý\Ð˜YÙYYØ\Ý\Ô›ÛU\HHH™\K˜›ÙNÂˆˆÛÛœÝ˜[Y›Û\ÈHÂˆ	ØYZ[‰Ë	ÜYØ\Ý\×ÝÚÛ\Ø[\‰Ë	ÝÚÛ\Ø[\‰Ëˆ	ÜYØ\Ý\×Ù™X[\ØØ\\‰Ë	Ù™X[\ØØ\\‰Ëˆ	Ú[™\ÝÜ‰Ë	Ø^Y\—Ü™]Z[	Ë	Ø^Y\—Ú[™\ÝY[	ÂˆNÂˆˆYˆ
+›ÛH	‰ˆ]˜[Y›Û\Ëš[˜ÛY\Ê›ÛJJHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ	Ò[˜[Y›ÛIÈJNÂˆBˆˆÛÛœÝ\]\Îˆ™XÛÜ™Ýš[™Ë[žOˆHßNÂˆYˆ
+›ÛJH\]\Ëœš[X\žWÜ›ÛHH›ÛNÂˆYˆ
+\ÔYØ\Ý\Ð˜YÙYOOH[™Yš[™Y
+H\]\Ëš\×ÜYØ\Ý\×Ø˜YÙYH\ÔYØ\Ý\Ð˜YÙYÂˆYˆ
+YØ\Ý\Ô›ÛU\HOOH[™Yš[™Y
+H\]\ËœYØ\Ý\×Ü›ÛWÝ\HHYØ\Ý\Ô›ÛU\NÂˆˆÛÛœÝ›Ùš[HH]ØZ]\]U\Ù\”›Ùš[J\Ù\’Y\]\ÊNÂˆ™\ËšœÛÛŠ›Ùš[JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ	Ñ\œ›Üˆ\ÜÚYÛš[™È›ÛN‰Ë\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ	Ñ˜Z[YÈ\ÜÚYÛˆ›ÛIÈJNÂˆBˆJNÂ‚ˆËÈÙ]\Ù\ˆ™\]][Ûˆœ›ÛHÝ\X˜\ÙBˆ\™Ù]
+	ËØ\KÜÝ\X˜\ÙKÜ™\]][Û‹Î\Ù\’Y	Ë\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝÈ\Ù\’YHH™\Kœ\˜[\ÎÂˆÛÛœÝ™\]][ÛˆH]ØZ]Ù]\Ù\”™\]][ÛŠ\Ù\’Y
+NÂˆˆYˆ
+\™\]][ÛŠHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ	Ô™\]][Ûˆ›Ý›Ý[™	ÈJNÂˆBˆˆ™\ËšœÛÛŠ™\]][ÛŠNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ	Ñ\œ›Üˆ™]Ú[™È™\]][ÛŽ‰Ë\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ	Ñ˜Z[YÈ™]Ú™\]][Û‰ÈJNÂˆBˆJNÂ‚ˆËÈÙ]\Ù\ˆ˜YÙ\Èœ›ÛHÝ\X˜\ÙBˆ\™Ù]
+	ËØ\KÜÝ\X˜\ÙKØ˜YÙ\ËÎ\Ù\’Y	Ë\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝÈ\Ù\’YHH™\Kœ\˜[\ÎÂˆÛÛœÝ˜YÙ\ÈH]ØZ]Ù]\Ù\˜YÙ\Ê\Ù\’Y
+NÂˆ™\ËšœÛÛŠ˜YÙ\ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ	Ñ\œ›Üˆ™]Ú[™È˜YÙ\Î‰Ë\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ	Ñ˜Z[YÈ™]Ú˜YÙ\ÉÈJNÂˆBˆJNÂ‚ˆËÈOOOOOOOOOHÕTPTÑHPT’ÑUPÑH“ÕUTÈOOOOOOOOOBˆËÈ\ÙH›Ý]\È\ÙHÝ\X˜\ÙH›Üˆ]H\œÚ\Ý[˜ÙBˆËÈ[\ÜØ\ÙH˜[œÙ›Ü›X][Ûˆ][]Y\ÂˆÛÛœÝÙ]Ý\X˜\ÙTÝÜ˜YÙHH\Þ[˜È
+
+HOˆÂˆÛÛœÝ[Ù[HH]ØZ][\Ü
+	Ë‹ÜÝ\X˜\ÙK\ÝÜ˜YÙIÊNÂˆ™]\›ˆÂˆÝÜ˜YÙNˆ[Ù[KœÝ\X˜\ÙTÝÜ˜YÙKˆÐØ[Y[Ø\ÙNˆ[Ù[KÐØ[Y[Ø\ÙKˆÔÛ˜ZÙPØ\ÙNˆ[Ù[KÔÛ˜ZÙPØ\ÙBˆNÂˆNÂ‚ˆ\HYØXÞT\XÚ\[ÛÝ\˜Ù\ÈHÂˆ™YÛÝX][ÛœÏÎˆ™XYÛ›H[žV×NÂˆÙ™™\œÏÎˆ™XYÛ›H[žV×NÂˆ[œ]Z\šY\ÏÎˆ™XYÛ›H[žV×NÂˆØ\][[™\ÝY[ÏÎˆ™XYÛ›H[žV×NÂˆNÂ‚ˆ\HYØXÞQX[XØÙ\ÜÈHÂˆÚ[™ˆYØXÞQX[Ú[™Âˆ™XÛÜ™ˆ[žNÂˆÝÛ™\’YˆÝš[™È[Âˆ\ÓÝÛ™\Žˆ›ÛÛX[ŽÂˆ\ÔÝY™Žˆ›ÛÛX[ŽÂˆ\Ô\XÚ\[ˆ›ÛÛX[ŽÂˆNÂ‚ˆÛÛœÝ™\ÛÛ™SYØXÞQX[XØÙ\ÜÈH\Þ[˜È
+ˆ™\Nˆ[žKˆ\Ù\’YˆÝš[™ËˆX[\NˆÝš[™ËˆX[Yˆ[X™\‹ˆÛÝ\˜Ù\ÎˆYØXÞT\XÚ\[ÛÝ\˜Ù\ÈHßKˆ
+Nˆ›ÛZ\ÙOYØXÞQX[XØÙ\ÜÈ[ˆOˆÂˆÛÛœÝÚ[™H›Ü›X[^™SYØXÞQX[\JX[\JNÂˆYˆ
+ZÚ[™S[X™\‹š\ÔØY™R[YÙ\ŠX[Y
+HX[YH
+HÂˆ™]\›ˆ[ÂˆB‚ˆ]™XÛÜ™ˆ[žNÂˆYˆ
+Ú[™OOHÚÛ\Ø[HŠHÂˆ™XÛÜ™H]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[
+X[Y
+NÂˆH[ÙHYˆ
+Ú[™OOH˜Ø\][ŠHÂˆ™XÛÜ™H]ØZ]ÝÜ˜YÙK™Ù]Ø\][›Ú™XÝ
+X[Y
+NÂˆH[ÙHÂˆ™XÛÜ™H]ØZ]ÝÜ˜YÙK™Ù]\Ý[™ÊX[Y
+NÂˆBˆYˆ
+\™XÛÜ™
+HÂˆ™]\›ˆ[ÂˆB‚ˆÛÛœÝÝÛ™\’YBˆÚ[™OOHÚÛ\Ø[H‚ˆÈ™XÛÜ™œÝX›Z]YžBˆˆÚ[™OOH˜Ø\][‚ˆÈ™XÛÜ™˜Ü™X]YžBˆˆ™XÛÜ™œÝX›Z]YžNÂˆÛÛœÝ\ÓÝÛ™\ˆHÝÛ™\’YOOH\Ù\’YÂˆÛÛœÝ\ÔÝY™ˆH]ØZ]\ÓX\šÙ]›ÝÔÝY™XØÙ\ÜÊ™\K\Ù\’Y
+NÂ‚ˆYˆ
+\ÓÝÛ™\ˆ\ÔÝY™ŠHÂˆ™]\›ˆÂˆÚ[™ˆ™XÛÜ™ˆÝÛ™\’YˆÝÛ™\’Y[ˆ\ÓÝÛ™\‹ˆ\ÔÝY™‹ˆ\Ô\XÚ\[ˆ˜[ÙKˆNÂˆB‚ˆ]™YÛÝX][ÛœÈHÛÝ\˜Ù\Ë›™YÛÝX][ÛœÎÂˆYˆ
+™YÛÝX][ÛœÈOOH[™Yš[™Y
+HÂˆÛÛœÝ™YÛÝX][Û‘Ü›Ý\ÈH]ØZ]›ÛZ\ÙK˜[
+ˆÙ]YØXÞQX[\P[X\Ù\ÊX[\JK›X\
+
+[X\ÊHO‚ˆÝÜ˜YÙK™Ù]X[™YÛÝX][ÛœÊ[X\ËX[Y
+Kˆ
+Kˆ
+NÂˆ™YÛÝX][ÛœÈH™YÛÝX][Û‘Ü›Ý\Ë™›]
+
+NÂˆB‚ˆ]Ù™™\œÈHÛÝ\˜Ù\Ë›Ù™™\œÎÂˆYˆ
+Ú[™OOHÚÛ\Ø[Hˆ	‰ˆÙ™™\œÈOOH[™Yš[™Y
+HÂˆÙ™™\œÈH]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[Ù™™\œÊX[Y
+NÂˆB‚ˆ][œ]Z\šY\ÈHÛÝ\˜Ù\Ëš[œ]Z\šY\ÎÂˆYˆ
+Ú[™OOH›\Ý[™Èˆ	‰ˆ[œ]Z\šY\ÈOOH[™Yš[™Y
+HÂˆ[œ]Z\šY\ÈH]ØZ]ÝÜ˜YÙK™Ù]\Ý[™Ò[œ]Z\šY\ÊX[Y
+NÂˆB‚ˆ]Ø\][[™\ÝY[ÈHÛÝ\˜Ù\Ë˜Ø\][[™\ÝY[ÎÂˆYˆ
+Ú[™OOH˜Ø\][ˆ	‰ˆØ\][[™\ÝY[ÈOOH[™Yš[™Y
+HÂˆÛÛœÝÛÙ™™\œÐžR[™\ÝÜ‹ÛÛ[Z]Y[ÐžR[™\ÝÜ—HH]ØZ]›ÛZ\ÙK˜[
+ÂˆÝÜ˜YÙK™Ù][™\ÝY[Ù™™\œÐžR[™\ÝÜŠ\Ù\’Y
+KˆÝÜ˜YÙK™Ù]ÛÛ[Z]Y[™\ÝY[ÐžR[™\ÝÜŠ\Ù\’Y
+KˆJNÂˆØ\][[™\ÝY[ÈHÂˆ‹‹›Ù™™\œÐžR[™\ÝÜ‹™š[\Š
+Ù™™\ŠHOˆÙ™™\‹œ›Ú™XÝYOOHX[Y
+Kˆ‹‹˜ÛÛ[Z]Y[ÐžR[™\ÝÜ‹™š[\Šˆ
+ÛÛ[Z]Y[
+HOˆÛÛ[Z]Y[œ›Ú™XÝYOOHX[Yˆ
+KˆNÂˆB‚ˆ™]\›ˆÂˆÚ[™ˆ™XÛÜ™ˆÝÛ™\’YˆÝÛ™\’Y[ˆ\ÓÝÛ™\‹ˆ\ÔÝY™‹ˆ\Ô\XÚ\[ˆ\ÓYØXÞQX[\XÚ\[
+\Ù\’YÂˆ™YÛÝX][ÛœËˆÙ™™\œËˆ[œ]Z\šY\ËˆØ\][[™\ÝY[ËˆJKˆNÂˆNÂ‚ˆÛÛœÝ\ÔX›XÓYØXÞQX[H
+XØÙ\ÜÎˆYØXÞQX[XØÙ\ÜÊNˆ›ÛÛX[ˆOˆÂˆYˆ
+XØÙ\ÜËšÚ[™OOHÚÛ\Ø[HŠHÂˆ™]\›ˆ\ÔX›XÕÚÛ\Ø[QX[
+XØÙ\ÜËœ™XÛÜ™
+NÂˆBˆYˆ
+XØÙ\ÜËšÚ[™OOH˜Ø\][ŠHÂˆ™]\›ˆ\ÔX›XÐØ\][›Ú™XÝ
+XØÙ\ÜËœ™XÛÜ™
+NÂˆBˆ™]\›ˆ\ÔX›XÓ\Ý[™ÊXØÙ\ÜËœ™XÛÜ™
+NÂˆNÂ‚ˆÛÛœÝØ[’[š]X]SYØXÞQX[[\˜XÝ[ÛˆH
+ˆXØÙ\ÜÎˆYØXÞQX[XØÙ\ÜËˆ™\Îˆ™\ÜÛœÙKˆ
+Nˆ›ÛÛX[ˆO‚ˆXXØÙ\ÜËš\ÓÝÛ™\ˆ	‰‚ˆ
+XØÙ\ÜËš\Ô\XÚ\[ˆXØÙ\ÜËš\ÔÝY™ˆˆ
+™\Ë›ØØ[Ë˜Ø[XØÙ\ÜÔ™]šY]ÙYX\šÙ]›ÝÒ[™[ÜžHOOHYH	‰‚ˆ\ÔX›XÓYØXÞQX[
+XØÙ\ÜÊJJNÂ‚ˆÛÛœÝ\Ý[™Ò[œ]Z\žR[™\œÈHÜ™X]S\Ý[™Ò[œ]Z\žT›Ý]R[™\œÊÂˆÙ]]]\Ù\’Yˆ\Ô™]šY]ÙY[™[ÜžPXØÙ\ÜÎˆ
+™\ÊHO‚ˆ™\Ë›ØØ[Ë˜Ø[XØÙ\ÜÔ™]šY]ÙYX\šÙ]›ÝÒ[™[ÜžHOOHYKˆÙ]\Ý[™Îˆ
+\Ý[™ÒY
+HOˆÝÜ˜YÙK™Ù]\Ý[™Ê\Ý[™ÒY
+KˆØ[’[š]X]R[œ]Z\žNˆ\Þ[˜È
+™\K™\Ë\Ù\’Y\Ý[™ÒY
+HOˆÂˆÛÛœÝXØÙ\ÜÈH]ØZ]™\ÛÛ™SYØXÞQX[XØÙ\ÜÊˆ™\Kˆ\Ù\’Yˆ›\Ý[™È‹ˆ\Ý[™ÒYˆ
+NÂˆ™]\›ˆ›ÛÛX[ŠˆXØÙ\ÜÈ	‰ˆØ[’[š]X]SYØXÞQX[[\˜XÝ[ÛŠXØÙ\ÜË™\ÊKˆ
+NÂˆKˆÜ™X]S\Ý[™Ò[œ]Z\žNˆ
+[œ]Z\žJHO‚ˆÝÜ˜YÙK˜Ü™X]S\Ý[™Ò[œ]Z\žJ[œ]Z\žJKˆJNÂ‚ˆÛÛœÝÙ]X›XÓX\šÙ]XÙR][HH\Þ[˜È
+ˆ˜]Õ\Nˆ[šÛ›ÝÛ‹ˆ˜]ÒYˆ[šÛ›ÝÛ‹ˆ
+Nˆ›ÛZ\ÙO™XÛÜ™Ýš[™Ë[šÛ›ÝÛˆ[ˆOˆÂˆÛÛœÝ\HBˆ\[Ùˆ˜]Õ\HOOHœÝš[™ÈˆÈ˜]Õ\Kš[J
+KÓÝÙ\Ø\ÙJ
+HˆˆŽÂˆÛÛœÝYH[X™\Š˜]ÒY
+NÂˆYˆ
+S[X™\‹š\ÔØY™R[YÙ\ŠY
+HYH
+HÂˆ™]\›ˆ[ÂˆB‚ˆYˆ
+\HOOHÚÛ\Ø[Hˆ\HOOHÚÛ\Ø[WÙX[ŠHÂˆÛÛœÝX[H]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[
+Y
+NÂˆ™]\›ˆX[	‰ˆ\ÔX›XÕÚÛ\Ø[QX[
+X[
+BˆÈÔX›XÕÚÛ\Ø[QX[
+X[
+Bˆˆ[ÂˆBˆYˆ
+\HOOH˜Ø\][ˆ\HOOH˜Ø\][Ü›Ú™XÝŠHÂˆÛÛœÝ›Ú™XÝH]ØZ]ÝÜ˜YÙK™Ù]Ø\][›Ú™XÝ
+Y
+NÂˆ™]\›ˆ›Ú™XÝ	‰ˆ\ÔX›XÐØ\][›Ú™XÝ
+›Ú™XÝ
+BˆÈÔX›XÐØ\][›Ú™XÝ
+›Ú™XÝ
+Bˆˆ[ÂˆBˆYˆ
+\HOOH›\Ý[™ÈŠHÂˆÛÛœÝ\Ý[™ÈH]ØZ]ÝÜ˜YÙK™Ù]\Ý[™ÊY
+NÂˆ™]\›ˆ\Ý[™È	‰ˆ\ÔX›XÓ\Ý[™Ê\Ý[™ÊBˆÈÔX›XÓ\Ý[™Ê\Ý[™ÊBˆˆ[ÂˆBˆYˆ
+\HOOHœ™]Z[ˆ\HOOHœ™]Z[Û\Ý[™ÈŠHÂˆÛÛœÝ\Ý[™ÈH]ØZ]ÝÜ˜YÙK™Ù]™]Z[\Ý[™ÊY
+NÂˆ™]\›ˆ\Ý[™È	‰‚ˆ
+\Ý[™ËœÝ]\ÈOOH˜XÝ]™Hˆ\Ý[™ËœÝ]\ÈOOH˜ÛÛZ[™×ÜÛÛÛˆŠBˆÈÔX›XÔ™]Z[\Ý[™Ê\Ý[™ÊBˆˆ[ÂˆBˆ™]\›ˆ[ÂˆNÂ‚ˆÛÛœÝØ]™Y][R[™\œÈHÜ™X]TØ]™Y][T›Ý]R[™\œÊÂˆÙ]\Ù\’YˆÙ]]]\Ù\’YˆØ[XØÙ\ÜÒ][U\Nˆ
+™\Ë][U\JHO‚ˆØ[XØÙ\ÜÓX\šÙ]›ÝÒ][U\J™\Ë][U\JKˆØ]™R][Nˆ\Þ[˜È
+\Ù\’Y][U\K][RY
+HOˆÂˆÛÛœÝÈÝÜ˜YÙNˆØ]™YÝÜ˜YÙKÐØ[Y[Ø\ÙHHBˆ]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆÛÛœÝØ]™Y][HH]ØZ]Ø]™YÝÜ˜YÙKœØ]™R][Jˆ\Ù\’Yˆ][U\Kˆ][RYˆ
+NÂˆ™]\›ˆØ]™Y][HÈÐØ[Y[Ø\ÙJØ]™Y][JHˆ[ÂˆKˆ™[[Ý™R][Nˆ\Þ[˜È
+\Ù\’Y][U\K][RY
+HOˆÂˆÛÛœÝÈÝÜ˜YÙNˆØ]™YÝÜ˜YÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆ™]\›ˆØ]™YÝÜ˜YÙK[œØ]™R][J\Ù\’Y][U\K][RY
+NÂˆKˆÙÑ\œ›ÜŽˆ
+Y\ÜØYÙK\œ›ÜŠHOˆÛÛœÛÛK™\œ›ÜŠY\ÜØYÙK\œ›ÜŠKˆJNÂ‚ˆËÈKKHØ]™Y][\ÈKKBˆ\™Ù]
+	ËØ\KÜÝ\X˜\ÙKÜØ]™YZ][\ÉË\ÒXœšY]][XØ]YØYX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ	Õ\Ù\ˆ›Ý]][XØ]Y	ÈJNÂˆBˆÛÛœÝÈ\HHH™\Kœ]Y\žNÂˆÛÛœÝÈÝÜ˜YÙKÐØ[Y[Ø\ÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆÛÛœÝ][\ÈH]ØZ]ÝÜ˜YÙK™Ù]Ø]™Y][\Ê\Ù\’Y\H\È[žJNÂˆÛÛœÝš\ÚX›R][\ÈH][\Ë™š[\Š
+][Nˆ[žJHO‚ˆØ[XØÙ\ÜÓX\šÙ]›ÝÒ][U\Jˆ™\Ëˆ][Kš][WÝ\HÏÈ][Kš][U\HÏÈ\Kˆ
+Kˆ
+NÂˆ™\ËšœÛÛŠÐØ[Y[Ø\ÙJš\ÚX›R][\ÊJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ	Ñ\œ›Üˆ™]Ú[™ÈØ]™Y][\Î‰Ë\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ	Ñ˜Z[YÈ™]ÚØ]™Y][\ÉÈJNÂˆBˆJNÂ‚ˆ\œÜÝ
+	ËØ\KÜÝ\X˜\ÙKÜØ]™YZ][\ÉË\ÒXœšY]][XØ]YØYX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^Ø]™Y][R[™\œËœÜÝ
+NÂ‚ˆ\™[]J	ËØ\KÜÝ\X˜\ÙKÜØ]™YZ][\ÉË\ÒXœšY]][XØ]YØYX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^Ø]™Y][R[™\œËœ™[[Ý™JNÂ‚ˆ\™Ù]
+	ËØ\KÜÝ\X˜\ÙKÜØ]™YZ][\ËØÚXÚÉË\ÒXœšY]][XØ]YØYX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ	Õ\Ù\ˆ›Ý]][XØ]Y	ÈJNÂˆBˆÛÛœÝÈ][U\K][RYHH™\Kœ]Y\žNÂˆˆYˆ
+Z][U\HZ][RY
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ	ÓZ\ÜÚ[™È][U\HÜˆ][RY	ÈJNÂˆBˆYˆ
+XØ[XØÙ\ÜÓX\šÙ]›ÝÒ][U\J™\Ë][U\JJHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ	Ò][H›Ý›Ý[™	ÈJNÂˆBˆˆÛÛœÝÈÝÜ˜YÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆÛÛœÝ\ÔØ]™YH]ØZ]ÝÜ˜YÙKš\Ò][TØ]™Y
+\Ù\’Y][U\H\È[žK][RY\ÈÝš[™ÊNÂˆ™\ËšœÛÛŠÈ\ÔØ]™YJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ	Ñ\œ›ÜˆÚXÚÚ[™ÈØ]™YÝ]\Î‰Ë\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ	Ñ˜Z[YÈÚXÚÈØ]™YÝ]\ÉÈJNÂˆBˆJNÂ‚ˆËÈKKH•ˆ™\]Y\ÝÈ
+Ý\X˜\ÙJHKKBˆ\œÜÝ
+	ËØ\KÜÝ\X˜\ÙKÚ‹\™\]Y\ÝÉË\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÂˆY\ÜØYÙNˆ	Õ\È[™Ú[\È[Ý™YÈØ\KÛX\šÙ]XÙKÚ‹\™\]Y\ÝË‰ËˆJNÂˆJNÂ‚ˆ\™Ù]
+	ËØ\KÜÝ\X˜\ÙKÚ‹\™\]Y\ÝÉË\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÂˆY\ÜØYÙN‚ˆ	Õ\È[™Ú[\È[Ý™YÈØ\KÛX\šÙ]XÙKÝÚÛ\Ø[\‹Ú‹\™\]Y\ÝË‰ËˆJNÂˆJNÂ‚ˆ\œ]Ú
+	ËØ\KÜÝ\X˜\ÙKÚ‹\™\]Y\ÝËÎšY	Ë\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÂˆY\ÜØYÙNˆ	Õ\È[™Ú[\È[Ý™YÈØ\KÛX\šÙ]XÙKÚ‹\™\]Y\ÝËÎšY‰ËˆJNÂˆJNÂ‚ˆËÈKKHØ\][›Ú™XÝÈ
+Ý\X˜\ÙJHKKBˆ\™Ù]
+	ËØ\KÜÝ\X˜\ÙKØØ\][\›Ú™XÝÉË\ÒXœšY]][XØ]Y™\]Z\™SX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜË\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝÈÝÜ˜YÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆÛÛœÝ›Ú™XÝÈH]ØZ]ÝÜ˜YÙK™Ù]X›XÐØ\][›Ú™XÝÊ
+NÂˆ™\ËšœÛÛŠˆ›Ú™XÝÂˆ›X\
+ÔX›XÔÝ\X˜\ÙPØ\][›Ú™XÝ
+Bˆ™š[\Š
+›Ú™XÝ
+HOˆ›Ú™XÝOOH[
+Kˆ
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ	Ñ\œ›Üˆ™]Ú[™ÈØ\][›Ú™XÝÎ‰Ë\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ	Ñ˜Z[YÈ™]ÚØ\][›Ú™XÝÉÈJNÂˆBˆJNÂ‚ˆ\™Ù]
+	ËØ\KÜÝ\X˜\ÙKØØ\][\›Ú™XÝËÛ^IË\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ	Õ\Ù\ˆ›Ý]][XØ]Y	ÈJNÂˆBˆÛÛœÝÈÝÜ˜YÙKÐØ[Y[Ø\ÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆÛÛœÝ›Ú™XÝÈH]ØZ]ÝÜ˜YÙK™Ù]Ø\][›Ú™XÝÐžU\Ù\Š\Ù\’Y
+NÂˆ™\ËšœÛÛŠÐØ[Y[Ø\ÙJ›Ú™XÝÊJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ	Ñ\œ›Üˆ™]Ú[™È\Ù\ˆ›Ú™XÝÎ‰Ë\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ	Ñ˜Z[YÈ™]Ú\Ù\ˆ›Ú™XÝÉÈJNÂˆBˆJNÂ‚ˆ\™Ù]
+	ËØ\KÜÝ\X˜\ÙKØØ\][\›Ú™XÝËÎšY	Ë\ÒXœšY]][XØ]Y™\]Z\™SX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜË\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝÈYHH™\Kœ\˜[\ÎÂˆÛÛœÝÈÝÜ˜YÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆÛÛœÝ›Ú™XÝH]ØZ]ÝÜ˜YÙK™Ù]Ø\][›Ú™XÝ
+Y
+NÂ‚ˆÛÛœÝX›XÔ›Ú™XÝH›Ú™XÝˆÈÔX›XÔÝ\X˜\ÙPØ\][›Ú™XÝ
+›Ú™XÝ
+Bˆˆ[ÂˆYˆ
+\X›XÔ›Ú™XÝ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ	Ô›Ú™XÝ›Ý›Ý[™	ÈJNÂˆB‚ˆ™\ËšœÛÛŠX›XÔ›Ú™XÝ
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ	Ñ\œ›Üˆ™]Ú[™ÈØ\][›Ú™XÝ‰Ë\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ	Ñ˜Z[YÈ™]ÚØ\][›Ú™XÝ	ÈJNÂˆBˆJNÂ‚ˆ\œÜÝ
+	ËØ\KÜÝ\X˜\ÙKØØ\][\›Ú™XÝÉË\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝY[]HH™\ÛÛ™TÝ\X˜\ÙSX\šÙ]XÙRY[]J™\JNÂˆYˆ
+ZY[]JHÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ	Õ\Ù\ˆ›Ý]][XØ]Y	ÈJNÂˆBˆÛÛœÝÈÝÜ˜YÙKÐØ[Y[Ø\ÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆÛÛœÝ›ÙHH™\K˜›ÙHÏÈßNÂˆÛÛœÝ]HBˆ\[Ùˆ›ÙK]HOOH	ÜÝš[™ÉÈÈ›ÙK]Kš[J
+KœÛXÙJMJHˆ	ÉÎÂˆÛÛœÝÝXÝ\™HBˆ\[Ùˆ›ÙKœÝXÝ\™HOOH	ÜÝš[™ÉÂˆÈ›ÙKœÝXÝ\™Kš[J
+KÕ\\Ø\ÙJ
+Bˆˆ	ÉÎÂˆÛÛœÝ[™[™ÑÛØ[H[X™\Š›ÙK™[™[™ÑÛØ[
+NÂˆÛÛœÝZ[’[™\ÝY[Bˆ›ÙK›Z[’[™\ÝY[OH[È[™Yš[™Yˆ[X™\Š›ÙK›Z[’[™\ÝY[
+NÂ‚ˆYˆ
+ˆ]]HˆVÉÑTURUIË	ÑP•	Ë	ÒP”’Q	×Kš[˜ÛY\ÊÝXÝ\™JHˆS[X™\‹š\Ñš[š]J[™[™ÑÛØ[
+Hˆ[™[™ÑÛØ[Hˆ
+Z[’[™\ÝY[OOH[™Yš[™Y	‰‚ˆ
+S[X™\‹š\Ñš[š]JZ[’[™\ÝY[
+HZ[’[™\ÝY[
+JBˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ	Ò[˜[Y›Ú™XÝ]Z[ÉÈJNÂˆB‚ˆÛÛœÝÛX[•^H
+˜[YNˆ[šÛ›ÝÛ‹X^[™Ýˆ[X™\ŠHO‚ˆ\[Ùˆ˜[YHOOH	ÜÝš[™ÉÈ	‰ˆ˜[YKš[J
+BˆÈ˜[YKš[J
+KœÛXÙJX^[™Ý
+Bˆˆ[™Yš[™YÂˆÛÛœÝÝÜÈH\œ˜^Kš\Ð\œ˜^J›ÙKœÝÜÊBˆÈ›ÙKœÝÜÂˆ™š[\Š
+ÝÎˆ[šÛ›ÝÛŠNˆÝÈ\ÈÝš[™ÈOˆ\[ÙˆÝÈOOH	ÜÝš[™ÉÊBˆœÛXÙJÌ
+Bˆˆ[™Yš[™YÂ‚ˆÛÛœÝ›Ú™XÝH™\]Z\™PÜ™X]YÝ\X˜\ÙSX\šÙ]XÙT™XÛÜ™
+ˆ]ØZ]ÝÜ˜YÙK˜Ü™X]PØ\][›Ú™XÝ
+ÂˆÝÛ™\—ÚYˆY[]KšÚ[™OOH	ÜÝ\X˜\ÙIÈÈY[]K\Ù\’Yˆ[ˆ^\›˜[ÛÝÛ™\—ÚY‚ˆY[]KšÚ[™OOH	Ù^\›˜[	ÈÈY[]K\Ù\’Yˆ[ˆ]Kˆ\ØÜš\[ÛŽˆÛX[•^
+›ÙK™\ØÜš\[Û‹LÌ
+KˆØØ][ÛŽˆÛX[•^
+›ÙK›ØØ][Û‹MJKˆ›Ü\WÝ\NˆÛX[•^
+›ÙKœ›Ü\U\KL
+KˆÝXÝ\™NˆÝXÝ\™H\È	ÑTURUIÈ	ÑP•	È	ÒP”’Q	Ëˆ[™[™×ÙÛØ[ˆ[™[™ÑÛØ[ˆZ[—Ú[™\ÝY[ˆZ[’[™\ÝY[ˆ›Ú™XÝYÜ™]\›ŽˆÛX[•^
+›ÙKœ›Ú™XÝY™]\›‹L
+KˆÛÜ\š[ÙˆÛX[•^
+›ÙKšÛ\š[ÙL
+KˆÝÜËˆÝ]\Îˆ	ÐPÕU‘IËˆ\×ÜX›XÎˆ˜[ÙKˆJKˆ	Ñ˜Z[YÈÜ™X]H›Ú™XÝ	Ëˆ
+NÂˆˆ™\ËœÝ]\ÊŒJKšœÛÛŠÐØ[Y[Ø\ÙJ›Ú™XÝ
+JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ	Ñ\œ›ÜˆÜ™X][™ÈØ\][›Ú™XÝ‰Ë\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ	Ñ˜Z[YÈÜ™X]HØ\][›Ú™XÝ	ÈJNÂˆBˆJNÂ‚ˆÛÛœÝØ\][›Ú™XÝÝÛ™\•\]TØÚ[XHH[œÙ\Ø\][›Ú™XÝØÚ[XBˆœXÚÊÂˆ]NˆYKˆ[™[™ÑÛØ[ˆYKˆZ[’[™\ÝY[ˆYKˆ›Ú™XÝY™]\›ŽˆYKˆ\ØÜš\[ÛŽˆYKˆJBˆœ\X[
+
+BˆœÝšXÝ
+
+NÂ‚ˆËÈ\]HØ\][›Ú™XÝ
+ÝÛ™\ˆÛ›JHH\Ù\ÈÜÝÜ™TÔSÝÜ˜YÙBˆ\œ]Ú
+	ËØ\KÜÝ\X˜\ÙKØØ\][\›Ú™XÝËÎšY	Ë\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ	Õ\Ù\ˆ›Ý]][XØ]Y	ÈJNÂˆBˆÛÛœÝ›Ú™XÝYH[X™\Š™\Kœ\˜[\ËšY
+NÂˆYˆ
+S[X™\‹š\ÔØY™R[YÙ\Š›Ú™XÝY
+H›Ú™XÝYH
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ	Ò[˜[Y›Ú™XÝQ	ÈJNÂˆBˆˆËÈÚXÚÈÝÛ™\œÚ\\Ú[™ÈÜÝÜ™TÔSÝÜ˜YÙBˆÛÛœÝ^\Ý[™Ô›Ú™XÝH]ØZ]ÝÜ˜YÙK™Ù]Ø\][›Ú™XÝ
+›Ú™XÝY
+NÂˆYˆ
+Y^\Ý[™Ô›Ú™XÝ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ	Ô›Ú™XÝ›Ý›Ý[™	ÈJNÂˆBˆYˆ
+^\Ý[™Ô›Ú™XÝ˜Ü™X]YžHOOH\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊÊKšœÛÛŠÈY\ÜØYÙNˆ	Ó›Ý]]Üš^™YÈY]\È›Ú™XÝ	ÈJNÂˆBˆˆÛÛœÝ\]T™\Ý[HØ\][›Ú™XÝÝÛ™\•\]TØÚ[XKœØY™T\œÙJ™\K˜›ÙJNÂˆYˆ
+]\]T™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÂˆY\ÜØYÙNˆœ›ÛQ\œ›ÜŠ\]T™\Ý[™\œ›ÜŠKÔÝš[™Ê
+KˆJNÂˆBˆˆÛÛœÝ\]Y›Ú™XÝH]ØZ]ÝÜ˜YÙK\]PØ\][›Ú™XÝ
+›Ú™XÝY\]T™\Ý[™]JNÂˆ™\ËšœÛÛŠ\]Y›Ú™XÝ
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ	Ñ\œ›Üˆ\][™ÈØ\][›Ú™XÝ‰Ë\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ	Ñ˜Z[YÈ\]HØ\][›Ú™XÝ	ÈJNÂˆBˆJNÂ‚ˆËÈKKHØ\][ÛÛ[Z]Y[È
+Ý\X˜\ÙJHKKBˆ\œÜÝ
+	ËØ\KÜÝ\X˜\ÙKØØ\][XÛÛ[Z]Y[ÉË\ÒXœšY]][XØ]YØYX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝY[]HH™\ÛÛ™TÝ\X˜\ÙSX\šÙ]XÙRY[]J™\JNÂˆYˆ
+ZY[]JHÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ	Õ\Ù\ˆ›Ý]][XØ]Y	ÈJNÂˆBˆYˆ
+™\Ë›ØØ[Ë˜Ø[XØÙ\ÜÔ™]šY]ÙYX\šÙ]›ÝÒ[™[ÜžHOOHYJHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ	Ô›Ú™XÝ›Ý›Ý[™	ÈJNÂˆBˆÛÛœÝÈ›Ú™XÝYÝXÝ\™T™Y™\™[˜ÙK›Ý\ÈHH™\K˜›ÙNÂˆÛÛœÝ[[Ý[H[X™\Š™\K˜›ÙOË˜[[Ý[
+NÂˆˆYˆ
+\›Ú™XÝYS[X™\‹š\Ñš[š]J[[Ý[
+H[[Ý[H
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ	ÓZ\ÜÚ[™È›Ú™XÝYÜˆ[[Ý[	ÈJNÂˆBˆˆÛÛœÝÈÝÜ˜YÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆˆÛÛœÝ›Ú™XÝH]ØZ]ÝÜ˜YÙK™Ù]Ø\][›Ú™XÝ
+›Ú™XÝY
+NÂˆÛÛœÝX›XÔ›Ú™XÝH›Ú™XÝˆÈÔX›XÔÝ\X˜\ÙPØ\][›Ú™XÝ
+›Ú™XÝ
+Bˆˆ[ÂˆÛÛœÝÝÛ™\’YH›Ú™XÝË›ÝÛ™\—ÚY›Ú™XÝË™^\›˜[ÛÝÛ™\—ÚY[ÂˆYˆ
+\›Ú™XÝ\X›XÔ›Ú™XÝ[ÝÛ™\’YÝÛ™\’YOOHY[]K\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ	Ô›Ú™XÝ›Ý›Ý[™	ÈJNÂˆBˆˆÛÛœÝÛÛ[Z]Y[H™\]Z\™PÜ™X]YÝ\X˜\ÙSX\šÙ]XÙT™XÛÜ™
+ˆ]ØZ]ÝÜ˜YÙK˜Ü™X]PØ\][ÛÛ[Z]Y[
+Âˆ›Ú™XÝÚYˆ›Ú™XÝYˆ‹‹ÐØ\][ÛÛ[Z]Y[Y[]PÛÛ[[œÊY[]JKˆ[[Ý[ˆÝXÝ\™WÜ™Y™\™[˜ÙNˆÝXÝ\™T™Y™\™[˜ÙKˆ›Ý\ËˆÝ]\Îˆ	Ü[™[™ÉÂˆJKˆ	Ñ˜Z[YÈÜ™X]HÛÛ[Z]Y[	Ëˆ
+NÂ‚ˆ]ØZ]ÝÜ˜YÙK˜Ü™X]S›ÝYšXØ][ÛŠÂˆ\Ù\—ÚYˆ›Ú™XÝ›ÝÛ™\—ÚY[ˆ^\›˜[Ý\Ù\—ÚYˆ›Ú™XÝ™^\›˜[ÛÝÛ™\—ÚY[ˆ\Nˆ	ØØ\][ØÛÛ[Z]Y[	Ëˆ]Nˆ	Ó™]È[™\ÝY[ÛÛ[Z]Y[	ËˆY\ÜØYÙNˆ[ˆ[™\ÝÜˆ\ÈÛÛ[Z]Y		Ø[[Ý[ÓØØ[TÝš[™Ê
+_HÈ[Ý\ˆ›Ú™XÝˆ[šÎˆÛX\šÙ]XÙKÙ™X[\ØØ\\‹Ü›Ú™XÝËÉÜ›Ú™XÝYXˆJNÂˆˆ™\ËœÝ]\ÊŒJKšœÛÛŠÐØ\][ÛÛ[Z]Y[\Ú›Ø\™ÊÛÛ[Z]Y[
+JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ	Ñ\œ›ÜˆÜ™X][™ÈØ\][ÛÛ[Z]Y[‰Ë\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ	Ñ˜Z[YÈÜ™X]HÛÛ[Z]Y[	ÈJNÂˆBˆJNÂ‚ˆ\™Ù]
+	ËØ\KÜÝ\X˜\ÙKØØ\][XÛÛ[Z]Y[ÉË\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝY[]HH™\ÛÛ™TÝ\X˜\ÙSX\šÙ]XÙRY[]J™\JNÂˆYˆ
+ZY[]JHÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ	Õ\Ù\ˆ›Ý]][XØ]Y	ÈJNÂˆBˆÛÛœÝÈÝÜ˜YÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆÛÛœÝÛÛ[Z]Y[ÈH]ØZ]ÝÜ˜YÙK™Ù]Ø\][ÛÛ[Z]Y[ÐžU\Ù\ŠY[]JNÂˆ™\ËšœÛÛŠÛÛ[Z]Y[Ë›X\
+ÐØ\][ÛÛ[Z]Y[\Ú›Ø\™ÊJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ	Ñ\œ›Üˆ™]Ú[™ÈÛÛ[Z]Y[Î‰Ë\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ	Ñ˜Z[YÈ™]ÚÛÛ[Z]Y[ÉÈJNÂˆBˆJNÂ‚ˆ\™Ù]
+	ËØ\KÜÝ\X˜\ÙKØØ\][\›Ú™XÝËÎšYØÛÛ[Z]Y[ÉË\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ	Õ[˜]]Üš^™Y	ÈJNÂˆB‚ˆÛÛœÝÈYHH™\Kœ\˜[\ÎÂˆÛÛœÝÈÝÜ˜YÙNˆÝ\TÝÜ˜YÙKÐØ[Y[Ø\ÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆÛÛœÝ›Ú™XÝH]ØZ]Ý\TÝÜ˜YÙK™Ù]Ø\][›Ú™XÝ
+Y
+NÂˆYˆ
+\›Ú™XÝ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ	Ô›Ú™XÝ›Ý›Ý[™	ÈJNÂˆB‚ˆÛÛœÝÛÛ[Z]Y[ÈH]ØZ]Ý\TÝÜ˜YÙK™Ù]Ø\][ÛÛ[Z]Y[ÐžT›Ú™XÝ
+Y
+NÂˆÛÛœÝ\ÔÝY™ˆH]ØZ]\ÓX\šÙ]›ÝÔÝY™XØÙ\ÜÊ™\K\Ù\’Y
+NÂˆÛÛœÝ\XÚ\[ÛÛ[Z]Y[ÈHÛÛ[Z]Y[Ë™š[\Š
+ÛÛ[Z]Y[ˆ[žJHO‚ˆØÛÛ[Z]Y[š[™\ÝÜ—ÚYÛÛ[Z]Y[™^\›˜[Ú[™\ÝÜ—ÚYKš[˜ÛY\Êˆ\Ù\’Yˆ
+Kˆ
+NÂˆYˆ
+ˆXØ[”™XYš]˜]QX[]JÂˆ\Ù\’YˆÝÛ™\’Yˆ›Ú™XÝ›ÝÛ™\—ÚYˆ\XÚ\[YÎˆ\XÚ\[ÛÛ[Z]Y[Ë›X\
+ˆ
+ÛÛ[Z]Y[ˆ[žJHO‚ˆÛÛ[Z]Y[š[™\ÝÜ—ÚYÛÛ[Z]Y[™^\›˜[Ú[™\ÝÜ—ÚYˆ
+Kˆ\ÔÝY™‹ˆJBˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ	Ô›Ú™XÝ›Ý›Ý[™	ÈJNÂˆB‚ˆÛÛœÝš\ÚX›PÛÛ[Z]Y[ÈBˆ\ÔÝY™ˆ›Ú™XÝ›ÝÛ™\—ÚYOOH\Ù\’YˆÈÛÛ[Z]Y[Âˆˆ\XÚ\[ÛÛ[Z]Y[ÎÂˆ™\ËšœÛÛŠÐØ[Y[Ø\ÙJš\ÚX›PÛÛ[Z]Y[ÊJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ	Ñ\œ›Üˆ™]Ú[™È›Ú™XÝÛÛ[Z]Y[Î‰Ë\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ	Ñ˜Z[YÈ™]ÚÛÛ[Z]Y[ÉÈJNÂˆBˆJNÂ‚ˆËÈKKHÚÛ\Ø[HX[È
+Ý\X˜\ÙJHKKBˆ\™Ù]
+	ËØ\KÜÝ\X˜\ÙKÝÚÛ\Ø[KYX[ÉË\ÒXœšY]][XØ]Y™\]Z\™SX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜË\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝÈÝÜ˜YÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆÛÛœÝX[ÈH]ØZ]ÝÜ˜YÙK™Ù]X›XÕÚÛ\Ø[QX[Ê
+NÂˆ™\ËšœÛÛŠˆX[Âˆ›X\
+ÔX›XÔÝ\X˜\ÙUÚÛ\Ø[QX[
+Bˆ™š[\Š
+X[
+HOˆX[OOH[
+Kˆ
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ	Ñ\œ›Üˆ™]Ú[™ÈÚÛ\Ø[HX[Î‰Ë\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ	Ñ˜Z[YÈ™]ÚÚÛ\Ø[HX[ÉÈJNÂˆBˆJNÂ‚ˆ\™Ù]
+	ËØ\KÜÝ\X˜\ÙKÝÚÛ\Ø[KYX[ËÛ^IË\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ	Õ\Ù\ˆ›Ý]][XØ]Y	ÈJNÂˆBˆÛÛœÝÈÝÜ˜YÙKÐØ[Y[Ø\ÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆÛÛœÝX[ÈH]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[ÐžU\Ù\Š\Ù\’Y
+NÂˆ™\ËšœÛÛŠÐØ[Y[Ø\ÙJX[ÊJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ	Ñ\œ›Üˆ™]Ú[™È\Ù\ˆX[Î‰Ë\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ	Ñ˜Z[YÈ™]Ú\Ù\ˆX[ÉÈJNÂˆBˆJNÂ‚ˆ\™Ù]
+	ËØ\KÜÝ\X˜\ÙKÝÚÛ\Ø[KYX[ËÎšY	Ë\ÒXœšY]][XØ]Y™\]Z\™SX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜË\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝÈYHH™\Kœ\˜[\ÎÂˆÛÛœÝÈÝÜ˜YÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆÛÛœÝX[H]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[
+Y
+NÂ‚ˆÛÛœÝX›XÑX[HX[ÈÔX›XÔÝ\X˜\ÙUÚÛ\Ø[QX[
+X[
+Hˆ[ÂˆYˆ
+\X›XÑX[
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ	ÑX[›Ý›Ý[™	ÈJNÂˆB‚ˆ™\ËšœÛÛŠX›XÑX[
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ	Ñ\œ›Üˆ™]Ú[™ÈÚÛ\Ø[HX[‰Ë\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ	Ñ˜Z[YÈ™]ÚÚÛ\Ø[HX[	ÈJNÂˆBˆJNÂ‚ˆ\œÜÝ
+	ËØ\KÜÝ\X˜\ÙKÝÚÛ\Ø[KYX[ÉË\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝY[]HH™\ÛÛ™TÝ\X˜\ÙSX\šÙ]XÙRY[]J™\JNÂˆYˆ
+ZY[]JHÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ	Õ\Ù\ˆ›Ý]][XØ]Y	ÈJNÂˆBˆÛÛœÝÈÝÜ˜YÙKÐØ[Y[Ø\ÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆÛÛœÝ›Ü›X[^™YH›Ü›X[^™SX\šÙ]›ÝÕÚÛ\Ø[TÝX›Z\ÜÚ[ÛŠ™\K˜›ÙKY[]JNÂˆYˆ
+[›Ü›X[^™Y›ÚÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ›Ü›X[^™Y›Y\ÜØYÙHJNÂˆB‚ˆÛÛœÝX[H™\]Z\™PÜ™X]YÝ\X˜\ÙSX\šÙ]XÙT™XÛÜ™
+ˆ]ØZ]ÝÜ˜YÙK˜Ü™X]UÚÛ\Ø[QX[
+Âˆ‹‹››Ü›X[^™Y™]KˆÝ]\Îˆ	Õ[™\ˆ™]šY]ÉËˆ\×ÜX›XÎˆ˜[ÙKˆ˜Z\Ú[™×ØØ\][ˆ˜[ÙKˆJKˆ	Ñ˜Z[YÈÜ™X]HX[	Ëˆ
+NÂˆˆ™\ËœÝ]\ÊŒJKšœÛÛŠÐØ[Y[Ø\ÙJX[
+JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ	Ñ\œ›ÜˆÜ™X][™ÈÚÛ\Ø[HX[‰Ë\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ	Ñ˜Z[YÈÜ™X]HÚÛ\Ø[HX[	ÈJNÂˆBˆJNÂ‚ˆÛÛœÝÚÛ\Ø[QX[ÝÛ™\•\]TØÚ[XHH[œÙ\ÚÛ\Ø[QX[ØÚ[XBˆœXÚÊÂˆ\ÚÚ[™ÔšXÙNˆYKˆ\ŽˆYKˆ\Ý[X]Y™\Z\œÎˆYKˆ\ØÜš\[ÛŽˆYKˆ\ÜÚYÛ›Y[™YNˆYKˆJBˆœ\X[
+
+BˆœÝšXÝ
+
+NÂ‚ˆËÈ\]HÚÛ\Ø[HX[
+ÝÛ™\ˆÛ›JBˆ\œ]Ú
+	ËØ\KÜÝ\X˜\ÙKÝÚÛ\Ø[KYX[ËÎšY	Ë\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ	Õ\Ù\ˆ›Ý]][XØ]Y	ÈJNÂˆBˆÛÛœÝX[YH[X™\Š™\Kœ\˜[\ËšY
+NÂˆYˆ
+S[X™\‹š\ÔØY™R[YÙ\ŠX[Y
+HX[YH
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ	Ò[˜[YX[Q	ÈJNÂˆBˆˆËÈÚXÚÈÝÛ™\œÚ\\Ú[™ÈÜÝÜ™TÔSÝÜ˜YÙBˆÛÛœÝ^\Ý[™ÑX[H]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[
+X[Y
+NÂˆYˆ
+Y^\Ý[™ÑX[
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ	ÑX[›Ý›Ý[™	ÈJNÂˆBˆYˆ
+^\Ý[™ÑX[œÝX›Z]YžHOOH\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊÊKšœÛÛŠÈY\ÜØYÙNˆ	Ó›Ý]]Üš^™YÈY]\ÈX[	ÈJNÂˆBˆˆÛÛœÝ\]T™\Ý[HÚÛ\Ø[QX[ÝÛ™\•\]TØÚ[XKœØY™T\œÙJ™\K˜›ÙJNÂˆYˆ
+]\]T™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÂˆY\ÜØYÙNˆœ›ÛQ\œ›ÜŠ\]T™\Ý[™\œ›ÜŠKÔÝš[™Ê
+KˆJNÂˆBˆˆÛÛœÝ\]YX[H]ØZ]ÝÜ˜YÙK\]UÚÛ\Ø[QX[
+X[Y\]T™\Ý[™]JNÂˆ™\ËšœÛÛŠ\]YX[
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ	Ñ\œ›Üˆ\][™ÈÚÛ\Ø[HX[‰Ë\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ	Ñ˜Z[YÈ\]HÚÛ\Ø[HX[	ÈJNÂˆBˆJNÂ‚ˆËÈKKHÚÛ\Ø[HX[Ù™™\œÈ
+Ý\X˜\ÙJHKKBˆ\œÜÝ
+	ËØ\KÜÝ\X˜\ÙKÝÚÛ\Ø[K[Ù™™\œÉË\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆ™]\›ˆ™\ËœÝ]\ÊLJKšœÛÛŠÂˆY\ÜØYÙN‚ˆ	ÓYØXÞHÚÛ\Ø[HÙ™™\œÈ\™H™XY[Û›Kˆ\ÙHX\šÙ]›ÝÈÙ™™\ˆÝY[È›Üˆ\œÚ\ÝYÙ™™\œË‰ËˆJNÂˆJNÂ‚ˆ\™Ù]
+	ËØ\KÜÝ\X˜\ÙKÝÚÛ\Ø[KYX[ËÎ™X[YÛ™YÛÝX][ÛœÉË\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ	Õ[˜]]Üš^™Y	ÈJNÂˆB‚ˆÛÛœÝÈX[YHH™\Kœ\˜[\ÎÂˆÛÛœÝÈÝÜ˜YÙNˆÝ\TÝÜ˜YÙKÐØ[Y[Ø\ÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆÛÛœÝX[H]ØZ]Ý\TÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[
+X[Y
+NÂˆYˆ
+YX[
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ	ÑX[›Ý›Ý[™	ÈJNÂˆB‚ˆÛÛœÝ\ÔÝY™ˆH]ØZ]\ÓX\šÙ]›ÝÔÝY™XØÙ\ÜÊ™\K\Ù\’Y
+NÂˆÛÛœÝ\ÑX[ÚYPXØÙ\ÜÈH\ÔÝY™ˆX[ÚÛ\Ø[\—ÚYOOH\Ù\’YÂˆÛÛœÝ™YÛÝX][ÛœÈH\ÑX[ÚYPXØÙ\ÜÂˆÈ]ØZ]Ý\TÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[™YÛÝX][ÛœÊX[Y
+Bˆˆ]ØZ]Ý\TÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[™YÛÝX][ÛœÐžT\XÚ\[
+ˆX[Yˆ\Ù\’Yˆ
+NÂˆYˆ
+ˆXØ[”™XYš]˜]QX[]JÂˆ\Ù\’YˆÝÛ™\’YˆX[ÚÛ\Ø[\—ÚYˆ\XÚ\[YÎˆ™YÛÝX][ÛœË›[™ÝˆÈÝ\Ù\’YHˆ×Kˆ\ÔÝY™‹ˆJBˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ	ÑX[›Ý›Ý[™	ÈJNÂˆB‚ˆ™\ËšœÛÛŠÐØ[Y[Ø\ÙJ™YÛÝX][ÛœÈ×JJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ	Ñ\œ›Üˆ™]Ú[™È™YÛÝX][ÛœÎ‰Ë\œ›ÜŠNÂˆ™\ËšœÛÛŠ×JNÂˆBˆJNÂ‚ˆ\œ]Ú
+	ËØ\KÜÝ\X˜\ÙKÝÚÛ\Ø[K[Ù™™\œËÎšYÜÝ]\ÉË\ÒXœšY]][XØ]Y\Þ[˜È
+Ü™\Nˆ[žK™\ÊHOˆÂˆ™]\›ˆ™\ËœÝ]\ÊLJKšœÛÛŠÂˆY\ÜØYÙN‚ˆ	ÓYØXÞHÚÛ\Ø[HÙ™™\œÈ\™H™XY[Û›Kˆ\ÙHX\šÙ]›ÝÈÙ™™\ˆÝY[È›Üˆ\œÚ\ÝYÙ™™\ˆ™\ÜÛœÙ\Ë‰ËˆJNÂˆJNÂ‚ˆËÈKKH\Ý[™ÜÈ
+Ý\X˜\ÙJHKKBˆ\™Ù]
+	ËØ\KÜÝ\X˜\ÙKÛ\Ý[™ÜÉË\ÒXœšY]][XØ]Y™\]Z\™SX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜË\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝÈÝÜ˜YÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆÛÛœÝ\Ý[™ÜÈH]ØZ]ÝÜ˜YÙK™Ù]X›XÓ\Ý[™ÜÊ
+NÂˆ™\ËšœÛÛŠˆ\Ý[™ÜÂˆ›X\
+ÔX›XÔÝ\X˜\ÙS\Ý[™ÊBˆ™š[\Š
+\Ý[™ÊHOˆ\Ý[™ÈOOH[
+Kˆ
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ	Ñ\œ›Üˆ™]Ú[™È\Ý[™ÜÎ‰Ë\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ	Ñ˜Z[YÈ™]Ú\Ý[™ÜÉÈJNÂˆBˆJNÂ‚ˆ\™Ù]
+	ËØ\KÜÝ\X˜\ÙKÛ\Ý[™ÜËÎšY	Ë\ÒXœšY]][XØ]Y™\]Z\™SX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜË\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝÈYHH™\Kœ\˜[\ÎÂˆÛÛœÝÈÝÜ˜YÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆÛÛœÝ\Ý[™ÈH]ØZ]ÝÜ˜YÙK™Ù]\Ý[™ÊY
+NÂ‚ˆÛÛœÝX›XÓ\Ý[™ÈH\Ý[™ÂˆÈÔX›XÔÝ\X˜\ÙS\Ý[™Ê\Ý[™ÊBˆˆ[ÂˆYˆ
+\X›XÓ\Ý[™ÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ	Ó\Ý[™È›Ý›Ý[™	ÈJNÂˆB‚ˆ™\ËšœÛÛŠX›XÓ\Ý[™ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ	Ñ\œ›Üˆ™]Ú[™È\Ý[™Î‰Ë\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ	Ñ˜Z[YÈ™]Ú\Ý[™ÉÈJNÂˆBˆJNÂ‚ˆËÈKKH[šYšYYX[ÛÛ^[™Ú[KKBˆËÈ™]\›œÈ›Ü›X[^™YX[]H˜\ÙYÛˆX[\H›Üˆ[žHX[Ü›Ú™XÝÛ\Ý[™ÂˆËÈ\È\ÈHÚ[™ÛHÛÝ\˜ÙHÙˆ]›Üˆ[Ø[›ÛšXØ[›Ü›\Âˆ\™Ù]
+ˆ‹Ø\KÙX[ËÓTÕS‘ËÎšYØÛÛ^‹ˆ\ÒXœšY]][XØ]YˆØYX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^ˆ\Ý[™Ò[œ]Z\žR[™\œË™Ù]ÛÛ^ˆ
+NÂ‚ˆ\™Ù]
+	ËØ\KÙX[ËÎ™X[\KÎšYØÛÛ^	Ë\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝÈX[\KYHH™\Kœ\˜[\ÎÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ	Õ[˜]]Üš^™Y	ÈJNÂˆBˆˆ]ÛÛ^ˆ[žHH[ÂˆˆYˆ
+X[\HOOH	ÕÒÓTÐSWÐTÔÒQÓ“QS•	ÈX[\HOOH	ÝÚÛ\Ø[IÊHÂˆËÈ™]ÚÚÛ\Ø[HX[œ›ÛHÜÝÜ™TÔSÝÜ˜YÙBˆÛÛœÝX[H]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[
+[X™\ŠY
+JNÂˆYˆ
+YX[
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ	ÑX[›Ý›Ý[™	ÈJNÂˆBˆˆËÈ™]Ú^\Ý[™ÈÙ™™\œÈ›Üˆ\ÈX[ˆÛÛœÝÙ™™\œÈH]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[Ù™™\œÊ[X™\ŠY
+JNÂˆÛÛœÝ\ÔÝY™ˆH]ØZ]\ÓX\šÙ]›ÝÔÝY™XØÙ\ÜÊ™\K\Ù\’Y
+NÂˆÛÛœÝ\XÚ\[Ù™™\œÈHÙ™™\œË™š[\Šˆ
+Ù™™\Žˆ[žJHOˆÙ™™\‹˜^Y\’YOOH\Ù\’Yˆ
+NÂˆYˆ
+ˆXØ[”™XYš]˜]QX[]JÂˆ\Ù\’YˆÝÛ™\’YˆX[œÝX›Z]YžKˆ\XÚ\[YÎˆ\XÚ\[Ù™™\œË›X\
+ˆ
+Ù™™\Žˆ[žJHOˆÙ™™\‹˜^Y\’Yˆ
+Kˆ\ÔÝY™‹ˆJBˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ	ÑX[›Ý›Ý[™	ÈJNÂˆBˆÛÛœÝš\ÚX›SÙ™™\œÈBˆ\ÔÝY™ˆX[œÝX›Z]YžHOOH\Ù\’YÈÙ™™\œÈˆ\XÚ\[Ù™™\œÎÂˆˆÛÛ^HÂˆX[\Nˆ	ÕÒÓTÐSWÐTÔÒQÓ“QS•	ËˆX[YˆX[šYˆX[ˆÂˆYˆX[šYˆ›Ü\PY™\ÜÎˆX[œ›Ü\PY™\ÜËˆÚ]NˆX[˜Ú]KˆÝ]NˆX[œÝ]Kˆš\ÛÙNˆX[žš\ÛÙKˆ›Ü\U\NˆX[œ›Ü\U\Kˆ™Y›ÛÛ\ÎˆX[˜™Y›ÛÛ\Ëˆ˜]›ÛÛ\ÎˆX[˜˜]›ÛÛ\ËˆÜYˆX[œÜYˆYX\Z[ˆX[žYX\Z[ˆ[XYÙ\ÎˆX[š[XYÙ\ËˆKˆËÈÚÛ\Ø[K\ÜXÚYšXÈ\›\ÂˆÚÛ\Ø[U\›\ÎˆÂˆÛÛ˜XÝšXÙNˆX[˜ÛÛ˜XÝšXÙKˆ\ÜÚYÛ›Y[™YNˆX[˜\ÜÚYÛ›Y[™YKˆX^\ÜÚYÛ›Y[™YNˆX[›X^\ÜÚYÛ›Y[™YKˆ\ŽˆX[˜\‹ˆ™\Z\œÎˆX[™\Ý[X]Y™\Z\œËˆÛÜÚ[™Ñ]NˆX[˜ÛÜÚ[™Ñ]KˆKˆËÈ^\Ý[™ÈÙ™™\œËØÛÝ[\œÂˆ^\Ý[™ÓÙ™™\œÎˆš\ÚX›SÙ™™\œË›X\
+
+Îˆ[žJHOˆ
+ÂˆYˆËšYˆ^Y\’YˆË˜^Y\’YˆÙ™™\[[Ý[ˆË›Ù™™\[[Ý[ˆX\›™\Ý[Û™^NˆË™X\›™\Ý[Û™^KˆÛÜÚ[™Õ[Y[[™NˆË˜ÛÜÚ[™Õ[Y[[™KˆÝ]\ÎˆËœÝ]\ËˆÜ™X]Y]ˆË˜Ü™X]Y]ˆJJKˆËÈ\Ù\‰ÜÈ^\Ý[™ÈÙ™™\œÈÛˆ\ÈX[ˆ\Ù\“Ù™™\œÎˆ\XÚ\[Ù™™\œËˆËÈ\›Z\ÜÚ[ÛœÂˆ\›Z\ÜÚ[ÛœÎˆÂˆØ[“Ù™™\Žˆ\Ù\’YOOHX[œÝX›Z]YžKˆØ[ÛÝ[\Žˆ\Ù\’YOOHX[œÝX›Z]YžKˆØ[”™\]Y\Ý•Žˆ\Ù\’YOOHX[œÝX›Z]YžKˆ\ÓÝÛ™\Žˆ\Ù\’YOOHX[œÝX›Z]YžKˆKˆÝX›Z]YžNˆX[œÝX›Z]YžKˆÝ]\ÎˆX[œÝ]\ËˆNÂˆH[ÙHYˆ
+X[\HOOH	ÐÐTUSÔRTÑIÈX[\HOOH	ØØ\][	ÊHÂˆËÈ™]ÚØ\][›Ú™XÝˆÛÛœÝ›Ú™XÝH]ØZ]ÝÜ˜YÙK™Ù]Ø\][›Ú™XÝ
+[X™\ŠY
+JNÂˆYˆ
+\›Ú™XÝ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ	Ô›Ú™XÝ›Ý›Ý[™	ÈJNÂˆBˆˆËÈ™]Ú^\Ý[™È[™\ÝY[Ù™™\œÈ›Üˆ\È›Ú™XÝˆÛÛœÝÛÛ[Z]Y[ÈH]ØZ]ÝÜ˜YÙK™Ù][™\ÝY[Ù™™\œÐžT›Ú™XÝ
+[X™\ŠY
+JNÂˆÛÛœÝ\ÔÝY™ˆH]ØZ]\ÓX\šÙ]›ÝÔÝY™XØÙ\ÜÊ™\K\Ù\’Y
+NÂˆÛÛœÝ\XÚ\[ÛÛ[Z]Y[ÈHÛÛ[Z]Y[Ë™š[\Šˆ
+ÛÛ[Z]Y[ˆ[žJHOˆÛÛ[Z]Y[š[™\ÝÜ’YOOH\Ù\’Yˆ
+NÂˆYˆ
+ˆXØ[”™XYš]˜]QX[]JÂˆ\Ù\’YˆÝÛ™\’Yˆ›Ú™XÝ˜Ü™X]YžKˆ\XÚ\[YÎˆ\XÚ\[ÛÛ[Z]Y[Ë›X\
+ˆ
+ÛÛ[Z]Y[ˆ[žJHOˆÛÛ[Z]Y[š[™\ÝÜ’Yˆ
+Kˆ\ÔÝY™‹ˆJBˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ	Ô›Ú™XÝ›Ý›Ý[™	ÈJNÂˆBˆÛÛœÝš\ÚX›PÛÛ[Z]Y[ÈBˆ\ÔÝY™ˆ›Ú™XÝ˜Ü™X]YžHOOH\Ù\’YˆÈÛÛ[Z]Y[Âˆˆ\XÚ\[ÛÛ[Z]Y[ÎÂˆˆÛÛ^HÂˆX[\Nˆ	ÐÐTUSÔRTÑIËˆX[Yˆ›Ú™XÝšYˆX[ˆÂˆYˆ›Ú™XÝšYˆ]Nˆ›Ú™XÝ]Kˆ\ØÜš\[ÛŽˆ›Ú™XÝ™\ØÜš\[Û‹ˆØØ][ÛŽˆ›Ú™XÝ›ØØ][Û‹ˆ[XYÙ\Îˆ›Ú™XÝš[XYÙ\ËˆKˆËÈØ\][\ÜXÚYšXÈ\›\ÂˆØ\][\›\ÎˆÂˆ[™[™ÑÛØ[ˆ›Ú™XÝ™[™[™ÑÛØ[ˆ[[Ý[˜Z\ÙYˆ›Ú™XÝ˜[[Ý[˜Z\ÙYˆ™[XZ[š[™Îˆ›Ú™XÝ™[™[™ÑÛØ[H
+›Ú™XÝ˜[[Ý[˜Z\ÙY
+KˆZ[’[™\ÝY[ˆ›Ú™XÝ›Z[’[™\ÝY[ˆX^[™\ÝY[\’[™\ÝÜŽˆ›Ú™XÝ›X^[™\ÝY[\’[™\ÝÜ‹ˆÝXÝ\™Nˆ›Ú™XÝœÝXÝ\™Kˆ›Ú™XÝY™]\›Žˆ›Ú™XÝœ›Ú™XÝY™]\›‹ˆÛ\š[Ùˆ›Ú™XÝšÛ\š[ÙˆËÈX\›\Âˆ\ÚÚ[™Ò[\™\Ý˜]Nˆ›Ú™XÝ˜\ÚÚ[™Ò[\™\Ý˜]Kˆ\ÚÚ[™ÓØ[‘\˜][ÛŽˆ›Ú™XÝ˜\ÚÚ[™ÓØ[‘\˜][Û‹ˆ\ÚÚ[™ÔÚ[Îˆ›Ú™XÝ˜\ÚÚ[™ÔÚ[ËˆËÈ\]Z]H\›\Âˆ\ÚÚ[™Ñ\]Z]T\˜Ù[ˆ›Ú™XÝ˜\ÚÚ[™Ñ\]Z]T\˜Ù[ˆ\ÚÚ[™Ô›Ùš]Ü]ˆ›Ú™XÝ˜\ÚÚ[™Ô›Ùš]Ü]ˆ\ÚÚ[™Ô™Y™\œ™Y™]\›Žˆ›Ú™XÝ˜\ÚÚ[™Ô™Y™\œ™Y™]\›‹ˆËÈXœšY\›\Âˆ\ÚÚ[™ÑXÜ[ÛŽˆ›Ú™XÝ˜\ÚÚ[™ÑXÜ[Û‹ˆ\ÚÚ[™Ñ\]Z]TÜ[ÛŽˆ›Ú™XÝ˜\ÚÚ[™Ñ\]Z]TÜ[Û‹ˆKˆØ\][ÝXÚÎˆÂˆ\˜Ú\ÙTšXÙNˆ›Ú™XÝœ\˜Ú\ÙTšXÙKˆ™ZXYÙ]ˆ›Ú™XÝœ™ZXYÙ]ˆÛÙÛÜÝÎˆ›Ú™XÝœÛÙÛÜÝËˆÜ\˜]Ü‘\]Z]Nˆ›Ú™XÝ›Ü\˜]Ü‘\]Z]KˆÛÛ[™Ù[˜ÞNˆ›Ú™XÝ˜ÛÛ[™Ù[˜ÞKˆÙ[š[Ü“Ø[Žˆ›Ú™XÝœÙ[š[Ü“Ø[‹ˆ›Ú™XÝYT•Žˆ›Ú™XÝœ›Ú™XÝYT•‹ˆ›Ú™XÝY›Ùš]ˆ›Ú™XÝœ›Ú™XÝY›Ùš]ˆKˆËÈ^\Ý[™ÈÛÛ[Z]Y[Âˆ^\Ý[™ÐÛÛ[Z]Y[Îˆš\ÚX›PÛÛ[Z]Y[Ë›X\
+
+Îˆ[žJHOˆ
+ÂˆYˆËšYˆ[™\ÝÜ’YˆËš[™\ÝÜ’Yˆ[[Ý[ˆË˜[[Ý[ˆÝXÝ\™NˆËœÝXÝ\™KˆÝ]\ÎˆËœÝ]\ËˆÜ™X]Y]ˆË˜Ü™X]Y]ˆJJKˆËÈ\Ù\‰ÜÈ^\Ý[™ÈÛÛ[Z]Y[Âˆ\Ù\ÛÛ[Z]Y[Îˆ\XÚ\[ÛÛ[Z]Y[ËˆËÈ\›Z\ÜÚ[ÛœÂˆ\›Z\ÜÚ[ÛœÎˆÂˆØ[’[™\Ýˆ\Ù\’YOOH›Ú™XÝ˜Ü™X]YžKˆØ[ÛÝ[\Žˆ\Ù\’YOOH›Ú™XÝ˜Ü™X]YžKˆ\ÓÝÛ™\Žˆ\Ù\’YOOH›Ú™XÝ˜Ü™X]YžKˆKˆÜ™X]YžNˆ›Ú™XÝ˜Ü™X]YžKˆÝ]\Îˆ›Ú™XÝœÝ]\ËˆNÂˆH[ÙHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÂˆY\ÜØYÙN‚ˆ’[˜[YX[\Kˆ]\Ý™HÒÓTÐSWÐTÔÒQÓ“QS•ÜˆÐTUSÔRTÑH‹ˆJNÂˆBˆˆ™\ËšœÛÛŠÛÛ^
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ	Ñ\œ›Üˆ™]Ú[™ÈX[ÛÛ^‰Ë\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ	Ñ˜Z[YÈ™]ÚX[ÛÛ^	ÈJNÂˆBˆJNÂ‚ˆËÈKKH^Y\ˆÙ™™\œÈ
+Ý\X˜\ÙJHKKBˆ\œÜÝ
+	ËØ\KÜÝ\X˜\ÙKØ^Y\‹[Ù™™\œÉË\ÒXœšY]][XØ]YØYX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝY[]HH™\ÛÛ™TÝ\X˜\ÙSX\šÙ]XÙRY[]J™\JNÂˆYˆ
+ZY[]JHÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ	Õ\Ù\ˆ›Ý]][XØ]Y	ÈJNÂˆBˆYˆ
+™\Ë›ØØ[Ë˜Ø[XØÙ\ÜÔ™]šY]ÙYX\šÙ]›ÝÒ[™[ÜžHOOHYJHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ	Ó\Ý[™È›Ý›Ý[™	ÈJNÂˆBˆÛÛœÝÈ\Ý[™ÒYš[˜[˜Ú[™Õ\HHH™\K˜›ÙNÂˆÛÛœÝÙ™™\[[Ý[H[X™\Š™\K˜›ÙOË›Ù™™\[[Ý[
+NÂˆˆYˆ
+[\Ý[™ÒYS[X™\‹š\Ñš[š]JÙ™™\[[Ý[
+HÙ™™\[[Ý[H
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ	ÓZ\ÜÚ[™È\Ý[™ÒYÜˆÙ™™\[[Ý[	ÈJNÂˆBˆˆÛÛœÝÈÝÜ˜YÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆˆÛÛœÝ\Ý[™ÈH]ØZ]ÝÜ˜YÙK™Ù]\Ý[™Ê\Ý[™ÒY
+NÂˆÛÛœÝX›XÓ\Ý[™ÈH\Ý[™ÈÈÔX›XÔÝ\X˜\ÙS\Ý[™Ê\Ý[™ÊHˆ[ÂˆÛÛœÝÝÛ™\’YH\Ý[™ÏË›ÝÛ™\—ÚY\Ý[™ÏË™^\›˜[ÛÝÛ™\—ÚY[ÂˆYˆ
+[\Ý[™È\X›XÓ\Ý[™È[ÝÛ™\’YÝÛ™\’YOOHY[]K\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ	Ó\Ý[™È›Ý›Ý[™	ÈJNÂˆB‚ˆÛÛœÝÛÛ[™Ù[˜ÚY\ÈH\œ˜^Kš\Ð\œ˜^J™\K˜›ÙOË˜ÛÛ[™Ù[˜ÚY\ÊBˆÈ™\K˜›ÙK˜ÛÛ[™Ù[˜ÚY\Âˆ™š[\Š
+][Nˆ[šÛ›ÝÛŠNˆ][H\ÈÝš[™ÈOˆ\[Ùˆ][HOOH	ÜÝš[™ÉÊBˆœÛXÙJŒ
+Bˆˆ[™Yš[™YÂˆÛÛœÝY\ÜØYÙHBˆ\[Ùˆ™\K˜›ÙOË›Y\ÜØYÙHOOH	ÜÝš[™ÉÂˆÈ™\K˜›ÙK›Y\ÜØYÙKš[J
+KœÛXÙJWÌ
+Bˆˆ[™Yš[™YÂˆˆÛÛœÝÙ™™\ˆH™\]Z\™PÜ™X]YÝ\X˜\ÙSX\šÙ]XÙT™XÛÜ™
+ˆ]ØZ]ÝÜ˜YÙK˜Ü™X]P^Y\“Ù™™\ŠÂˆ\Ý[™×ÚYˆ\Ý[™ÒYˆ‹‹Ð^Y\“Ù™™\’Y[]PÛÛ[[œÊY[]JKˆÙ™™\—Ø[[Ý[ˆÙ™™\[[Ý[ˆš[˜[˜Ú[™×Ý\Nˆš[˜[˜Ú[™Õ\KˆÛÛ[™Ù[˜ÚY\ËˆY\ÜØYÙKˆÝ]\Îˆ	Ü[™[™ÉÂˆJKˆ	Ñ˜Z[YÈÜ™X]HÙ™™\‰Ëˆ
+NÂ‚ˆ]ØZ]ÝÜ˜YÙK˜Ü™X]S›ÝYšXØ][ÛŠÂˆ\Ù\—ÚYˆ\Ý[™Ë›ÝÛ™\—ÚY[ˆ^\›˜[Ý\Ù\—ÚYˆ\Ý[™Ë™^\›˜[ÛÝÛ™\—ÚY[ˆ\Nˆ	Ø^Y\—ÛÙ™™\‰Ëˆ]Nˆ	Ó™]ÈÙ™™\ˆ™XÙZ]™Y	ËˆY\ÜØYÙNˆ[ÝH™XÙZ]™Y[ˆÙ™™\ˆÙˆ		ÛÙ™™\[[Ý[ÓØØ[TÝš[™Ê
+_HÛˆ[Ý\ˆ\Ý[™Øˆ[šÎˆÛX\šÙ]XÙKÛ\Ý[™ÜËÉÛ\Ý[™ÒYXˆJNÂˆˆ™\ËœÝ]\ÊŒJKšœÛÛŠÐ^Y\“Ù™™\‘\Ú›Ø\™ÊÙ™™\ŠJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ	Ñ\œ›ÜˆÜ™X][™È^Y\ˆÙ™™\Ž‰Ë\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ	Ñ˜Z[YÈÜ™X]HÙ™™\‰ÈJNÂˆBˆJNÂ‚ˆ\™Ù]
+	ËØ\KÜÝ\X˜\ÙKØ^Y\‹[Ù™™\œÉË\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝY[]HH™\ÛÛ™TÝ\X˜\ÙSX\šÙ]XÙRY[]J™\JNÂˆYˆ
+ZY[]JHÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ	Õ\Ù\ˆ›Ý]][XØ]Y	ÈJNÂˆBˆÛÛœÝÈÝÜ˜YÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆÛÛœÝÙ™™\œÈH]ØZ]ÝÜ˜YÙK™Ù]^Y\“Ù™™\œÐžU\Ù\ŠY[]JNÂˆ™\ËšœÛÛŠÙ™™\œË›X\
+Ð^Y\“Ù™™\‘\Ú›Ø\™ÊJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ	Ñ\œ›Üˆ™]Ú[™È^Y\ˆÙ™™\œÎ‰Ë\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ	Ñ˜Z[YÈ™]ÚÙ™™\œÉÈJNÂˆBˆJNÂ‚ˆËÈKKH™YÛÝX][ÛœÈ
+XØÙ\ÐÛÝ[\ˆ›ÜˆX[ÊHKKBˆ\œÜÝ
+	ËØ\KÛ™YÛÝX][ÛœËØXØÙ\	Ë\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆ™]\›ˆ™\ËœÝ]\ÊLJKšœÛÛŠÂˆY\ÜØYÙN‚ˆ	Õ\ÈYØXÞH™YÛÝX][ÛˆXÝ[Ûˆ\È[˜]˜Z[X›Kˆ\ÙHX\šÙ]›ÝÈÙ™™\ˆÝY[È›Üˆ\œÚ\ÝYÙ™™\œË‰ËˆJNÂˆJNÂ‚ˆ\œÜÝ
+	ËØ\KÛ™YÛÝX][ÛœËØÛÝ[\‰Ë\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆ™]\›ˆ™\ËœÝ]\ÊLJKšœÛÛŠÂˆY\ÜØYÙN‚ˆ	Õ\ÈYØXÞH™YÛÝX][ÛˆXÝ[Ûˆ\È[˜]˜Z[X›Kˆ\ÙHX\šÙ]›ÝÈÙ™™\ˆÝY[È›Üˆ\œÚ\ÝYÙ™™\œË‰ËˆJNÂˆJNÂ‚ˆËÈKKH›ÝYšXØ][ÛœÈ
+Ý\X˜\ÙJHKKBˆ\™Ù]
+	ËØ\KÜÝ\X˜\ÙKÛ›ÝYšXØ][ÛœÉË\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ	Õ\Ù\ˆ›Ý]][XØ]Y	ÈJNÂˆBˆÛÛœÝÈ[œ™XYÛ›HHH™\Kœ]Y\žNÂˆÛÛœÝÈÝÜ˜YÙKÐØ[Y[Ø\ÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆÛÛœÝ›ÝYšXØ][ÛœÈH]ØZ]ÝÜ˜YÙK™Ù]›ÝYšXØ][ÛœÊ\Ù\’Y[œ™XYÛ›HOOH	ÝYIÊNÂˆ™\ËšœÛÛŠÐØ[Y[Ø\ÙJ›ÝYšXØ][ÛœÊJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ	Ñ\œ›Üˆ™]Ú[™È›ÝYšXØ][ÛœÎ‰Ë\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ	Ñ˜Z[YÈ™]Ú›ÝYšXØ][ÛœÉÈJNÂˆBˆJNÂ‚ˆ\œ]Ú
+	ËØ\KÜÝ\X˜\ÙKÛ›ÝYšXØ][ÛœËÎšYÜ™XY	Ë\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝÈYHH™\Kœ\˜[\ÎÂˆÛÛœÝÈÝÜ˜YÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆÛÛœÝÝXØÙ\ÜÈH]ØZ]ÝÜ˜YÙK›X\šÓ›ÝYšXØ][Û”™XY
+Y
+NÂˆ™\ËšœÛÛŠÈÝXØÙ\ÜÈJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ	Ñ\œ›ÜˆX\šÚ[™È›ÝYšXØ][Ûˆ™XY‰Ë\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ	Ñ˜Z[YÈX\šÈ›ÝYšXØ][Ûˆ™XY	ÈJNÂˆBˆJNÂ‚ˆ\œÜÝ
+	ËØ\KÜÝ\X˜\ÙKÛ›ÝYšXØ][ÛœËÛX\šËX[\™XY	Ë\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ	Õ\Ù\ˆ›Ý]][XØ]Y	ÈJNÂˆBˆÛÛœÝÈÝÜ˜YÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆÛÛœÝÝXØÙ\ÜÈH]ØZ]ÝÜ˜YÙK›X\šÐ[›ÝYšXØ][ÛœÔ™XY
+\Ù\’Y
+NÂˆ™\ËšœÛÛŠÈÝXØÙ\ÜÈJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ	Ñ\œ›ÜˆX\šÚ[™È[›ÝYšXØ][ÛœÈ™XY‰Ë\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ	Ñ˜Z[YÈX\šÈ›ÝYšXØ][ÛœÈ™XY	ÈJNÂˆBˆJNÂ‚ˆËÈ]]›Ý]\Âˆ\™Ù]
+	ËØ\KØ]]Ý\Ù\‰Ë\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆÛÛœÝ\Ù\‘[XZ[H
+™\K\Ù\‹˜ÛZ[\Ë™[XZ[ˆŠKÓÝÙ\Ø\ÙJ
+NÂˆˆËÈÚXÚÈYˆ\Ù\ˆ\È[ˆYZ[ˆ[XZ[[ÝÛ\ÝˆÛÛœÝ\ÐYZ[‘[XZ[HQRS—ÑSPRSËš[˜ÛY\Ê\Ù\‘[XZ[
+NÂˆˆÛÛœÝÝ\X˜\ÙT›Ùš[HH]ØZ]Ù]\Ù\”›Ùš[J\Ù\’Y
+NÂˆˆYˆ
+Ý\X˜\ÙT›Ùš[JHÂˆÛÛœÝ›ÛHHÝ\X˜\ÙT›Ùš[Kœš[X\žWÜ›ÛNÂˆÛÛœÝ\ÔYØ\Ý\ÈHÝ\X˜\ÙT›Ùš[Kš\×ÜYØ\Ý\×Ø˜YÙY›ÛOËœÝ\ÕÚ]
+	ÜYØ\Ý\×ÉÊNÂˆˆ™]\›ˆ™\ËšœÛÛŠÂˆYˆ\Ù\’Yˆ[XZ[ˆ™\K\Ù\‹˜ÛZ[\Ë™[XZ[Ý\X˜\ÙT›Ùš[K™\Ü^WÛ˜[YKˆš\œÝ˜[YNˆÝ\X˜\ÙT›Ùš[K™\Ü^WÛ˜[YOËœÜ]
+	È	ÊVÌH	ÉËˆ\Ý˜[YNˆÝ\X˜\ÙT›Ùš[K™\Ü^WÛ˜[YOËœÜ]
+	È	ÊKœÛXÙJJKš›Ú[Š	È	ÊH	ÉËˆ›Ùš[R[XYÙU\›ˆÝ\X˜\ÙT›Ùš[K˜]˜]\—Ý\›ˆ\Ü^S˜[YNˆÝ\X˜\ÙT›Ùš[K™\Ü^WÛ˜[YKˆš[X\žT›ÛNˆ›ÛKˆ\ÔYØ\Ý\Ð˜YÙYˆ\ÔYØ\Ý\Ëˆ›Û\ÎˆÜ›ÛWKˆ\ÔÝY™Žˆ›ÛHOOH	ØYZ[‰È\ÔYØ\Ý\È\ÐYZ[‘[XZ[ˆ\ÐYZ[Žˆ\ÐYZ[‘[XZ[›ÛHOOH	ØYZ[‰Ëˆ\Ò[™\ÝÜŽˆ›ÛHOOH	Ú[™\ÝÜ‰Ëˆ\ÕÚÛ\Ø[\Žˆ›ÛHOOH	ÝÚÛ\Ø[\‰È›ÛHOOH	ÜYØ\Ý\×ÝÚÛ\Ø[\‰Ëˆ\Ð^Y\Žˆ›ÛHOOH	Ø^Y\—Ü™]Z[	È›ÛHOOH	Ø^Y\—Ú[™\ÝY[	Ëˆ\Ñ™X[\ØØ\\Žˆ›ÛHOOH	Ù™X[\ØØ\\‰È›ÛHOOH	ÜYØ\Ý\×Ù™X[\ØØ\\‰ËˆÝ\X˜\ÙP]]ˆYBˆJNÂˆBˆˆÛÛœÝ\Ù\ˆH]ØZ]ÝÜ˜YÙK™Ù]\Ù\Š\Ù\’Y
+NÂˆÛÛœÝ›Û\ÈH]ØZ]ÝÜ˜YÙK™Ù]\Ù\”›Û\Ê\Ù\’Y
+NÂˆÛÛœÝ›ÛS˜[Y\ÈH›Û\Ë›X\
+ˆOˆ‹œ›ÛJNÂˆÛÛœÝ\ÔÝY™ˆH›ÛS˜[Y\ËœÛÛYJˆOˆÕQ‘—Ô“ÓTËš[˜ÛY\Êˆ\È[žJJH\ÐYZ[‘[XZ[ÂˆÛÛœÝ\Ñ™X[\ØØ\\ˆH›ÛS˜[Y\Ëš[˜ÛY\Ê™™X[\ØØ\\ˆŠH›ÛS˜[Y\Ëš[˜ÛY\Ê›Ü\˜]ÜˆŠNÂˆˆ™\ËšœÛÛŠÈˆ‹‹\Ù\‹ˆYˆ\Ù\’YËÈ[Ø^\È[˜ÛYHYœ›ÛHÛZ[\Âˆ[XZ[ˆ\Ù\‘[XZ[\Ù\Ë™[XZ[™\K\Ù\‹˜ÛZ[\Ë™[XZ[ˆš\œÝ˜[YNˆ™\K\Ù\‹˜ÛZ[\Ë™š\œÝÛ˜[YH\Ù\Ë™š\œÝ˜[YH	ÉËˆ\Ý˜[YNˆ™\K\Ù\‹˜ÛZ[\Ë›\ÝÛ˜[YH\Ù\Ë›\Ý˜[YH	ÉËˆ›Û\Îˆ›ÛS˜[Y\Ëˆ\ÔÝY™‹ˆ\ÐYZ[Žˆ\ÐYZ[‘[XZ[›ÛS˜[Y\Ëš[˜ÛY\Ê˜YZ[ˆŠKˆ\Ò[™\ÝÜŽˆ›ÛS˜[Y\Ëš[˜ÛY\Êš[™\ÝÜˆŠKˆ\ÕÚÛ\Ø[\Žˆ›ÛS˜[Y\Ëš[˜ÛY\ÊÚÛ\Ø[\ˆŠKˆ\Ð^Y\Žˆ›ÛS˜[Y\Ëš[˜ÛY\Ê˜^Y\ˆŠKˆ\Ñ™X[\ØØ\\‹ˆÝ\X˜\ÙP]]ˆ˜[ÙBˆJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È\Ù\Žˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]Ú\Ù\ˆˆJNÂˆBˆJNÂ‚ˆËÈX[›ÝÈÝ]È›Ý]H›Üˆ]][XØ]Y\Ù\œÂˆ\™Ù]
+	ËØ\KÙX[›ÝËÜÝ]ÉË\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆˆËÈÙ]\Ù\‰ÜÈØ]™YX[È
+ZÙY
+BˆÛÛœÝØ]™YX[ÈH]ØZ]ÝÜ˜YÙK™Ù]\Ù\“ZÙYX[Ê\Ù\’Y
+NÂˆˆËÈÙ][ÚÛ\Ø[HX[ÈÈÛÝ[XÝ]™HÛ™\ÂˆÛÛœÝ[X[ÈH]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[Ê
+NÂˆÛÛœÝXÝ]™QX[ÈH[X[Ë™š[\Š
+ˆ[žJHOˆœÝ]\ÈOOH	Ø]˜Z[X›IÊK›[™ÝÂˆˆËÈÙ][Ø]™YX[È
+›Ý\ÜÙY
+BˆÛÛœÝ[Ø]™YH]ØZ]ÝÜ˜YÙK™Ù]\Ù\”Ø]™YX[Ê\Ù\’Y
+NÂˆˆ™\ËšœÛÛŠÂˆØ]™YX[ÎˆØ]™YX[Ë›[™ÝˆXÝ]™QX[Ëˆ[™[™ÑX[Îˆ[Ø]™Y™š[\Š
+Žˆ[žJHOˆ‹˜XÝ[ÛˆOOH	ÜØ]™IÊK›[™ÝˆJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈX[›ÝÈÝ]Îˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚÝ]ÈˆJNÂˆBˆJNÂ‚ˆËÈÜ[™YÚ\Ý˜][Ûˆ›Ý]\ÈH[™\ÝÜœÈ[™ÚÛ\Ø[\œÈØ[ˆ™YÚ\Ý\‚ˆ\œÜÝ
+	ËØ\KÜÜ[Ú[™\ÝÜ‹Ü™YÚ\Ý\‰Ë\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆÛÛœÝ™\Ý[H[œÙ\[™\ÝÜ”›Ùš[TØÚ[XKœØY™T\œÙJÈ‹‹œ™\K˜›ÙK\Ù\’YJNÂˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆœ›ÛQ\œ›ÜŠ™\Ý[™\œ›ÜŠKÔÝš[™Ê
+HJNÂˆBˆˆËÈÜ™X]H[™\ÝÜˆ›Ùš[BˆÛÛœÝ›Ùš[HH]ØZ]ÝÜ˜YÙK\Ù\[™\ÝÜ”›Ùš[J™\Ý[™]JNÂˆˆËÈY[™\ÝÜˆ›ÛHYˆ›Ý^\ÝÂˆÛÛœÝ\Ô›ÛHH]ØZ]ÝÜ˜YÙKš\Ô›ÛJ\Ù\’Yš[™\ÝÜˆŠNÂˆYˆ
+Z\Ô›ÛJHÂˆ]ØZ]ÝÜ˜YÙK˜Y\Ù\”›ÛJÈ\Ù\’Y›ÛNˆš[™\ÝÜˆˆJNÂˆBˆˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠ›Ùš[JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™È[™\ÝÜˆ›Ùš[Nˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œÜÝ
+	ËØ\KÜÜ[ÝÚÛ\Ø[\‹Ü™YÚ\Ý\‰Ë\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆÛÛœÝ™\Ý[H[œÙ\ÚÛ\Ø[\”›Ùš[TØÚ[XKœØY™T\œÙJÈ‹‹œ™\K˜›ÙK\Ù\’YJNÂˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆœ›ÛQ\œ›ÜŠ™\Ý[™\œ›ÜŠKÔÝš[™Ê
+HJNÂˆBˆˆËÈÜ™X]HÚÛ\Ø[\ˆ›Ùš[BˆÛÛœÝ›Ùš[HH]ØZ]ÝÜ˜YÙK\Ù\ÚÛ\Ø[\”›Ùš[J™\Ý[™]JNÂˆˆËÈYÚÛ\Ø[\ˆ›ÛHYˆ›Ý^\ÝÂˆÛÛœÝ\Ô›ÛHH]ØZ]ÝÜ˜YÙKš\Ô›ÛJ\Ù\’YÚÛ\Ø[\ˆŠNÂˆYˆ
+Z\Ô›ÛJHÂˆ]ØZ]ÝÜ˜YÙK˜Y\Ù\”›ÛJÈ\Ù\’Y›ÛNˆÚÛ\Ø[\ˆˆJNÂˆBˆˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠ›Ùš[JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™ÈÚÛ\Ø[\ˆ›Ùš[Nˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œÜÝ
+	ËØ\KÜÜ[Ø^Y\‹Ü™YÚ\Ý\‰Ë\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆÛÛœÝ™\Ý[H[œÙ\^Y\”›Ùš[TØÚ[XKœØY™T\œÙJÈ‹‹œ™\K˜›ÙK\Ù\’YJNÂˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆœ›ÛQ\œ›ÜŠ™\Ý[™\œ›ÜŠKÔÝš[™Ê
+HJNÂˆBˆˆËÈÜ™X]H^Y\ˆ›Ùš[BˆÛÛœÝ›Ùš[HH]ØZ]ÝÜ˜YÙK\Ù\^Y\”›Ùš[J™\Ý[™]JNÂˆˆËÈY^Y\ˆ›ÛHYˆ›Ý^\ÝÂˆÛÛœÝ\Ô›ÛHH]ØZ]ÝÜ˜YÙKš\Ô›ÛJ\Ù\’Y˜^Y\ˆŠNÂˆYˆ
+Z\Ô›ÛJHÂˆ]ØZ]ÝÜ˜YÙK˜Y\Ù\”›ÛJÈ\Ù\’Y›ÛNˆ˜^Y\ˆˆJNÂˆBˆˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠ›Ùš[JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™È^Y\ˆ›Ùš[Nˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈÜ[\ÜXÚYšXÈ]H›Ý]\Âˆ\™Ù]
+	ËØ\KÜÜ[Ú[™\ÝÜ‹Ü›Ùš[IË\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆÛÛœÝ›Ùš[HH]ØZ]ÝÜ˜YÙK™Ù][™\ÝÜ”›Ùš[J\Ù\’Y
+NÂˆYˆ
+\›Ùš[JHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”›Ùš[H›Ý›Ý[™ˆJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠ›Ùš[JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È[™\ÝÜˆ›Ùš[Nˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈ[™\ÝÜˆÜ›Û[È›Ý]\Âˆ\™Ù]
+	ËØ\KÜÜ[Ú[™\ÝÜ‹Û^KZ[™\ÝY[ÉË\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆÛÛœÝ[™\ÝY[ÈH]ØZ]ÝÜ˜YÙK™Ù]ÛÛ[Z]Y[™\ÝY[ÐžR[™\ÝÜŠ\Ù\’Y
+NÂˆ™]\›ˆ™\ËšœÛÛŠ[™\ÝY[È×JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È[™\ÝÜˆ[™\ÝY[Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\™Ù]
+	ËØ\KÜÜ[Ú[™\ÝÜ‹Û^K[Ù™™\œÉË\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆÛÛœÝÙ™™\œÈH]ØZ]ÝÜ˜YÙK™Ù][™\ÝY[Ù™™\œÐžR[™\ÝÜŠ\Ù\’Y
+NÂˆ™]\›ˆ™\ËšœÛÛŠÙ™™\œÈ×JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È[™\ÝÜˆÙ™™\œÎˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\™Ù]
+	ËØ\KÜÜ[ÝÚÛ\Ø[\‹Ü›Ùš[IË\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆÛÛœÝ›Ùš[HH]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[\”›Ùš[J\Ù\’Y
+NÂˆYˆ
+\›Ùš[JHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”›Ùš[H›Ý›Ý[™ˆJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠ›Ùš[JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÚÛ\Ø[\ˆ›Ùš[Nˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\™Ù]
+	ËØ\KÜÜ[ÝÚÛ\Ø[\‹Û^KYX[ÉË\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆÛÛœÝX[ÈH]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[ÐžTÝX›Z]\Š\Ù\’Y
+NÂˆ™]\›ˆ™\ËšœÛÛŠX[ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÚÛ\Ø[\ˆX[Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈÙ]\Ù\‰ÜÈÝX›Z]Y\Ý[™ÜÂˆ\™Ù]
+	ËØ\KÜÜ[Û^K[\Ý[™ÜÉË\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆÛÛœÝ\Ý[™ÜÈH]ØZ]ÝÜ˜YÙK™Ù]\Ý[™ÜÐžTÝX›Z]\Š\Ù\’Y
+NÂˆ™]\›ˆ™\ËšœÛÛŠ\Ý[™ÜÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È\Ù\ˆ\Ý[™ÜÎˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈÙ]\Ù\‰ÜÈØ\][›Ú™XÝÂˆ\™Ù]
+	ËØ\KÜÜ[Û^KXØ\][\›Ú™XÝÉË\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆÛÛœÝ›Ú™XÝÈH]ØZ]ÝÜ˜YÙK™Ù]Ø\][›Ú™XÝÐžPÜ™X]ÜŠ\Ù\’Y
+NÂˆ™]\›ˆ™\ËšœÛÛŠ›Ú™XÝÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È\Ù\ˆØ\][›Ú™XÝÎˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\™Ù]
+	ËØ\KÜÜ[Ø^Y\‹Ü›Ùš[IË\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆÛÛœÝ›Ùš[HH]ØZ]ÝÜ˜YÙK™Ù]^Y\”›Ùš[J\Ù\’Y
+NÂˆYˆ
+\›Ùš[JHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”›Ùš[H›Ý›Ý[™ˆJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠ›Ùš[JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È^Y\ˆ›Ùš[Nˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈØ]™Y›Ü\Y\È›Ý]\È
+›Üˆ^Y\œÊBˆ\™Ù]
+	ËØ\KÜÜ[Ø^Y\‹ÜØ]™Y\›Ü\Y\ÉË\Ð]][XØ]YØYX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆÛÛœÝØ]™YH]ØZ]ÝÜ˜YÙK™Ù]Ø]™Y›Ü\Y\Ê\Ù\’Y
+NÂˆ™]\›ˆ™\ËšœÛÛŠˆØ]™Y™š[\Š
+[žJHO‚ˆØ[XØÙ\ÜÓX\šÙ]›ÝÒ][U\J™\Ë[žKœ›Ü\U\JKˆ
+Kˆ
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈØ]™Y›Ü\Y\Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œÜÝ
+	ËØ\KÜÜ[Ø^Y\‹ÜØ]™Y\›Ü\Y\ÉË\Ð]][XØ]YØYX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆÛÛœÝ™\Ý[H[œÙ\Ø]™Y›Ü\TØÚ[XKœØY™T\œÙJÈ‹‹œ™\K˜›ÙK\Ù\’YJNÂˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆœ›ÛQ\œ›ÜŠ™\Ý[™\œ›ÜŠKÔÝš[™Ê
+HJNÂˆBˆYˆ
+XØ[XØÙ\ÜÓX\šÙ]›ÝÒ][U\J™\Ë™\Ý[™]Kœ›Ü\U\JJHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”›Ü\H›Ý›Ý[™ˆJNÂˆBˆÛÛœÝX›XÔ›Ü\HH]ØZ]Ù]X›XÓX\šÙ]XÙR][Jˆ™\Ý[™]Kœ›Ü\U\Kˆ™\Ý[™]Kœ›Ü\RYˆ
+NÂˆYˆ
+\X›XÔ›Ü\JHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”›Ü\H›Ý›Ý[™ˆJNÂˆBˆˆËÈÚXÚÈYˆ[™XYHØ]™YˆÛÛœÝ\ÔØ]™YH]ØZ]ÝÜ˜YÙKš\Ô›Ü\TØ]™Y
+\Ù\’Y™\Ý[™]Kœ›Ü\U\K™\Ý[™]Kœ›Ü\RY
+NÂˆYˆ
+\ÔØ]™Y
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”›Ü\H[™XYHØ]™YˆJNÂˆBˆˆÛÛœÝØ]™YH]ØZ]ÝÜ˜YÙKœØ]™T›Ü\J™\Ý[™]JNÂˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠØ]™Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆØ]š[™È›Ü\Nˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\™[]J	ËØ\KÜÜ[Ø^Y\‹ÜØ]™Y\›Ü\Y\ËÎœ›Ü\U\KÎœ›Ü\RY	Ë\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆÛÛœÝÈ›Ü\U\K›Ü\RYHH™\Kœ\˜[\ÎÂˆ]ØZ]ÝÜ˜YÙKœ™[[Ý™TØ]™Y›Ü\J\Ù\’Y›Ü\U\K\œÙR[
+›Ü\RY
+JNÂˆ™]\›ˆ™\ËœÝ]\ÊŒ
+KœÙ[™
+
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™[[Ýš[™ÈØ]™Y›Ü\Nˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈ^Y\ˆÙ™™\œÈ›Ý]\Âˆ\™Ù]
+	ËØ\KÜÜ[Ø^Y\‹ÛÙ™™\œÉË\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆÛÛœÝÙ™™\œÈH]ØZ]ÝÜ˜YÙK™Ù]^Y\“Ù™™\œÊ\Ù\’Y
+NÂˆ™]\›ˆ™\ËšœÛÛŠÙ™™\œÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È^Y\ˆÙ™™\œÎˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œÜÝ
+	ËØ\KÜÜ[Ø^Y\‹ÛÙ™™\œÉË\Ð]][XØ]YØYX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆÛÛœÝ™\Ý[H[œÙ\^Y\“Ù™™\”ØÚ[XKœØY™T\œÙJÈ‹‹œ™\K˜›ÙK\Ù\’YJNÂˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆœ›ÛQ\œ›ÜŠ™\Ý[™\œ›ÜŠKÔÝš[™Ê
+HJNÂˆBˆYˆ
+\Ô™]šY]ÙYX\šÙ]›ÝÒ[™[ÜžU\J™\Ý[™]Kœ›Ü\U\JJHÂˆÛÛœÝXØÙ\ÜÈH]ØZ]™\ÛÛ™SYØXÞQX[XØÙ\ÜÊˆ™\Kˆ\Ù\’Yˆ™\Ý[™]Kœ›Ü\U\Kˆ™\Ý[™]Kœ›Ü\RYˆ
+NÂˆYˆ
+XXØÙ\ÜÈXØ[’[š]X]SYØXÞQX[[\˜XÝ[ÛŠXØÙ\ÜË™\ÊJHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”›Ü\H›Ý›Ý[™ˆJNÂˆBˆBˆÛÛœÝX›XÔ›Ü\HH]ØZ]Ù]X›XÓX\šÙ]XÙR][Jˆ™\Ý[™]Kœ›Ü\U\Kˆ™\Ý[™]Kœ›Ü\RYˆ
+NÂˆYˆ
+\X›XÔ›Ü\JHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”›Ü\H›Ý›Ý[™ˆJNÂˆBˆˆÛÛœÝÙ™™\ˆH]ØZ]ÝÜ˜YÙK˜Ü™X]P^Y\“Ù™™\Š™\Ý[™]JNÂˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠÙ™™\ŠNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™È^Y\ˆÙ™™\Žˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈ™X[\ØØ\\ˆ
+Ü\˜]ÜŠHÜ[›Ý]\Âˆ\™Ù]
+	ËØ\KÜÜ[Ù™X[\ØØ\\‹Û^K\›Ú™XÝÉË\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆÛÛœÝ›Û\ÈH]ØZ]ÝÜ˜YÙK™Ù]\Ù\”›Û\Ê\Ù\’Y
+NÂˆÛÛœÝ›ÛS˜[Y\ÈH›Û\Ë›X\
+ˆOˆ‹œ›ÛJNÂˆÛÛœÝ\Ñ™X[\ØØ\\ˆH›ÛS˜[Y\Ëš[˜ÛY\Ê™™X[\ØØ\\ˆŠH›ÛS˜[Y\Ëš[˜ÛY\Ê›Ü\˜]ÜˆŠNÂˆˆYˆ
+Z\Ñ™X[\ØØ\\ŠHÂˆ™]\›ˆ™\ËœÝ]\ÊÊKšœÛÛŠÈY\ÜØYÙNˆ“›Ý]]Üš^™Y\ÈH™X[\ØØ\\ˆˆJNÂˆBˆˆÛÛœÝ›Ú™XÝÈH]ØZ]ÝÜ˜YÙK™Ù]Ø\][›Ú™XÝÐžPÜ™X]ÜŠ\Ù\’Y
+NÂˆ™]\›ˆ™\ËšœÛÛŠ›Ú™XÝÈ×JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È™X[\ØØ\\ˆ›Ú™XÝÎˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\™Ù]
+	ËØ\KÜÜ[Ù™X[\ØØ\\‹Ü[™[™Ë[Ù™™\œÉË\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆÛÛœÝ›Û\ÈH]ØZ]ÝÜ˜YÙK™Ù]\Ù\”›Û\Ê\Ù\’Y
+NÂˆÛÛœÝ›ÛS˜[Y\ÈH›Û\Ë›X\
+ˆOˆ‹œ›ÛJNÂˆÛÛœÝ\Ñ™X[\ØØ\\ˆH›ÛS˜[Y\Ëš[˜ÛY\Ê™™X[\ØØ\\ˆŠH›ÛS˜[Y\Ëš[˜ÛY\Ê›Ü\˜]ÜˆŠNÂˆˆYˆ
+Z\Ñ™X[\ØØ\\ŠHÂˆ™]\›ˆ™\ËœÝ]\ÊÊKšœÛÛŠÈY\ÜØYÙNˆ“›Ý]]Üš^™Y\ÈH™X[\ØØ\\ˆˆJNÂˆBˆˆÛÛœÝ\Ù\”›Ú™XÝÈH]ØZ]ÝÜ˜YÙK™Ù]Ø\][›Ú™XÝÐžPÜ™X]ÜŠ\Ù\’Y
+NÂˆÛÛœÝ›Ú™XÝYÈH\Ù\”›Ú™XÝË›X\
+OˆšY
+NÂˆˆÛÛœÝ[Ù™™\œÈH×NÂˆ›Üˆ
+ÛÛœÝ›Ú™XÝYÙˆ›Ú™XÝYÊHÂˆÛÛœÝÙ™™\œÈH]ØZ]ÝÜ˜YÙK™Ù][™\ÝY[Ù™™\œÐžT›Ú™XÝ
+›Ú™XÝY
+NÂˆÛÛœÝ[™[™ÓÙ™™\œÈHÙ™™\œË™š[\ŠÈOˆËœÝ]\ÈOOH	ÔS‘S‘ÉÊNÂˆ[Ù™™\œËœ\Ú
+‹‹œ[™[™ÓÙ™™\œÊNÂˆBˆˆ™]\›ˆ™\ËšœÛÛŠ[Ù™™\œÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È[™[™ÈÙ™™\œÎˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\™Ù]
+	ËØ\KÜÜ[Ù™X[\ØØ\\‹Ø[Z[™\ÝY[ÉË\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆÛÛœÝ›Û\ÈH]ØZ]ÝÜ˜YÙK™Ù]\Ù\”›Û\Ê\Ù\’Y
+NÂˆÛÛœÝ›ÛS˜[Y\ÈH›Û\Ë›X\
+ˆOˆ‹œ›ÛJNÂˆÛÛœÝ\Ñ™X[\ØØ\\ˆH›ÛS˜[Y\Ëš[˜ÛY\Ê™™X[\ØØ\\ˆŠH›ÛS˜[Y\Ëš[˜ÛY\Ê›Ü\˜]ÜˆŠNÂˆˆYˆ
+Z\Ñ™X[\ØØ\\ŠHÂˆ™]\›ˆ™\ËœÝ]\ÊÊKšœÛÛŠÈY\ÜØYÙNˆ“›Ý]]Üš^™Y\ÈH™X[\ØØ\\ˆˆJNÂˆBˆˆÛÛœÝ\Ù\”›Ú™XÝÈH]ØZ]ÝÜ˜YÙK™Ù]Ø\][›Ú™XÝÐžPÜ™X]ÜŠ\Ù\’Y
+NÂˆÛÛœÝ›Ú™XÝYÈH\Ù\”›Ú™XÝË›X\
+OˆšY
+NÂˆˆÛÛœÝ[[™\ÝY[ÈH×NÂˆ›Üˆ
+ÛÛœÝ›Ú™XÝYÙˆ›Ú™XÝYÊHÂˆÛÛœÝ[™\ÝY[ÈH]ØZ]ÝÜ˜YÙK™Ù]ÛÛ[Z]Y[™\ÝY[ÐžT›Ú™XÝ
+›Ú™XÝY
+NÂˆ[[™\ÝY[Ëœ\Ú
+‹‹š[™\ÝY[ÊNÂˆBˆˆ™]\›ˆ™\ËšœÛÛŠ[[™\ÝY[ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È[[™\ÝY[Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œÜÝ
+	ËØ\KÚ[™\ÝY[[Ù™™\œËÎ›Ù™™\’YØXØÙ\	Ë\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆ™]\›ˆ™\ËœÝ]\ÊLJKšœÛÛŠÂˆY\ÜØYÙN‚ˆ“YØXÞH[™\ÝY[Ù™™\œÈ\™H™XY[Û›Kˆ\ÙHX\šÙ]›ÝÈÙ™™\ˆÝY[ÈÈ™\ÜÛ™ˆ‹ˆJNÂˆJNÂ‚ˆ\œÜÝ
+	ËØ\KÚ[™\ÝY[[Ù™™\œËÎ›Ù™™\’YÙXÛ[™IË\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆ™]\›ˆ™\ËœÝ]\ÊLJKšœÛÛŠÂˆY\ÜØYÙN‚ˆ“YØXÞH[™\ÝY[Ù™™\œÈ\™H™XY[Û›Kˆ\ÙHX\šÙ]›ÝÈÙ™™\ˆÝY[ÈÈ™\ÜÛ™ˆ‹ˆJNÂˆJNÂˆˆËÈÙ[\ˆXY›Ý]\ÂˆËÈX›XÈÙXœÚ]HŒH
+\ÜÝYHÌŒŠNˆÝXÝ\™YÜÜ[š]H[ZÙH
+È›Ý][™Ë‚ˆ™YÚ\Ý\“ÜÜ[š]T›Ý]\Ê\Âˆ\Ð]][XØ]Yˆ™\]Z\™TÝY™”›ÛKˆX›XÒ[ZÙT˜]S[Z]ˆJNÂ‚ˆ\œÜÝ
+‹Ø\KÜÙ[\‹[XYÈ‹X›XÒ[ZÙT˜]S[Z]\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ™\Ý[H[œÙ\Ù[\“XYØÚ[XKœØY™T\œÙJ™\K˜›ÙJNÂˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈˆY\ÜØYÙNˆœ›ÛQ\œ›ÜŠ™\Ý[™\œ›ÜŠKÔÝš[™Ê
+HˆJNÂˆBˆˆÛÛœÝXYH]ØZ]ÝÜ˜YÙK˜Ü™X]TÙ[\“XY
+™\Ý[™]JNÂˆÛÛœÛÛKš[™›Ê–Ú[ZÙWHÙ[\ˆXYÝÜ™YŠNÂˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠXY
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™ÈÙ[\ˆXYˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈ[™\ÝÜˆXY›Ý]\Âˆ\œÜÝ
+‹Ø\KÚ[™\ÝÜ‹[XYÈ‹X›XÒ[ZÙT˜]S[Z]\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ™\Ý[H[œÙ\[™\ÝÜ“XYØÚ[XKœØY™T\œÙJ™\K˜›ÙJNÂˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈˆY\ÜØYÙNˆœ›ÛQ\œ›ÜŠ™\Ý[™\œ›ÜŠKÔÝš[™Ê
+HˆJNÂˆBˆˆÛÛœÝXYH]ØZ]ÝÜ˜YÙK˜Ü™X]R[™\ÝÜ“XY
+™\Ý[™]JNÂˆÛÛœÛÛKš[™›Ê–Ú[ZÙWH[™\ÝÜˆXYÝÜ™YŠNÂˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠXY
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™È[™\ÝÜˆXYˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈ^Y\ˆXY›Ý]\Âˆ\œÜÝ
+‹Ø\KØ^Y\‹[XYÈ‹X›XÒ[ZÙT˜]S[Z]\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ™\Ý[H[œÙ\^Y\“XYØÚ[XKœØY™T\œÙJ™\K˜›ÙJNÂˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈˆY\ÜØYÙNˆœ›ÛQ\œ›ÜŠ™\Ý[™\œ›ÜŠKÔÝš[™Ê
+HˆJNÂˆBˆˆÛÛœÝXYH]ØZ]ÝÜ˜YÙK˜Ü™X]P^Y\“XY
+™\Ý[™]JNÂˆÛÛœÛÛKš[™›Ê–Ú[ZÙWH^Y\ˆXYÝÜ™YŠNÂˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠXY
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™È^Y\ˆXYˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈÛÛXÝ›Ý]\Âˆ\œÜÝ
+‹Ø\KØÛÛXÝÈ‹X›XÒ[ZÙT˜]S[Z]\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ™\Ý[H[œÙ\ÛÛXÝØÚ[XKœØY™T\œÙJ™\K˜›ÙJNÂˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈˆY\ÜØYÙNˆœ›ÛQ\œ›ÜŠ™\Ý[™\œ›ÜŠKÔÝš[™Ê
+HˆJNÂˆBˆˆÛÛœÝÛÛXÝH]ØZ]ÝÜ˜YÙK˜Ü™X]PÛÛXÝ
+™\Ý[™]JNÂˆÛÛœÛÛKš[™›Ê–Ú[ZÙWHÛÛXÝY\ÜØYÙHÝÜ™YŠNÂˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠÛÛXÝ
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™ÈÛÛXÝˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈYZ[Žˆ[Ý˜]YÞHXœ˜\žHX[˜YÙ[Y[ˆ\™Ù]
+‹Ø\KÚKØ\XÛ\È‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+Ü™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ\ÝH]ØZ]ÝÜ˜YÙK™Ù]\XÛ\Ê
+NÂˆ™]\›ˆ™\ËšœÛÛŠ\Ý
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È[\XÛ\Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈXØÙ\TÓÈ]HÝš[™ÜÈœ›ÛH”ÓÓˆÛY[ÈžHÛÙ\˜Ú[™ÈX›\ÚY]È]K‚ˆÛÛœÝ\XÛUÜš]TØÚ[XHH[œÙ\\XÛTØÚ[XK™^[™
+ÂˆX›\ÚY]ˆ‹œ™\›ØÙ\ÜÊˆ
+ŠHOˆ
+\[ÙˆˆOOHœÝš[™Èˆ	‰ˆ‹›[™ÝˆÈ™]È]JŠHˆŠKˆ‹™]J
+K›[X›J
+K›Ü[Û˜[
+
+Kˆ
+KˆJNÂ‚ˆ\œÜÝ
+‹Ø\KÚKØ\XÛ\È‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ™\Ý[H\XÛUÜš]TØÚ[XKœØY™T\œÙJ™\K˜›ÙJNÂˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[Y\XÛH‹\œ›ÜœÎˆ™\Ý[™\œ›Ü‹™›][Š
+HJNÂˆBˆÛÛœÝ]HHÈ‹‹œ™\Ý[™]HNÂˆYˆ
+]KœX›\ÚY	‰ˆY]KœX›\ÚY]
+H]KœX›\ÚY]H™]È]J
+NÂˆÛÛœÝÜ™X]YH]ØZ]ÝÜ˜YÙK˜Ü™X]P\XÛJ]JNÂˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠÜ™X]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆYˆ
+
+\œ›Üˆ\ÈÈÛÙOÎˆÝš[™ÈJOË˜ÛÙHOOHŒŒÍLHŠHÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ[ˆ\XÛHÚ]]ÛYÈ[™XYH^\ÝÈˆJNÂˆBˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™È\XÛNˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œ]Ú
+‹Ø\KÚKØ\XÛ\ËÎšY‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝYH\œÙR[
+™\Kœ\˜[\ËšY
+NÂˆYˆ
+[X™\‹š\Ó˜SŠY
+JH™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[YYˆJNÂˆÛÛœÝ™\Ý[H\XÛUÜš]TØÚ[XKœ\X[
+
+KœØY™T\œÙJ™\K˜›ÙJNÂˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[Y\XÛH]Ú‹\œ›ÜœÎˆ™\Ý[™\œ›Ü‹™›][Š
+HJNÂˆBˆÛÛœÝ]HHÈ‹‹œ™\Ý[™]HNÂˆYˆ
+]KœX›\ÚY	‰ˆY]KœX›\ÚY]
+H]KœX›\ÚY]H™]È]J
+NÂˆÛÛœÝ\]YH]ØZ]ÝÜ˜YÙK\]P\XÛJY]JNÂˆYˆ
+]\]Y
+H™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ\XÛH›Ý›Ý[™ˆJNÂˆ™]\›ˆ™\ËšœÛÛŠ\]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆYˆ
+
+\œ›Üˆ\ÈÈÛÙOÎˆÝš[™ÈJOË˜ÛÙHOOHŒŒÍLHŠHÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ[ˆ\XÛHÚ]]ÛYÈ[™XYH^\ÝÈˆJNÂˆBˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\][™È\XÛNˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\™[]J‹Ø\KÚKØ\XÛ\ËÎšY‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝYH\œÙR[
+™\Kœ\˜[\ËšY
+NÂˆYˆ
+[X™\‹š\Ó˜SŠY
+JH™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[YYˆJNÂˆÛÛœÝÚÈH]ØZ]ÝÜ˜YÙK™[]P\XÛJY
+NÂˆYˆ
+[ÚÊH™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ\XÛH›Ý›Ý[™ˆJNÂˆ™]\›ˆ™\ËšœÛÛŠÈÝXØÙ\ÜÎˆYHJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ[][™È\XÛNˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈYZ[Žˆ™YÚ[›™\ˆ]Ô•Qˆ\™Ù]
+‹Ø\KÚKÛXœ˜\žKØ™YÚ[›™\‹\]‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+Ü™\K™\ÊHOˆÂˆžHÂˆ™]\›ˆ™\ËšœÛÛŠ]ØZ]ÝÜ˜YÙK™Ù]Xœ˜\žP™YÚ[›™\”Ý\Ê
+JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È™YÚ[›™\ˆ]
+JNˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œÜÝ
+‹Ø\KÚKÛXœ˜\žKØ™YÚ[›™\‹\]‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ™\Ý[H[œÙ\Xœ˜\žP™YÚ[›™\”Ý\ØÚ[XKœØY™T\œÙJ™\K˜›ÙJNÂˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[YÝ\‹\œ›ÜœÎˆ™\Ý[™\œ›Ü‹™›][Š
+HJNÂˆBˆÛÛœÝÜ™X]YH]ØZ]ÝÜ˜YÙK˜Ü™X]SXœ˜\žP™YÚ[›™\”Ý\
+™\Ý[™]JNÂˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠÜ™X]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™È™YÚ[›™\ˆÝ\ˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œ]Ú
+‹Ø\KÚKÛXœ˜\žKØ™YÚ[›™\‹\]ÎšY‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝYH\œÙR[
+™\Kœ\˜[\ËšY
+NÂˆYˆ
+[X™\‹š\Ó˜SŠY
+JH™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[YYˆJNÂˆÛÛœÝ™\Ý[H[œÙ\Xœ˜\žP™YÚ[›™\”Ý\ØÚ[XKœ\X[
+
+KœØY™T\œÙJ™\K˜›ÙJNÂˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[Y]Ú‹\œ›ÜœÎˆ™\Ý[™\œ›Ü‹™›][Š
+HJNÂˆBˆÛÛœÝ\]YH]ØZ]ÝÜ˜YÙK\]SXœ˜\žP™YÚ[›™\”Ý\
+Y™\Ý[™]JNÂˆYˆ
+]\]Y
+H™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”Ý\›Ý›Ý[™ˆJNÂˆ™]\›ˆ™\ËšœÛÛŠ\]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\][™È™YÚ[›™\ˆÝ\ˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\™[]J‹Ø\KÚKÛXœ˜\žKØ™YÚ[›™\‹\]ÎšY‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝYH\œÙR[
+™\Kœ\˜[\ËšY
+NÂˆYˆ
+[X™\‹š\Ó˜SŠY
+JH™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[YYˆJNÂˆÛÛœÝÚÈH]ØZ]ÝÜ˜YÙK™[]SXœ˜\žP™YÚ[›™\”Ý\
+Y
+NÂˆYˆ
+[ÚÊH™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”Ý\›Ý›Ý[™ˆJNÂˆ™]\›ˆ™\ËšœÛÛŠÈÝXØÙ\ÜÎˆYHJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ[][™È™YÚ[›™\ˆÝ\ˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈYZ[ŽˆÛÜÜØ\žHÔ•Qˆ\™Ù]
+‹Ø\KÚKÛXœ˜\žKÙÛÜÜØ\žH‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+Ü™\K™\ÊHOˆÂˆžHÂˆ™]\›ˆ™\ËšœÛÛŠ]ØZ]ÝÜ˜YÙK™Ù]Xœ˜\žQÛÜÜØ\žU\›\Ê
+JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÛÜÜØ\žH
+JNˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œÜÝ
+‹Ø\KÚKÛXœ˜\žKÙÛÜÜØ\žH‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ™\Ý[H[œÙ\Xœ˜\žQÛÜÜØ\žU\›TØÚ[XKœØY™T\œÙJ™\K˜›ÙJNÂˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[Y\›H‹\œ›ÜœÎˆ™\Ý[™\œ›Ü‹™›][Š
+HJNÂˆBˆÛÛœÝÜ™X]YH]ØZ]ÝÜ˜YÙK˜Ü™X]SXœ˜\žQÛÜÜØ\žU\›J™\Ý[™]JNÂˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠÜ™X]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™ÈÛÜÜØ\žH\›Nˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œ]Ú
+‹Ø\KÚKÛXœ˜\žKÙÛÜÜØ\žKÎšY‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝYH\œÙR[
+™\Kœ\˜[\ËšY
+NÂˆYˆ
+[X™\‹š\Ó˜SŠY
+JH™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[YYˆJNÂˆÛÛœÝ™\Ý[H[œÙ\Xœ˜\žQÛÜÜØ\žU\›TØÚ[XKœ\X[
+
+KœØY™T\œÙJ™\K˜›ÙJNÂˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[Y]Ú‹\œ›ÜœÎˆ™\Ý[™\œ›Ü‹™›][Š
+HJNÂˆBˆÛÛœÝ\]YH]ØZ]ÝÜ˜YÙK\]SXœ˜\žQÛÜÜØ\žU\›JY™\Ý[™]JNÂˆYˆ
+]\]Y
+H™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ•\›H›Ý›Ý[™ˆJNÂˆ™]\›ˆ™\ËšœÛÛŠ\]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\][™ÈÛÜÜØ\žH\›Nˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\™[]J‹Ø\KÚKÛXœ˜\žKÙÛÜÜØ\žKÎšY‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝYH\œÙR[
+™\Kœ\˜[\ËšY
+NÂˆYˆ
+[X™\‹š\Ó˜SŠY
+JH™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[YYˆJNÂˆÛÛœÝÚÈH]ØZ]ÝÜ˜YÙK™[]SXœ˜\žQÛÜÜØ\žU\›JY
+NÂˆYˆ
+[ÚÊH™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ•\›H›Ý›Ý[™ˆJNÂˆ™]\›ˆ™\ËšœÛÛŠÈÝXØÙ\ÜÎˆYHJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ[][™ÈÛÜÜØ\žH\›Nˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈ›ÝXÝYH›Ý]\È
+™\]Z\™HÝY™ˆ›ÛJBˆ\™Ù]
+‹Ø\KÚKÜÙ[\‹[XYÈ‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝXYÈH]ØZ]ÝÜ˜YÙK™Ù]Ù[\“XYÊ
+NÂˆ™]\›ˆ™\ËšœÛÛŠXYÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÙ[\ˆXYÎˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\™Ù]
+‹Ø\KÚKÚ[™\ÝÜ‹[XYÈ‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝXYÈH]ØZ]ÝÜ˜YÙK™Ù][™\ÝÜ“XYÊ
+NÂˆ™]\›ˆ™\ËšœÛÛŠXYÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È[™\ÝÜˆXYÎˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\™Ù]
+‹Ø\KÚKØ^Y\‹[XYÈ‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝXYÈH]ØZ]ÝÜ˜YÙK™Ù]^Y\“XYÊ
+NÂˆ™]\›ˆ™\ËšœÛÛŠXYÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È^Y\ˆXYÎˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œ]Ú
+‹Ø\KÚKØ^Y\‹[XYËÎšYÜÝ]\È‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝYH\œÙR[
+™\Kœ\˜[\ËšY
+NÂˆÛÛœÝÈÝ]\ÈHH™\K˜›ÙNÂˆÛÛœÝ\]YH]ØZ]ÝÜ˜YÙK\]P^Y\“XYÝ]\ÊYÝ]\ÊNÂˆYˆ
+]\]Y
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“XY›Ý›Ý[™ˆJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠ\]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\][™È^Y\ˆXYÝ]\Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\™Ù]
+‹Ø\KÚKØÛÛXÝÈ‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝÛÛXÝÓ\ÝH]ØZ]ÝÜ˜YÙK™Ù]ÛÛXÝÊ
+NÂˆ™]\›ˆ™\ËšœÛÛŠÛÛXÝÓ\Ý
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÛÛXÝÎˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œ]Ú
+‹Ø\KÚKÜÙ[\‹[XYËÎšYÜÝ]\È‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝYH\œÙR[
+™\Kœ\˜[\ËšY
+NÂˆÛÛœÝÈÝ]\ÈHH™\K˜›ÙNÂˆÛÛœÝ\]YH]ØZ]ÝÜ˜YÙK\]TÙ[\“XYÝ]\ÊYÝ]\ÊNÂˆYˆ
+]\]Y
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“XY›Ý›Ý[™ˆJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠ\]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\][™ÈÙ[\ˆXYÝ]\Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œ]Ú
+‹Ø\KÚKÚ[™\ÝÜ‹[XYËÎšYÜÝ]\È‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝYH\œÙR[
+™\Kœ\˜[\ËšY
+NÂˆÛÛœÝÈÝ]\ÈHH™\K˜›ÙNÂˆÛÛœÝ\]YH]ØZ]ÝÜ˜YÙK\]R[™\ÝÜ“XYÝ]\ÊYÝ]\ÊNÂˆYˆ
+]\]Y
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“XY›Ý›Ý[™ˆJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠ\]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\][™È[™\ÝÜˆXYÝ]\Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œ]Ú
+‹Ø\KÚKØÛÛXÝËÎšYÜÝ]\È‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝYH\œÙR[
+™\Kœ\˜[\ËšY
+NÂˆÛÛœÝÈÝ]\ÈHH™\K˜›ÙNÂˆÛÛœÝ\]YH]ØZ]ÝÜ˜YÙK\]PÛÛXÝÝ]\ÊYÝ]\ÊNÂˆYˆ
+]\]Y
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆÛÛXÝ›Ý›Ý[™ˆJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠ\]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\][™ÈÛÛXÝÝ]\Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈXYXÝ]š]Y\È›Ý]\È
+›ÜˆÔ“HHÝY™ˆÛ›JBˆ\™Ù]
+‹Ø\KÚKØXÝ]š]Y\ËÎ›XY\KÎ›XYY‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝÈXY\KXYYHH™\Kœ\˜[\ÎÂˆÛÛœÝXÝ]š]Y\ÈH]ØZ]ÝÜ˜YÙK™Ù]XYXÝ]š]Y\ÊXY\K\œÙR[
+XYY
+JNÂˆ™]\›ˆ™\ËšœÛÛŠXÝ]š]Y\ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈXYXÝ]š]Y\Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œÜÝ
+‹Ø\KÚKØXÝ]š]Y\È‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝÈXY\KXYYXÝ]š]U\K›Ý\Ë›ÛÝÕ\]HHH™\K˜›ÙNÂˆÛÛœÝXÝ]š]HH]ØZ]ÝÜ˜YÙK˜Ü™X]SXYXÝ]š]JÂˆXY\KˆXYYˆ\œÙR[
+XYY
+KˆXÝ]š]U\Kˆ›Ý\Ëˆ›ÛÝÕ\]Nˆ›ÛÝÕ\]HÈ™]È]J›ÛÝÕ\]JHˆ[™Yš[™YˆJNÂˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠXÝ]š]JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™ÈXYXÝ]š]Nˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œ]Ú
+‹Ø\KÚKØXÝ]š]Y\ËÎšYØÛÛ\]H‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝYH\œÙR[
+™\Kœ\˜[\ËšY
+NÂˆÛÛœÝ\]YH]ØZ]ÝÜ˜YÙK›X\šÐXÝ]š]PÛÛ\]Y
+Y
+NÂˆYˆ
+]\]Y
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆXÝ]š]H›Ý›Ý[™ˆJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠ\]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆX\šÚ[™ÈXÝ]š]H\ÈÛÛ\]Yˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈ]Y]YH›Ý]\È
+›ÜˆÛÜšÈ]Y]YKÝ\ÚÈX[˜YÙ[Y[HÝY™ˆÛ›JBˆ\™Ù]
+‹Ø\KÚKÜ]Y]YH‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ]Y]YR][\ÈH]ØZ]ÝÜ˜YÙK™Ù]]Y]YR][\Ê
+NÂˆ™]\›ˆ™\ËšœÛÛŠ]Y]YR][\ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È]Y]YNˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈ›Ú™XÝÈ›Ý]\È
+X›XÊBˆ\™Ù]
+‹Ø\KÜ›Ú™XÝÈ‹\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ›Ú™XÝÓ\ÝH]ØZ]ÝÜ˜YÙK™Ù]›Ú™XÝÊ
+NÂˆ™]\›ˆ™\ËšœÛÛŠš[\”X›\ÚY›Ú™XÝÊ›Ú™XÝÓ\Ý
+JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È›Ú™XÝÎˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\™Ù]
+‹Ø\KÜ›Ú™XÝËÎœÛYÈ‹\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆYˆ
+Z\ÔX›\ÚY›Ú™XÝÛYÊ™\Kœ\˜[\ËœÛYÊJHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”›Ú™XÝ›Ý›Ý[™ˆJNÂˆBˆÛÛœÝ›Ú™XÝH]ØZ]ÝÜ˜YÙK™Ù]›Ú™XÝžTÛYÊ™\Kœ\˜[\ËœÛYÊNÂˆYˆ
+\›Ú™XÝZ\ÔX›\ÚY›Ú™XÝÛYÊ›Ú™XÝœÛYÊJHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”›Ú™XÝ›Ý›Ý[™ˆJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠ›Ú™XÝ
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È›Ú™XÝˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈ™]šY]ÙYX\šÙ]›ÝÈ[™[ÜžKˆX›XÈX\šÙ][™È[™[ZÙH›Ý]\È™[XZ[‚ˆËÈÙ\\˜]NÈ]][XØ][Ûˆ[Û™HÙ\È›ÝÜ˜[š]˜]KX™]H]HXØÙ\ÜË‚ˆ\™Ù]
+‹Ø\KÝÚÛ\Ø[KYX[È‹\ÒXœšY]][XØ]Y™\]Z\™SX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜË\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]X\šÙ]›ÝÒ[™[ÜžTš[˜Ú\[Y
+™\ÊNÂˆÛÛœÝX[ÈH]ØZ]ÝÜ˜YÙK™Ù]]˜Z[X›UÚÛ\Ø[QX[Ê
+NÂˆ™]\›ˆ™\ËšœÛÛŠˆX[Âˆ™š[\Š\ÔX›XÕÚÛ\Ø[QX[
+Bˆ›X\
+
+X[
+HO‚ˆÔX›XÕÚÛ\Ø[QX[
+ˆX[ˆ\Ù\’YˆØ[•šY]Ù\’[š]X]SX\šÙ]›ÝÒŠ™\ÊKˆ
+Kˆ
+Kˆ
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÚÛ\Ø[HX[Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\™Ù]
+‹Ø\KÝÚÛ\Ø[KYX[ËXXÝ]™H‹\ÒXœšY]][XØ]Y™\]Z\™SX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜË\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]X\šÙ]›ÝÒ[™[ÜžTš[˜Ú\[Y
+™\ÊNÂˆÛÛœÝX[ÈH]ØZ]ÝÜ˜YÙK™Ù]]˜Z[X›UÚÛ\Ø[QX[Ê
+NÂˆ™]\›ˆ™\ËšœÛÛŠˆX[Âˆ™š[\Š\ÔX›XÕÚÛ\Ø[QX[
+Bˆ›X\
+
+X[
+HO‚ˆÔX›XÕÚÛ\Ø[QX[
+ˆX[ˆ\Ù\’YˆØ[•šY]Ù\’[š]X]SX\šÙ]›ÝÒŠ™\ÊKˆ
+Kˆ
+Kˆ
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈXÝ]™HÚÛ\Ø[HX[Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\™Ù]
+‹Ø\KÝÚÛ\Ø[KYX[ËÎšY‹\ÒXœšY]][XØ]Y™\]Z\™SX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜË\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]X\šÙ]›ÝÒ[™[ÜžTš[˜Ú\[Y
+™\ÊNÂˆÛÛœÝX[H]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[
+\œÙR[
+™\Kœ\˜[\ËšY
+JNÂˆYˆ
+YX[Z\ÔX›XÕÚÛ\Ø[QX[
+X[
+JHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ‘X[›Ý›Ý[™ˆJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠˆÔX›XÕÚÛ\Ø[QX[
+ˆX[ˆ\Ù\’YˆØ[•šY]Ù\’[š]X]SX\šÙ]›ÝÒŠ™\ÊKˆ
+Kˆ
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÚÛ\Ø[HX[ˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈÚÛ\Ø[H™\]Y\Ý
+X›XÈH[™\ÝÜœÈØ[ˆ™\]Y\ÝX[ÊBˆ\œÜÝ
+‹Ø\KÝÚÛ\Ø[K\™\]Y\ÝÈ‹X›XÒ[ZÙT˜]S[Z]\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ™\Ý[H[œÙ\ÚÛ\Ø[T™\]Y\ÝØÚ[XKœØY™T\œÙJ™\K˜›ÙJNÂˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈˆY\ÜØYÙNˆœ›ÛQ\œ›ÜŠ™\Ý[™\œ›ÜŠKÔÝš[™Ê
+HˆJNÂˆBˆˆÛÛœÝ™\]Y\ÝH]ØZ]ÝÜ˜YÙK˜Ü™X]UÚÛ\Ø[T™\]Y\Ý
+™\Ý[™]JNÂˆÛÛœÛÛKš[™›Ê–Ú[ZÙWHÚÛ\Ø[H™\]Y\ÝÝÜ™YŠNÂˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠ™\]Y\Ý
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™ÈÚÛ\Ø[H™\]Y\Ýˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈÚÛ\Ø[\ˆX[ÝX›Z\ÜÚ[Ûˆ
+]][XØ]YÚÛ\Ø[\œÊBˆ\œÜÝ
+‹Ø\KÝÚÛ\Ø[KYX[È‹\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆˆËÈÚXÚÈYˆ\Ù\ˆ\ÈHÚÛ\Ø[\ˆ›Ùš[BˆÛÛœÝ›Ùš[HH]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[\”›Ùš[J\Ù\’Y
+NÂˆYˆ
+\›Ùš[JHÂˆ™]\›ˆ™\ËœÝ]\ÊÊKšœÛÛŠÈY\ÜØYÙNˆ”X\ÙHÛÛ\]H[Ý\ˆÚÛ\Ø[\ˆ›Ùš[Hš\œÝˆJNÂˆBˆˆÛÛœÝ™\Ý[H[œÙ\ÚÛ\Ø[QX[ØÚ[XKœØY™T\œÙJÂˆ‹‹œ™\K˜›ÙKˆÝX›Z]YžNˆ\Ù\’YˆÝ]\Îˆ[™\—Ü™]šY]È‹ËÈ[ÝX›Z]YX[ÈÝ\[™\ˆ™]šY]ÂˆJNÂˆˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈˆY\ÜØYÙNˆœ›ÛQ\œ›ÜŠ™\Ý[™\œ›ÜŠKÔÝš[™Ê
+HˆJNÂˆBˆˆÛÛœÝX[H]ØZ]ÝÜ˜YÙK˜Ü™X]UÚÛ\Ø[QX[
+™\Ý[™]JNÂˆÛÛœÛÛKš[™›Ê–ÙX[›Ý×HÚÛ\Ø[HX[ÝX›Z]YŠNÂˆˆËÈÙ[™[XZ[›ÝYšXØ][Ûˆ
+›Û‹X›ØÚÚ[™ÊBˆÙ[™X[ÝX›Z\ÜÚ[Û“›ÝYšXØ][ÛŠÂˆ›Ü\PY™\ÜÎˆX[œ›Ü\PY™\ÜËˆÚ]NˆX[˜Ú]KˆÝ]NˆX[œÝ]KˆÛÛ˜XÝšXÙNˆX[˜ÛÛ˜XÝšXÙKˆ\ÜÚYÛ›Y[™YNˆX[˜\ÜÚYÛ›Y[™YKˆ\ŽˆX[˜\ˆ[™Yš[™YˆÝX›Z]YžNˆ›Ùš[K˜ÛÛ\[žH\Ù\’YˆJK˜Ø]Ú
+\œˆOˆÛÛœÛÛK™\œ›ÜŠ	Ñ˜Z[YÈÙ[™X[ÝX›Z\ÜÚ[Ûˆ›ÝYšXØ][ÛŽ‰Ë\œŠJNÂˆˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠX[
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÝX›Z][™ÈÚÛ\Ø[HX[ˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈ\Ù\‹[ÝÛ™YÚÛ\Ø[HX[\]H
+ÝÛ™\ˆÛ›JBˆ\œ]Ú
+‹Ø\KÝÚÛ\Ø[KYX[ËÎšY‹\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\Ë˜ÛZ[\ÏËœÝXŽÂˆÛÛœÝX[YH[X™\Š™\Kœ\˜[\ËšY
+NÂˆYˆ
+S[X™\‹š\ÔØY™R[YÙ\ŠX[Y
+HX[YH
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[YX[QˆJNÂˆB‚ˆÛÛœÝ^\Ý[™ÈH]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[
+X[Y
+NÂˆYˆ
+Y^\Ý[™ÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ‘X[›Ý›Ý[™ˆJNÂˆB‚ˆËÈÚXÚÈÝÛ™\œÚ\ˆYˆ
+^\Ý[™ËœÝX›Z]YžHOOH\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊÊKšœÛÛŠÈY\ÜØYÙNˆ“›Ý]]Üš^™YÈY]\ÈX[ˆJNÂˆB‚ˆÛÛœÝ\]T™\Ý[HÚÛ\Ø[QX[ÝÛ™\•\]TØÚ[XKœØY™T\œÙJ™\K˜›ÙJNÂˆYˆ
+]\]T™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÂˆY\ÜØYÙNˆœ›ÛQ\œ›ÜŠ\]T™\Ý[™\œ›ÜŠKÔÝš[™Ê
+KˆJNÂˆB‚ˆÛÛœÝ\]YH]ØZ]ÝÜ˜YÙK\]UÚÛ\Ø[QX[
+X[Y\]T™\Ý[™]JNÂˆ™]\›ˆ™\ËšœÛÛŠ\]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\][™ÈÚÛ\Ø[HX[ˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈ\Ù\‹[ÝÛ™YØ\][›Ú™XÝ\]H
+ÝÛ™\ˆÛ›JBˆ\œ]Ú
+‹Ø\KØØ\][\›Ú™XÝËÎšY‹\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\Ë˜ÛZ[\ÏËœÝXŽÂˆÛÛœÝ›Ú™XÝYH[X™\Š™\Kœ\˜[\ËšY
+NÂˆYˆ
+S[X™\‹š\ÔØY™R[YÙ\Š›Ú™XÝY
+H›Ú™XÝYH
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[Y›Ú™XÝQˆJNÂˆB‚ˆÛÛœÝ^\Ý[™ÈH]ØZ]ÝÜ˜YÙK™Ù]Ø\][›Ú™XÝ
+›Ú™XÝY
+NÂˆYˆ
+Y^\Ý[™ÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”›Ú™XÝ›Ý›Ý[™ˆJNÂˆB‚ˆËÈÚXÚÈÝÛ™\œÚ\ˆYˆ
+^\Ý[™Ë˜Ü™X]YžHOOH\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊÊKšœÛÛŠÈY\ÜØYÙNˆ“›Ý]]Üš^™YÈY]\È›Ú™XÝˆJNÂˆB‚ˆÛÛœÝ\]T™\Ý[HØ\][›Ú™XÝÝÛ™\•\]TØÚ[XKœØY™T\œÙJ™\K˜›ÙJNÂˆYˆ
+]\]T™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÂˆY\ÜØYÙNˆœ›ÛQ\œ›ÜŠ\]T™\Ý[™\œ›ÜŠKÔÝš[™Ê
+KˆJNÂˆB‚ˆÛÛœÝ\]YH]ØZ]ÝÜ˜YÙK\]PØ\][›Ú™XÝ
+›Ú™XÝY\]T™\Ý[™]JNÂˆ™]\›ˆ™\ËšœÛÛŠ\]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\][™ÈØ\][›Ú™XÝˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈYZ[ˆ™X]\™YX[ÈTBˆ\™Ù]
+‹Ø\KØYZ[‹Ù™X]\™YYX[È‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ™X]\™YX[ÈH]ØZ]ÝÜ˜YÙK™Ù]™X]\™YX[Ê
+NÂˆ™]\›ˆ™\ËšœÛÛŠ™X]\™YX[ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È™X]\™YX[Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œÜÝ
+‹Ø\KØYZ[‹Ù™X]\™YYX[È‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝÈX[\KX[Yš[Üš]K\ÐXÝ]™HHH™\K˜›ÙNÂˆˆYˆ
+YX[\HYX[Y
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ™X[\H[™X[Y\™H™\]Z\™YˆJNÂˆB‚ˆÛÛœÝ™X]\™YX[H]ØZ]ÝÜ˜YÙK˜Ü™X]Q™X]\™YX[
+ÂˆX[\KˆX[Yˆš[Üš]Nˆš[Üš]HKˆ\ÐXÝ]™Nˆ\ÐXÝ]™HOOH˜[ÙKˆJNÂˆˆÛÛœÛÛK›ÙÊ‘™X]\™YX[Ü™X]Yˆ‹ÈX[\KX[YJNÂˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠ™X]\™YX[
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™X]\š[™ÈX[ˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\™[]J‹Ø\KØYZ[‹Ù™X]\™YYX[ËÎšY‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝYH\œÙR[
+™\Kœ\˜[\ËšY
+NÂˆ]ØZ]ÝÜ˜YÙK™[]Q™X]\™YX[
+Y
+NÂˆ™]\›ˆ™\ËœÝ]\ÊŒ
+KœÙ[™
+
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™[[Ýš[™È™X]\™YX[ˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈ[˜[]XÜÈ˜XÚÚ[™ÈTHH™\]Z\™\È]][XØ][Û‚ˆÛÛœÝ˜[YXÝ]š]U\\ÈHÈšY]È‹œØ]™H‹›Ù™™\ˆ‹›Y\ÜØYÙH‹œÚ\™H‹˜ÛXÚÈ—NÂˆÛÛœÝ˜[Y™\ÛÝ\˜ÙU\\ÈHÈ™X[‹œ›Ú™XÝ‹›\Ý[™È‹\Ù\ˆ‹œYÙH—NÂ‚ˆ\œÜÝ
+‹Ø\KØ[˜[]XÜËÝ˜XÚÈ‹\Ð]][XØ]Y˜]S[Z]
+LŒ
+K\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝÈXÝ]š]U\K™\ÛÝ\˜ÙU\K™\ÛÝ\˜ÙRYY]Y]HHH™\K˜›ÙNÂˆÛÛœÝ\Ù\’YH™\K\Ù\Ë˜ÛZ[\ÏËœÝXŽÂˆˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ]][XØ][Ûˆ™\]Z\™YˆJNÂˆB‚ˆYˆ
+XXÝ]š]U\H\™\ÛÝ\˜ÙU\H™\ÛÝ\˜ÙRYOOH[™Yš[™Y
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ˜XÝ]š]U\K™\ÛÝ\˜ÙU\K[™™\ÛÝ\˜ÙRY\™H™\]Z\™YˆJNÂˆB‚ˆYˆ
+]˜[YXÝ]š]U\\Ëš[˜ÛY\ÊXÝ]š]U\JJHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ[˜[YXÝ]š]U\Kˆ]\Ý™HÛ™HÙŽˆ	Ý˜[YXÝ]š]U\\Ëš›Ú[Š‹Š_XJNÂˆB‚ˆYˆ
+]˜[Y™\ÛÝ\˜ÙU\\Ëš[˜ÛY\Ê™\ÛÝ\˜ÙU\JJHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ[˜[Y™\ÛÝ\˜ÙU\Kˆ]\Ý™HÛ™HÙŽˆ	Ý˜[Y™\ÛÝ\˜ÙU\\Ëš›Ú[Š‹Š_XJNÂˆB‚ˆÛÛœÝ\œÙY™\ÛÝ\˜ÙRYH\œÙR[
+Ýš[™Ê™\ÛÝ\˜ÙRY
+KL
+NÂˆYˆ
+\Ó˜SŠ\œÙY™\ÛÝ\˜ÙRY
+H\œÙY™\ÛÝ\˜ÙRY
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆœ™\ÛÝ\˜ÙRY]\Ý™HH˜[YÜÚ]]™H[YÙ\ˆˆJNÂˆB‚ˆ]Ø[š]^™YY]Y]NˆÝš[™È[™Yš[™YÂˆYˆ
+Y]Y]JHÂˆÛÛœÝY]Y]TÝˆH”ÓÓ‹œÝš[™ÚYžJY]Y]JNÂˆYˆ
+Y]Y]TÝ‹›[™ÝˆL
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ›Y]Y]H^ÙYYÈX^[][HÚ^™HÙˆLÚ\˜XÝ\œÈˆJNÂˆBˆØ[š]^™YY]Y]HHY]Y]TÝŽÂˆB‚ˆÛÛœÝXÝ]š]HH]ØZ]ÝÜ˜YÙK˜Ü™X]U\Ù\XÝ]š]JÂˆ\Ù\’YˆXÝ]š]U\Kˆ™\ÛÝ\˜ÙU\Kˆ™\ÛÝ\˜ÙRYˆ\œÙY™\ÛÝ\˜ÙRYˆY]Y]NˆØ[š]^™YY]Y]KˆJNÂ‚ˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠXÝ]š]JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ˜XÚÚ[™ÈXÝ]š]Nˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\™Ù]
+‹Ø\KØYZ[‹Ø[˜[]XÜËÜÝ]È‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝÝ]ÈH]ØZ]ÝÜ˜YÙK™Ù]XÝ]š]TÝ]Ê
+NÂˆ™]\›ˆ™\ËšœÛÛŠÝ]ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È[˜[]XÜÈÝ]Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈØ]™YÙX\˜Ú\ÈTHH\Ù\‹YYš[™YÙX\˜Úš[\œÈ›ÜˆX\šÙ]›ÝÂˆ\™Ù]
+‹Ø\KÜØ]™Y\ÙX\˜Ú\È‹\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\Ë˜ÛZ[\ÏËœÝXŽÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ]][XØ][Ûˆ™\]Z\™YˆJNÂˆBˆÛÛœÝÙX\˜Ú\ÈH]ØZ]ÝÜ˜YÙK™Ù]Ø]™YÙX\˜Ú\Ê\Ù\’Y
+NÂˆ™]\›ˆ™\ËšœÛÛŠÙX\˜Ú\ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈØ]™YÙX\˜Ú\Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œÜÝ
+‹Ø\KÜØ]™Y\ÙX\˜Ú\È‹\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\Ë˜ÛZ[\ÏËœÝXŽÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ]][XØ][Ûˆ™\]Z\™YˆJNÂˆB‚ˆÛÛœÝÈ˜[YK[™Kš[\œË[XZ[[\Ë[\œ™\]Y[˜ÞHHH™\K˜›ÙNÂˆˆYˆ
+[˜[YH[[™HYš[\œÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ›˜[YK[™K[™š[\œÈ\™H™\]Z\™YˆJNÂˆB‚ˆYˆ
+VÈÚÛ\Ø[H‹˜Ø\][‹›\Ý[™ÜÈ—Kš[˜ÛY\Ê[™JJHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ›[™H]\Ý™HÚÛ\Ø[KØ\][Üˆ\Ý[™ÜÈˆJNÂˆB‚ˆÛÛœÝØ]™YÙX\˜ÚH]ØZ]ÝÜ˜YÙK˜Ü™X]TØ]™YÙX\˜Ú
+Âˆ\Ù\’Yˆ˜[YNˆ˜[YKœÛXÙJL
+Kˆ[™Kˆš[\œËˆ[XZ[[\Îˆ[XZ[[\È˜[ÙKˆ[\œ™\]Y[˜ÞNˆ[\œ™\]Y[˜ÞH™Z[H‹ˆ\ÐXÝ]™NˆYKˆJNÂ‚ˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠØ]™YÙX\˜Ú
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™ÈØ]™YÙX\˜Úˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œ]Ú
+‹Ø\KÜØ]™Y\ÙX\˜Ú\ËÎšY‹\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\Ë˜ÛZ[\ÏËœÝXŽÂˆÛÛœÝÙX\˜ÚYH\œÙR[
+™\Kœ\˜[\ËšY
+NÂˆˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ]][XØ][Ûˆ™\]Z\™YˆJNÂˆB‚ˆÛÛœÝ^\Ý[™ÈH]ØZ]ÝÜ˜YÙK™Ù]Ø]™YÙX\˜ÚžRY
+ÙX\˜ÚY
+NÂˆYˆ
+Y^\Ý[™È^\Ý[™Ë\Ù\’YOOH\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”Ø]™YÙX\˜Ú›Ý›Ý[™ˆJNÂˆB‚ˆÛÛœÝÈ˜[YKš[\œË[XZ[[\Ë[\œ™\]Y[˜ÞK\ÐXÝ]™K\Ý\ÙY]HH™\K˜›ÙNÂˆÛÛœÝ\]YH]ØZ]ÝÜ˜YÙK\]TØ]™YÙX\˜Ú
+ÙX\˜ÚYÂˆ˜[YNˆ˜[YOËœÛXÙJL
+Kˆš[\œËˆ[XZ[[\Ëˆ[\œ™\]Y[˜ÞKˆ\ÐXÝ]™Kˆ\Ý\ÙY]ˆ\Ý\ÙY]È™]È]J\Ý\ÙY]
+Hˆ[™Yš[™YˆJNÂ‚ˆ™]\›ˆ™\ËšœÛÛŠ\]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\][™ÈØ]™YÙX\˜Úˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\™[]J‹Ø\KÜØ]™Y\ÙX\˜Ú\ËÎšY‹\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\Ë˜ÛZ[\ÏËœÝXŽÂˆÛÛœÝÙX\˜ÚYH\œÙR[
+™\Kœ\˜[\ËšY
+NÂˆˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ]][XØ][Ûˆ™\]Z\™YˆJNÂˆB‚ˆÛÛœÝ^\Ý[™ÈH]ØZ]ÝÜ˜YÙK™Ù]Ø]™YÙX\˜ÚžRY
+ÙX\˜ÚY
+NÂˆYˆ
+Y^\Ý[™È^\Ý[™Ë\Ù\’YOOH\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”Ø]™YÙX\˜Ú›Ý›Ý[™ˆJNÂˆB‚ˆ]ØZ]ÝÜ˜YÙK™[]TØ]™YÙX\˜Ú
+ÙX\˜ÚY
+NÂˆ™]\›ˆ™\ËœÝ]\ÊŒ
+KœÙ[™
+
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ[][™ÈØ]™YÙX\˜Úˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈÛY\YÙHÛÛ[THHX›XÈ[™Ú[™]\›œÈÛ›HXÝ]™HÛÛ[ˆ\™Ù]
+‹Ø\KÚÛY\YÙKXÛÛ[‹\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝÛÛ[H]ØZ]ÝÜ˜YÙK™Ù]ÛY\YÙPÛÛ[
+
+NÂˆÛÛœÝXÝ]™PÛÛ[HÛÛ[™š[\Š][HOˆ][Kš\ÐXÝ]™HOOH˜[ÙJNÂˆÛÛœÝÛÛ[X\HXÝ]™PÛÛ[œ™YXÙJ
+XØË][JHOˆÂˆXØÖÚ][KœÙXÝ[Û’Ù^WHH][K˜ÛÛ[Âˆ™]\›ˆXØÎÂˆKßH\È™XÛÜ™Ýš[™ËÝš[™ÏŠNÂˆ™]\›ˆ™\ËšœÛÛŠÛÛ[X\
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÛY\YÙHÛÛ[ˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\™Ù]
+‹Ø\KØYZ[‹ÚÛY\YÙKXÛÛ[‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝÛÛ[H]ØZ]ÝÜ˜YÙK™Ù]ÛY\YÙPÛÛ[
+
+NÂˆ™]\›ˆ™\ËšœÛÛŠÛÛ[
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÛY\YÙHÛÛ[ˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆÛÛœÝ˜[YÙXÝ[Û’Ù^\ÈHÈš\›×Ý]H‹š\›×ÜÝX]H‹š\›×ØÝH‹™™X]\™YÝ]H‹™™X]\™YÜÝX]H—NÂˆÛÛœÝ˜[YÛÛ[\\ÈHÈ^‹š[‹šœÛÛˆ—NÂ‚ˆ\œÜÝ
+‹Ø\KØYZ[‹ÚÛY\YÙKXÛÛ[‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝÈÙXÝ[Û’Ù^KÛÛ[ÛÛ[\HHH™\K˜›ÙNÂˆÛÛœÝ\Ù\’YH™\K\Ù\Ë˜ÛZ[\ÏËœÝXŽÂ‚ˆYˆ
+\ÙXÝ[Û’Ù^HXÛÛ[
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆœÙXÝ[Û’Ù^H[™ÛÛ[\™H™\]Z\™YˆJNÂˆB‚ˆYˆ
+]˜[YÙXÝ[Û’Ù^\Ëš[˜ÛY\ÊÙXÝ[Û’Ù^JJHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ[˜[YÙXÝ[Û’Ù^Kˆ]\Ý™HÛ™HÙŽˆ	Ý˜[YÙXÝ[Û’Ù^\Ëš›Ú[Š‹Š_XJNÂˆB‚ˆYˆ
+ÛÛ[›[™ÝˆŒ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆÛÛ[^ÙYYÈX^[][H[™ÝÙˆŒÚ\˜XÝ\œÈˆJNÂˆB‚ˆÛÛœÝØY™PÛÛ[\HHÛÛ[\H	‰ˆ˜[YÛÛ[\\Ëš[˜ÛY\ÊÛÛ[\JHÈÛÛ[\Hˆ^ŽÂ‚ˆÛÛœÝØ]™YÛÛ[H]ØZ]ÝÜ˜YÙK\Ù\ÛY\YÙPÛÛ[
+ÂˆÙXÝ[Û’Ù^KˆÛÛ[ˆÛÛ[\NˆØY™PÛÛ[\Kˆ\]YžNˆ\Ù\’YˆJNÂ‚ˆÛÛœÛÛK›ÙÊ’ÛY\YÙHÛÛ[\]Yˆ‹ÙXÝ[Û’Ù^JNÂˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠØ]™YÛÛ[
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆØ]š[™ÈÛY\YÙHÛÛ[ˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆËÈT\ÈHYZ[ˆÛÛ[X[˜YÙ[Y[ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‚ˆËÈX›XÎˆÙ][T\Âˆ\™Ù]
+‹Ø\KÙ˜\\È‹\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ[˜\\ÈH]ØZ]ÝÜ˜YÙK™Ù]˜\\Ê
+NÂˆ™]\›ˆ™\ËšœÛÛŠ[˜\\ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈT\Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈYZ[ŽˆÜ™X]HTBˆ\œÜÝ
+‹Ø\KØYZ[‹Ù˜\\È‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ™\Ý[H[œÙ\˜\TØÚ[XKœØY™T\œÙJÈ‹‹œ™\K˜›ÙK\ÐXÝ]™NˆYHJNÂˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆœ›ÛQ\œ›ÜŠ™\Ý[™\œ›ÜŠKÔÝš[™Ê
+HJNÂˆBˆÛÛœÝ˜\HH]ØZ]ÝÜ˜YÙK˜Ü™X]Q˜\J™\Ý[™]JNÂˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠ˜\JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™ÈTNˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈYZ[Žˆ\]HTBˆ\œ]Ú
+‹Ø\KØYZ[‹Ù˜\\ËÎšY‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝYH\œÙR[
+™\Kœ\˜[\ËšY
+NÂˆÛÛœÝ\X[ØÚ[XHH[œÙ\˜\TØÚ[XKœ\X[
+
+NÂˆÛÛœÝ™\Ý[H\X[ØÚ[XKœØY™T\œÙJ™\K˜›ÙJNÂˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆœ›ÛQ\œ›ÜŠ™\Ý[™\œ›ÜŠKÔÝš[™Ê
+HJNÂˆBˆÛÛœÝ\]YH]ØZ]ÝÜ˜YÙK\]Q˜\JY™\Ý[™]JNÂˆYˆ
+]\]Y
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ‘TH›Ý›Ý[™ˆJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠ\]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\][™ÈTNˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈYZ[Žˆ[]HTBˆ\™[]J‹Ø\KØYZ[‹Ù˜\\ËÎšY‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝYH\œÙR[
+™\Kœ\˜[\ËšY
+NÂˆ]ØZ]ÝÜ˜YÙK™[]Q˜\JY
+NÂˆ™]\›ˆ™\ËœÝ]\ÊŒ
+KœÙ[™
+
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ[][™ÈTNˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆËÈTÕSSÓ’PSÈHYZ[ˆÛÛ[X[˜YÙ[Y[ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‚ˆËÈX›XÎˆÙ][\Ý[[ÛšX[Âˆ\™Ù]
+‹Ø\KÝ\Ý[[ÛšX[È‹\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ[\Ý[[ÛšX[ÈH]ØZ]ÝÜ˜YÙK™Ù]\Ý[[ÛšX[Ê
+NÂˆ™]\›ˆ™\ËšœÛÛŠ[\Ý[[ÛšX[ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È\Ý[[ÛšX[Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈYZ[ŽˆÜ™X]H\Ý[[ÛšX[ˆ\œÜÝ
+‹Ø\KØYZ[‹Ý\Ý[[ÛšX[È‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ™\Ý[H[œÙ\\Ý[[ÛšX[ØÚ[XKœØY™T\œÙJÈ‹‹œ™\K˜›ÙK\ÐXÝ]™NˆYHJNÂˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆœ›ÛQ\œ›ÜŠ™\Ý[™\œ›ÜŠKÔÝš[™Ê
+HJNÂˆBˆÛÛœÝ\Ý[[ÛšX[H]ØZ]ÝÜ˜YÙK˜Ü™X]U\Ý[[ÛšX[
+™\Ý[™]JNÂˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠ\Ý[[ÛšX[
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™È\Ý[[ÛšX[ˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈYZ[Žˆ\]H\Ý[[ÛšX[ˆ\œ]Ú
+‹Ø\KØYZ[‹Ý\Ý[[ÛšX[ËÎšY‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝYH\œÙR[
+™\Kœ\˜[\ËšY
+NÂˆÛÛœÝ\X[ØÚ[XHH[œÙ\\Ý[[ÛšX[ØÚ[XKœ\X[
+
+NÂˆÛÛœÝ™\Ý[H\X[ØÚ[XKœØY™T\œÙJ™\K˜›ÙJNÂˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆœ›ÛQ\œ›ÜŠ™\Ý[™\œ›ÜŠKÔÝš[™Ê
+HJNÂˆBˆÛÛœÝ\]YH]ØZ]ÝÜ˜YÙK\]U\Ý[[ÛšX[
+Y™\Ý[™]JNÂˆYˆ
+]\]Y
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ•\Ý[[ÛšX[›Ý›Ý[™ˆJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠ\]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\][™È\Ý[[ÛšX[ˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈYZ[Žˆ[]H\Ý[[ÛšX[ˆ\™[]J‹Ø\KØYZ[‹Ý\Ý[[ÛšX[ËÎšY‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝYH\œÙR[
+™\Kœ\˜[\ËšY
+NÂˆ]ØZ]ÝÜ˜YÙK™[]U\Ý[[ÛšX[
+Y
+NÂˆ™]\›ˆ™\ËœÝ]\ÊŒ
+KœÙ[™
+
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ[][™È\Ý[[ÛšX[ˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆËÈPSHQSP‘T”ÈHYZ[ˆÛÛ[X[˜YÙ[Y[ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‚ˆËÈX›XÎˆÙ][X[HY[X™\œÂˆ\™Ù]
+‹Ø\KÝX[H‹\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ[Y[X™\œÈH]ØZ]ÝÜ˜YÙK™Ù]X[SY[X™\œÊ
+NÂˆ™]\›ˆ™\ËšœÛÛŠ[Y[X™\œÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈX[HY[X™\œÎˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈYZ[ŽˆÜ™X]HX[HY[X™\‚ˆ\œÜÝ
+‹Ø\KØYZ[‹ÝX[H‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ™\Ý[H[œÙ\X[SY[X™\”ØÚ[XKœØY™T\œÙJÈ‹‹œ™\K˜›ÙK\ÐXÝ]™NˆYHJNÂˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆœ›ÛQ\œ›ÜŠ™\Ý[™\œ›ÜŠKÔÝš[™Ê
+HJNÂˆBˆÛÛœÝY[X™\ˆH]ØZ]ÝÜ˜YÙK˜Ü™X]UX[SY[X™\Š™\Ý[™]JNÂˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠY[X™\ŠNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™ÈX[HY[X™\Žˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈYZ[Žˆ\]HX[HY[X™\‚ˆ\œ]Ú
+‹Ø\KØYZ[‹ÝX[KÎšY‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝYH\œÙR[
+™\Kœ\˜[\ËšY
+NÂˆÛÛœÝ\X[ØÚ[XHH[œÙ\X[SY[X™\”ØÚ[XKœ\X[
+
+NÂˆÛÛœÝ™\Ý[H\X[ØÚ[XKœØY™T\œÙJ™\K˜›ÙJNÂˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆœ›ÛQ\œ›ÜŠ™\Ý[™\œ›ÜŠKÔÝš[™Ê
+HJNÂˆBˆÛÛœÝ\]YH]ØZ]ÝÜ˜YÙK\]UX[SY[X™\ŠY™\Ý[™]JNÂˆYˆ
+]\]Y
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ•X[HY[X™\ˆ›Ý›Ý[™ˆJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠ\]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\][™ÈX[HY[X™\Žˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈYZ[Žˆ[]HX[HY[X™\‚ˆ\™[]J‹Ø\KØYZ[‹ÝX[KÎšY‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝYH\œÙR[
+™\Kœ\˜[\ËšY
+NÂˆ]ØZ]ÝÜ˜YÙK™[]UX[SY[X™\ŠY
+NÂˆ™]\›ˆ™\ËœÝ]\ÊŒ
+KœÙ[™
+
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ[][™ÈX[HY[X™\Žˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆËÈQQPH’STÈHYZ[ˆÛÛ[X[˜YÙ[Y[ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‚ˆËÈYZ[ŽˆÙ][YYXHš[\Âˆ\™Ù]
+‹Ø\KØYZ[‹ÛYYXH‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ[YYXHH]ØZ]ÝÜ˜YÙK™Ù]YYXQš[\Ê
+NÂˆ™]\›ˆ™\ËšœÛÛŠ[YYXJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈYYXHš[\Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈYZ[ŽˆÜ™X]HYYXHš[H™XÛÜ™
+Y\ˆ\ØYÛÛ\]\ÊBˆ\œÜÝ
+‹Ø\KØYZ[‹ÛYYXH‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ™\Ý[H[œÙ\YYXQš[TØÚ[XKœØY™T\œÙJ™\K˜›ÙJNÂˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆœ›ÛQ\œ›ÜŠ™\Ý[™\œ›ÜŠKÔÝš[™Ê
+HJNÂˆBˆÛÛœÝYYXHH]ØZ]ÝÜ˜YÙK˜Ü™X]SYYXQš[J™\Ý[™]JNÂˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠYYXJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™ÈYYXHš[H™XÛÜ™ˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈYZ[Žˆ[]HYYXHš[Bˆ\™[]J‹Ø\KØYZ[‹ÛYYXKÎšY‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝYH\œÙR[
+™\Kœ\˜[\ËšY
+NÂˆ]ØZ]ÝÜ˜YÙK™[]SYYXQš[JY
+NÂˆ™]\›ˆ™\ËœÝ]\ÊŒ
+KœÙ[™
+
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ[][™ÈYYXHš[Nˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆËÈÒUHÓÓ•S•H[›[™HY][ÙBˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‚ˆËÈX›XÎˆÙ][Ú]HÛÛ[
+›Üˆ[š]X[ØY
+Bˆ\™Ù]
+‹Ø\KÜÚ]KXÛÛ[‹\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ[ÛÛ[H]ØZ]ÝÜ˜YÙK™Ù][Ú]PÛÛ[
+
+NÂˆ™]\›ˆ™\ËšœÛÛŠ[ÛÛ[
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÚ]HÛÛ[ˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈX›XÎˆÙ]ÜXÚYšXÈÚ]HÛÛ[žHÙ^Bˆ\™Ù]
+‹Ø\KÜÚ]KXÛÛ[ÎšÙ^H‹\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝÛÛ[H]ØZ]ÝÜ˜YÙK™Ù]Ú]PÛÛ[
+™\Kœ\˜[\ËšÙ^JNÂˆYˆ
+XÛÛ[
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆÛÛ[›Ý›Ý[™ˆJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠÛÛ[
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÚ]HÛÛ[ˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈYZ[Žˆ\Ù\Ú]HÛÛ[
+Ü™X]HÜˆ\]JBˆ\œ]
+‹Ø\KØYZ[‹ÜÚ]KXÛÛ[‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ™\Ý[H[œÙ\Ú]PÛÛ[ØÚ[XKœØY™T\œÙJÂˆ‹‹œ™\K˜›ÙKˆ\]YžNˆ™\K\Ù\Ë˜ÛZ[\ÏË™[XZ[™\K\Ù\Ë™[XZ[™\K\Ù\Ë˜ÛZ[\ÏËœÝX‹ˆJNÂˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆœ›ÛQ\œ›ÜŠ™\Ý[™\œ›ÜŠKÔÝš[™Ê
+HJNÂˆBˆÛÛœÝÛÛ[H]ØZ]ÝÜ˜YÙK\Ù\Ú]PÛÛ[
+™\Ý[™]JNÂˆ™]\›ˆ™\ËšœÛÛŠÛÛ[
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\Ù\[™ÈÚ]HÛÛ[ˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈYZ[Žˆ[]HÚ]HÛÛ[ˆ\™[]J‹Ø\KØYZ[‹ÜÚ]KXÛÛ[ÎšÙ^H‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆ]ØZ]ÝÜ˜YÙK™[]TÚ]PÛÛ[
+™\Kœ\˜[\ËšÙ^JNÂˆ™]\›ˆ™\ËœÝ]\ÊŒ
+KœÙ[™
+
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ[][™ÈÚ]HÛÛ[ˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈ›ÝXÝYHÚÛ\Ø[H›Ý]\È
+ÝY™ˆÛ›JBˆ\™Ù]
+‹Ø\KÚKÝÚÛ\Ø[KYX[È‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝX[ÈH]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[Ê
+NÂˆ™]\›ˆ™\ËšœÛÛŠX[ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È[ÚÛ\Ø[HX[Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œÜÝ
+‹Ø\KÚKÝÚÛ\Ø[KYX[È‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ™\Ý[H[œÙ\ÚÛ\Ø[QX[ØÚ[XKœØY™T\œÙJ™\K˜›ÙJNÂˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈˆY\ÜØYÙNˆœ›ÛQ\œ›ÜŠ™\Ý[™\œ›ÜŠKÔÝš[™Ê
+HˆJNÂˆBˆˆÛÛœÝX[H]ØZ]ÝÜ˜YÙK˜Ü™X]UÚÛ\Ø[QX[
+™\Ý[™]JNÂˆÛÛœÛÛKš[™›Ê–ÙX[›Ý×HÚÛ\Ø[HX[Ü™X]YŠNÂˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠX[
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™ÈÚÛ\Ø[HX[ˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œ]Ú
+‹Ø\KÚKÝÚÛ\Ø[KYX[ËÎšYÜÝ]\È‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝYH\œÙR[
+™\Kœ\˜[\ËšY
+NÂˆÛÛœÝÈÝ]\Ë›Ý\ÈHH™\K˜›ÙNÂˆÛÛœÝ\]YH]ØZ]ÝÜ˜YÙK\]UÚÛ\Ø[QX[Ý]\ÊYÝ]\Ë›Ý\ÊNÂˆYˆ
+]\]Y
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ‘X[›Ý›Ý[™ˆJNÂˆBˆˆËÈÙ[™X[\]H›ÝYšXØ][Ûˆ[XZ[ˆÙ[™X[\]S›ÝYšXØ][ÛŠÂˆ™XÚ\Y[[XZ[ˆ›ØÙ\ÜË™[‹”ÕQ‘—Ó“ÕQ’PÐUSÓ—ÑSPRS	ÙX[ÐYØ\Ý\Ù™X[\ØØ\\Ë˜ÛÛIËˆ™XÚ\Y[˜[YNˆ	ÑX[ÝXœØÜšX™\‰ËˆX[]Nˆ\]Yœ›Ü\PY™\ÜÈÚÛ\Ø[HX[ÉÚYXˆ\]U\Nˆ	ÜÝ]\×ØÚ[™ÙIËˆÛ˜[YNˆ	Ü™]š[Ý\ÈÝ]\ÉËˆ™]Õ˜[YNˆÝ]\ËˆY\ÜØYÙNˆ›Ý\È[™Yš[™YˆJK˜Ø]Ú
+\œˆOˆÛÛœÛÛK™\œ›ÜŠ	Ñ˜Z[YÈÙ[™X[\]H[XZ[‰Ë\œŠJNÂˆˆËÈœ›ØYØ\Ý™X[][YH\]HšXHÙX”ÛØÚÙ]
+ÈØ]Ú\œÈYˆ[\[Y[Y
+BˆÛÛœÝœ›ØYØ\ÝÕ\Ù\ˆH
+\\È[žJK˜œ›ØYØ\ÝÕ\Ù\ŽÂˆYˆ
+œ›ØYØ\ÝÕ\Ù\ˆ	‰ˆ\]YœÝX›Z]YžJHÂˆœ›ØYØ\ÝÕ\Ù\Š\]YœÝX›Z]YžKÂˆ\Nˆ	ÙX[Ý\]IËˆ^[ØYˆÈX[YˆYÝ]\Ë›Ü\PY™\ÜÎˆ\]Yœ›Ü\PY™\ÜÈBˆJNÂˆBˆˆ™]\›ˆ™\ËšœÛÛŠ\]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\][™ÈÚÛ\Ø[HX[Ý]\Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œ]Ú
+‹Ø\KÚKÝÚÛ\Ø[KYX[ËÎšY‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝYH\œÙR[
+™\Kœ\˜[\ËšY
+NÂˆÛÛœÝ\]YH]ØZ]ÝÜ˜YÙK\]UÚÛ\Ø[QX[
+Y™\K˜›ÙJNÂˆYˆ
+]\]Y
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ‘X[›Ý›Ý[™ˆJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠ\]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\][™ÈÚÛ\Ø[HX[ˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\™Ù]
+‹Ø\KÚKÝÚÛ\Ø[K\™\]Y\ÝÈ‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ™\]Y\ÝÈH]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[T™\]Y\ÝÊ
+NÂˆ™]\›ˆ™\ËšœÛÛŠ™\]Y\ÝÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÚÛ\Ø[H™\]Y\ÝÎˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\™Ù]
+‹Ø\KÚKÝÚÛ\Ø[KYX[ËÎšYÜ™\]Y\ÝÈ‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝX[YH\œÙR[
+™\Kœ\˜[\ËšY
+NÂˆÛÛœÝ™\]Y\ÝÈH]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[T™\]Y\ÝÐžQX[
+X[Y
+NÂˆ™]\›ˆ™\ËšœÛÛŠ™\]Y\ÝÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈX[™\]Y\ÝÎˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œ]Ú
+‹Ø\KÚKÝÚÛ\Ø[K\™\]Y\ÝËÎšYÜÝ]\È‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝYH\œÙR[
+™\Kœ\˜[\ËšY
+NÂˆÛÛœÝÈÝ]\ÈHH™\K˜›ÙNÂˆÛÛœÝ\]YH]ØZ]ÝÜ˜YÙK\]UÚÛ\Ø[T™\]Y\ÝÝ]\ÊYÝ]\ÊNÂˆYˆ
+]\]Y
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”™\]Y\Ý›Ý›Ý[™ˆJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠ\]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\][™ÈÚÛ\Ø[H™\]Y\ÝÝ]\Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈOOOOOOOOOOOH‘URSTÕS‘ÔÈ“ÕUTÈOOOOOOOOOOOB‚ˆËÈX›XÈX\šÙ][™È\Ý[™ÜËˆ\ÙH\™H\Ý[˜Ýœ›ÛHHš]˜]HYØXÞBˆËÈØ\KÛ\Ý[™ÜÈX\šÙ]›ÝÈ[™[ÜžH™[ÝË‚ˆ\™Ù]
+‹Ø\KÜ™]Z[[\Ý[™ÜÈ‹\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ý[™ÜÈH]ØZ]ÝÜ˜YÙK™Ù]XÝ]™T™]Z[\Ý[™ÜÊ
+NÂˆ™]\›ˆ™\ËšœÛÛŠ\Ý[™ÜË›X\
+ÔX›XÔ™]Z[\Ý[™ÊJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È™]Z[\Ý[™ÜÎˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\™Ù]
+‹Ø\KÜ™]Z[[\Ý[™ÜËÎœÛYÈ‹\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ý[™ÈH]ØZ]ÝÜ˜YÙK™Ù]™]Z[\Ý[™ÐžTÛYÊ™\Kœ\˜[\ËœÛYÊNÂˆYˆ
+[\Ý[™È
+\Ý[™ËœÝ]\ÈOOH˜XÝ]™Hˆ	‰ˆ\Ý[™ËœÝ]\ÈOOH˜ÛÛZ[™×ÜÛÛÛˆŠJHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“\Ý[™È›Ý›Ý[™ˆJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠÔX›XÔ™]Z[\Ý[™Ê\Ý[™ÊJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È™]Z[\Ý[™Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈ^Y\ˆ[œ]Z\šY\È
+X›XÊBˆ\œÜÝ
+‹Ø\KØ^Y\‹Z[œ]Z\šY\È‹X›XÒ[ZÙT˜]S[Z]\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ™\Ý[H[œÙ\^Y\’[œ]Z\žTØÚ[XKœØY™T\œÙJ™\K˜›ÙJNÂˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆœ›ÛQ\œ›ÜŠ™\Ý[™\œ›ÜŠKÔÝš[™Ê
+HJNÂˆBˆˆÛÛœÝ[œ]Z\žHH]ØZ]ÝÜ˜YÙK˜Ü™X]P^Y\’[œ]Z\žJ™\Ý[™]JNÂˆÛÛœÛÛKš[™›Ê–Ú[ZÙWH^Y\ˆ[œ]Z\žHÝÜ™YŠNÂˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠ[œ]Z\žJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™È^Y\ˆ[œ]Z\žNˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈTÕS‘ÈX[\H[™Ú[Âˆ\™Ù]
+‹Ø\KÛ\Ý[™ÜÈ‹\ÒXœšY]][XØ]Y™\]Z\™SX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜË\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝXÝ]™S\Ý[™ÜÈH]ØZ]ÝÜ˜YÙK™Ù]XÝ]™S\Ý[™ÜÊ
+NÂˆ™]\›ˆ™\ËšœÛÛŠˆXÝ]™S\Ý[™ÜË™š[\Š\ÔX›XÓ\Ý[™ÊK›X\
+ÔX›XÓ\Ý[™ÊKˆ
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È\Ý[™ÜÎˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\™Ù]
+‹Ø\KÛ\Ý[™ÜËÎšY‹\ÒXœšY]][XØ]Y™\]Z\™SX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜË\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ý[™ÈH]ØZ]ÝÜ˜YÙK™Ù]\Ý[™Ê\œÙR[
+™\Kœ\˜[\ËšY
+JNÂˆYˆ
+[\Ý[™ÈZ\ÔX›XÓ\Ý[™Ê\Ý[™ÊJHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“\Ý[™È›Ý›Ý[™ˆJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠÔX›XÓ\Ý[™Ê\Ý[™ÊJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È\Ý[™Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈÜ™X]H™]È\Ý[™Âˆ\œÜÝ
+‹Ø\KÛ\Ý[™ÜÈ‹\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\Ë˜ÛZ[\ÏËœÝXŽÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•\Ù\ˆ›Ý]][XØ]YˆJNÂˆB‚ˆÛÛœÝ\Ý[™Ñ]HHÂˆ‹‹œ™\K˜›ÙKˆÝX›Z]YžNˆ\Ù\’YˆÝ]\Îˆœ[™[™È‹ˆNÂ‚ˆÛÛœÝ™\Ý[H[œÙ\\Ý[™ÔØÚ[XKœØY™T\œÙJ\Ý[™Ñ]JNÂˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆœ›ÛQ\œ›ÜŠ™\Ý[™\œ›ÜŠKÔÝš[™Ê
+HJNÂˆB‚ˆÛÛœÝ\Ý[™ÈH]ØZ]ÝÜ˜YÙK˜Ü™X]S\Ý[™Ê™\Ý[™]JNÂˆÛÛœÛÛKš[™›Ê–Û\Ý[™Ü×H\Ý[™ÈÜ™X]YŠNÂˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠ\Ý[™ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™È\Ý[™Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆÛÛœÝ\Ý[™ÓÝÛ™\•\]TØÚ[XHH[œÙ\\Ý[™ÔØÚ[XBˆœXÚÊÂˆ\ÝšXÙNˆYKˆ™Y›ÛÛ\ÎˆYKˆ˜]›ÛÛ\ÎˆYKˆÜYˆYKˆ\ØÜš\[ÛŽˆYKˆJBˆœ\X[
+
+BˆœÝšXÝ
+
+NÂ‚ˆËÈ\]H\Ý[™È
+ÝÛ™\ˆÛ›JBˆ\œ]Ú
+‹Ø\KÛ\Ý[™ÜËÎšY‹\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\Ë˜ÛZ[\ÏËœÝXŽÂˆÛÛœÝ\Ý[™ÒYH[X™\Š™\Kœ\˜[\ËšY
+NÂˆYˆ
+S[X™\‹š\ÔØY™R[YÙ\Š\Ý[™ÒY
+H\Ý[™ÒYH
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[Y\Ý[™ÈQˆJNÂˆB‚ˆÛÛœÝ^\Ý[™ÈH]ØZ]ÝÜ˜YÙK™Ù]\Ý[™Ê\Ý[™ÒY
+NÂˆYˆ
+Y^\Ý[™ÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“\Ý[™È›Ý›Ý[™ˆJNÂˆB‚ˆËÈÚXÚÈÝÛ™\œÚ\ˆYˆ
+^\Ý[™ËœÝX›Z]YžHOOH\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊÊKšœÛÛŠÈY\ÜØYÙNˆ“›Ý]]Üš^™YÈY]\È\Ý[™ÈˆJNÂˆB‚ˆÛÛœÝ\]T™\Ý[H\Ý[™ÓÝÛ™\•\]TØÚ[XKœØY™T\œÙJ™\K˜›ÙJNÂˆYˆ
+]\]T™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÂˆY\ÜØYÙNˆœ›ÛQ\œ›ÜŠ\]T™\Ý[™\œ›ÜŠKÔÝš[™Ê
+KˆJNÂˆB‚ˆÛÛœÝ\]YH]ØZ]ÝÜ˜YÙK\]S\Ý[™Ê\Ý[™ÒY\]T™\Ý[™]JNÂˆ™]\›ˆ™\ËšœÛÛŠ\]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\][™È\Ý[™Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œÜÝ
+‹Ø\KÛ\Ý[™ËZ[œ]Z\šY\È‹ˆ\ÒXœšY]][XØ]Yˆ\Ý[™Ò[œ]Z\žR[™\œË˜[Y]R[œ]Z\žKˆØYX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^ˆ\Ý[™Ò[œ]Z\žR[™\œËœÜÝ[œ]Z\žKˆ
+NÂ‚ˆ\™Ù]
+‹Ø\KÛ\Ý[™ÜËÎšYÚ[œ]Z\šY\È‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝ\Ý[™ÒYH[X™\Š™\Kœ\˜[\ËšY
+NÂˆÛÛœÝ[œ]Z\šY\ÈH[X™\‹š\ÔØY™R[YÙ\Š\Ý[™ÒY
+H	‰ˆ\Ý[™ÒYˆˆÈ]ØZ]ÝÜ˜YÙK™Ù]\Ý[™Ò[œ]Z\šY\Ê\Ý[™ÒY
+Bˆˆ×NÂˆÛÛœÝXØÙ\ÜÈH]ØZ]™\ÛÛ™SYØXÞQX[XØÙ\ÜÊˆ™\Kˆ\Ù\’Yˆ›\Ý[™È‹ˆ\Ý[™ÒYˆÈ[œ]Z\šY\ÈKˆ
+NÂˆYˆ
+XXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“\Ý[™È›Ý›Ý[™ˆJNÂˆB‚ˆYˆ
+XØÙ\ÜËš\ÓÝÛ™\ˆXØÙ\ÜËš\ÔÝY™ŠHÂˆ™]\›ˆ™\ËšœÛÛŠ[œ]Z\šY\ÊNÂˆB‚ˆÛÛœÝš\ÚX›R[œ]Z\šY\ÈHš[\“YØXÞS\Ý[™Ò[œ]Z\šY\Ñ›Ü•\Ù\Šˆ\Ù\’Yˆ[œ]Z\šY\Ëˆ
+NÂˆYˆ
+XXØÙ\ÜËš\Ô\XÚ\[š\ÚX›R[œ]Z\šY\Ë›[™ÝOOH
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“\Ý[™È›Ý›Ý[™ˆJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠš\ÚX›R[œ]Z\šY\ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È\Ý[™È[œ]Z\šY\Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈ›ÝXÝYH›Ý]\È›Üˆ™]Z[\Ý[™ÜÈ
+ÝY™ˆÛ›JBˆ\™Ù]
+‹Ø\KÚKÜ™]Z[[\Ý[™ÜÈ‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ý[™ÜÈH]ØZ]ÝÜ˜YÙK™Ù]™]Z[\Ý[™ÜÊ
+NÂˆ™]\›ˆ™\ËšœÛÛŠ\Ý[™ÜÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È[™]Z[\Ý[™ÜÎˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œÜÝ
+‹Ø\KÚKÜ™]Z[[\Ý[™ÜÈ‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ™\Ý[H[œÙ\™]Z[\Ý[™ÔØÚ[XKœØY™T\œÙJ™\K˜›ÙJNÂˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆœ›ÛQ\œ›ÜŠ™\Ý[™\œ›ÜŠKÔÝš[™Ê
+HJNÂˆBˆˆÛÛœÝ\Ý[™ÈH]ØZ]ÝÜ˜YÙK˜Ü™X]T™]Z[\Ý[™Ê™\Ý[™]JNÂˆÛÛœÛÛKš[™›Ê–Ü™]Z[[\Ý[™Ü×H\Ý[™ÈÜ™X]YŠNÂˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠ\Ý[™ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™È™]Z[\Ý[™Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œ]Ú
+‹Ø\KÚKÜ™]Z[[\Ý[™ÜËÎšY‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝYH\œÙR[
+™\Kœ\˜[\ËšY
+NÂˆÛÛœÝ\]YH]ØZ]ÝÜ˜YÙK\]T™]Z[\Ý[™ÊY™\K˜›ÙJNÂˆYˆ
+]\]Y
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“\Ý[™È›Ý›Ý[™ˆJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠ\]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\][™È™]Z[\Ý[™Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œ]Ú
+‹Ø\KÚKÜ™]Z[[\Ý[™ÜËÎšYÜÝ]\È‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝYH\œÙR[
+™\Kœ\˜[\ËšY
+NÂˆÛÛœÝÈÝ]\ÈHH™\K˜›ÙNÂˆÛÛœÝ\]YH]ØZ]ÝÜ˜YÙK\]T™]Z[\Ý[™ÔÝ]\ÊYÝ]\ÊNÂˆYˆ
+]\]Y
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“\Ý[™È›Ý›Ý[™ˆJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠ\]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\][™È™]Z[\Ý[™ÈÝ]\Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈ›ÝXÝYH›Ý]\È›Üˆ^Y\ˆ[œ]Z\šY\È
+ÝY™ˆÛ›JBˆ\™Ù]
+‹Ø\KÚKØ^Y\‹Z[œ]Z\šY\È‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ[œ]Z\šY\ÈH]ØZ]ÝÜ˜YÙK™Ù]^Y\’[œ]Z\šY\Ê
+NÂˆ™]\›ˆ™\ËšœÛÛŠ[œ]Z\šY\ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È^Y\ˆ[œ]Z\šY\Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œ]Ú
+‹Ø\KÚKØ^Y\‹Z[œ]Z\šY\ËÎšYÜÝ]\È‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝYH\œÙR[
+™\Kœ\˜[\ËšY
+NÂˆÛÛœÝÈÝ]\ÈHH™\K˜›ÙNÂˆÛÛœÝ\]YH]ØZ]ÝÜ˜YÙK\]P^Y\’[œ]Z\žTÝ]\ÊYÝ]\ÊNÂˆYˆ
+]\]Y
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[œ]Z\žH›Ý›Ý[™ˆJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠ\]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\][™È^Y\ˆ[œ]Z\žHÝ]\Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈOOOOOOOOOOOHQRSˆ“ÕUTÈ“ÔˆTÑT‹Ô“ÓHPSQÑSQS•OOOOOOOOOOOB‚ˆËÈYZ[‹[Û›H›Ý]\È›ÜˆX[˜YÚ[™ÈÝY™ˆ[™Ü[\Ù\œÂˆ\™Ù]
+‹Ø\KÚKÝ\Ù\œËÜ›Û\È‹\Ð]][XØ]Y™\]Z\™T›ÛJ˜YZ[ˆŠK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ[\Ù\œÈH]ØZ]ÝÜ˜YÙK™Ù][ÝY™”›Ùš[\Ê
+NÂˆÛÛœÝ[™\ÝÜœÈH]ØZ]ÝÜ˜YÙK™Ù][[™\ÝÜ”›Ùš[\Ê
+NÂˆÛÛœÝÚÛ\Ø[\œÈH]ØZ]ÝÜ˜YÙK™Ù][ÚÛ\Ø[\”›Ùš[\Ê
+NÂˆ™]\›ˆ™\ËšœÛÛŠÈÝY™Žˆ[\Ù\œË[™\ÝÜœËÚÛ\Ø[\œÈJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È\Ù\ˆ›Ùš[\Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\™Ù]
+‹Ø\KÚKÚ[™\ÝÜ‹\›Ùš[\È‹\Ð]][XØ]Y™\]Z\™T›ÛJ˜YZ[ˆŠK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ›Ùš[\ÈH]ØZ]ÝÜ˜YÙK™Ù][[™\ÝÜ”›Ùš[\Ê
+NÂˆ™]\›ˆ™\ËšœÛÛŠ›Ùš[\ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È[™\ÝÜˆ›Ùš[\Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\™Ù]
+‹Ø\KÚKÝÚÛ\Ø[\‹\›Ùš[\È‹\Ð]][XØ]Y™\]Z\™T›ÛJ˜YZ[ˆŠK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ›Ùš[\ÈH]ØZ]ÝÜ˜YÙK™Ù][ÚÛ\Ø[\”›Ùš[\Ê
+NÂˆ™]\›ˆ™\ËšœÛÛŠ›Ùš[\ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÚÛ\Ø[\ˆ›Ùš[\Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\™Ù]
+‹Ø\KÚKØ^Y\‹\›Ùš[\È‹\Ð]][XØ]Y™\]Z\™T›ÛJ˜YZ[ˆŠK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ›Ùš[\ÈH]ØZ]ÝÜ˜YÙK™Ù][^Y\”›Ùš[\Ê
+NÂˆ™]\›ˆ™\ËšœÛÛŠ›Ùš[\ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È^Y\ˆ›Ùš[\Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œÜÝ
+‹Ø\KÚKÝ\Ù\œËÎ\Ù\’YÜ›Û\È‹\Ð]][XØ]Y™\]Z\™T›ÛJ˜YZ[ˆŠK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝÈ\Ù\’YHH™\Kœ\˜[\ÎÂˆÛÛœÝÈ›ÛHHH™\K˜›ÙNÂˆˆËÈÚXÚÈYˆ›ÛH[™XYH^\ÝÂˆÛÛœÝ\Ô›ÛHH]ØZ]ÝÜ˜YÙKš\Ô›ÛJ\Ù\’Y›ÛJNÂˆYˆ
+\Ô›ÛJHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ•\Ù\ˆ[™XYH\È\È›ÛHˆJNÂˆBˆˆÛÛœÝ\Ù\”›ÛHH]ØZ]ÝÜ˜YÙK˜Y\Ù\”›ÛJÈ\Ù\’Y›ÛHJNÂˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠ\Ù\”›ÛJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆY[™È\Ù\ˆ›ÛNˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\™[]J‹Ø\KÚKÝ\Ù\œËÎ\Ù\’YÜ›Û\ËÎœ›ÛH‹\Ð]][XØ]Y™\]Z\™T›ÛJ˜YZ[ˆŠK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝÈ\Ù\’Y›ÛHHH™\Kœ\˜[\ÎÂˆ]ØZ]ÝÜ˜YÙKœ™[[Ý™U\Ù\”›ÛJ\Ù\’Y›ÛJNÂˆ™]\›ˆ™\ËšœÛÛŠÈY\ÜØYÙNˆ”›ÛH™[[Ý™YÝXØÙ\ÜÙ[HˆJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™[[Ýš[™È\Ù\ˆ›ÛNˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œ]Ú
+‹Ø\KÚKÚ[™\ÝÜœËÎ\Ù\’YØ\›Ý™H‹\Ð]][XØ]Y™\]Z\™T›ÛJ˜YZ[ˆŠK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝÈ\Ù\’YHH™\Kœ\˜[\ÎÂˆÛÛœÝÈ\Ð\›Ý™YHH™\K˜›ÙNÂˆÛÛœÝ\]YH]ØZ]ÝÜ˜YÙK\]R[™\ÝÜ\›Ý˜[
+\Ù\’Y\Ð\›Ý™Y
+NÂˆYˆ
+]\]Y
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[™\ÝÜˆ›Ùš[H›Ý›Ý[™ˆJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠ\]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\][™È[™\ÝÜˆ\›Ý˜[ˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œ]Ú
+‹Ø\KÚKÝÚÛ\Ø[\œËÎ\Ù\’YØ\›Ý™H‹\Ð]][XØ]Y™\]Z\™T›ÛJ˜YZ[ˆŠK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝÈ\Ù\’YHH™\Kœ\˜[\ÎÂˆÛÛœÝÈ\Ð\›Ý™YHH™\K˜›ÙNÂˆÛÛœÝ\]YH]ØZ]ÝÜ˜YÙK\]UÚÛ\Ø[\\›Ý˜[
+\Ù\’Y\Ð\›Ý™Y
+NÂˆYˆ
+]\]Y
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ•ÚÛ\Ø[\ˆ›Ùš[H›Ý›Ý[™ˆJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠ\]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\][™ÈÚÛ\Ø[\ˆ\›Ý˜[ˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆ\œ]Ú
+‹Ø\KÚKØ^Y\œËÎ\Ù\’YØ\›Ý™H‹\Ð]][XØ]Y™\]Z\™T›ÛJ˜YZ[ˆŠK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝÈ\Ù\’YHH™\Kœ\˜[\ÎÂˆÛÛœÝÈ\Ð\›Ý™YHH™\K˜›ÙNÂˆÛÛœÝ\]YH]ØZ]ÝÜ˜YÙK\]P^Y\\›Ý˜[
+\Ù\’Y\Ð\›Ý™Y
+NÂˆYˆ
+]\]Y
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ^Y\ˆ›Ùš[H›Ý›Ý[™ˆJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠ\]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\][™È^Y\ˆ\›Ý˜[ˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈÚXÚÈÝY™ˆXØÙ\ÜÈ›Ý]H
+›Üˆœ›Û[™È™\šYžH™Y›Ü™HXØÙ\ÜÚ[™ÈJBˆ\™Ù]
+‹Ø\KØ]]ØÚXÚË\ÝY™ˆ‹\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆÛÛœÝ\ÔÝY™ˆH]ØZ]ÝÜ˜YÙKš\Ð[žTÝY™”›ÛJ\Ù\’Y
+NÂˆ™]\›ˆ™\ËšœÛÛŠÈ\ÔÝY™ˆJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÚXÚÚ[™ÈÝY™ˆXØÙ\ÜÎˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆËÈÛÛ[][š]H›Ý]\ÂˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆˆËÈÙ][ÛÛ[][š]HØ]YÛÜšY\Âˆ\™Ù]
+‹Ø\KØÛÛ[][š]KØØ]YÛÜšY\È‹\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝØ]YÛÜšY\ÈH]ØZ]ÝÜ˜YÙK™Ù]ÛÛ[][š]PØ]YÛÜšY\Ê
+NÂˆ™]\›ˆ™\ËšœÛÛŠØ]YÛÜšY\ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÛÛ[][š]HØ]YÛÜšY\Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈÙ]ÛÛ[][š]HØ]YÛÜžHžHÛYÂˆ\™Ù]
+‹Ø\KØÛÛ[][š]KØØ]YÛÜšY\ËÎœÛYÈ‹\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝÈÛYÈHH™\Kœ\˜[\ÎÂˆÛÛœÝØ]YÛÜžHH]ØZ]ÝÜ˜YÙK™Ù]ÛÛ[][š]PØ]YÛÜžJÛYÊNÂˆYˆ
+XØ]YÛÜžJHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆØ]YÛÜžH›Ý›Ý[™ˆJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠØ]YÛÜžJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÛÛ[][š]HØ]YÛÜžNˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈÜ™X]HÛÛ[][š]HØ]YÛÜžH
+YZ[ˆÛ›JBˆ\œÜÝ
+‹Ø\KØÛÛ[][š]KØØ]YÛÜšY\È‹\Ð]][XØ]Y™\]Z\™T›ÛJ˜YZ[ˆŠK\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝÈ˜[YKÛYË\ØÜš\[Û‹XÛÛ‹ÛÛÜ‹Ü™\ˆHH™\K˜›ÙNÂˆÛÛœÝØ]YÛÜžHH]ØZ]ÝÜ˜YÙK˜Ü™X]PÛÛ[][š]PØ]YÛÜžJÈ˜[YKÛYË\ØÜš\[Û‹XÛÛ‹ÛÛÜ‹Ü™\ˆJNÂˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠØ]YÛÜžJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™ÈÛÛ[][š]HØ]YÛÜžNˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈÙ]ÛÛ[][š]HÜÝÈ
+Ü[Û˜[Hš[\™YžHØ]YÛÜžJBˆ\™Ù]
+‹Ø\KØÛÛ[][š]KÜÜÝÈ‹\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝØ]YÛÜžRYH™\Kœ]Y\žK˜Ø]YÛÜžRYÈ[X™\Š™\Kœ]Y\žK˜Ø]YÛÜžRY
+Hˆ[™Yš[™YÂˆÛÛœÝÜÝÈH]ØZ]ÝÜ˜YÙK™Ù]ÛÛ[][š]TÜÝÊØ]YÛÜžRY
+NÂˆ™]\›ˆ™\ËšœÛÛŠÜÝÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÛÛ[][š]HÜÝÎˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈÙ]Ú[™ÛHÛÛ[][š]HÜÝˆ\™Ù]
+‹Ø\KØÛÛ[][š]KÜÜÝËÎšY‹\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝYH[X™\Š™\Kœ\˜[\ËšY
+NÂˆÛÛœÝÜÝH]ØZ]ÝÜ˜YÙK™Ù]ÛÛ[][š]TÜÝ
+Y
+NÂˆYˆ
+\ÜÝ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”ÜÝ›Ý›Ý[™ˆJNÂˆBˆËÈ[˜Ü™[Y[šY]ÈÛÝ[ˆ]ØZ]ÝÜ˜YÙKš[˜Ü™[Y[ÜÝšY]ÜÊY
+NÂˆ™]\›ˆ™\ËšœÛÛŠÜÝ
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÛÛ[][š]HÜÝˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈÜ™X]HÛÛ[][š]HÜÝ
+]][XØ]Y\Ù\œÈÛ›JBˆ\œÜÝ
+‹Ø\KØÛÛ[][š]KÜÜÝÈ‹\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆÛÛœÝÈØ]YÛÜžRY]KÛÛ[HH™\K˜›ÙNÂˆˆÛÛœÝÜÝH]ØZ]ÝÜ˜YÙK˜Ü™X]PÛÛ[][š]TÜÝ
+ÂˆØ]YÛÜžRYˆ\Ù\’Yˆ]KˆÛÛ[ˆ\Ô[›™Yˆ˜[ÙKˆ\ÓØÚÙYˆ˜[ÙKˆJNÂˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠÜÝ
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™ÈÛÛ[][š]HÜÝˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈ\]HÛÛ[][š]HÜÝ
+ÝÛ™\ˆÜˆYZ[ŠBˆ\œ]Ú
+‹Ø\KØÛÛ[][š]KÜÜÝËÎšY‹\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[µïn6¶‰žËkºwµçBˆÛÛœÝÈ\Ù\’YHH™\Kœ\˜[\ÎÂˆÛÛœÝÝ]ÈH]ØZ]ÝÜ˜YÙK™Ù]\Ù\”Ý]Ê\Ù\’Y
+NÂˆ™]\›ˆ™\ËšœÛÛŠÝ]ÈßJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È\Ù\ˆÝ]Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈÙ]\Ù\ˆXÝ]š]H
+[Y[[™HÙˆ™XÙ[XÝ[ÛœÊBˆ\™Ù]
+‹Ø\KÝ\Ù\œËÎ\Ù\’YØXÝ]š]H‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝÈ\Ù\’YHH™\Kœ\˜[\ÎÂˆÛÛœÝ™\]Y\Ý[™Õ\Ù\’YBˆ™\K\Ù\Ë˜ÛZ[\ÏËœÝXˆ™\KœÝ\X˜\ÙU\Ù\ËšYÂˆYˆ
+\™\]Y\Ý[™Õ\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆBˆYˆ
+ˆ™\]Y\Ý[™Õ\Ù\’YOOH\Ù\’Y	‰‚ˆJ]ØZ]\ÓX\šÙ]›ÝÔÝY™XØÙ\ÜÊ™\K™\]Y\Ý[™Õ\Ù\’Y
+JBˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ•\Ù\ˆ›Ý›Ý[™ˆJNÂˆB‚ˆÛÛœÝXÝ]š]Y\ÈH]ØZ]ÝÜ˜YÙK™Ù]\Ù\XÝ]š]J\Ù\’Y
+NÂˆ™]\›ˆ™\ËšœÛÛŠXÝ]š]Y\ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È\Ù\ˆXÝ]š]Nˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈÙ]\Ù\ˆ™\]][Û‚ˆ\™Ù]
+‹Ø\KÝ\Ù\œËÎ\Ù\’YÜ™\]][Ûˆ‹\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝÈ\Ù\’YHH™\Kœ\˜[\ÎÂˆYˆ
+]\Ù\’Y\Ù\’Y›[™ÝH\Ù\’Y›[™ÝˆL
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[Y\Ù\ˆQˆJNÂˆBˆÛÛœÝ™\]][ÛˆH]ØZ]ÝÜ˜YÙK™Ù]\Ù\”™\]][ÛŠ\Ù\’Y
+NÂˆ™]\›ˆ™\ËšœÛÛŠ™\]][Ûˆ[
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È\Ù\ˆ™\]][ÛŽˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈÙ]\Ù\ˆ˜YÙ\Âˆ\™Ù]
+‹Ø\KÝ\Ù\œËÎ\Ù\’YØ˜YÙ\È‹\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝÈ\Ù\’YHH™\Kœ\˜[\ÎÂˆYˆ
+]\Ù\’Y\Ù\’Y›[™ÝH\Ù\’Y›[™ÝˆL
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[Y\Ù\ˆQˆJNÂˆBˆÛÛœÝ˜YÙ\ÈH]ØZ]ÝÜ˜YÙK™Ù]\Ù\˜YÙ\Ê\Ù\’Y
+NÂˆ™]\›ˆ™\ËšœÛÛŠ˜YÙ\È×JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È\Ù\ˆ˜YÙ\Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆËÈX[™YÛÝX][ÛœÈ›Ý]\ÂˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆˆËÈÙ]™YÛÝX][ÛœÈ›ÜˆHX[ˆ\™Ù]
+‹Ø\KÛ™YÛÝX][ÛœËÎ™X[\KÎ™X[Y
+
+ÊH‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆBˆÛÛœÝÈX[\KX[YHH™\Kœ\˜[\ÎÂˆÛÛœÝ[Y\šXÑX[YH[X™\ŠX[Y
+NÂˆÛÛœÝ™YÛÝX][ÛœÈH]ØZ]ÝÜ˜YÙK™Ù]X[™YÛÝX][ÛœÊˆX[\Kˆ[Y\šXÑX[Yˆ
+NÂˆÛÛœÝXØÙ\ÜÈH]ØZ]™\ÛÛ™SYØXÞQX[XØÙ\ÜÊˆ™\Kˆ\Ù\’YˆX[\Kˆ[Y\šXÑX[YˆÈ™YÛÝX][ÛœÈKˆ
+NÂˆYˆ
+ˆXXØÙ\ÜÈˆ
+XXØÙ\ÜËš\ÓÝÛ™\ˆ	‰ˆXXØÙ\ÜËš\Ô\XÚ\[	‰ˆXXØÙ\ÜËš\ÔÝY™ŠBˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ‘X[›Ý›Ý[™ˆJNÂˆB‚ˆYˆ
+XØÙ\ÜËš\ÓÝÛ™\ˆXØÙ\ÜËš\ÔÝY™ŠHÂˆ™]\›ˆ™\ËšœÛÛŠ™YÛÝX][ÛœÊNÂˆBˆÛÛœÝš\ÚX›S™YÛÝX][ÛœÈHš[\“YØXÞS™YÛÝX][ÛœÑ›Ü•\Ù\Šˆ\Ù\’Yˆ™YÛÝX][ÛœËˆ
+NÂˆYˆ
+š\ÚX›S™YÛÝX][ÛœË›[™ÝOOH
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ‘X[›Ý›Ý[™ˆJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠš\ÚX›S™YÛÝX][ÛœÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈX[™YÛÝX][ÛœÎˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈÙ]^H™YÛÝX][ÛœÂˆ\™Ù]
+‹Ø\KÛ^K[™YÛÝX][ÛœÈ‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆBˆÛÛœÝ™YÛÝX][ÛœÈH]ØZ]ÝÜ˜YÙK™Ù]™YÛÝX][ÛœÐžU\Ù\Š\Ù\’Y
+NÂˆ™]\›ˆ™\ËšœÛÛŠ™YÛÝX][ÛœÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È^H™YÛÝX][ÛœÎˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈÜ™X]H™YÛÝX][Ûˆ
+XZÙHÙ™™\‹ØÛÝ[\‹[Ù™™\ŠBˆ\œÜÝ
+‹Ø\KÛ™YÛÝX][ÛœÈ‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆ™]\›ˆ™\ËœÝ]\ÊLJKšœÛÛŠÂˆY\ÜØYÙN‚ˆ“YØXÞH™YÛÝX][ÛœÈ\™H™XY[Û›Kˆ\ÙHX\šÙ]›ÝÈÙ™™\ˆÝY[È›Üˆ™]ÈÜˆÛÝ[\ˆÙ™™\œËˆ‹ˆJNÂˆJNÂ‚ˆËÈÙ]™YÛÝX][Ûˆ™XY
+ÜšYÚ[˜[
+È[ÛÝ[\‹[Ù™™\œÊBˆ\™Ù]
+‹Ø\KÛ™YÛÝX][ÛœËÎšYÝ™XY‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆBˆÛÛœÝYH[X™\Š™\Kœ\˜[\ËšY
+NÂˆÛÛœÝ™YÛÝX][ÛˆH[X™\‹š\ÔØY™R[YÙ\ŠY
+H	‰ˆYˆˆÈ]ØZ]ÝÜ˜YÙK™Ù]X[™YÛÝX][ÛŠY
+Bˆˆ[™Yš[™YÂˆYˆ
+[™YÛÝX][ÛŠHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“™YÛÝX][Ûˆ›Ý›Ý[™ˆJNÂˆBˆÛÛœÝXØÙ\ÜÈH]ØZ]™\ÛÛ™SYØXÞQX[XØÙ\ÜÊˆ™\Kˆ\Ù\’Yˆ™YÛÝX][Û‹™X[\Kˆ™YÛÝX][Û‹™X[YˆÈ™YÛÝX][ÛœÎˆÛ™YÛÝX][Û—HKˆ
+NÂˆYˆ
+ˆXXØÙ\ÜÈˆ
+XXØÙ\ÜËš\ÓÝÛ™\ˆ	‰ˆXXØÙ\ÜËš\Ô\XÚ\[	‰ˆXXØÙ\ÜËš\ÔÝY™ŠBˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“™YÛÝX][Ûˆ›Ý›Ý[™ˆJNÂˆB‚ˆÛÛœÝ™XYH]ØZ]ÝÜ˜YÙK™Ù]™YÛÝX][Û•™XY
+Y
+NÂˆYˆ
+XØÙ\ÜËš\ÓÝÛ™\ˆXØÙ\ÜËš\ÔÝY™ŠHÂˆ™]\›ˆ™\ËšœÛÛŠ™XY
+NÂˆBˆÛÛœÝš\ÚX›U™XYHš[\“YØXÞS™YÛÝX][ÛœÑ›Ü•\Ù\Š\Ù\’Y™XY
+NÂˆYˆ
+ˆZ\ÓYØXÞQX[\XÚ\[
+\Ù\’YÈ™YÛÝX][ÛœÎˆÛ™YÛÝX][Û—HJHˆš\ÚX›U™XY›[™ÝOOHˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“™YÛÝX][Ûˆ›Ý›Ý[™ˆJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠš\ÚX›U™XY
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È™YÛÝX][Ûˆ™XYˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈ™\ÜÛ™È™YÛÝX][Ûˆ
+XØÙ\ÙXÛ[™KØÛÝ[\ŠBˆ\œÜÝ
+‹Ø\KÛ™YÛÝX][ÛœËÎšYÜ™\ÜÛ™‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆ™]\›ˆ™\ËœÝ]\ÊLJKšœÛÛŠÂˆY\ÜØYÙN‚ˆ“YØXÞH™YÛÝX][ÛœÈ\™H™XY[Û›Kˆ\ÙHX\šÙ]›ÝÈÙ™™\ˆÝY[ÈÈ™\ÜÛ™ˆ‹ˆJNÂˆJNÂ‚ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆËÈX[Y\ÜØYÙ\È
+Ú]
+H›Ý]\ÂˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆˆËÈÙ]Y\ÜØYÙ\È›ÜˆHX[ˆ\™Ù]
+‹Ø\KÙX[[Y\ÜØYÙ\ËÎ™X[\KÎ™X[Y‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆ™]\›ˆ™\ËœÝ]\ÊLJKšœÛÛŠÂˆY\ÜØYÙN‚ˆ“YØXÞHX[Ú]\È[˜]˜Z[X›Kˆ\ÙHHÛÛ™\œØ][Ûˆ]XÚYÈHX\šÙ]›ÝÈÙ™™\‹ˆ‹ˆJNÂˆJNÂˆˆËÈÙ[™HY\ÜØYÙBˆ\œÜÝ
+‹Ø\KÙX[[Y\ÜØYÙ\È‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆ™]\›ˆ™\ËœÝ]\ÊLJKšœÛÛŠÂˆY\ÜØYÙN‚ˆ“YØXÞHX[Ú]\È[˜]˜Z[X›Kˆ\ÙHHÛÛ™\œØ][Ûˆ]XÚYÈHX\šÙ]›ÝÈÙ™™\‹ˆ‹ˆJNÂˆJNÂˆˆËÈÙ][œ™XYY\ÜØYÙHÛÝ[ˆ\™Ù]
+‹Ø\KÙX[[Y\ÜØYÙ\ËÎ™X[\KÎ™X[YÝ[œ™XY‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆ™]\›ˆ™\ËœÝ]\ÊLJKšœÛÛŠÂˆY\ÜØYÙN‚ˆ“YØXÞHX[Ú]\È[˜]˜Z[X›Kˆ\ÙHHÛÛ™\œØ][Ûˆ]XÚYÈHX\šÙ]›ÝÈÙ™™\‹ˆ‹ˆJNÂˆJNÂ‚ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆËÈÚÛ\Ø[HX[ØÝ[Y[È›Ý]\ÂˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆˆËÈÙ]ØÝ[Y[È›ÜˆHÚÛ\Ø[HX[ˆ\™Ù]
+‹Ø\KÝÚÛ\Ø[KYX[ËÎ™X[YÙØÝ[Y[È‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆBˆÛÛœÝX[YH[X™\Š™\Kœ\˜[\Ë™X[Y
+NÂˆÛÛœÝXØÙ\ÜÈH]ØZ]™\ÛÛ™SYØXÞQX[XØÙ\ÜÊˆ™\Kˆ\Ù\’YˆÚÛ\Ø[WÙX[‹ˆX[Yˆ
+NÂˆYˆ
+ˆXXØÙ\ÜÈˆ
+XXØÙ\ÜËš\ÓÝÛ™\ˆ	‰ˆXXØÙ\ÜËš\Ô\XÚ\[	‰ˆXXØÙ\ÜËš\ÔÝY™ŠBˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ•ÚÛ\Ø[HX[›Ý›Ý[™ˆJNÂˆB‚ˆÛÛœÝØÝ[Y[ÈH]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[ØÝ[Y[ÊX[Y
+NÂˆYˆ
+XXØÙ\ÜËš\ÓÝÛ™\ˆ	‰ˆXXØÙ\ÜËš\ÔÝY™ŠHÂˆ™]\›ˆ™\ËšœÛÛŠš[\“YØXÞQØÝ[Y[Ñ›Ü”\XÚ\[
+ØÝ[Y[ÊJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠØÝ[Y[ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÚÛ\Ø[HX[ØÝ[Y[Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈ\ØYØÝ[Y[
+ÚÛ\Ø[\ˆÛ›JBˆ\œÜÝ
+‹Ø\KÝÚÛ\Ø[KYX[ËÎ™X[YÙØÝ[Y[È‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆBˆÛÛœÝX[YH[X™\Š™\Kœ\˜[\Ë™X[Y
+NÂˆˆÛÛœÝXØÙ\ÜÈH]ØZ]™\ÛÛ™SYØXÞQX[XØÙ\ÜÊˆ™\Kˆ\Ù\’YˆÚÛ\Ø[WÙX[‹ˆX[Yˆ
+NÂˆYˆ
+XXØÙ\ÜÈ
+XXØÙ\ÜËš\ÓÝÛ™\ˆ	‰ˆXXØÙ\ÜËš\ÔÝY™ŠJHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ•ÚÛ\Ø[HX[›Ý›Ý[™ˆJNÂˆBˆˆÛÛœÝØÝ[Y[H]ØZ]ÝÜ˜YÙK˜Ü™X]UÚÛ\Ø[QX[ØÝ[Y[
+Âˆ‹‹œ™\K˜›ÙKˆX[Yˆ\ØYYžNˆ\Ù\’YˆJNÂˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠØÝ[Y[
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\ØY[™ÈØÝ[Y[ˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈ[]HØÝ[Y[ˆ\™[]J‹Ø\KÝÚÛ\Ø[KYX[YØÝ[Y[ËÎšY‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆBˆÛÛœÝYH[X™\Š™\Kœ\˜[\ËšY
+NÂˆÛÛœÝØÝ[Y[H[X™\‹š\ÔØY™R[YÙ\ŠY
+H	‰ˆYˆˆÈ]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[ØÝ[Y[
+Y
+Bˆˆ[™Yš[™YÂˆYˆ
+YØÝ[Y[
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ‘ØÝ[Y[›Ý›Ý[™ˆJNÂˆBˆÛÛœÝXØÙ\ÜÈH]ØZ]™\ÛÛ™SYØXÞQX[XØÙ\ÜÊˆ™\Kˆ\Ù\’YˆÚÛ\Ø[WÙX[‹ˆØÝ[Y[™X[Yˆ
+NÂˆYˆ
+ˆXXØÙ\ÜÈˆXØ[‘[]SYØXÞUÚÛ\Ø[QØÝ[Y[
+Âˆ\Ù\’YˆX[ÝÛ™\’YˆXØÙ\ÜË›ÝÛ™\’Yˆ\ØYYžNˆØÝ[Y[\ØYYžKˆ\ÔÝY™ŽˆXØÙ\ÜËš\ÔÝY™‹ˆJBˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ‘ØÝ[Y[›Ý›Ý[™ˆJNÂˆB‚ˆ]ØZ]ÝÜ˜YÙK™[]UÚÛ\Ø[QX[ØÝ[Y[
+Y
+NÂˆ™]\›ˆ™\ËœÝ]\ÊŒ
+KœÙ[™
+
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ[][™ÈØÝ[Y[ˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆËÈX[[˜[^™\ˆ›Ý]\ÂˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆˆËÈÙ]^H[˜[^™\ˆ™\Ý[Âˆ\™Ù]
+‹Ø\KÛ^KYX[X[˜[\Ù\È‹\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆÛÛœÝ™\Ý[ÈH]ØZ]ÝÜ˜YÙK™Ù]X[[˜[^™\”™\Ý[Ê\Ù\’Y
+NÂˆ™]\›ˆ™\ËšœÛÛŠ™\Ý[ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈX[[˜[\Ù\Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈØ]™H[˜[^™\ˆ™\Ý[ˆ\œÜÝ
+‹Ø\KÙX[X[˜[\Ù\È‹\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆÛÛœÝ™\Ý[H]ØZ]ÝÜ˜YÙK˜Ü™X]QX[[˜[^™\”™\Ý[
+Âˆ\Ù\’Yˆ‹‹œ™\K˜›ÙBˆJNÂˆ™]\›ˆ™\ËœÝ]\ÊŒJKšœÛÛŠ™\Ý[
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆØ]š[™ÈX[[˜[\Ú\Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈ[]H[˜[^™\ˆ™\Ý[ˆ\™[]J‹Ø\KÙX[X[˜[\Ù\ËÎšY‹\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆÛÛœÝYH[X™\Š™\Kœ\˜[\ËšY
+NÂˆˆËÈ™\šYžHÝÛ™\œÚ\ˆÛÛœÝ™\Ý[H]ØZ]ÝÜ˜YÙK™Ù]X[[˜[^™\”™\Ý[
+Y
+NÂˆYˆ
+\™\Ý[
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ[˜[\Ú\È›Ý›Ý[™ˆJNÂˆBˆYˆ
+™\Ý[\Ù\’YOOH\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊÊKšœÛÛŠÈY\ÜØYÙNˆ“›Ý]]Üš^™YÈ[]H\È[˜[\Ú\ÈˆJNÂˆBˆˆ]ØZ]ÝÜ˜YÙK™[]QX[[˜[^™\”™\Ý[
+Y
+NÂˆ™]\›ˆ™\ËœÝ]\ÊŒ
+KœÙ[™
+
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ[][™ÈX[[˜[\Ú\Îˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ’[\›˜[Ù\™\ˆ\œ›ÜˆˆJNÂˆBˆJNÂ‚ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆËÈQÑÖHRHTÔÒTÕS•“ÕUTÂˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‚ˆÛÛœÝ™\]Z\™TYÙÞPÛÛ™\œØ][ÛXØÙ\ÜÈBˆÜ™X]TYÙÞPÛÛ™\œØ][ÛXØÙ\ÜÑÝX\™
+ÂˆÙ]ÛÛ™\œØ][ÛŽˆ
+Y
+HOˆÝÜ˜YÙK™Ù]YÙÞPÛÛ™\œØ][ÛŠY
+KˆÙ]™\šYšYY\Ù\’YˆÙ]™\šYšYYYÙÞU\Ù\’YˆJNÂ‚ˆÛÛœÝYÙÞRY[]S›ÔÝÜ™Nˆ™\]Y\Ý[™\ˆH
+Ü™\K™\Ë™^
+HOˆÂˆ™\ËœÙ]
+ØXÚKPÛÛ›Û‹››Ë\ÝÜ™HŠNÂˆ™^
+
+NÂˆNÂˆÛÛœÝYÙÞPØ[Ý[]Ü”˜]S[Z]H˜]S[Z]
+LŒÌ
+NÂ‚ˆ™YÚ\Ý\”YÙÞRY[]T›Ý]\Ê\Âˆ›ÔÝÜ™NˆYÙÞRY[]S›ÔÝÜ™KˆX›XÐÜ™X]T˜]S[Z]ˆX›XÒ[ZÙT˜]S[Z]ˆØ[Ý[]Ü”˜]S[Z]ˆYÙÞPØ[Ý[]Ü”˜]S[Z]ˆ\ÒXœšY]][XØ]YˆÙ]™\šYšYYYÙÞU\Ù\’Yˆ˜[™ÛUURQˆÙ]XØÙ\ÜÔÙXÜ™]ˆÙ]YÙÞPÛÛ™\œØ][ÛXØÙ\ÜÔÙXÜ™]ˆÜ™X]PXØÙ\ÜÕÚÙ[ŽˆÜ™X]TYÙÞPÛÛ™\œØ][ÛXØÙ\ÜÕÚÙ[‹ˆÝ\ÙXÛÛ™\œØ][ÛŽˆYÙÞKœÝ\ÙXÛÛ™\œØ][Û‹ˆ\œÙPØ[Ý[]Ü”™\]Y\Ýˆ\œÙTYÙÞPØ[Ý[]Ü”™\]Y\Ýˆ[˜[^™PØ[Ý[]ÜŽˆYÙÞK˜[˜[^™PØ[Ý[]Ü”™\Ý[ËˆJNÂ‚ˆ™YÚ\Ý\”YÙÞPÛÛ™\œØ][ÛXØÙ\ÜÔ™Yœ™\Ú›Ý]J\Âˆ›ÔÝÜ™NˆYÙÞRY[]S›ÔÝÜ™Kˆ˜]S[Z]ˆX›XÒ[ZÙT˜]S[Z]ˆÙ]ÛÛ™\œØ][ÛŽˆ
+Y
+HOˆÝÜ˜YÙK™Ù]YÙÞPÛÛ™\œØ][ÛŠY
+KˆÙ]™\šYšYY\Ù\’YˆÙ]™\šYšYYYÙÞU\Ù\’YˆÙ]ÙXÜ™]ˆÙ]YÙÞPÛÛ™\œØ][ÛXØÙ\ÜÔÙXÜ™]ˆ™\šYžPXØÙ\ÜÕÚÙ[Žˆ™\šYžTYÙÞPÛÛ™\œØ][ÛXØÙ\ÜÕÚÙ[‹ˆÜ™X]PXØÙ\ÜÕÚÙ[ŽˆÜ™X]TYÙÞPÛÛ™\œØ][ÛXØÙ\ÜÕÚÙ[‹ˆJNÂ‚ˆ\\ÙJ‹Ø\KÜYÙÞH‹YÙÞRY[]S›ÔÝÜ™JNÂˆ\\ÙJ‹Ø\KØYZ[‹ÜYÙÞH‹YÙÞRY[]S›ÔÝÜ™JNÂ‚ˆËÈÙ]ÛÛ™\œØ][Ûˆ\ÝÜžBˆ\™Ù]
+‹Ø\KÜYÙÞKØÛÛ™\œØ][ÛœËÎšY‹™\]Z\™TYÙÞPÛÛ™\œØ][ÛXØÙ\ÜË\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝÛÛ™\œØ][ÛˆH™\Ë›ØØ[ËœYÙÞPÛÛ™\œØ][ÛŽÂˆÛÛœÝÛÛ™\œØ][Û’YHÛÛ™\œØ][Û‹šYÂˆÛÛœÝY\ÜØYÙ\ÈH]ØZ]ÝÜ˜YÙK™Ù]YÙÞSY\ÜØYÙ\ÊÛÛ™\œØ][Û’Y
+NÂˆ™]\›ˆ™\ËšœÛÛŠÈÛÛ™\œØ][Û‹Y\ÜØYÙ\ÈJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈYÙÞHÛÛ™\œØ][ÛŽˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚÛÛ™\œØ][ÛˆˆJNÂˆBˆJNÂ‚ˆËÈÙ]\Ù\‰ÜÈÛÛ™\œØ][ÛœÈ\Ýˆ\™Ù]
+‹Ø\KÜYÙÞKØÛÛ™\œØ][ÛœÈ‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\Ë˜ÛZ[\ÏËœÝXŽÂˆÛÛœÝÛÛ™\œØ][ÛœÈH]ØZ]ÝÜ˜YÙK™Ù]YÙÞPÛÛ™\œØ][ÛœÊ\Ù\’Y
+NÂˆ™]\›ˆ™\ËšœÛÛŠÛÛ™\œØ][ÛœÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈYÙÞHÛÛ™\œØ][ÛœÎˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚÛÛ™\œØ][ÛœÈˆJNÂˆBˆJNÂ‚ˆËÈÙ[™HY\ÜØYÙHÈYÙÞBˆËÈ\ÚÈÌMLH8 %[\Yœ›ÛHŒÍŒÈÈÌÍŒÈ\ˆ[Y[™Y[ˆ0©Ñ‚ˆ\œÜÝ
+‹Ø\KÜYÙÞKØÚ]‹˜]S[Z]
+ÌŒ
+K™\]Z\™TYÙÞPÛÛ™\œØ][ÛXØÙ\ÜË\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝÈÛÛ™\œØ][Û’YY\ÜØYÙKÛÛ^HH™\K˜›ÙNÂ‚ˆYˆ
+XÛÛ™\œØ][Û’Y[Y\ÜØYÙJHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ˜ÛÛ™\œØ][Û’Y[™Y\ÜØYÙH\™H™\]Z\™YˆJNÂˆB‚ˆÛÛœÝ™\Ý[H]ØZ]YÙÞK˜Ú]
+Y\ÜØYÙKÛÛ™\œØ][Û’YÛÛ^
+NÂˆ™]\›ˆ™\ËšœÛÛŠ™\Ý[
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ[ˆYÙÞHÚ]ˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈÙ]™\ÜÛœÙHœ›ÛHYÙÞHˆJNÂˆBˆJNÂ‚ˆËÈ\ÚÈÌMLH8 %X\šÈHÛÛ™\œØ][ÛˆÛ™KˆšYÙÙ\œÈš[˜[[ZÙH^˜XÝ[Û‚ˆËÈ\ÜÈ[™
+Yˆ\ÜÜÚ][Ûˆ™\ÛÛ™YÈ[X[—Ü™\]Z\™Y
+H[ˆ[[YYX]H[XZ[‚ˆ\œÜÝ
+‹Ø\KÜYÙÞKØÛÛ™\œØ][ÛœËÎšYÙš[š\Ú‹X›XÒ[ZÙT˜]S[Z]™\]Z\™TYÙÞPÛÛ™\œØ][ÛXØÙ\ÜË\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝÛÛ™\œØ][ÛˆH™\Ë›ØØ[ËœYÙÞPÛÛ™\œØ][ÛŽÂˆÛÛœÝYHÛÛ™\œØ][Û‹šYÂˆÛÛœÝY\ÜØYÙ\ÈH]ØZ]ÝÜ˜YÙK™Ù]YÙÞSY\ÜØYÙ\ÊY
+NÂˆÛÛœÝ˜[œØÜš\HY\ÜØYÙ\Âˆ™š[\ŠHOˆKœ›ÛHOOHœÞ\Ý[HŠBˆ›X\
+HOˆ
+È›ÛNˆKœ›ÛH\È\Ù\ˆˆ˜\ÜÚ\Ý[‹ÛÛ[ˆK˜ÛÛ[JJNÂ‚ˆÛÛœÝ^˜XÝYH]ØZ]YÙÞK™^˜XÝ[ZÙJ˜[œØÜš\
+NÂˆÛÛœÝ]Úˆ[žHHÈ[™Y]ˆ™]È]J
+HNÂˆYˆ
+^˜XÝY
+HÂˆ]Úš[ZÙHH^˜XÝYš[ZÙNÂˆ]Ú™\ÜÜÚ][ÛˆH^˜XÝY™\ÜÜÚ][ÛˆÛÛ™\œØ][Û‹™\ÜÜÚ][Ûˆ[™Yš[™YÂˆ]ÚœÝ[[X\žHH^˜XÝYœÝ[[X\žHÛÛ™\œØ][Û‹œÝ[[X\žH[™Yš[™YÂˆYˆ
+^˜XÝYš[ZÙKšY[]OË›˜[YJH]Ú˜ÛÛXÝ˜[YHH^˜XÝYš[ZÙKšY[]K›˜[YNÂˆYˆ
+^˜XÝYš[ZÙKšY[]OË™[XZ[
+H]Ú˜ÛÛXÝ[XZ[H^˜XÝYš[ZÙKšY[]K™[XZ[ÂˆYˆ
+^˜XÝYš[ZÙKšY[]OËœÛ™JH]Ú˜ÛÛXÝÛ™HH^˜XÝYš[ZÙKšY[]KœÛ™NÂˆBˆÛÛœÝ\]YH]ØZ]ÝÜ˜YÙK\]TYÙÞPÛÛ™\œØ][ÛŠY]Ú
+NÂ‚ˆËÈYˆ\ÈÛÛ™\œØ][Ûˆ[™YÛˆ[X[—Ü™\]Z\™YXZÙHÝ\™H\ÛÈÛÝ[ˆ[XZ[ˆYˆ
+\]YË™\ÜÜÚ][ÛˆOOHš[X[—Ü™\]Z\™Yˆ	‰ˆ]\]YËœ™\ÜY]
+HÂˆÛÛœÝÈÙ[™YÙÞR[X[”™\]Z\™YHH]ØZ][\Ü
+‹‹Ù[XZ[ŠNÂˆ]ØZ]Ù[™YÙÞR[X[”™\]Z\™Y
+ÂˆÛÛ™\œØ][ÛŽˆ\]Yˆ˜[œØÜš\ˆY\ÜØYÙ\Ëˆ™X\ÛÛŽˆ\]Yš[X[”™\]Z\™Y™X\ÛÛˆ›X[X[Ùš[š\Ú‹ˆJNÂˆB‚ˆ™]\›ˆ™\ËšœÛÛŠ\]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆš[š\Ú[™ÈYÙÞHÛÛ™\œØ][ÛŽˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈš[š\ÚÛÛ™\œØ][ÛˆˆJNÂˆBˆJNÂ‚ˆËÈ\ÚÈÌMLˆ8 %YÙÞHÛ™HÙXšÛÚÈ
+™[™Ü‹XYÛ›ÜÝXÎÈÙYHÙ\™\‹ÜYÙÞK\Û™KÊK‚ˆËÈ™[™Üˆ
+˜\HÈ›[™È™][
+HÔÕÈXXÚØ[\ˆ\›ˆ\™H[™ÜÝÈBˆËÈ[™[Ù‹XØ[]™[\™KˆÙH™\šYžHHPPÈÚYÛ˜]\™K›Ý]HÈHšYÚˆËÈ[™\‹[™™]\›ˆH”ÓÓˆ[œÝXÝ[ÛˆXÚÙ]›ÜˆH™[™ÜˆÈ^XÝ]K‚ˆËÂˆËÈ\ÛË\ÚYHÙ]\ˆÙ]QÑÖWÔÓ‘WÕÑP’ÓÒ×ÔÑPÔ‘UÚ[™[™Ü‰ÜÈÙXšÛÚÂˆËÈT“]Ø\KÜYÙÞKÜÛ™KÝÙXšÛÚË[™ÛÛ™šYÝ\™HH™[™ÜˆÈÚYÛˆÚ]BˆËÈØ[YHÙXÜ™]
+PPËTÒLMˆÝ™\ˆH˜]È›ÙKÙ[[ˆ\YÙÞK\ÚYÛ˜]\™JK‚ˆ\œÜÝ
+ˆ‹Ø\KÜYÙÞKÜÛ™KÝÙXšÛÚÈ‹ˆ^™\ÜËœ˜]ÊÈ\Nˆ˜\XØ][Û‹ÚœÛÛˆ‹[Z]ˆŒMšØˆˆJKˆ\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ˜]Ð›ÙHH
+™\K˜›ÙH[œÝ[˜Ù[ÙˆY™™\ˆÈ™\K˜›ÙHˆY™™\‹™œ›ÛJ™\K˜›ÙHˆŠJBˆÔÝš[™Ê]ŽŠNÂˆÛÛœÝÚYÛ˜]\™HBˆ
+™\KšXY\œÖÈž\YÙÞK\ÚYÛ˜]\™H—H\ÈÝš[™È[™Yš[™Y
+Hˆ
+™\KšXY\œÖÈž]˜\K\ÙXÜ™]—H\ÈÝš[™È[™Yš[™Y
+NÂˆÛÛœÝÛ™HH]ØZ][\Ü
+‹‹ÜYÙÞK\Û™HŠNÂˆYˆ
+\Û™K™\šYžTÛ™UÙXšÛÚÔÚYÛ˜]\™J˜]Ð›ÙKÚYÛ˜]\™JJHÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ’[˜[YÚYÛ˜]\™HˆJNÂˆBˆÛÛœÝ^[ØYH”ÓÓ‹œ\œÙJ˜]Ð›ÙJNÂˆYˆ
+^[ØY™]™[OOH\›ˆŠHÂˆÛÛœÝ™\Ý[H]ØZ]Û™Kš[™TÛ™U\›Š^[ØY
+NÂˆ™]\›ˆ™\ËšœÛÛŠ™\Ý[
+NÂˆBˆYˆ
+^[ØY™]™[OOH™[™ˆ^[ØY™]™[OOH˜Ø[Ù[™YŠHÂˆ]ØZ]Û™Kš[™TÛ™Q[™
+^[ØY
+NÂˆ™]\›ˆ™\ËšœÛÛŠÈÚÎˆYHJNÂˆBˆËÈ[šÛ›ÝÛˆ]™[8 %XÚÛ›ÝÛYÙHÈÙY\H™[™Üˆ\KÙÈ›Üˆ™]šY]Ë‚ˆÛÛœÛÛKØ\›Š–ÜYÙÞK\Û™WH[šÛ›ÝÛˆÙXšÛÚÈ]™[ˆ‹^[ØY™]™[
+NÂˆ™]\›ˆ™\ËšœÛÛŠÈÚÎˆYHJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ[ˆYÙÞHÛ™HÙXšÛÚÎˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ”Û™HÙXšÛÚÈ˜Z[\™HˆJNÂˆBˆKˆ
+NÂ‚ˆËÈ\ÚÈÌMLH8 %YZ[Žˆ\Ý\ÝÌ^\ÈÙˆYÙÞHÛÛ™\œØ][ÛœË‚ˆ\™Ù]
+‹Ø\KØYZ[‹ÜYÙÞKØÛÛ™\œØ][ÛœÈ‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\‘[XZ[H
+™\K\Ù\Ë˜ÛZ[\ÏË™[XZ[™\K\Ù\Ë™[XZ[ˆŠKÓÝÙ\Ø\ÙJ
+NÂˆYˆ
+]\Ù\‘[XZ[PQRS—ÑSPRSËš[˜ÛY\Ê\Ù\‘[XZ[
+JHÂˆ™]\›ˆ™\ËœÝ]\ÊÊKšœÛÛŠÈY\ÜØYÙNˆYZ[ˆXØÙ\ÜÈ™\]Z\™YˆJNÂˆBˆÛÛœÝÚ[˜ÙS\ÈH]K››ÝÊ
+HHÌ
+ˆ
+ˆŒ
+ˆŒ
+ˆLÂˆÛÛœÝÛÛ™\œØ][ÛœÈH]ØZ]ÝÜ˜YÙK™Ù]YÙÞPÛÛ™\œØ][ÛœÔÚ[˜ÙJÚ[˜ÙS\ÊNÂˆ™\ËšœÛÛŠÛÛ™\œØ][ÛœÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\Ý[™ÈYÙÞHÛÛ™\œØ][ÛœÎˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ\ÝÛÛ™\œØ][ÛœÈˆJNÂˆBˆJNÂ‚ˆËÈ\ÚÈÌMLH8 %YZ[Žˆ™]ÚHÚ[™ÛHÛÛ™\œØ][Ûˆ
+È˜[œØÜš\‚ˆ\™Ù]
+‹Ø\KØYZ[‹ÜYÙÞKØÛÛ™\œØ][ÛœËÎšY‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\‘[XZ[H
+™\K\Ù\Ë˜ÛZ[\ÏË™[XZ[™\K\Ù\Ë™[XZ[ˆŠKÓÝÙ\Ø\ÙJ
+NÂˆYˆ
+]\Ù\‘[XZ[PQRS—ÑSPRSËš[˜ÛY\Ê\Ù\‘[XZ[
+JHÂˆ™]\›ˆ™\ËœÝ]\ÊÊKšœÛÛŠÈY\ÜØYÙNˆYZ[ˆXØÙ\ÜÈ™\]Z\™YˆJNÂˆBˆÛÛœÝYH[X™\Š™\Kœ\˜[\ËšY
+NÂˆÛÛœÝÛÛ™\œØ][ÛˆH]ØZ]ÝÜ˜YÙK™Ù]YÙÞPÛÛ™\œØ][ÛŠY
+NÂˆYˆ
+XÛÛ™\œØ][ÛŠH™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆÛÛ™\œØ][Ûˆ›Ý›Ý[™ˆJNÂˆÛÛœÝY\ÜØYÙ\ÈH]ØZ]ÝÜ˜YÙK™Ù]YÙÞSY\ÜØYÙ\ÊY
+NÂˆ™\ËšœÛÛŠÈÛÛ™\œØ][Û‹Y\ÜØYÙ\ÈJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈYÙÞHÛÛ™\œØ][ÛŽˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚÛÛ™\œØ][ÛˆˆJNÂˆBˆJNÂ‚ˆËÈÙ]ÛÛ^X]Ø\™HÝYÙÙ\Ý[ÛœÂˆ\œÜÝ
+‹Ø\KÜYÙÞKÜÝYÙÙ\Ý[ÛœÈ‹\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝÛÛ^H™\K˜›ÙK˜ÛÛ^ßNÂˆÛÛœÝÝYÙÙ\Ý[ÛœÈHYÙÞK™Ù]ÝYÙÙ\Ý[ÛœÊÛÛ^
+NÂˆ™\ËšœÛÛŠÈÝYÙÙ\Ý[ÛœÈJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÙ][™ÈYÙÞHÝYÙÙ\Ý[ÛœÎˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈÙ]ÝYÙÙ\Ý[ÛœÈˆJNÂˆBˆJNÂ‚ˆËÈ›ÝšYH™YY˜XÚÈÛˆHY\ÜØYÙBˆ\œÜÝ
+‹Ø\KÜYÙÞKÛY\ÜØYÙ\ËÎšYÙ™YY˜XÚÈ‹X›XÒ[ZÙT˜]S[Z]™\]Z\™TYÙÞPÛÛ™\œØ][ÛXØÙ\ÜË\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝY\ÜØYÙRYH[X™\Š™\Kœ\˜[\ËšY
+NÂˆÛÛœÝÈ™YY˜XÚË™YY˜XÚÓ›Ý\ÈHH™\K˜›ÙNÂˆˆYˆ
+Y™YY˜XÚÈVÉÚ[[	Ë	Û›ÝÚ[[	×Kš[˜ÛY\Ê™YY˜XÚÊJHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ•˜[Y™YY˜XÚÈ
+[[Û›ÝÚ[[
+H\È™\]Z\™YˆJNÂˆB‚ˆÛÛœÝÛÛ™\œØ][ÛˆH™\Ë›ØØ[ËœYÙÞPÛÛ™\œØ][ÛŽÂˆÛÛœÝÛÛ™\œØ][Û“Y\ÜØYÙ\ÈH]ØZ]ÝÜ˜YÙK™Ù]YÙÞSY\ÜØYÙ\ÊÛÛ™\œØ][Û‹šY
+NÂˆYˆ
+XÛÛ™\œØ][Û“Y\ÜØYÙ\ËœÛÛYJ
+Y\ÜØYÙJHOˆY\ÜØYÙKšYOOHY\ÜØYÙRY
+JHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“Y\ÜØYÙH›Ý›Ý[™ˆJNÂˆBˆˆÛÛœÝY\ÜØYÙHH]ØZ]ÝÜ˜YÙK\]TYÙÞSY\ÜØYÙQ™YY˜XÚÊY\ÜØYÙRY™YY˜XÚË™YY˜XÚÓ›Ý\ÊNÂˆ™]\›ˆ™\ËšœÛÛŠY\ÜØYÙJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆØ]š[™ÈYÙÞHY\ÜØYÙH™YY˜XÚÎˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈØ]™H™YY˜XÚÈˆJNÂˆBˆJNÂ‚ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆËÈS’Q’QQPQÈTSS‘H“ÕUTÂˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‚ˆËÈÙ][XYÈ
+ÝY™ˆÛ›JBˆ\™Ù]
+‹Ø\KÚKÛXYÈ‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝXY\HH™\Kœ]Y\žK›XY\H\ÈÝš[™È[™Yš[™YÂˆÛÛœÝÝYÙHH™\Kœ]Y\žKœÝYÙH\ÈÝš[™È[™Yš[™YÂˆÛÛœÝ\ÜÚYÛ™YÈH™\Kœ]Y\žK˜\ÜÚYÛ™YÈ\ÈÝš[™È[™Yš[™YÂˆˆÛÛœÝXYÈH]ØZ]ÝÜ˜YÙK™Ù]XYÊÈXY\KÝYÙK\ÜÚYÛ™YÈJNÂˆ™\ËšœÛÛŠXYÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈXYÎˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚXYÈˆJNÂˆBˆJNÂ‚ˆËÈÙ]Ú[™ÛHXY
+ÝY™ˆÛ›JBˆ\™Ù]
+‹Ø\KÚKÛXYËÎšY‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝYH[X™\Š™\Kœ\˜[\ËšY
+NÂˆÛÛœÝXYH]ØZ]ÝÜ˜YÙK™Ù]XY
+Y
+NÂˆˆYˆ
+[XY
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“XY›Ý›Ý[™ˆJNÂˆBˆˆ™\ËšœÛÛŠXY
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈXYˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚXYˆJNÂˆBˆJNÂ‚ˆËÈÜ™X]HH™]ÈXY
+X›XÈÜˆ]][XØ]Y
+Bˆ\œÜÝ
+‹Ø\KÛXYÈ‹X›XÒ[ZÙT˜]S[Z]\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆËÈ[\\™HØÝš[™HŒKŒŒH8 %Ù\™\‹]][K\Ü[H›ÜˆÜÝX›Z][™ˆËÈÛX\šÙ]›ÝËØXØÙ\ÜÈÝX›Z\ÜÚ[ÛœËˆÛ™^\ÝØÛÛ\[žH]\Ý™H[\NÂˆËÈ×Ù[\ÙYÛ\È]\Ý™H]X\ÝÌ
+Ë\ÙXÛÛ™[YK[Û‹Y›Ü›JK‚ˆËÈÛY[\ÚYHÚXÚÜÈ^\Ý›ÜˆV]HÙ\™\ˆ\ÈBˆËÈ]]Üš]]]™HØ]HÛÈHØÜš\YÔÕž\\ÜÚ[™ÈH™XXÝ›Ü›BˆËÈØ[››Ý™XXÚÝÜ˜YÙK‚ˆÛÛœÝH™\K˜›ÙOË›XY\NÂˆYˆ
+OOHœÝX›Z]ˆOOH›X\šÙ]›Ý×ØXØÙ\ÜÈŠHÂˆÛÛœÝH™\K˜›ÙOË›XY]OËšØÛÛ\[žHÏÈ™\K˜›ÙOËšØÛÛ\[žHÏÈˆŽÂˆYˆ
+\[ÙˆOOHœÝš[™Èˆ	‰ˆš[J
+K›[™Ýˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”ÝX›Z\ÜÚ[Ûˆ™Z™XÝYˆˆJNÂˆBˆÛÛœÝ[\ÙYH[X™\Šˆ™\K˜›ÙOË›XY]OË×Ù[\ÙYÛ\ÈÏÈ™\K˜›ÙOË×Ù[\ÙYÛ\ÈÏÈˆ
+NÂˆYˆ
+S[X™\‹š\Ñš[š]J[\ÙY
+H[\ÙYÌ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÂˆY\ÜØYÙNˆ‘›Ü›HÝX›Z]YÛÈ˜\ÝˆX\ÙHžHYØZ[‹ˆ‹ˆJNÂˆBˆËÈÝš\Û™^\Ý™Y›Ü™H\œÚ\Ý[™ÈÛÈ]™]™\ˆ[™È[ˆÝÜ˜YÙK‚ˆYˆ
+™\K˜›ÙOË›XY]H	‰ˆ\[Ùˆ™\K˜›ÙK›XY]HOOH›Øš™XÝŠHÂˆ[]H™\K˜›ÙK›XY]KšØÛÛ\[žNÂˆBˆB‚ˆËÈÛÛœÙ[\ÈH˜XÝX[™\œÚ[Û™Y\ÙˆH[ZÙH™XÛÜ™ˆÛ›H[‚ˆËÈ^XÚ]›ÛÛX[ˆÛÝ[ÎÈÛÛXÝ\›Z\ÜÚ[Ûˆ™]™\ˆÝX›\È\ÈHš]˜XÞBˆËÈXÚÛ›ÝÛYÙ[Y[ˆZYÜ˜]YX›XÈÝ\™˜XÙ\È]\Ý›ÝšYH]™Y›Ü™HBˆËÈXY\ÈÝÜ™YÜˆ›ÜØ\™Y‚ˆÛÛœÝ›Ü›X[^™YÛÛœÙ[H›Ü›X[^™SXYÛÛœÙ[
+™\K˜›ÙJNÂˆÛÛœÝÛÛœÙ[™\]Z\™[Y[H˜[Y]SXYÛÛœÙ[™\]Z\™[Y[
+›Ü›X[^™YÛÛœÙ[
+NÂˆYˆ
+XÛÛœÙ[™\]Z\™[Y[›ÚÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆÛÛœÙ[™\]Z\™[Y[›Y\ÜØYÙHJNÂˆBˆ™\K˜›ÙK›XY]HHY\™ÙSXYÛÛœÙ[]Y]
+™\K˜›ÙOË›XY]K›Ü›X[^™YÛÛœÙ[ÂˆXY\NˆˆÛÝ\˜ÙNˆ™\K˜›ÙOËœÛÝ\˜ÙKˆJNÂ‚ˆËÈ™]\ØX›HYØ\Ý\È›Ü›\È[\ˆ›ÝYÚHÛÛœÙ[YØ]YÝX›Z]ˆËÈÝ\™˜XÙK[ˆ™XÙZ]™HHÙ\™\‹[ÝÛ™YÜ\˜][Û˜[[™Kˆ™]™\ˆ\ÝBˆËÈÛY[\›ÝšYY[™HÜˆ™X]Ù[™\šXÈÛÛ^\ÈH›Ü\HY™\ÜË‚ˆ™\K˜›ÙHH›Ü›X[^™TYØ\Ý\ÓXYÝX›Z\ÜÚ[ÛŠ™\K˜›ÙJNÂ‚ˆËÈ[\\™HØÝš[™HŒKŒŒH8 %^XÚ]›Ý[™\žHX\[™È›ÜˆX\šÙ]›ÝÂˆËÈXØÙ\ÜÈ™\]Y\ÝËˆØ\KÛXYÈ\ÈH\œÚ\Ý[˜ÙH]Ùˆ™XÛÜ™]ˆËÈX\šÙ]›Ý×ØXØÙ\ÜÈÝX›Z\ÜÚ[ÛœÈ\™HÛÛ˜Ù\X[HH\Ý[˜ÝˆËÈØ[›ÛšXØ[Ú\H8 %X\šÙ]›Ý×ØXØÙ\Ü×Ü™\]Y\ÝØ8 %[™ÙH›Ú™XÝˆËÈ[H[È]Ú\HÙ\™\‹\ÚYHÛÈÝÛœÝ™X[HÛÛœÝ[Y\œÂˆËÈ
+[˜[]XÜË]\™HYXØ]YX›JHØ[ˆÝXœØÜšX™HÈHÝX›BˆËÈÛÛ˜XÝ[™\[™[ÙˆH[™\›Z[™ÈXYÈX›K‚ˆYˆ
+OOH›X\šÙ]›Ý×ØXØÙ\ÜÈŠHÂˆÛÛœÝˆ[žHH™\K˜›ÙOË›XY]HÏÈßNÂˆÛÛœÝX\šÙ]›Ý×ØXØÙ\Ü×Ü™\]Y\ÝHÂˆÚ\Nˆ›X\šÙ]›Ý×ØXØÙ\Ü×Ü™\]Y\ÝÈ‹ˆ™\œÚ[ÛŽˆKˆš\œÝ˜[YNˆ™\K˜›ÙOË™š\œÝ˜[YHÏÈˆ‹ˆ\Ý˜[YNˆ™\K˜›ÙOË›\Ý˜[YHÏÈˆ‹ˆ[XZ[ˆ™\K˜›ÙOË™[XZ[ÏÈˆ‹ˆ›ÛNˆœ›ÛHÏÈˆ‹ˆ[›ÙXÙYžNˆš[›ÙXÙYžHÏÈˆ‹ˆ›Ý\Îˆ››Ý\ÈÏÈˆ‹ˆÛÛœÙ[ÛÛXÝˆ›Ü›X[^™YÛÛœÙ[˜ÛÛœÙ[ÛÛXÝˆÛÛœÙ[ØÜPXÚÛ›ÝÛYÙYˆ›Ü›X[^™YÛÛœÙ[˜ÛÛœÙ[ØÜPXÚÛ›ÝÛYÙYˆÛÝ\˜ÙNˆ™\K˜›ÙOËœÛÝ\˜ÙHÏÈ›X\šÙ]›Ý×ØXØÙ\Ü×ÜYÙH‹ˆÝX›Z]Y]ˆ™]È]J
+KÒTÓÔÝš[™Ê
+KˆNÂˆÛÛœÛÛKš[™›Ê–ÛX\šÙ]›Ý×ØXØÙ\Ü×Ü™\]Y\Ý×HXØÙ\YŠNÂˆËÈ\œÚ\ÝHØ[›ÛšXØ[Ú\H[œÚYHXY]H[™\ˆH™\œÚ[Û™YˆËÈÙ^HÛÈHXYÈ›ÝÈØ\œšY\ÈH[XØÙ\ÜË\™\]Y\Ý[™[ÜK‚ˆYˆ
+™\K˜›ÙOË›XY]H	‰ˆ\[Ùˆ™\K˜›ÙK›XY]HOOH›Øš™XÝŠHÂˆ™\K˜›ÙK›XY]K›X\šÙ]›Ý×ØXØÙ\Ü×Ü™\]Y\ÝHX\šÙ]›Ý×ØXØÙ\Ü×Ü™\]Y\ÝÂˆBˆB‚ˆËÈ[\\™HØÝš[™HŒKŒŒˆ[Y[™Y[HËŽ8 %YØ\Ý\È^X›Þ\Èœ™YBˆËÈ[\™\Ý\ÝˆÝX›Z\ÜÚ[ÛœÈ\œš]™H\È[XZ[[Û›HÚYÛ˜[ÎÈ[œÙ\ˆËÈHØ[›ÛšXØ[XÙZÛ\ˆš\œÝ˜[YH
+ÈÛÝ\˜ÙHÛÈH™\]Y\ÝˆËÈØ]\ÙšY\ÈHXYÈØÚ[XHÚ]Ý]›Ü˜Ú[™ÈHX›XÈ›Ü›HÂˆËÈ\ÚÈ›ÜˆH˜[YKˆH^X›ÞY[]H]™\È[ˆXY]K˜^X›ÞY‚ˆYˆ
+OOH˜^X›ÞÚ[\™\ÝŠHÂˆYˆ
+\™\K˜›ÙK™š\œÝ˜[YH\[Ùˆ™\K˜›ÙK™š\œÝ˜[YHOOHœÝš[™Èˆ\™\K˜›ÙK™š\œÝ˜[YKš[J
+JHÂˆ™\K˜›ÙK™š\œÝ˜[YHH^X›ÞÝXœØÜšX™\ˆŽÂˆBˆYˆ
+\™\K˜›ÙKœÛÝ\˜ÙH\[Ùˆ™\K˜›ÙKœÛÝ\˜ÙHOOHœÝš[™Èˆ\™\K˜›ÙKœÛÝ\˜ÙKš[J
+JHÂˆ™\K˜›ÙKœÛÝ\˜ÙHH˜^X›Þ\ÈŽÂˆBˆB‚ˆÛÛœÝ\œÙT™\Ý[H[œÙ\XYØÚ[XKœØY™T\œÙJ™\K˜›ÙJNÂˆYˆ
+\\œÙT™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈˆY\ÜØYÙNˆ’[˜[YXY]H‹ˆ\œ›ÜœÎˆœ›ÛQ\œ›ÜŠ\œÙT™\Ý[™\œ›ÜŠKÔÝš[™Ê
+HˆJNÂˆBˆˆÛÛœÝXYH]ØZ]ÝÜ˜YÙK˜Ü™X]SXY
+\œÙT™\Ý[™]JNÂ‚ˆËÈ\ÚÈÌMLÈ8 %›ÜØ\™ÈYØ\Ý\ÈKˆÝ]›ÞYš\œÝˆ\È[Ø^\ÂˆËÈ]Y]Y\ÎÈH™]ÛÜšÈØ[\Èš\™KX[™Y›Ü™Ù]ˆHÚ]H™]™\‚ˆËÈ›ØÚÜÈÛˆH]˜Z[Xš[]KˆXY\HX\ÈÈÝ]™XXÚ™X\ÛÛˆ\‚ˆËÈHØÚÙY™\]›YÛÛ˜XÝ‚ˆžHÂˆÛÛœÝÝ\™˜XÙNˆ›XYˆ™[™Üˆˆ˜^X›ÞˆBˆ\œÙT™\Ý[™]K›XY\HOOH™[™Üˆ‚ˆÈ™[™Üˆ‚ˆˆ\œÙT™\Ý[™]K›XY\HOOH˜^X›ÞÚ[\™\Ý‚ˆÈ˜^X›Þ‚ˆˆ›XYŽÂˆ]ØZ]Q›ÜØ\™
+ÂˆÝ\™˜XÙKˆÛÝ\˜ÙRYˆXYšYˆ^[ØYˆÂˆ›Ü\PY™\ÜÎˆ\œÙT™\Ý[™]K˜Y™\ÜÈ[™Yš[™YˆÛÛXÝ˜[YNˆ	Ü\œÙT™\Ý[™]K™š\œÝ˜[YHˆŸH	Ü\œÙT™\Ý[™]K›\Ý˜[YHˆŸXš[J
+H•[šÛ›ÝÛˆ‹ˆÛÛXÝ[XZ[ˆ\œÙT™\Ý[™]K™[XZ[[™Yš[™YˆÛÛXÝÛ™Nˆ\œÙT™\Ý[™]KœÛ™H[™Yš[™YˆÝ]™XXÚ™X\ÛÛŽˆÝ]™XXÚ™X\ÛÛ‘›Ü“XY\J\œÙT™\Ý[™]K›XY\JKˆÛÝ\˜ÙPÚ[›™[ˆÙXœÚ]N‰Ü\œÙT™\Ý[™]KœÛÝ\˜ÙH\œÙT™\Ý[™]K›XY\_XˆÛÛœÙ[ÛÛXÝˆ›Ü›X[^™YÛÛœÙ[˜ÛÛœÙ[ÛÛXÝˆÛÛœÙ[ØÜPXÚÛ›ÝÛYÙYˆ›Ü›X[^™YÛÛœÙ[˜ÛÛœÙ[ØÜPXÚÛ›ÝÛYÙYˆ^˜NˆÂˆXY\Nˆ\œÙT™\Ý[™]K›XY\KˆXY]Nˆ\œÙT™\Ý[™]K›XY]Kˆ›Ý\Îˆ\œÙT™\Ý[™]K››Ý\ËˆKˆKˆJNÂˆHØ]Ú
+\œŠHÂˆÛÛœÛÛK™\œ›ÜŠ–ÚKY›ÜØ\™H]Y]YH\œ›Üˆ
+›Û‹X›ØÚÚ[™ÊNˆ‹\œŠNÂˆB‚ˆËÈÙ[™[XZ[›ÝYšXØ][Ûˆ˜\ÙYÛˆXY\H
+›Û‹X›ØÚÚ[™ÊBˆÛÛœÝXY]HH\œÙT™\Ý[™]NÂˆÛÛœÝ[˜[YHH	ÛXY]K™š\œÝ˜[YH	ÉßH	ÛXY]K›\Ý˜[YH	ÉßXš[J
+H	Õ[šÛ›ÝÛ‰ÎÂˆˆYˆ
+XY]K›XY\HOOH	ÜÙ[\‰ÊHÂˆÙ[™Ù[\“XY›ÝYšXØ][ÛŠÂˆ˜[YNˆ[˜[YKˆ[XZ[ˆXY]K™[XZ[	ÉËˆÛ™NˆXY]KœÛ™H	ÉËˆY™\ÜÎˆXY]K˜Y™\ÜÈ	ÉËˆ›Ü\U\Nˆ
+XY]K›XY]H\È[žJOËœ›Ü\U\H	Õ[šÛ›ÝÛ‰ËˆÛÛ™][ÛŽˆ
+XY]K›XY]H\È[žJOË˜ÛÛ™][Ûˆ	Õ[šÛ›ÝÛ‰Ëˆ[Y[[™Nˆ
+XY]K›XY]H\È[žJOË[Y[[™H	Õ[šÛ›ÝÛ‰Ëˆ›Ý\ÎˆXY]K››Ý\È[™Yš[™YˆJK˜Ø]Ú
+\œˆOˆÛÛœÛÛK™\œ›ÜŠ	Ñ˜Z[YÈÙ[™Ù[\ˆXY›ÝYšXØ][ÛŽ‰Ë\œŠJNÂˆH[ÙHYˆ
+XY]K›XY\HOOH	Ú[™\ÝÜ‰ÊHÂˆÙ[™[™\ÝÜ“XY›ÝYšXØ][ÛŠÂˆ˜[YNˆ[˜[YKˆ[XZ[ˆXY]K™[XZ[	ÉËˆÛ™NˆXY]KœÛ™H	ÉËˆ[™\ÝY[˜[™ÙNˆ
+XY]K›XY]H\È[žJOËš[™\ÝY[˜[™ÙH	Õ[šÛ›ÝÛ‰ËˆÝ˜]YÞNˆ
+XY]K›XY]H\È[žJOËœÝ˜]YÞH	Õ[šÛ›ÝÛ‰Ëˆ›Ý\ÎˆXY]K››Ý\È[™Yš[™YˆJK˜Ø]Ú
+\œˆOˆÛÛœÛÛK™\œ›ÜŠ	Ñ˜Z[YÈÙ[™[™\ÝÜˆXY›ÝYšXØ][ÛŽ‰Ë\œŠJNÂˆH[ÙHYˆ
+XY]K›XY\HOOH	Ø^Y\‰ÊHÂˆÙ[™^Y\“XY›ÝYšXØ][ÛŠÂˆ˜[YNˆ[˜[YKˆ[XZ[ˆXY]K™[XZ[	ÉËˆÛ™NˆXY]KœÛ™H	ÉËˆ^Y\•\Nˆ
+XY]K›XY]H\È[žJOË˜^Y\•\H	Õ[šÛ›ÝÛ‰ËˆšXÙT˜[™ÙNˆ
+XY]K›XY]H\È[žJOËœšXÙT˜[™ÙH	Õ[šÛ›ÝÛ‰ËˆØØ][ÛœÎˆ
+XY]K›XY]H\È[žJOË›ØØ][ÛœËˆ›Ý\ÎˆXY]K››Ý\È[™Yš[™YˆJK˜Ø]Ú
+\œˆOˆÛÛœÛÛK™\œ›ÜŠ	Ñ˜Z[YÈÙ[™^Y\ˆXY›ÝYšXØ][ÛŽ‰Ë\œŠJNÂˆH[ÙHYˆ
+XY]K›XY\HOOH	Ý™[™Ü‰ÊHÂˆÙ[™™[™Ü“XY›ÝYšXØ][ÛŠÂˆ˜[YNˆ[˜[YKˆ[XZ[ˆXY]K™[XZ[	ÉËˆÛ™NˆXY]KœÛ™H	ÉËˆÛÛ\[žNˆ
+XY]K›XY]H\È[žJOË˜ÛÛ\[žH
+XY]K›XY]H\È[žJOË˜ÛÛ\[žS˜[YKˆ˜YNˆ
+XY]K›XY]H\È[žJOË˜YH
+XY]K›XY]H\È[žJOË˜YPØ]YÛÜžH
+XY]K›XY]H\È[žJOË˜Ø]YÛÜžKˆXÙ[œÙNˆ
+XY]K›XY]H\È[žJOË›XÙ[œÙH
+XY]K›XY]H\È[žJOË›XÙ[œÙS[X™\‹ˆÙ\šXÙP\™XNˆ
+XY]K›XY]H\È[žJOËœÙ\šXÙP\™XH
+XY]K›XY]H\È[žJOË˜\™XKˆ›Ý\ÎˆXY]K››Ý\È[™Yš[™YˆJK˜Ø]Ú
+\œˆOˆÛÛœÛÛK™\œ›ÜŠ	Ñ˜Z[YÈÙ[™™[™ÜˆXY›ÝYšXØ][ÛŽ‰Ë\œŠJNÂˆH[ÙHÂˆÛÛœÝ›ÝYšXØ][ÛˆHZ[Ù[™\šXÓXY›ÝYšXØ][Û‘]JÂˆ‹‹›XY]KˆYˆXYšYˆJNÂˆ›ÚYÙ[™[XZ[
+ÂˆÎˆ™\ÛÛ™TÝY™“›ÝYšXØ][Û”™XÚ\Y[
+
+KˆÝXš™XÝˆ›ÝYšXØ][Û‹œÝXš™XÝˆ^ˆ›ÝYšXØ][Û‹^ˆJBˆ[Š
+™\Ý[
+HOˆÂˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆÛÛœÛÛK™\œ›ÜŠ	ÖÛXYY[XZ[H[]™\žH˜Z[Y‰Ë™\Ý[™\œ›ÜŠNÂˆBˆJBˆ˜Ø]Ú
+
+\œ›ÜŠHOˆÛÛœÛÛK™\œ›ÜŠ	ÖÛXYY[XZ[H[]™\žH˜Z[Y‰Ë\œ›ÜŠJNÂˆBˆˆ™\ËœÝ]\ÊŒJKšœÛÛŠXY
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™ÈXYˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈÜ™X]HXYˆJNÂˆBˆJNÂ‚ˆËÈ\ÚÈÌMLÈ8 %YØ\Ý\ÈHÝ]›ÞYZ[‹ˆ™XY[™[™ËÙ˜Z[YÙ›ÜØ\™YˆËÈ^[ØYË™]žHH˜Z[Y›ÝË˜Z[ˆ[[™[™ËˆØ]YÈYZ[œË‚ˆÛÛœÝ™\]Z\™PYZ[‘[XZ[H\Þ[˜È
+™\Nˆ[žK™\Îˆ™\ÜÛœÙK™^ˆ™^[˜Ý[ÛŠHOˆÂˆÛÛœÝ[XZ[H
+™\K\Ù\Ë˜ÛZ[\ÏË™[XZ[™\K\Ù\Ë™[XZ[ˆŠKÓÝÙ\Ø\ÙJ
+NÂˆYˆ
+Y[XZ[PQRS—ÑSPRSËš[˜ÛY\Ê[XZ[
+JHÂˆ™]\›ˆ™\ËœÝ]\ÊÊKšœÛÛŠÈY\ÜØYÙNˆ‘›Ü˜šY[ˆˆJNÂˆBˆ™^
+
+NÂˆNÂ‚ˆ\™Ù]
+‹Ø\KØYZ[‹ÚK[Ý]›Þ‹\ÒXœšY]][XØ]Y™\]Z\™PYZ[‘[XZ[\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝÝ]\ÈH
+™\Kœ]Y\žKœÝ]\È\ÈÝš[™ÊH[™Yš[™YÂˆÛÛœÝ[Z]H[X™\Š™\Kœ]Y\žK›[Z]
+HLÂˆÛÛœÝ›ÝÜÈH]ØZ]ÝÜ˜YÙK™Ù]SÝ]›Þ\Ý
+ÈÝ]\Ë[Z]JNÂˆÛÛœÝX[HH]ØZ]\ÒRX[J
+NÂˆ™\ËšœÛÛŠÈ›ÝÜËRX[NˆX[HJNÂˆHØ]Ú
+\œŠHÂˆÛÛœÛÛK™\œ›ÜŠšK[Ý]›Þ\Ý\œ›ÜŽˆ‹\œŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈØYÝ]›ÞˆJNÂˆBˆJNÂ‚ˆ\œÜÝ
+‹Ø\KØYZ[‹ÚK[Ý]›ÞÎšYÜ™]žH‹\ÒXœšY]][XØ]Y™\]Z\™PYZ[‘[XZ[\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝYH[X™\Š™\Kœ\˜[\ËšY
+NÂˆÛÛœÝ™\Ý[H]ØZ]T™]žSÝ]›Þ›ÝÊY
+NÂˆ™\ËšœÛÛŠÈÚÎˆH\™\Ý[ËšWÜÝX›Z\ÜÚ[Û—ÚY™\Ý[JNÂˆHØ]Ú
+\œŠHÂˆÛÛœÛÛK™\œ›ÜŠšK[Ý]›Þ™]žH\œ›ÜŽˆ‹\œŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ”™]žH˜Z[YˆJNÂˆBˆJNÂ‚ˆ\œÜÝ
+‹Ø\KØYZ[‹ÚK[Ý]›ÞÙ˜Z[ˆ‹\ÒXœšY]][XØ]Y™\]Z\™PYZ[‘[XZ[\Þ[˜È
+Ü™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ™\Ý[H]ØZ]Q˜Z[”[™[™ÊL
+NÂˆ™\ËšœÛÛŠ™\Ý[
+NÂˆHØ]Ú
+\œŠHÂˆÛÛœÛÛK™\œ›ÜŠšK[Ý]›Þ˜Z[ˆ\œ›ÜŽˆ‹\œŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[ˆ˜Z[YˆJNÂˆBˆJNÂ‚ˆËÈNˆ\Ý™[™Üˆ\XØ][ÛœÈÝX›Z]YšXHÝ™[™Ü‹[™]ÛÜšÂˆ\™Ù]
+‹Ø\KÚKÝ™[™ÜœÈ‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+Ü™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ™[™ÜœÈH]ØZ]ÝÜ˜YÙK™Ù]XYÊÈXY\Nˆ™[™ÜˆˆJNÂˆ™]\›ˆ™\ËšœÛÛŠ™[™ÜœÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È™[™ÜˆXYÎˆ‹\œ›ÜŠNÂˆ™]\›ˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]Ú™[™Üˆ\XØ][ÛœÈˆJNÂˆBˆJNÂ‚ˆËÈ\]HXY
+ÝY™ˆÛ›JBˆ\œ]Ú
+‹Ø\KÚKÛXYËÎšY‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝYH[X™\Š™\Kœ\˜[\ËšY
+NÂˆÛÛœÝXYH]ØZ]ÝÜ˜YÙK\]SXY
+Y™\K˜›ÙJNÂˆˆYˆ
+[XY
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“XY›Ý›Ý[™ˆJNÂˆBˆˆ™\ËšœÛÛŠXY
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\][™ÈXYˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ\]HXYˆJNÂˆBˆJNÂ‚ˆËÈ\]HXYÝYÙH
+ÝY™ˆÛ›JBˆ\œ]Ú
+‹Ø\KÚKÛXYËÎšYÜÝYÙH‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝYH[X™\Š™\Kœ\˜[\ËšY
+NÂˆÛÛœÝÈÝYÙHHH™\K˜›ÙNÂˆˆYˆ
+\ÝYÙJHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”ÝYÙH\È™\]Z\™YˆJNÂˆBˆˆÛÛœÝXYH]ØZ]ÝÜ˜YÙK\]SXYÝYÙJYÝYÙJNÂˆˆYˆ
+[XY
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“XY›Ý›Ý[™ˆJNÂˆBˆˆ™\ËšœÛÛŠXY
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\][™ÈXYÝYÙNˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ\]HXYÝYÙHˆJNÂˆBˆJNÂ‚ˆËÈ\ÜÚYÛˆXY
+ÝY™ˆÛ›JBˆ\œ]Ú
+‹Ø\KÚKÛXYËÎšYØ\ÜÚYÛˆ‹\Ð]][XØ]Y™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝYH[X™\Š™\Kœ\˜[\ËšY
+NÂˆÛÛœÝÈ\ÜÚYÛ™YÈHH™\K˜›ÙNÂˆˆYˆ
+X\ÜÚYÛ™YÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ˜\ÜÚYÛ™YÈ\È™\]Z\™YˆJNÂˆBˆˆÛÛœÝXYH]ØZ]ÝÜ˜YÙK˜\ÜÚYÛ“XY
+Y\ÜÚYÛ™YÊNÂˆˆYˆ
+[XY
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“XY›Ý›Ý[™ˆJNÂˆBˆˆ™\ËšœÛÛŠXY
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\ÜÚYÛš[™ÈXYˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ\ÜÚYÛˆXYˆJNÂˆBˆJNÂ‚ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆËÈÐU‘QSSTÑTÈ“ÕUTÈ
+[š[˜ÙYØ[Ý[]ÜˆØ]™\ÊBˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‚ˆËÈÙ]\Ù\‰ÜÈØ]™Y[˜[\Ù\Âˆ\™Ù]
+‹Ø\KÜØ]™YX[˜[\Ù\È‹\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆÛÛœÝØ[Ý[]Ü•\HH™\Kœ]Y\žK˜Ø[Ý[]Ü•\H\ÈÝš[™È[™Yš[™YÂˆˆÛÛœÝ[˜[\Ù\ÈH]ØZ]ÝÜ˜YÙK™Ù]Ø]™Y[˜[\Ù\Ê\Ù\’YØ[Ý[]Ü•\JNÂˆ™\ËšœÛÛŠ[˜[\Ù\ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈØ]™Y[˜[\Ù\Îˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]Ú[˜[\Ù\ÈˆJNÂˆBˆJNÂ‚ˆËÈÙ]Ú[™ÛHØ]™Y[˜[\Ú\Âˆ\™Ù]
+‹Ø\KÜØ]™YX[˜[\Ù\ËÎšY‹\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝYH[X™\Š™\Kœ\˜[\ËšY
+NÂˆÛÛœÝ[˜[\Ú\ÈH]ØZ]ÝÜ˜YÙK™Ù]Ø]™Y[˜[\Ú\ÊY
+NÂˆˆYˆ
+X[˜[\Ú\ÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ[˜[\Ú\È›Ý›Ý[™ˆJNÂˆBˆˆËÈÚXÚÈÝÛ™\œÚ\ˆYˆ
+[˜[\Ú\Ë\Ù\’YOOH™\K\Ù\‹˜ÛZ[\ËœÝXŠHÂˆ™]\›ˆ™\ËœÝ]\ÊÊKšœÛÛŠÈY\ÜØYÙNˆ“›Ý]]Üš^™YˆJNÂˆBˆˆ™\ËšœÛÛŠ[˜[\Ú\ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È[˜[\Ú\Îˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]Ú[˜[\Ú\ÈˆJNÂˆBˆJNÂ‚ˆËÈÝÛ™\‹[Û›NˆÚÈ\È\È[˜[\Ú\È™Y[ˆ[XZ[YÈ
+[ÜÝ™XÙ[š\œÝ
+K‚ˆËÈ[\[Y[][Ûˆ]™\È[ˆ‹Ø[˜[\Ú\ÔÙ[™\ÝÜžT›Ý]\ÈÛÈHÝÛ™\œÚ\ˆËÈÚXÚÈ
+ÈÝÜ˜YÙHÚ\š[™ÈØ[ˆ™H^\˜Ú\ÙYžH[YÜ˜][Ûˆ\ÝË‚ˆÛÛœÝÈ™YÚ\Ý\[˜[\Ú\ÔÙ[™\ÝÜžT›Ý]\ÈHH]ØZ][\Ü
+ˆ‹‹Ø[˜[\Ú\ÔÙ[™\ÝÜžT›Ý]\È‚ˆ
+NÂˆ™YÚ\Ý\[˜[\Ú\ÔÙ[™\ÝÜžT›Ý]\Ê\È\Ð]][XØ]YJNÂ‚ˆËÈÛ˜\ÚÝÚ\™H[™Ú[È8 %^˜XÝY[ÈHYXØ]Y[Ù[HÛÈBˆËÈUÒ[ÝÛ\Ý
+ÈÚÙ[ˆZ[
+ÈX›XË\™XY›ÝÈØ[ˆ™H^\˜Ú\ÙYžBˆËÈH[YÜ˜][Ûˆ\ÝÈ[ˆÙ\™\‹××Ý\Ý××ËÜØ]™YX[˜[\Ù\Ë\Ú\™K\ÝÂˆËÈÚ]Ý]›ÛÝ[™ÈH[^™\ÜÈ\‚ˆÛÛœÝÈ™YÚ\Ý\”Ø]™Y[˜[\Ù\ÔÚ\™T›Ý]\ÈHH]ØZ][\Ü
+ˆ‹‹ÜØ]™Y[˜[\Ù\ÔÚ\™T›Ý]\È‚ˆ
+NÂˆ™YÚ\Ý\”Ø]™Y[˜[\Ù\ÔÚ\™T›Ý]\Ê\È\Ð]][XØ]YJNÂ‚ˆËÈÜ™X]HØ]™Y[˜[\Ú\Âˆ\œÜÝ
+‹Ø\KÜØ]™YX[˜[\Ù\È‹\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆˆÛÛœÝ\œÙT™\Ý[H[œÙ\Ø]™Y[˜[\Ú\ÔØÚ[XKœØY™T\œÙJÂˆ‹‹œ™\K˜›ÙKˆ\Ù\’YˆJNÂˆˆYˆ
+\\œÙT™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈˆY\ÜØYÙNˆ’[˜[Y[˜[\Ú\È]H‹ˆ\œ›ÜœÎˆœ›ÛQ\œ›ÜŠ\œÙT™\Ý[™\œ›ÜŠKÔÝš[™Ê
+HˆJNÂˆBˆˆÛÛœÝ[˜[\Ú\ÈH]ØZ]ÝÜ˜YÙK˜Ü™X]TØ]™Y[˜[\Ú\Ê\œÙT™\Ý[™]JNÂˆ™\ËœÝ]\ÊŒJKšœÛÛŠ[˜[\Ú\ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆØ]š[™È[˜[\Ú\Îˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈØ]™H[˜[\Ú\ÈˆJNÂˆBˆJNÂ‚ˆËÈUÒØ\KÜØ]™YX[˜[\Ù\ËÎšY\È™YÚ\Ý\™YX›Ý™HšXBˆËÈ™YÚ\Ý\”Ø]™Y[˜[\Ù\ÔÚ\™T›Ý]\È8 %È›Ý™YXÛ\™H]\™K‚‚ˆËÈ[]HØ]™Y[˜[\Ú\Âˆ\™[]J‹Ø\KÜØ]™YX[˜[\Ù\ËÎšY‹\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝYH[X™\Š™\Kœ\˜[\ËšY
+NÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆˆËÈ™\šYžHÝÛ™\œÚ\ˆÛÛœÝ^\Ý[™ÈH]ØZ]ÝÜ˜YÙK™Ù]Ø]™Y[˜[\Ú\ÊY
+NÂˆYˆ
+Y^\Ý[™ÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ[˜[\Ú\È›Ý›Ý[™ˆJNÂˆBˆYˆ
+^\Ý[™Ë\Ù\’YOOH\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊÊKšœÛÛŠÈY\ÜØYÙNˆ“›Ý]]Üš^™YˆJNÂˆBˆˆ]ØZ]ÝÜ˜YÙK™[]TØ]™Y[˜[\Ú\ÊY
+NÂˆ™\ËœÝ]\ÊŒ
+KœÙ[™
+
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ[][™È[˜[\Ú\Îˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ[]H[˜[\Ú\ÈˆJNÂˆBˆJNÂ‚ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆËÈÒÓTÐSHPSÑ‘‘T”È“ÕUTÂˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‚ˆËÈÙ]Ù™™\œÈ›ÜˆHX[ˆ\™Ù]
+‹Ø\KÝÚÛ\Ø[KYX[ËÎ™X[YÛÙ™™\œÈ‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆBˆÛÛœÝX[YH[X™\Š™\Kœ\˜[\Ë™X[Y
+NÂˆÛÛœÝÙ™™\œÈH]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[Ù™™\œÊX[Y
+NÂˆÛÛœÝXØÙ\ÜÈH]ØZ]™\ÛÛ™SYØXÞQX[XØÙ\ÜÊˆ™\Kˆ\Ù\’YˆÚÛ\Ø[WÙX[‹ˆX[YˆÈÙ™™\œÈKˆ
+NÂˆYˆ
+ˆXXØÙ\ÜÈˆ
+XXØÙ\ÜËš\ÓÝÛ™\ˆ	‰ˆXXØÙ\ÜËš\Ô\XÚ\[	‰ˆXXØÙ\ÜËš\ÔÝY™ŠBˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ•ÚÛ\Ø[HX[›Ý›Ý[™ˆJNÂˆB‚ˆYˆ
+XØÙ\ÜËš\ÓÝÛ™\ˆXØÙ\ÜËš\ÔÝY™ŠHÂˆ™]\›ˆ™\ËšœÛÛŠÙ™™\œÊNÂˆBˆÛÛœÝš\ÚX›SÙ™™\œÈHš[\“YØXÞUÚÛ\Ø[SÙ™™\œÑ›Ü•\Ù\Š\Ù\’YÙ™™\œÊNÂˆYˆ
+š\ÚX›SÙ™™\œË›[™ÝOOH
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ•ÚÛ\Ø[HX[›Ý›Ý[™ˆJNÂˆBˆ™]\›ˆ™\ËšœÛÛŠš\ÚX›SÙ™™\œÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈX[Ù™™\œÎˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚÙ™™\œÈˆJNÂˆBˆJNÂ‚ˆËÈÙ]^HÙ™™\œÂˆ\™Ù]
+‹Ø\KÛ^K]ÚÛ\Ø[K[Ù™™\œÈ‹\Ð]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\‹˜ÛZ[\ËœÝXŽÂˆÛÛœÝÙ™™\œÈH]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[Ù™™\œÐžP^Y\Š\Ù\’Y
+NÂˆ™\ËšœÛÛŠÙ™™\œÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È^HÙ™™\œÎˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚÙ™™\œÈˆJNÂˆBˆJNÂ‚ˆËÈÜ™X]HÙ™™\ˆÛˆHX[ˆ\œÜÝ
+‹Ø\KÝÚÛ\Ø[KYX[ËÎ™X[YÛÙ™™\œÈ‹\ÒXœšY]][XØ]Y\Þ[˜È
+Ü™\Nˆ[žK™\ÊHOˆÂˆ™]\›ˆ™\ËœÝ]\ÊLJKšœÛÛŠÂˆY\ÜØYÙN‚ˆ“YØXÞHÚÛ\Ø[HÙ™™\œÈ\™H™XY[Û›Kˆ\ÙHX\šÙ]›ÝÈÙ™™\ˆÝY[È›Üˆ\œÚ\ÝYÙ™™\œËˆ‹ˆJNÂˆJNÂ‚ˆËÈ\]HÙ™™\ˆÝ]\È
+ÚÛ\Ø[\ˆXØÙ\[™ËÜ™Z™XÝ[™ÊBˆ\œ]Ú
+‹Ø\KÝÚÛ\Ø[K[Ù™™\œËÎšYÜÝ]\È‹\ÒXœšY]][XØ]Y\Þ[˜È
+Ü™\Nˆ[žK™\ÊHOˆÂˆ™]\›ˆ™\ËœÝ]\ÊLJKšœÛÛŠÂˆY\ÜØYÙN‚ˆ“YØXÞHÚÛ\Ø[HÙ™™\œÈ\™H™XY[Û›Kˆ\ÙHX\šÙ]›ÝÈÙ™™\ˆÝY[È›Üˆ\œÚ\ÝYÙ™™\ˆ™\ÜÛœÙ\Ëˆ‹ˆJNÂˆJNÂ‚ˆËÈÛÝ[\ˆ[ˆÙ™™\‚ˆ\œÜÝ
+‹Ø\KÝÚÛ\Ø[K[Ù™™\œËÎšYØÛÝ[\ˆ‹\ÒXœšY]][XØ]Y\Þ[˜È
+Ü™\Nˆ[žK™\ÊHOˆÂˆ™]\›ˆ™\ËœÝ]\ÊLJKšœÛÛŠÂˆY\ÜØYÙN‚ˆ“YØXÞHÚÛ\Ø[HÙ™™\œÈ\™H™XY[Û›Kˆ\ÙHX\šÙ]›ÝÈÙ™™\ˆÝY[È›Üˆ\œÚ\ÝYÛÝ[\›Ù™™\œËˆ‹ˆJNÂˆJNÂ‚ˆËÈOOOOOOOOOOOOOHˆÑS‘TUSÓˆ“ÕUTÈOOOOOOOOOOOOOBˆˆËÈÙ[™\˜]HØ[Ý[]Üˆ[˜[\Ú\È‹‚ˆËÈ™YH[œ][Ù\È
+[ˆš[Üš]HÜ™\ŠN‚ˆËÈKˆÈYH8¡¤ˆ™[™\ˆHØ]™Y[˜[\Ú\ÈÝÛ™YžHHØ[\ˆ
+]]™\]Z\™Y
+BˆËÈ‹ˆÈÚ\™UÚÙ[ˆH8¡¤ˆ™[™\ˆHX›XÛHÚ\™YØ]™Y[˜[\Ú\È
+›È]]
+BˆËÈËˆÈØ[Ý[]Ü•\K[œ]ËÝ]]ÈH8¡¤ˆ™[™\ˆ[ˆYZØÈØ[Ý[]Üˆ[‚ˆ\œÜÝ
+‹Ø\KÜ‹ØØ[Ý[]Üˆ‹\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝÈYÚ\™UÚÙ[‹Ø[Ý[]Ü•\K[œ]ËÝ]]ÈHH™\K˜›ÙHÏÈßNÂ‚ˆËÈ[ÙHNˆ™[™\ˆžHØ]™Y[˜[\Ú\ÈY
+ÝÛ™\‹[Û›JBˆYˆ
+YOOH[™Yš[™Y	‰ˆYOOH[
+HÂˆÛÛœÝ[Y\šXÒYH[X™\ŠY
+NÂˆYˆ
+S[X™\‹š\Ñš[š]J[Y\šXÒY
+JHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[YYˆJNÂˆBˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JHÏÈ
+]ØZ]^˜XÝÝ\X˜\ÙU\Ù\Š™\JJOËšYÏÈ[ÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆBˆÛÛœÝ[˜[\Ú\ÈH]ØZ]ÝÜ˜YÙK™Ù]Ø]™Y[˜[\Ú\Ê[Y\šXÒY
+NÂˆYˆ
+X[˜[\Ú\ÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ[˜[\Ú\È›Ý›Ý[™ˆJNÂˆBˆYˆ
+[˜[\Ú\Ë\Ù\’YOOH\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊÊKšœÛÛŠÈY\ÜØYÙNˆ“›Ý]]Üš^™YˆJNÂˆBˆÛÛœÝY™™\ˆH]ØZ]Ù[™\˜]TØ]™Y[˜[\Ú\ÔŠÂˆ˜[YNˆ[˜[\Ú\Ë›˜[YKˆØ[Ý[]Ü•\Nˆ[˜[\Ú\Ë˜Ø[Ý[]Ü•\Kˆ›Ü\PY™\ÜÎˆ[˜[\Ú\Ëœ›Ü\PY™\ÜËˆ[œ]Îˆ
+[˜[\Ú\Ëš[œ]ÈÏÈßJH\È™XÛÜ™Ýš[™Ë[šÛ›ÝÛ‹ˆ™\Ý[Îˆ
+[˜[\Ú\Ëœ™\Ý[ÈÏÈßJH\È™XÛÜ™Ýš[™Ë[šÛ›ÝÛ‹ˆš[X\žSY]šXÎˆ[˜[\Ú\Ëœš[X\žSY]šXËˆš[X\žU˜[YNˆ[˜[\Ú\Ëœš[X\žU˜[YKˆÙXÛÛ™\žSY]šXÎˆ[˜[\Ú\ËœÙXÛÛ™\žSY]šXËˆÙXÛÛ™\žU˜[YNˆ[˜[\Ú\ËœÙXÛÛ™\žU˜[YKˆX[Ü˜YNˆ[˜[\Ú\Ë™X[Ü˜YKˆØÙ[˜\š[ÓX™[ˆ[˜[\Ú\ËœØÙ[˜\š[ÓX™[ˆ›Ý\Îˆ[˜[\Ú\Ë››Ý\ËˆÜ™X]Y]ˆ[˜[\Ú\Ë˜Ü™X]Y]ˆJNÂˆÛÛœÝØY™S˜[YHH[˜[\Ú\Ë›˜[YKœ™\XÙJÖ×˜K^KVŒNKW×JËÙË‹HŠKœÛXÙJŒ
+H˜[˜[\Ú\ÈŽÂˆ™\ËœÙ]XY\ŠÛÛ[U\H‹˜\XØ][Û‹ÜˆŠNÂˆ™\ËœÙ]XY\ŠÛÛ[Q\ÜÜÚ][Ûˆ‹]XÚY[Èš[[˜[YOHœYØ\Ý\ËIÜØY™S˜[Y_Kœˆ˜
+NÂˆ™]\›ˆ™\ËœÙ[™
+Y™™\ŠNÂˆB‚ˆËÈ[ÙHŽˆ™[™\ˆžHX›XÈÚ\™HÚÙ[‚ˆYˆ
+\[ÙˆÚ\™UÚÙ[ˆOOHœÝš[™Èˆ	‰ˆÚ\™UÚÙ[‹›[™Ýˆ
+HÂˆËÈˆ^ÜÚÝ[›Ý[™›]HÛ˜\ÚÝšY]ÐÛÝ[[˜[]XÜË‚ˆÛÛœÝ[˜[\Ú\ÈH]ØZ]ÝÜ˜YÙK™Ù]Ø]™Y[˜[\Ú\ÐžTÚ\™UÚÙ[ŠÚ\™UÚÙ[‹Âˆ[˜Ü™[Y[šY]ÐÛÝ[ˆ˜[ÙKˆJNÂˆYˆ
+X[˜[\Ú\ÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”Ú\™Y[˜[\Ú\È›Ý›Ý[™ˆJNÂˆBˆÛÛœÝY™™\ˆH]ØZ]Ù[™\˜]TØ]™Y[˜[\Ú\ÔŠÂˆ˜[YNˆ[˜[\Ú\Ë›˜[YKˆØ[Ý[]Ü•\Nˆ[˜[\Ú\Ë˜Ø[Ý[]Ü•\Kˆ›Ü\PY™\ÜÎˆ[˜[\Ú\Ëœ›Ü\PY™\ÜËˆ[œ]Îˆ
+[˜[\Ú\Ëš[œ]ÈÏÈßJH\È™XÛÜ™Ýš[™Ë[šÛ›ÝÛ‹ˆ™\Ý[Îˆ
+[˜[\Ú\Ëœ™\Ý[ÈÏÈßJH\È™XÛÜ™Ýš[™Ë[šÛ›ÝÛ‹ˆš[X\žSY]šXÎˆ[˜[\Ú\Ëœš[X\žSY]šXËˆš[X\žU˜[YNˆ[˜[\Ú\Ëœš[X\žU˜[YKˆÙXÛÛ™\žSY]šXÎˆ[˜[\Ú\ËœÙXÛÛ™\žSY]šXËˆÙXÛÛ™\žU˜[YNˆ[˜[\Ú\ËœÙXÛÛ™\žU˜[YKˆX[Ü˜YNˆ[˜[\Ú\Ë™X[Ü˜YKˆØÙ[˜\š[ÓX™[ˆ[˜[\Ú\ËœØÙ[˜\š[ÓX™[ˆ›Ý\Îˆ[˜[\Ú\Ë››Ý\ËˆÜ™X]Y]ˆ[˜[\Ú\Ë˜Ü™X]Y]ˆJNÂˆÛÛœÝØY™S˜[YHH[˜[\Ú\Ë›˜[YKœ™\XÙJÖ×˜K^KVŒNKW×JËÙË‹HŠKœÛXÙJŒ
+H˜[˜[\Ú\ÈŽÂˆ™\ËœÙ]XY\ŠÛÛ[U\H‹˜\XØ][Û‹ÜˆŠNÂˆ™\ËœÙ]XY\ŠÛÛ[Q\ÜÜÚ][Ûˆ‹]XÚY[Èš[[˜[YOHœYØ\Ý\ËIÜØY™S˜[Y_Kœˆ˜
+NÂˆ™]\›ˆ™\ËœÙ[™
+Y™™\ŠNÂˆB‚ˆËÈ[ÙHÎˆYZØÈØ[Ý[]Üˆ[ˆ
+YØXÞJBˆYˆ
+XØ[Ý[]Ü•\HZ[œ]È[Ý]]ÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÂˆY\ÜØYÙNˆ”›ÝšYHYÚ\™UÚÙ[‹ÜˆØ[Ý[]Ü•\JÚ[œ]ÊÛÝ]]È‹ˆJNÂˆB‚ˆÛÛœÝY™™\ˆH]ØZ]Ù[™\˜]PØ[Ý[]Ü”ŠØ[Ý[]Ü•\K[œ]ËÝ]]ÊNÂˆ™\ËœÙ]XY\ŠÛÛ[U\H‹˜\XØ][Û‹ÜˆŠNÂˆ™\ËœÙ]XY\ŠˆÛÛ[Q\ÜÜÚ][Ûˆ‹ˆ]XÚY[Èš[[˜[YOH‰ØØ[Ý[]Ü•\_KX[˜[\Ú\ËIÑ]K››ÝÊ
+_Kœˆ˜ˆ
+NÂˆ™\ËœÙ[™
+Y™™\ŠNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÙ[™\˜][™ÈØ[Ý[]ÜˆŽˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈÙ[™\˜]HˆˆJNÂˆBˆJNÂ‚ˆËÈÙ[™\˜]Hœ˜[™Yˆ›ÜˆHØ]™Y[˜[\Ú\È
+ÝÛ™\ˆÛ›JH8 %ÛÛ™[šY[˜ÙHÑUˆËÈÜ˜\\ˆ\›Ý[™ÔÕØ\KÜ‹ØØ[Ý[]ÜˆÈYH›Üˆ\™XÝYÝÛ›ØY[šÜË‚ˆ\™Ù]
+‹Ø\KÜ‹ØØ[Ý[]Ü‹ØžKZYÎšY‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝYH[X™\Š™\Kœ\˜[\ËšY
+NÂˆYˆ
+S[X™\‹š\Ñš[š]JY
+JHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[YYˆJNÂˆBˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆÛÛœÝ[˜[\Ú\ÈH]ØZ]ÝÜ˜YÙK™Ù]Ø]™Y[˜[\Ú\ÊY
+NÂˆYˆ
+X[˜[\Ú\ÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ[˜[\Ú\È›Ý›Ý[™ˆJNÂˆBˆYˆ
+[˜[\Ú\Ë\Ù\’YOOH\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊÊKšœÛÛŠÈY\ÜØYÙNˆ“›Ý]]Üš^™YˆJNÂˆB‚ˆÛÛœÝY™™\ˆH]ØZ]Ù[™\˜]TØ]™Y[˜[\Ú\ÔŠÂˆ˜[YNˆ[˜[\Ú\Ë›˜[YKˆØ[Ý[]Ü•\Nˆ[˜[\Ú\Ë˜Ø[Ý[]Ü•\Kˆ›Ü\PY™\ÜÎˆ[˜[\Ú\Ëœ›Ü\PY™\ÜËˆ[œ]Îˆ
+[˜[\Ú\Ëš[œ]ÈÏÈßJH\È™XÛÜ™Ýš[™Ë[šÛ›ÝÛ‹ˆ™\Ý[Îˆ
+[˜[\Ú\Ëœ™\Ý[ÈÏÈßJH\È™XÛÜ™Ýš[™Ë[šÛ›ÝÛ‹ˆš[X\žSY]šXÎˆ[˜[\Ú\Ëœš[X\žSY]šXËˆš[X\žU˜[YNˆ[˜[\Ú\Ëœš[X\žU˜[YKˆÙXÛÛ™\žSY]šXÎˆ[˜[\Ú\ËœÙXÛÛ™\žSY]šXËˆÙXÛÛ™\žU˜[YNˆ[˜[\Ú\ËœÙXÛÛ™\žU˜[YKˆX[Ü˜YNˆ[˜[\Ú\Ë™X[Ü˜YKˆØÙ[˜\š[ÓX™[ˆ[˜[\Ú\ËœØÙ[˜\š[ÓX™[ˆ›Ý\Îˆ[˜[\Ú\Ë››Ý\ËˆÜ™X]Y]ˆ[˜[\Ú\Ë˜Ü™X]Y]ˆJNÂ‚ˆÛÛœÝØY™S˜[YHH[˜[\Ú\Ë›˜[YKœ™\XÙJÖ×˜K^KVŒNKW×JËÙË‹HŠKœÛXÙJŒ
+H˜[˜[\Ú\ÈŽÂˆ™\ËœÙ]XY\ŠÛÛ[U\H‹˜\XØ][Û‹ÜˆŠNÂˆ™\ËœÙ]XY\ŠˆÛÛ[Q\ÜÜÚ][Ûˆ‹ˆ]XÚY[Èš[[˜[YOHœYØ\Ý\ËIÜØY™S˜[Y_Kœˆ˜ˆ
+NÂˆ™\ËœÙ[™
+Y™™\ŠNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÙ[™\˜][™ÈØ]™YX[˜[\Ú\Èˆ
+žHY
+Nˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈÙ[™\˜]HˆˆJNÂˆBˆJNÂ‚ˆËÈÙ[™\˜]Hœ˜[™Yˆ›ÜˆHX›XÛHÚ\™Y[˜[\Ú\È
+›È]]™\]Z\™Y
+Bˆ\™Ù]
+‹Ø\KÜ‹ØØ[Ý[]Ü‹ØžK]ÚÙ[‹ÎÚÙ[ˆ‹\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝÚÙ[ˆH™\Kœ\˜[\ËÚÙ[ŽÂˆÛÛœÝ[˜[\Ú\ÈH]ØZ]ÝÜ˜YÙK™Ù]Ø]™Y[˜[\Ú\ÐžTÚ\™UÚÙ[ŠÚÙ[‹Âˆ[˜Ü™[Y[šY]ÐÛÝ[ˆ˜[ÙKˆJNÂˆYˆ
+X[˜[\Ú\ÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”Ú\™Y[˜[\Ú\È›Ý›Ý[™ˆJNÂˆB‚ˆÛÛœÝY™™\ˆH]ØZ]Ù[™\˜]TØ]™Y[˜[\Ú\ÔŠÂˆ˜[YNˆ[˜[\Ú\Ë›˜[YKˆØ[Ý[]Ü•\Nˆ[˜[\Ú\Ë˜Ø[Ý[]Ü•\Kˆ›Ü\PY™\ÜÎˆ[˜[\Ú\Ëœ›Ü\PY™\ÜËˆ[œ]Îˆ
+[˜[\Ú\Ëš[œ]ÈÏÈßJH\È™XÛÜ™Ýš[™Ë[šÛ›ÝÛ‹ˆ™\Ý[Îˆ
+[˜[\Ú\Ëœ™\Ý[ÈÏÈßJH\È™XÛÜ™Ýš[™Ë[šÛ›ÝÛ‹ˆš[X\žSY]šXÎˆ[˜[\Ú\Ëœš[X\žSY]šXËˆš[X\žU˜[YNˆ[˜[\Ú\Ëœš[X\žU˜[YKˆÙXÛÛ™\žSY]šXÎˆ[˜[\Ú\ËœÙXÛÛ™\žSY]šXËˆÙXÛÛ™\žU˜[YNˆ[˜[\Ú\ËœÙXÛÛ™\žU˜[YKˆX[Ü˜YNˆ[˜[\Ú\Ë™X[Ü˜YKˆØÙ[˜\š[ÓX™[ˆ[˜[\Ú\ËœØÙ[˜\š[ÓX™[ˆ›Ý\Îˆ[˜[\Ú\Ë››Ý\ËˆÜ™X]Y]ˆ[˜[\Ú\Ë˜Ü™X]Y]ˆJNÂ‚ˆÛÛœÝØY™S˜[YHH[˜[\Ú\Ë›˜[YKœ™\XÙJÖ×˜K^KVŒNKW×JËÙË‹HŠKœÛXÙJŒ
+H˜[˜[\Ú\ÈŽÂˆ™\ËœÙ]XY\ŠÛÛ[U\H‹˜\XØ][Û‹ÜˆŠNÂˆ™\ËœÙ]XY\ŠˆÛÛ[Q\ÜÜÚ][Ûˆ‹ˆ]XÚY[Èš[[˜[YOHœYØ\Ý\ËIÜØY™S˜[Y_Kœˆ˜ˆ
+NÂˆ™\ËœÙ[™
+Y™™\ŠNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÙ[™\˜][™ÈØ]™YX[˜[\Ú\Èˆ
+žHÚÙ[ŠNˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈÙ[™\˜]HˆˆJNÂˆBˆJNÂ‚ˆËÈ[XZ[HØ]™YX[˜[\Ú\ÈˆÈH™XÚ\Y[
+[™\‹•ˆ\™\‹Ù[\‹]ËŠK‚ˆËÈÛÈ[œ][Ù\Î‚ˆËÈKˆÈY™XÚ\Y[˜[YK™XÚ\Y[[XZ[›ÝOÈH8¡¤ˆÝÛ™\‹[Û›H
+]]™\]Z\™Y
+BˆËÈ‹ˆÈÚ\™UÚÙ[‹™XÚ\Y[˜[YK™XÚ\Y[[XZ[›ÝOÈH8¡¤ˆX›XË˜]K[[Z]YˆÛÛœÝÙ[™‘[XZ[ØÚ[XHH‹›Øš™XÝ
+ÂˆYˆ‹›[X™\Š
+Kš[
+
+KœÜÚ]]™J
+K›Ü[Û˜[
+
+KˆÚ\™UÚÙ[Žˆ‹œÝš[™Ê
+K›Z[ŠJK›Ü[Û˜[
+
+Kˆ™XÚ\Y[˜[YNˆ‹œÝš[™Ê
+Kš[J
+K›Z[ŠK”™XÚ\Y[˜[YH\È™\]Z\™YŠK›X^
+LŒ
+Kˆ™XÚ\Y[[XZ[ˆ‹œÝš[™Ê
+Kš[J
+K™[XZ[
+’[˜[Y[XZ[ŠK›X^
+M
+Kˆ›ÝNˆ‹œÝš[™Ê
+K›X^
+Œ
+K›Ü[Û˜[
+
+KˆJKœ™Yš[™Jˆ
+ŠHOˆ‹šYOOH[™Yš[™Y‹œÚ\™UÚÙ[ˆOOH[™Yš[™YˆÈY\ÜØYÙNˆ”›ÝšYHYÜˆÚ\™UÚÙ[ˆˆKˆ
+NÂ‚ˆÛÛœÝÐS×ÑSPRSÓP‘SÎˆ™XÛÜ™Ýš[™ËÝš[™ÏˆHÂˆ\ŽˆT•ˆÈ›\[˜[\Ú\È‹ˆ›ÚNˆ’[™\ÝY[“ÒH[˜[\Ú\È‹ˆœœœœŽˆ””””ˆÝ˜]YÞH[˜[\Ú\È‹ˆØ\Ú›ÝÎˆØ\Ú›ÝÈ[˜[\Ú\È‹ˆX[Îˆ•ÚÛ\Ø[H
+PSÊH[˜[\Ú\È‹ˆÚÛ\Ø[Nˆ•ÚÛ\Ø[HX[[˜[\Ú\È‹ˆ]Nˆ“[ÜØYÙHÈUH[˜[\Ú\È‹ˆÝÛœÜ™[ˆ“ÝÛˆœÈ™[[˜[\Ú\È‹ˆ\™[Û™^Nˆ’\™[Û™^H[˜[\Ú\È‹ˆNÂ‚ˆ\œÜÝ
+ˆ‹Ø\KÜ‹ØØ[Ý[]Ü‹Ù[XZ[‹ˆ˜]S[Z]
+LŒÌ
+Kˆ\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\œÙYHÙ[™‘[XZ[ØÚ[XKœØY™T\œÙJ™\K˜›ÙHÏÈßJNÂˆYˆ
+\\œÙYœÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÂˆY\ÜØYÙNˆœ›ÛQ\œ›ÜŠ\œÙY™\œ›ÜŠKÔÝš[™Ê
+KˆJNÂˆBˆÛÛœÝÈYÚ\™UÚÙ[‹™XÚ\Y[˜[YK™XÚ\Y[[XZ[›ÝHHH\œÙY™]NÂ‚ˆ][˜[\Ú\Îˆ]ØZ]Y™]\›•\O\[ÙˆÝÜ˜YÙK™Ù]Ø]™Y[˜[\Ú\Ïˆ[™Yš[™YÂ‚ˆYˆ
+YOOH[™Yš[™Y
+HÂˆËÈÝÛ™\‹[Û›H]ˆÛÛœÝ\Ù\’YBˆÙ]]]\Ù\’Y
+™\JHÏÈ
+]ØZ]^˜XÝÝ\X˜\ÙU\Ù\Š™\JJOËšYÏÈ[ÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆBˆÛÛœÝ›Ý[™H]ØZ]ÝÜ˜YÙK™Ù]Ø]™Y[˜[\Ú\ÊY
+NÂˆYˆ
+Y›Ý[™
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ[˜[\Ú\È›Ý›Ý[™ˆJNÂˆBˆYˆ
+›Ý[™\Ù\’YOOH\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊÊKšœÛÛŠÈY\ÜØYÙNˆ“›Ý]]Üš^™YˆJNÂˆBˆ[˜[\Ú\ÈH›Ý[™ÂˆH[ÙHYˆ
+Ú\™UÚÙ[ŠHÂˆÛÛœÝ›Ý[™H]ØZ]ÝÜ˜YÙK™Ù]Ø]™Y[˜[\Ú\ÐžTÚ\™UÚÙ[ŠÚ\™UÚÙ[‹Âˆ[˜Ü™[Y[šY]ÐÛÝ[ˆ˜[ÙKˆJNÂˆYˆ
+Y›Ý[™
+HÂˆ™]\›ˆ™\ÂˆœÝ]\Ê
+BˆšœÛÛŠÈY\ÜØYÙNˆ”Ú\™Y[˜[\Ú\È›Ý›Ý[™ˆJNÂˆBˆ[˜[\Ú\ÈH›Ý[™ÂˆB‚ˆYˆ
+X[˜[\Ú\ÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ[˜[\Ú\È›Ý™\ÛÛ™YˆJNÂˆB‚ˆÛÛœÝY™™\ˆH]ØZ]Ù[™\˜]TØ]™Y[˜[\Ú\ÔŠÂˆ˜[YNˆ[˜[\Ú\Ë›˜[YKˆØ[Ý[]Ü•\Nˆ[˜[\Ú\Ë˜Ø[Ý[]Ü•\Kˆ›Ü\PY™\ÜÎˆ[˜[\Ú\Ëœ›Ü\PY™\ÜËˆ[œ]Îˆ
+[˜[\Ú\Ëš[œ]ÈÏÈßJH\È™XÛÜ™Ýš[™Ë[šÛ›ÝÛ‹ˆ™\Ý[Îˆ
+[˜[\Ú\Ëœ™\Ý[ÈÏÈßJH\È™XÛÜ™Ýš[™Ë[šÛ›ÝÛ‹ˆš[X\žSY]šXÎˆ[˜[\Ú\Ëœš[X\žSY]šXËˆš[X\žU˜[YNˆ[˜[\Ú\Ëœš[X\žU˜[YKˆÙXÛÛ™\žSY]šXÎˆ[˜[\Ú\ËœÙXÛÛ™\žSY]šXËˆÙXÛÛ™\žU˜[YNˆ[˜[\Ú\ËœÙXÛÛ™\žU˜[YKˆX[Ü˜YNˆ[˜[\Ú\Ë™X[Ü˜YKˆØÙ[˜\š[ÓX™[ˆ[˜[\Ú\ËœØÙ[˜\š[ÓX™[ˆ›Ý\Îˆ[˜[\Ú\Ë››Ý\ËˆÜ™X]Y]ˆ[˜[\Ú\Ë˜Ü™X]Y]ˆJNÂ‚ˆÛÛœÝØY™S˜[YHBˆ[˜[\Ú\Ë›˜[YKœ™\XÙJÖ×˜K^KVŒNKW×JËÙË‹HŠKœÛXÙJŒ
+Hˆ˜[˜[\Ú\ÈŽÂ‚ˆËÈÙ[™\ˆ]šX][ÛŽˆ\ÙHH]][XØ]Y\Ù\‰ÜÈ›Ùš[HÚ[ˆ]˜Z[X›K‚ˆ]Ù[™\“˜[YNˆÝš[™È[™Yš[™YÂˆ]Ù[™\‘[XZ[ˆÝš[™È[™Yš[™YÂˆÛÛœÝÙ[™\•\Ù\’YBˆÙ]]]\Ù\’Y
+™\JHÏÈ
+]ØZ]^˜XÝÝ\X˜\ÙU\Ù\Š™\JJOËšYÏÈ[ÂˆYˆ
+Ù[™\•\Ù\’Y
+HÂˆžHÂˆÛÛœÝÙ[™\ˆH]ØZ]ÝÜ˜YÙK™Ù]\Ù\ŠÙ[™\•\Ù\’Y
+NÂˆYˆ
+Ù[™\ŠHÂˆÛÛœÝ[˜[YHHÜÙ[™\‹™š\œÝ˜[YKÙ[™\‹›\Ý˜[YWBˆ™š[\Š›ÛÛX[ŠBˆš›Ú[ŠˆŠBˆš[J
+NÂˆÙ[™\“˜[YHH[˜[YHÙ[™\‹™[XZ[[™Yš[™YÂˆÙ[™\‘[XZ[HÙ[™\‹™[XZ[[™Yš[™YÂˆBˆHØ]ÚÂˆËÈ›Û‹Y˜][ˆÝ[Ù[™Ú]Ý]Ù[™\ˆ]šX][Û‚ˆBˆB‚ˆÛÛœÝ™\Ý[H]ØZ]Ù[™Ø]™Y[˜[\Ú\Ô‘[XZ[
+Âˆ™XÚ\Y[˜[YKˆ™XÚ\Y[[XZ[ˆÙ[™\“˜[YKˆÙ[™\‘[XZ[ˆ[˜[\Ú\Ó˜[YNˆ[˜[\Ú\Ë›˜[YKˆØ[Ý[]Ü“X™[‚ˆÐS×ÑSPRSÓP‘SÖØ[˜[\Ú\Ë˜Ø[Ý[]Ü•\WHÏÈ”Ý˜]YÞH[˜[\Ú\È‹ˆ›Ü\PY™\ÜÎˆ[˜[\Ú\Ëœ›Ü\PY™\ÜËˆš[X\žSY]šXÎˆ[˜[\Ú\Ëœš[X\žSY]šXËˆš[X\žU˜[YNˆ[˜[\Ú\Ëœš[X\žU˜[YKˆ›ÝKˆY™™\ŽˆY™™\‹ˆ‘š[[˜[YNˆYØ\Ý\ËIÜØY™S˜[Y_Kœ˜ˆJNÂ‚ˆYˆ
+\™\Ý[œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\ÊLŠKšœÛÛŠÂˆY\ÜØYÙNˆ™\Ý[™\œ›ÜˆÏÈ‘˜Z[YÈÙ[™[XZ[‹ˆJNÂˆB‚ˆËÈ\œÚ\ÝHÙ[™Z\ÝÜžH›ÝÈÛ›H›ÜˆÝÛ™\‹[ÜšYÚ[˜]YÙ[™Ë‚ˆËÈH[XZ[\È[™XYH™Y[ˆ[]™\™YÈYˆ\œÚ\Ý[˜ÙH˜Z[ÈÙBˆËÈÝ[™]\›ˆÝXØÙ\ÜÈÚ]\ÝÜžT\œÚ\ÝYˆ˜[ÙXÛÈBˆËÈÛY[Ù\Û‰ÝšYÙÙ\ˆH\XØ]H™]žKˆX›XË\Ú\™K]ÚÙ[‚ˆËÈÙ[™Èœ›ÛH[›Ûž[[Ý\ÈšY]Ù\œÈ\™H[[[Û˜[H›Ý™XÛÜ™Y‚ˆÛÛœÝÈ™XÛÜ™ÝÛ™\“ÜšYÚ[˜]YÙ[™HH]ØZ][\Ü
+ˆ‹‹Ø[˜[\Ú\ÔÙ[™\ÝÜžT›Ý]\È‚ˆ
+NÂˆÛÛœÝÈ™XÛÜ™YÝÛ™\“ÜšYÚ[˜]YHH]ØZ]™XÛÜ™ÝÛ™\“ÜšYÚ[˜]YÙ[™
+Âˆ[˜[\Ú\ÒYˆ[˜[\Ú\ËšYˆ[˜[\Ú\ÓÝÛ™\’Yˆ[˜[\Ú\Ë\Ù\’YˆÙ[™\•\Ù\’Yˆ™XÚ\Y[˜[YKˆ™XÚ\Y[[XZ[ˆJNÂ‚ˆ™]\›ˆ™\ËšœÛÛŠÂˆÝXØÙ\ÜÎˆYKˆ˜[˜XÚÎˆ™\Ý[™˜[˜XÚÈÏÈ˜[ÙKˆËÈYHYˆ\œÚ\ÝYÈ›Üˆ›Û‹[ÝÛ™\ˆÙ[™ËYH
+›È›ÝÈØ\ÂˆËÈ^XÝY
+KˆÛ›H›\È˜[ÙHÚ[ˆHÙ[™ÐTÈÝÛ™\‹[ÜšYÚ[˜]YˆËÈ]ÝÜ˜YÙH™]Ë‚ˆ\ÝÜžT\œÚ\ÝYˆ[ÝÛ™\“ÜšYÚ[˜]Y™XÛÜ™YˆJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ[XZ[[™ÈØ]™YX[˜[\Ú\ÈŽˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ[XZ[ˆˆJNÂˆBˆKˆ
+NÂ‚ˆËÈÙ[™\˜]HX[XÚÙ]‚ˆ\œÜÝ
+‹Ø\KÜ‹ÙX[\XÚÙ]‹\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝX[]HH™\K˜›ÙNÂˆˆYˆ
+YX[]K]HYX[]K\HYX[]Kœ›Ü\PY™\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈˆY\ÜØYÙNˆ]K\K[™›Ü\PY™\ÜÈ\™H™\]Z\™YˆˆJNÂˆBˆˆÛÛœÝY™™\ˆH]ØZ]Ù[™\˜]QX[XÚÙ]ŠX[]JNÂˆˆ™\ËœÙ]XY\ŠÛÛ[U\H‹˜\XØ][Û‹ÜˆŠNÂˆ™\ËœÙ]XY\ŠˆÛÛ[Q\ÜÜÚ][Ûˆ‹ˆ]XÚY[Èš[[˜[YOH™X[\XÚÙ]IÑ]K››ÝÊ
+_Kœˆ˜ˆ
+NÂˆ™\ËœÙ[™
+Y™™\ŠNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÙ[™\˜][™ÈX[XÚÙ]Žˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈÙ[™\˜]HˆˆJNÂˆBˆJNÂ‚ˆËÈÙ[™\˜]HÚÛ\Ø[HX[‚ˆ\™Ù]
+‹Ø\KÜ‹ÝÚÛ\Ø[KYX[ÎšY‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\Ë˜ÛZ[\ÏËœÝXˆ™\KœÝ\X˜\ÙU\Ù\ËšYÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝX[YH[X™\Š™\Kœ\˜[\ËšY
+NÂˆÛÛœÝX[H]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[
+X[Y
+NÂˆˆYˆ
+YX[
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ‘X[›Ý›Ý[™ˆJNÂˆBˆYˆ
+ˆX[œÝX›Z]YžHOOH\Ù\’Y	‰‚ˆJ]ØZ]\ÓX\šÙ]›ÝÔÝY™XØÙ\ÜÊ™\K\Ù\’Y
+JBˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ‘X[›Ý›Ý[™ˆJNÂˆBˆˆÛÛœÝY™™\ˆH]ØZ]Ù[™\˜]QX[XÚÙ]ŠÂˆ]NˆX[œ›Ü\PY™\ÜËˆ\NˆÚÛ\Ø[H‹ˆ›Ü\PY™\ÜÎˆX[œ›Ü\PY™\ÜËˆÚ]NˆX[˜Ú]H[™Yš[™YˆÝ]NˆX[œÝ]H[™Yš[™Yˆ›Ü\U\NˆX[œ›Ü\U\H[™Yš[™Yˆ™YÎˆX[˜™Y›ÛÛ\È[™Yš[™Yˆ˜]ÎˆX[˜˜]›ÛÛ\ÈÈ\œÙQ›Ø]
+X[˜˜]›ÛÛ\ÊHˆ[™Yš[™YˆÜYˆX[œÜY[™Yš[™Yˆ\ŽˆX[˜\ˆ[™Yš[™Yˆ\˜Ú\ÙTšXÙNˆX[˜\ÚÚ[™ÔšXÙH[™Yš[™Yˆ™ZXÛÜÝˆX[™\Ý[X]Y™\Z\œÈ[™Yš[™Yˆ\ÜÚYÛ›Y[™YNˆX[˜\ÜÚYÛ›Y[™YH[™Yš[™Yˆ\ØÜš\[ÛŽˆX[™\ØÜš\[Ûˆ[™Yš[™YˆYÚYÚÎˆX[œÙ[\”Ú]X][ÛˆÈÙX[œÙ[\”Ú]X][Û—Hˆ[™Yš[™YˆJNÂˆˆ™\ËœÙ]XY\ŠÛÛ[U\H‹˜\XØ][Û‹ÜˆŠNÂˆ™\ËœÙ]XY\ŠˆÛÛ[Q\ÜÜÚ][Ûˆ‹ˆ]XÚY[Èš[[˜[YOHÚÛ\Ø[KYX[IÙX[YKIÑ]K››ÝÊ
+_Kœˆ˜ˆ
+NÂˆ™\ËœÙ[™
+Y™™\ŠNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÙ[™\˜][™ÈÚÛ\Ø[HX[Žˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈÙ[™\˜]HˆˆJNÂˆBˆJNÂ‚ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆËÈPT’ÑUPÑHTÒ“ÐT‘THS‘ÒS•ÂˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‚ˆËÈÚÛ\Ø[\ˆ\Ú›Ø\™Ý]Âˆ\™Ù]
+‹Ø\KÛX\šÙ]XÙKÝÚÛ\Ø[\‹ÜÝ]È‹\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\Ë˜ÛZ[\ÏËœÝXŽÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝÚÛ\Ø[QX[ÈH]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[ÐžTÝX›Z]\Š\Ù\’Y
+NÂˆˆÛÛœÝÝ]ÈHÂˆXÝ]™NˆÚÛ\Ø[QX[Ë™š[\ŠOˆœÝ]\ÈOOH›\ÝYˆœÝ]\ÈOOH˜\›Ý™YŠK›[™Ýˆ[™[™ÎˆÚÛ\Ø[QX[Ë™š[\ŠOˆœÝ]\ÈOOHœ[™[™×Ü™]šY]ÈˆœÝ]\ÈOOH[™\—Ü™]šY]ÈŠK›[™ÝˆÛÛˆÚÛ\Ø[QX[Ë™š[\ŠOˆœÝ]\ÈOOHœÛÛˆœÝ]\ÈOOH˜ÛÜÙYŠK›[™ÝˆÝ[›Û[YNˆÚÛ\Ø[QX[Âˆ™š[\ŠOˆœÝ]\ÈOOHœÛÛˆœÝ]\ÈOOH˜ÛÜÙYŠBˆœ™YXÙJ
+Ý[K
+HOˆÝ[H
+È
+˜\ÜÚYÛ›Y[™YH
+K
+KˆNÂ‚ˆ™\ËšœÛÛŠÝ]ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÚÛ\Ø[\ˆÝ]Îˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚÝ]ÈˆJNÂˆBˆJNÂ‚ˆËÈÚÛ\Ø[\ˆ™XÙ[X[Âˆ\™Ù]
+‹Ø\KÛX\šÙ]XÙKÝÚÛ\Ø[\‹ÙX[È‹\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\Ë˜ÛZ[\ÏËœÝXŽÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝX[ÈH]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[ÐžTÝX›Z]\Š\Ù\’Y
+NÂˆ™\ËšœÛÛŠX[ËœÛXÙJL
+JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÚÛ\Ø[\ˆX[Îˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚX[ÈˆJNÂˆBˆJNÂ‚ˆËÈÚÛ\Ø[\ˆ•ˆ™\]Y\ÝÈ
+™\]Y\ÝÈÛˆZ\ˆX[ÊBˆ\™Ù]
+‹Ø\KÛX\šÙ]XÙKÝÚÛ\Ø[\‹Ú‹\™\]Y\ÝÈ‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝ™\]Y\ÝÈH]ØZ]ÝÜ˜YÙK™Ù]”™\]Y\ÝÐžUÚÛ\Ø[\Š\Ù\’Y
+NÂˆ™\ËšœÛÛŠ™\]Y\ÝÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÚÛ\Ø[\ˆ•ˆ™\]Y\ÝÎˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]Ú•ˆ™\]Y\ÝÈˆJNÂˆBˆJNÂ‚ˆËÈ\]H•ˆ™\]Y\ÝÝ]\È
+XØÙ\Ü™Z™XÝ
+Bˆ\œ]Ú
+‹Ø\KÛX\šÙ]XÙKÚ‹\™\]Y\ÝËÎšY‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝ™\]Y\ÝYH[X™\Š™\Kœ\˜[\ËšY
+NÂˆÛÛœÝÈÝ]\ÈHH™\K˜›ÙNÂ‚ˆYˆ
+S[X™\‹š\ÔØY™R[YÙ\Š™\]Y\ÝY
+H™\]Y\ÝYH
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’•ˆ™\]Y\Ý›Ý›Ý[™ˆJNÂˆBˆYˆ
+VÈ˜XØÙ\Y‹œ™Z™XÝY—Kš[˜ÛY\ÊÝ]\ÊJHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[YÝ]\ÈˆJNÂˆB‚ˆÛÛœÝ”™\]Y\ÝH]ØZ]ÝÜ˜YÙK™Ù]”™\]Y\Ý
+™\]Y\ÝY
+NÂˆYˆ
+Z”™\]Y\Ý
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’•ˆ™\]Y\Ý›Ý›Ý[™ˆJNÂˆB‚ˆËÈ™\šYžHH\Ù\ˆ\ÈHÚÛ\Ø[\ˆ›Üˆ\ÈX[ˆYˆ
+ˆ”™\]Y\ÝÚÛ\Ø[\’YOOH\Ù\’Yˆ”™\]Y\ÝœÝ]\ÈOOHœ[™[™È‚ˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’•ˆ™\]Y\Ý›Ý›Ý[™ˆJNÂˆB‚ˆÛÛœÝ\]YH]ØZ]ÝÜ˜YÙK\]R”™\]Y\ÝÝ]\Ê™\]Y\ÝYÝ]\ÊNÂˆYˆ
+]\]Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÂˆY\ÜØYÙNˆ•\È•ˆ™\]Y\Ý\È[™XYH™Y[ˆ[œÝÙ\™Yˆ‹ˆJNÂˆBˆ™\ËšœÛÛŠ\]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\][™È•ˆ™\]Y\Ýˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ\]H•ˆ™\]Y\ÝˆJNÂˆBˆJNÂ‚ˆËÈ[™\ÝÜˆ\Ú›Ø\™Ý]Âˆ\™Ù]
+‹Ø\KÛX\šÙ]XÙKÚ[™\ÝÜ‹ÜÝ]È‹\ÒXœšY]][XØ]YØYX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝ[™\ÝÜ”›Ùš[HH]ØZ]ÝÜ˜YÙK™Ù][™\ÝÜ”›Ùš[J\Ù\’Y
+NÂˆÛÛœÝ[™\ÝY[Ù™™\œÈH]ØZ]ÝÜ˜YÙK™Ù][™\ÝY[Ù™™\œÐžR[™\ÝÜŠ\Ù\’Y
+NÂˆÛÛœÝØ]™YX[ÈH]ØZ]ÝÜ˜YÙK™Ù]\Ù\”Ø]™YX[Ê\Ù\’Y
+NÂˆÛÛœÝš\ÚX›TØ]™YX[ÈHØ]™YX[Ë™š[\Š
+[žJHO‚ˆØ[XØÙ\ÜÓX\šÙ]›ÝÒ][U\J™\Ë[žK™X[\JKˆ
+NÂ‚ˆÛÛœÝÝ]ÈHÂˆÝ[[™\ÝYˆ[™\ÝY[Ù™™\œÂˆ™š[\ŠÈOˆËœÝ]\ÈOOH˜XØÙ\YŠBˆœ™YXÙJ
+Ý[KÊHOˆÝ[H
+È
+Ë˜[[Ý[Ù™™\™Y
+K
+KˆXÝ]™QX[Îˆ[™\ÝY[Ù™™\œË™š[\ŠÈOˆËœÝ]\ÈOOH˜XØÙ\Yˆ	‰ˆËœ›Ú™XÝY
+K›[™ÝˆØ]™YX[Îˆš\ÚX›TØ]™YX[Ë›[™Ýˆ[™[™ÓÙ™™\œÎˆ[™\ÝY[Ù™™\œË™š[\ŠÈOˆËœÝ]\ÈOOHœ[™[™ÈŠK›[™ÝˆNÂ‚ˆ™\ËšœÛÛŠÝ]ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È[™\ÝÜˆÝ]Îˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚÝ]ÈˆJNÂˆBˆJNÂ‚ˆËÈ[™\ÝÜˆØ]™YÐ›ÛÚÛX\šÙYX[Âˆ\™Ù]
+‹Ø\KÛX\šÙ]XÙKÚ[™\ÝÜ‹ÜØ]™Y‹\ÒXœšY]][XØ]YØYX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝ›ÛÚÛX\šÜÈH]ØZ]ÝÜ˜YÙK™Ù]\Ù\”Ø]™YX[Ê\Ù\’Y
+NÂˆ™\ËšœÛÛŠˆ›ÛÚÛX\šÜË™š[\Š
+[žJHO‚ˆØ[XØÙ\ÜÓX\šÙ]›ÝÒ][U\J™\Ë[žK™X[\JKˆ
+Kˆ
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È[™\ÝÜˆØ]™YX[Îˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚØ]™YX[ÈˆJNÂˆBˆJNÂ‚ˆËÈ[™\ÝÜˆÛÛ[Z]Y[ÈHÙ][™\ÝY[ÈÚ]›Ú™XÝ]Z[Âˆ\™Ù]
+‹Ø\KÛX\šÙ]XÙKÚ[™\ÝÜ‹ØÛÛ[Z]Y[È‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝÛÛ[Z]Y[ÈH]ØZ]ÝÜ˜YÙK™Ù]ÛÛ[Z]Y[™\ÝY[ÐžR[™\ÝÜŠ\Ù\’Y
+NÂˆˆËÈ[œšXÚÚ]›Ú™XÝ]Z[ÂˆÛÛœÝ[œšXÚYÛÛ[Z]Y[ÈH]ØZ]›ÛZ\ÙK˜[
+ˆÛÛ[Z]Y[Ë›X\
+\Þ[˜È
+ÛÛ[Z]Y[
+HOˆÂˆÛÛœÝ›Ú™XÝH]ØZ]ÝÜ˜YÙK™Ù]Ø\][›Ú™XÝ
+ÛÛ[Z]Y[œ›Ú™XÝY
+NÂˆ™]\›ˆÂˆ‹‹˜ÛÛ[Z]Y[ˆ›Ú™XÝˆ›Ú™XÝÈÔX›XÐØ\][›Ú™XÝ
+›Ú™XÝ
+Hˆ[ˆNÂˆJBˆ
+NÂˆˆ™\ËšœÛÛŠ[œšXÚYÛÛ[Z]Y[ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È[™\ÝÜˆÛÛ[Z]Y[Îˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚÛÛ[Z]Y[ÈˆJNÂˆBˆJNÂ‚ˆËÈ™X[\ØØ\\ˆ\Ú›Ø\™Ý]Èˆ\™Ù]
+‹Ø\KÛX\šÙ]XÙKÙ™X[\ØØ\\‹ÜÝ]È‹\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\Ë˜ÛZ[\ÏËœÝXŽÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝ›Ú™XÝÈH]ØZ]ÝÜ˜YÙK™Ù]Ø\][›Ú™XÝÐžPÜ™X]ÜŠ\Ù\’Y
+NÂˆˆÛÛœÝÝ]ÈHÂˆXÝ]™T›Ú™XÝÎˆ›Ú™XÝË™š[\ŠOˆœÝ]\ÈOOH™[™[™ÈˆœÝ]\ÈOOH˜XÝ]™HŠK›[™ÝˆÝ[˜Z\ÙYˆ›Ú™XÝËœ™YXÙJ
+Ý[K
+HOˆÝ[H
+È
+˜[[Ý[˜Z\ÙY
+K
+KˆÝ[[™[™ÑÛØ[ˆ›Ú™XÝËœ™YXÙJ
+Ý[K
+HOˆÝ[H
+È
+™[™[™ÑÛØ[
+K
+Kˆ›Ú™XÝÐÛÛ\]Yˆ›Ú™XÝË™š[\ŠOˆœÝ]\ÈOOH˜ÛÛ\]YˆœÝ]\ÈOOH™^]YŠK›[™ÝˆNÂ‚ˆ™\ËšœÛÛŠÝ]ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È™X[\ØØ\\ˆÝ]Îˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚÝ]ÈˆJNÂˆBˆJNÂ‚ˆËÈ™X[\ØØ\\ˆ™XÙ[›Ú™XÝÂˆ\™Ù]
+‹Ø\KÛX\šÙ]XÙKÙ™X[\ØØ\\‹Ü›Ú™XÝÈ‹\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\Ë˜ÛZ[\ÏËœÝXŽÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝ›Ú™XÝÈH]ØZ]ÝÜ˜YÙK™Ù]Ø\][›Ú™XÝÐžPÜ™X]ÜŠ\Ù\’Y
+NÂˆ™\ËšœÛÛŠ›Ú™XÝËœÛXÙJL
+JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È™X[\ØØ\\ˆ›Ú™XÝÎˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]Ú›Ú™XÝÈˆJNÂˆBˆJNÂ‚ˆËÈ^Y\ˆ\Ú›Ø\™Ý]Âˆ\™Ù]
+‹Ø\KÛX\šÙ]XÙKØ^Y\‹ÜÝ]È‹\ÒXœšY]][XØ]YØYX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝØ]™Y›Ü\Y\ÈH]ØZ]ÝÜ˜YÙK™Ù]Ø]™Y›Ü\Y\Ê\Ù\’Y
+NÂˆÛÛœÝÙ™™\œÈH]ØZ]ÝÜ˜YÙK™Ù]^Y\“Ù™™\œÊ\Ù\’Y
+NÂˆÛÛœÝš\ÚX›TØ]™Y›Ü\Y\ÈHØ]™Y›Ü\Y\Ë™š[\Š
+[žJHO‚ˆØ[XØÙ\ÜÓX\šÙ]›ÝÒ][U\J™\Ë[žKœ›Ü\U\JKˆ
+NÂˆÛÛœÝÝ]ÈHÂˆØ]™Y›Ü\Y\Îˆš\ÚX›TØ]™Y›Ü\Y\Ë›[™Ýˆ[™[™ÓÙ™™\œÎˆÙ™™\œË™š[\ŠÈOˆËœÝ]\ÈOOHœ[™[™ÈŠK›[™ÝˆXØÙ\YÙ™™\œÎˆÙ™™\œË™š[\ŠÈOˆËœÝ]\ÈOOH˜XØÙ\YŠK›[™ÝˆÝ[\˜Ú\Ù\ÎˆÙ™™\œË™š[\ŠÈOˆËœÝ]\ÈOOH˜ÛÜÙYŠK›[™ÝˆNÂ‚ˆ™\ËšœÛÛŠÝ]ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È^Y\ˆÝ]Îˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚÝ]ÈˆJNÂˆBˆJNÂ‚ˆËÈ^Y\ˆØ]™Y›Ü\Y\Âˆ\™Ù]
+‹Ø\KÛX\šÙ]XÙKØ^Y\‹ÜØ]™Y‹\ÒXœšY]][XØ]YØYX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝØ]™Y›Ü\Y\ÈH]ØZ]ÝÜ˜YÙK™Ù]Ø]™Y›Ü\Y\Ê\Ù\’Y
+NÂˆÛÛœÝ[œšXÚY›Ü\Y\ÈH
+ˆ]ØZ]›ÛZ\ÙK˜[
+ˆØ]™Y›Ü\Y\Âˆ™š[\Š
+Ø]™Y
+HO‚ˆØ[XØÙ\ÜÓX\šÙ]›ÝÒ][U\J™\ËØ]™Yœ›Ü\U\JKˆ
+Bˆ›X\
+\Þ[˜È
+Ø]™Y
+HOˆÂˆÛÛœÝ›Ü\HH]ØZ]Ù]X›XÓX\šÙ]XÙR][JˆØ]™Yœ›Ü\U\KˆØ]™Yœ›Ü\RYˆ
+NÂˆYˆ
+\›Ü\JHÂˆ™]\›ˆ[ÂˆBˆ™]\›ˆØ]™Yœ›Ü\U\HOOHœ™]Z[‚ˆÈÈ‹‹œØ]™Y\Ý[™Îˆ›Ü\HBˆˆÈ‹‹œØ]™YX[ˆ›Ü\HNÂˆJKˆ
+Bˆ
+K™š[\Š
+[žJHOˆ[žHOOH[
+NÂˆ™\ËšœÛÛŠ[œšXÚY›Ü\Y\ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È^Y\ˆØ]™Y›Ü\Y\Îˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚØ]™Y›Ü\Y\ÈˆJNÂˆBˆJNÂ‚ˆËÈ^Y\ˆÙ™™\œÈHÙ]\Ù\‰ÜÈÙ™™\œÂˆ\™Ù]
+‹Ø\KÛX\šÙ]XÙKØ^Y\‹ÛÙ™™\œÈ‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝÙ™™\œÈH]ØZ]ÝÜ˜YÙK™Ù]^Y\“Ù™™\œÊ\Ù\’Y
+NÂˆËÈ[œšXÚÚ]›Ü\H]Z[ÂˆÛÛœÝ[œšXÚYÙ™™\œÈH
+ˆ]ØZ]›ÛZ\ÙK˜[
+ˆÙ™™\œË›X\
+\Þ[˜È
+Ù™™\ŠHOˆÂˆÛÛœÝ›Ü\HH]ØZ]Ù]X›XÓX\šÙ]XÙR][JˆÙ™™\‹œ›Ü\U\KˆÙ™™\‹œ›Ü\RYˆ
+NÂˆYˆ
+\›Ü\JHÂˆ™]\›ˆ[ÂˆBˆ™]\›ˆÙ™™\‹œ›Ü\U\HOOHœ™]Z[‚ˆÈÈ‹‹›Ù™™\‹\Ý[™Îˆ›Ü\HBˆˆÈ‹‹›Ù™™\‹X[ˆ›Ü\HNÂˆJKˆ
+Bˆ
+K™š[\Š
+[žJHOˆ[žHOOH[
+NÂˆ™\ËšœÛÛŠ[œšXÚYÙ™™\œÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È^Y\ˆÙ™™\œÎˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚÙ™™\œÈˆJNÂˆBˆJNÂ‚ˆËÈÝX›Z]H^Y\ˆÙ™™\‚ˆ\œÜÝ
+‹Ø\KÛX\šÙ]XÙKØ^Y\‹ÛÙ™™\œÈ‹\ÒXœšY]][XØ]YØYX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝÈ›Ü\U\K›Ü\RYÙ™™\[[Ý[[™[™Õ\KÛÜÚ[™Õ[Y[[™KY\ÜØYÙHHH™\K˜›ÙNÂˆˆYˆ
+\›Ü\U\H\›Ü\RY[Ù™™\[[Ý[Y[™[™Õ\JHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“Z\ÜÚ[™È™\]Z\™YšY[ÈˆJNÂˆBˆYˆ
+\Ô™]šY]ÙYX\šÙ]›ÝÒ[™[ÜžU\J›Ü\U\JJHÂˆÛÛœÝXØÙ\ÜÈH]ØZ]™\ÛÛ™SYØXÞQX[XØÙ\ÜÊˆ™\Kˆ\Ù\’Yˆ›Ü\U\Kˆ›Ü\RYˆ
+NÂˆYˆ
+XXØÙ\ÜÈXØ[’[š]X]SYØXÞQX[[\˜XÝ[ÛŠXØÙ\ÜË™\ÊJHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”›Ü\H›Ý›Ý[™ˆJNÂˆBˆBˆÛÛœÝX›XÔ›Ü\HH]ØZ]Ù]X›XÓX\šÙ]XÙR][Jˆ›Ü\U\Kˆ›Ü\RYˆ
+NÂˆYˆ
+\X›XÔ›Ü\JHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”›Ü\H›Ý›Ý[™ˆJNÂˆB‚ˆÛÛœÝÙ™™\ˆH]ØZ]ÝÜ˜YÙK˜Ü™X]P^Y\“Ù™™\ŠÂˆ\Ù\’Yˆ›Ü\U\Kˆ›Ü\RYˆ[X™\Š›Ü\RY
+KˆÙ™™\[[Ý[ˆ[X™\ŠÙ™™\[[Ý[
+Kˆ[™[™Õ\KˆÛÜÚ[™Õ[Y[[™NˆÛÜÚ[™Õ[Y[[™H[ˆY\ÜØYÙNˆY\ÜØYÙH[ˆ›ÛÙ“Ù‘[™Îˆ[ˆJNÂ‚ˆ™\ËœÝ]\ÊŒJKšœÛÛŠÙ™™\ŠNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™È^Y\ˆÙ™™\Žˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈÝX›Z]Ù™™\ˆˆJNÂˆBˆJNÂ‚ˆËÈÙÙÛHØ]™KÝ[œØ]™HH›Ü\Bˆ\œÜÝ
+‹Ø\KÛX\šÙ]XÙKØ^Y\‹ÜØ]™H‹\ÒXœšY]][XØ]YØYX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝÈ›Ü\U\K›Ü\RYHH™\K˜›ÙNÂˆˆYˆ
+\›Ü\U\H\›Ü\RY
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“Z\ÜÚ[™È™\]Z\™YšY[ÈˆJNÂˆBˆYˆ
+XØ[XØÙ\ÜÓX\šÙ]›ÝÒ][U\J™\Ë›Ü\U\JJHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”›Ü\H›Ý›Ý[™ˆJNÂˆBˆÛÛœÝX›XÔ›Ü\HH]ØZ]Ù]X›XÓX\šÙ]XÙR][Jˆ›Ü\U\Kˆ›Ü\RYˆ
+NÂˆYˆ
+\X›XÔ›Ü\JHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”›Ü\H›Ý›Ý[™ˆJNÂˆB‚ˆÛÛœÝØ]™YH]ØZ]ÝÜ˜YÙKÙÙÛTØ]™Y›Ü\J\Ù\’Y›Ü\U\K[X™\Š›Ü\RY
+JNÂˆ™\ËšœÛÛŠÈØ]™YJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÙÙÛ[™ÈØ]™Y›Ü\Nˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈÙÙÛHØ]™Y›Ü\HˆJNÂˆBˆJNÂ‚ˆËÈÝX›Z]^Y\ˆ[œ]Z\žH
+ØÚY[HÚÝÚ[™Ë\ÚÈ]Y\Ý[ÛŠBˆ\œÜÝ
+‹Ø\KÛX\šÙ]XÙKØ^Y\‹Ú[œ]Z\šY\È‹X›XÒ[ZÙT˜]S[Z]ØYX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆÛÛœÝÈ›Ü\U\K›Ü\RY˜[YK[XZ[Û™KY\ÜØYÙK™\]Y\Ý\HHH™\K˜›ÙNÂ‚ˆYˆ
+\›Ü\U\H\›Ü\RY[˜[YHY[XZ[\™\]Y\Ý\JHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“Z\ÜÚ[™È™\]Z\™YšY[ÈˆJNÂˆBˆYˆ
+\Ô™]šY]ÙYX\šÙ]›ÝÒ[™[ÜžU\J›Ü\U\JJHÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”›Ü\H›Ý›Ý[™ˆJNÂˆBˆÛÛœÝXØÙ\ÜÈH]ØZ]™\ÛÛ™SYØXÞQX[XØÙ\ÜÊˆ™\Kˆ\Ù\’Yˆ›Ü\U\Kˆ›Ü\RYˆ
+NÂˆYˆ
+XXØÙ\ÜÈXØ[’[š]X]SYØXÞQX[[\˜XÝ[ÛŠXØÙ\ÜË™\ÊJHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”›Ü\H›Ý›Ý[™ˆJNÂˆBˆBˆÛÛœÝX›XÔ›Ü\HH]ØZ]Ù]X›XÓX\šÙ]XÙR][Jˆ›Ü\U\Kˆ›Ü\RYˆ
+NÂˆYˆ
+\X›XÔ›Ü\JHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”›Ü\H›Ý›Ý[™ˆJNÂˆB‚ˆÛÛœÝ[œ]Z\žHH]ØZ]ÝÜ˜YÙK˜Ü™X]P^Y\’[œ]Z\žJÂˆ\Ý[™Õ\Nˆ›Ü\U\Kˆ\Ý[™ÒYˆ[X™\Š›Ü\RY
+Kˆ˜[YKˆ[XZ[ˆÛ™NˆÛ™H	ÉËˆ^Y\•\Nˆ™\]Y\Ý\H	Ú[™\ÝÜ‰ËˆY\ÜØYÙNˆY\ÜØYÙH[ˆJNÂ‚ˆ™\ËšœÛÛŠ[œ]Z\žJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™È^Y\ˆ[œ]Z\žNˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈÝX›Z][œ]Z\žHˆJNÂˆBˆJNÂ‚ˆËÈÙ]™]Z[\Ý[™ÜÈ
+X›XÈœ›ÝÜÙJBˆ\™Ù]
+‹Ø\KÛX\šÙ]XÙKÜ›Ü\Y\È‹\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ý[™ÜÈH]ØZ]ÝÜ˜YÙK™Ù]™]Z[\Ý[™ÜÊ
+NÂˆÛÛœÝXÝ]™S\Ý[™ÜÈH\Ý[™ÜÂˆ™š[\Šˆ
+\Ý[™ÊHO‚ˆ\Ý[™ËœÝ]\ÈOOH˜XÝ]™Hˆ\Ý[™ËœÝ]\ÈOOH˜ÛÛZ[™×ÜÛÛÛˆ‹ˆ
+Bˆ›X\
+ÔX›XÔ™]Z[\Ý[™ÊNÂˆ™\ËšœÛÛŠXÝ]™S\Ý[™ÜÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È™]Z[\Ý[™ÜÎˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]Ú›Ü\Y\ÈˆJNÂˆBˆJNÂ‚ˆËÈÙ]Ú[™ÛH™]Z[\Ý[™Âˆ\™Ù]
+‹Ø\KÛX\šÙ]XÙKÜ›Ü\Y\ËÎšY‹\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ý[™ÒYH[X™\Š™\Kœ\˜[\ËšY
+NÂˆYˆ
+\Ó˜SŠ\Ý[™ÒY
+JHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[Y\Ý[™ÈQˆJNÂˆBˆˆÛÛœÝ\Ý[™ÈH]ØZ]ÝÜ˜YÙK™Ù]™]Z[\Ý[™Ê\Ý[™ÒY
+NÂˆYˆ
+ˆ[\Ý[™Èˆ
+\Ý[™ËœÝ]\ÈOOH˜XÝ]™Hˆ	‰ˆ\Ý[™ËœÝ]\ÈOOH˜ÛÛZ[™×ÜÛÛÛˆŠBˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”›Ü\H›Ý›Ý[™ˆJNÂˆBˆˆ™\ËšœÛÛŠÔX›XÔ™]Z[\Ý[™Ê\Ý[™ÊJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È™]Z[\Ý[™Îˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]Ú›Ü\HˆJNÂˆBˆJNÂ‚ˆËÈ[˜[]XÜÈ\Ú›Ø\™]HHÛÛ\™Z[œÚ]™H]›Ü›HY]šXÜÂˆ\™Ù]
+‹Ø\KØYZ[‹Ø[˜[]XÜËÙ\Ú›Ø\™‹™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝÝÚÛ\Ø[QX[Ë›Ú™XÝË\Ù\œË\Ý[™Ü×HH]ØZ]›ÛZ\ÙK˜[
+ÂˆÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[Ê
+KˆÝÜ˜YÙK™Ù]Ø\][›Ú™XÝÊ
+KˆÝÜ˜YÙK™Ù][\Ù\œÊ
+KˆÝÜ˜YÙK™Ù]\Ý[™ÜÊ
+KˆJNÂ‚ˆËÈØ[Ý[]HÝ[›Û[YHœ›ÛHX[ÂˆÛÛœÝÝ[›Û[YHHÚÛ\Ø[QX[Ëœ™YXÙJ
+Ý[K
+HOˆÝ[H
+È
+˜ÛÛ˜XÝšXÙH
+H
+È
+˜\ÜÚYÛ›Y[™YH
+K
+NÂˆˆËÈÙ]\Ù\ˆ›Û\È›Üˆ\ÝšX][Û‚ˆÛÛœÝ\Ù\”›Û\Ô›ÛZ\Ù\ÈH\Ù\œË›X\
+HOˆÝÜ˜YÙK™Ù]\Ù\”›Û\ÊKšY
+JNÂˆÛÛœÝ[\Ù\”›Û\ÈH]ØZ]›ÛZ\ÙK˜[
+\Ù\”›Û\Ô›ÛZ\Ù\ÊNÂˆˆËÈÛÝ[\Ù\œÈžH›ÛBˆÛÛœÝ›ÛPÛÝ[Îˆ™XÛÜ™Ýš[™Ë[X™\ˆHÈ[™\ÝÜŽˆÚÛ\Ø[\Žˆ™X[\ØØ\\Žˆ^Y\ŽˆNÂˆ[\Ù\”›Û\Ë™›Ü‘XXÚ
+›Û\ÈOˆÂˆ›Û\Ë™›Ü‘XXÚ
+ˆOˆÂˆYˆ
+‹œ›ÛKš[˜ÛY\Ê	Ú[™\ÝÜ‰ÊJH›ÛPÛÝ[Ëš[™\ÝÜŠÊÎÂˆYˆ
+‹œ›ÛKš[˜ÛY\Ê	ÝÚÛ\Ø[\‰ÊJH›ÛPÛÝ[ËÚÛ\Ø[\ŠÊÎÂˆYˆ
+‹œ›ÛKš[˜ÛY\Ê	Ù™X[\ØØ\\‰ÊJH›ÛPÛÝ[Ë™™X[\ØØ\\ŠÊÎÂˆYˆ
+‹œ›ÛKš[˜ÛY\Ê	Ø^Y\‰ÊJH›ÛPÛÝ[Ë˜^Y\ŠÊÎÂˆJNÂˆJNÂ‚ˆËÈÙ[™\˜]H[ÛH]H
+\Ý[ÛÊBˆÛÛœÝ[Û˜[Y\ÈHÉÒ˜[‰Ë	Ñ™X‰Ë	ÓX\‰Ë	Ð\‰Ë	ÓX^IË	Ò[‰Ë	Ò[	Ë	Ð]YÉË	ÔÙ\	Ë	ÓØÝ	Ë	Ó›Ý‰Ë	ÑXÉ×NÂˆÛÛœÝ›ÝÈH™]È]J
+NÂˆÛÛœÝX[›Û[YQ]HH×NÂˆ›Üˆ
+]HHÎÈHHÈKKJHÂˆÛÛœÝ[Û]HH™]È]J›ÝË™Ù][YX\Š
+K›ÝË™Ù][Û
+
+HHKJNÂˆÛÛœÝ[ÛÝˆH[Û˜[Y\ÖÛ[Û]K™Ù][Û
+
+WNÂˆÛÛœÝ[ÛX[ÈHÚÛ\Ø[QX[Ë™š[\ŠOˆÂˆÛÛœÝX[]HH™]È]J˜Ü™X]Y]
+NÂˆ™]\›ˆX[]K™Ù][Û
+
+HOOH[Û]K™Ù][Û
+
+H	‰ˆX[]K™Ù][YX\Š
+HOOH[Û]K™Ù][YX\Š
+NÂˆJNÂˆÛÛœÝ[Û›Û[YHH[ÛX[Ëœ™YXÙJ
+Ý[K
+HOˆÝ[H
+È
+
+˜ÛÛ˜XÝšXÙH
+H
+È
+˜\ÜÚYÛ›Y[™YH
+JHÈL
+NÂˆX[›Û[YQ]Kœ\Ú
+È[Ûˆ[ÛÝ‹X[Îˆ[ÛX[Ë›[™Ý›Û[YNˆX]œ›Ý[™
+[Û›Û[YJHJNÂˆB‚ˆËÈX[Ý]\Èœ™XZÙÝÛ‚ˆÛÛœÝÝ]\ÐÛÝ[Îˆ™XÛÜ™Ýš[™Ë[X™\ˆHßNÂˆÚÛ\Ø[QX[Ë™›Ü‘XXÚ
+OˆÂˆÛÛœÝÝ]\ÈHœÝ]\È	Ý[šÛ›ÝÛ‰ÎÂˆÝ]\ÐÛÝ[ÖÜÝ]\×HH
+Ý]\ÐÛÝ[ÖÜÝ]\×H
+H
+ÈNÂˆJNÂ‚ˆÛÛœÝX[Ý]\ÈHÂˆÈÝ]\Îˆ	Õ[™\ˆ™]šY]ÉËÛÝ[ˆ
+Ý]\ÐÛÝ[ÖÉÜ[™[™×Ü™]šY]É×H
+H
+È
+Ý]\ÐÛÝ[ÖÉÝ[™\—Ü™]šY]É×H
+H
+È
+Ý]\ÐÛÝ[ÖÉÜÝX›Z]Y	×H
+KÛÛÜŽˆ	ÈÙNYL‰ÈKˆÈÝ]\Îˆ	Ó\ÝY	ËÛÝ[ˆ
+Ý]\ÐÛÝ[ÖÉÛ\ÝY	×H
+H
+È
+Ý]\ÐÛÝ[ÖÉØ\›Ý™Y	×H
+KÛÛÜŽˆ	ÈÌØŽ™‰ÈKˆÈÝ]\Îˆ	Õ[™\ˆÛÛ˜XÝ	ËÛÝ[ˆÝ]\ÐÛÝ[ÖÉÝ[™\—ØÛÛ˜XÝ	×HÛÛÜŽˆ	ÈÎXÙ‰ÈKˆÈÝ]\Îˆ	ÔÛÛ	ËÛÝ[ˆ
+Ý]\ÐÛÝ[ÖÉÜÛÛ	×H
+H
+È
+Ý]\ÐÛÝ[ÖÉØÛÜÙY	×H
+KÛÛÜŽˆ	ÈÌLŽNIÈKˆÈÝ]\Îˆ	ÕÚ]˜]Û‰ËÛÝ[ˆ
+Ý]\ÐÛÝ[ÖÉÝÚ]˜]Û‰×H
+H
+È
+Ý]\ÐÛÝ[ÖÉÙ^\™Y	×H
+KÛÛÜŽˆ	ÈÙY	ÈKˆK™š[\ŠÈOˆË˜ÛÝ[ˆ
+NÂ‚ˆËÈ[™[™È›ÙÜ™\ÜÈ›ÜˆÜ›Ú™XÝÂˆÛÛœÝ[™[™Ô›ÙÜ™\ÜÈH›Ú™XÝÂˆ™š[\ŠOˆœÝ]\ÈOOH	Ù[™[™ÉÈœÝ]\ÈOOH	ØXÝ]™IÊBˆœÛXÙJ
+Bˆ›X\
+Oˆ
+Âˆ›Ú™XÝˆ]H	Õ[]Y›Ú™XÝ	Ëˆ˜Z\ÙYˆ˜[[Ý[˜Z\ÙYˆÛØ[ˆ™[™[™ÑÛØ[ˆJJNÂ‚ˆÛÛœÝÝ]ÈHÂˆÝ[X[ÎˆÚÛ\Ø[QX[Ë›[™ÝˆÝ[›Û[YKˆXÝ]™T›Ú™XÝÎˆ›Ú™XÝË™š[\ŠOˆœÝ]\ÈOOH	Ù[™[™ÉÈœÝ]\ÈOOH	ØXÝ]™IÊK›[™ÝˆÝ[\Ù\œÎˆ\Ù\œË›[™ÝˆNÂ‚ˆÛÛœÝ›ÛQ\ÝšX][ÛˆHÂˆÈ›ÛNˆ	Ò[™\ÝÜœÉËÛÝ[ˆ›ÛPÛÝ[Ëš[™\ÝÜ‹ÛÛÜŽˆ	ÈØÎXMMXÉÈKˆÈ›ÛNˆ	ÕÚÛ\Ø[\œÉËÛÝ[ˆ›ÛPÛÝ[ËÚÛ\Ø[\‹ÛÛÜŽˆ	ÈÌMŒÙX‰ÈKˆÈ›ÛNˆ	Ñ™X[\ØØ\\œÉËÛÝ[ˆ›ÛPÛÝ[Ë™™X[\ØØ\\‹ÛÛÜŽˆ	ÈÌM˜LÍIÈKˆÈ›ÛNˆ	Ð^Y\œÉËÛÝ[ˆ›ÛPÛÝ[Ë˜^Y\‹ÛÛÜŽˆ	ÈÙÌŒ‰ÈKˆK™š[\Š
+›ÛJHOˆ›ÛK˜ÛÝ[ˆ
+NÂ‚ˆ™\ËšœÛÛŠÂˆÝ]Ëˆ[™TÝ]ÎˆÂˆÚÛ\Ø[NˆÚÛ\Ø[QX[Ë›[™ÝˆØ\][ˆ›Ú™XÝË›[™Ýˆ\Ý[™ÜÎˆ\Ý[™ÜË›[™ÝˆKˆX[›Û[YQ]Kˆ›ÛQ\ÝšX][Û‹ˆ[™[™Ô›ÙÜ™\ÜËˆX[Ý]\ËˆJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È[˜[]XÜÈ]Nˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]Ú[˜[]XÜÈ]HˆJNÂˆBˆJNÂ‚ˆËÈYZ[ˆ\Ú›Ø\™Ý]Âˆ\™Ù]
+‹Ø\KÛX\šÙ]XÙKØYZ[‹ÜÝ]È‹™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝÜÙ[\“XYË[™\ÝÜ“XYËÚÛ\Ø[QX[Ë›Ú™XÝ×HH]ØZ]›ÛZ\ÙK˜[
+ÂˆÝÜ˜YÙK™Ù]Ù[\“XYÊ
+KˆÝÜ˜YÙK™Ù][™\ÝÜ“XYÊ
+KˆÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[Ê
+KˆÝÜ˜YÙK™Ù]Ø\][›Ú™XÝÊ
+KˆJNÂ‚ˆÛÛœÝÝ]ÈHÂˆÝ[Ù[\“XYÎˆÙ[\“XYË›[™Ýˆ[™[™ÔÙ[\“XYÎˆÙ[\“XYË™š[\ŠOˆœÝ]\ÈOOH›™]ÈˆœÝ]\ÈOOHœ[™[™ÈŠK›[™ÝˆÝ[[™\ÝÜ“XYÎˆ[™\ÝÜ“XYË›[™ÝˆXÝ]™UÚÛ\Ø[QX[ÎˆÚÛ\Ø[QX[Ë™š[\ŠOˆœÝ]\ÈOOH›\ÝYˆœÝ]\ÈOOH˜\›Ý™YŠK›[™ÝˆXÝ]™PØ\][›Ú™XÝÎˆ›Ú™XÝË™š[\ŠOˆœÝ]\ÈOOH™[™[™ÈˆœÝ]\ÈOOH˜XÝ]™HŠK›[™ÝˆNÂ‚ˆ™\ËšœÛÛŠÝ]ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈYZ[ˆÝ]Îˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚÝ]ÈˆJNÂˆBˆJNÂ‚ˆËÈÙ][™[™È][\È™\]Z\š[™ÈYZ[ˆXÝ[Û‚ˆ\™Ù]
+‹Ø\KÛX\šÙ]XÙKØYZ[‹Ü[™[™È‹™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝÝÚÛ\Ø[QX[Ë›Ú™XÝË\Ù\œ×HH]ØZ]›ÛZ\ÙK˜[
+ÂˆÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[Ê
+KˆÝÜ˜YÙK™Ù]Ø\][›Ú™XÝÊ
+KˆÝÜ˜YÙK™Ù][\Ù\œÊ
+KˆJNÂˆˆÛÛœÝ[™[™ÑX[ÈHÚÛ\Ø[QX[Âˆ™š[\ŠOˆœÝ]\ÈOOHœ[™[™×Ü™]šY]ÈˆœÝ]\ÈOOH[™\—Ü™]šY]ÈˆœÝ]\ÈOOHœÝX›Z]YŠBˆœÛXÙJL
+NÂˆˆÛÛœÝ[™[™Ô›Ú™XÝÈH›Ú™XÝÂˆ™š[\ŠOˆœÝ]\ÈOOHœ[™[™×Ø\›Ý˜[ˆœÝ]\ÈOOHœÝX›Z]YŠBˆœÛXÙJL
+NÂˆˆÛÛœÝ[™[™Ò][\ÈHÂˆ‹‹œ[™[™ÑX[Ë›X\
+Oˆ
+ÂˆYˆšYˆ\NˆÚÛ\Ø[WÙX[ˆ\ÈÛÛœÝˆ]Nˆ•ÚÛ\Ø[HX[ÝX›Z\ÜÚ[Ûˆ‹ˆ\ØÜš\[ÛŽˆœ›Ü\PY™\ÜÈ“™]ÈX[ÝX›Z\ÜÚ[Ûˆ‹ˆÝX›Z]YžNˆœÝX›Z]YžKˆÜ™X]Y]ˆ˜Ü™X]Y]ˆJJKˆ‹‹œ[™[™Ô›Ú™XÝË›X\
+Oˆ
+ÂˆYˆšYˆ\Nˆ˜Ø\][Ü›Ú™XÝˆ\ÈÛÛœÝˆ]NˆØ\][›Ú™XÝÝX›Z\ÜÚ[Ûˆ‹ˆ\ØÜš\[ÛŽˆ]H“™]È›Ú™XÝÝX›Z\ÜÚ[Ûˆ‹ˆÝX›Z]YžNˆ˜Ü™X]YžKˆÜ™X]Y]ˆ˜Ü™X]Y]ˆJJKˆKœÛÜ
+
+KŠHOˆ™]È]J‹˜Ü™X]Y]
+K™Ù][YJ
+HH™]È]JK˜Ü™X]Y]
+K™Ù][YJ
+JNÂˆˆ™\ËšœÛÛŠ[™[™Ò][\ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È[™[™È][\Îˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]Ú[™[™È][\ÈˆJNÂˆBˆJNÂ‚ˆËÈÙ]™XÙ[\Ù\œÈ›ÜˆYZ[‚ˆ\™Ù]
+‹Ø\KÛX\šÙ]XÙKØYZ[‹Ý\Ù\œÈ‹™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\œÈH]ØZ]ÝÜ˜YÙK™Ù][\Ù\œÊ
+NÂˆÛÛœÝ\Ù\œÕÚ]›Û\ÈH]ØZ]›ÛZ\ÙK˜[
+ˆ\Ù\œËœÛXÙJŒ
+K›X\
+\Þ[˜È
+\Ù\ŠHOˆÂˆÛÛœÝ›Û\ÈH]ØZ]ÝÜ˜YÙK™Ù]\Ù\”›Û\Ê\Ù\‹šY
+NÂˆ™]\›ˆÂˆ‹‹\Ù\‹ˆ›Û\Îˆ›Û\Ë›X\
+ˆOˆ‹œ›ÛJKˆNÂˆJBˆ
+NÂˆ™\ËšœÛÛŠ\Ù\œÕÚ]›Û\ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È\Ù\œÎˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]Ú\Ù\œÈˆJNÂˆBˆJNÂ‚ˆËÈÙ]™XÙ[XYÈ›ÜˆYZ[‚ˆ\™Ù]
+‹Ø\KÛX\šÙ]XÙKØYZ[‹ÛXYÈ‹™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝÜÙ[\“XYË[™\ÝÜ“XY×HH]ØZ]›ÛZ\ÙK˜[
+ÂˆÝÜ˜YÙK™Ù]Ù[\“XYÊ
+KˆÝÜ˜YÙK™Ù][™\ÝÜ“XYÊ
+KˆJNÂˆˆÛÛœÝXYÈHÂˆ‹‹œÙ[\“XYËœÛXÙJL
+K›X\
+Oˆ
+ÂˆYˆšYˆ\NˆœÙ[\ˆˆ\ÈÛÛœÝˆ˜[YNˆ›˜[YH”›Ü\HÝÛ™\ˆ‹ˆ\ØÜš\[ÛŽˆ	Ûœ›Ü\PY™\ÜÈ”›Ü\HŸH	Û[Y[[™H’[œ]Z\žHŸXˆÝ]\ÎˆœÝ]\ËˆÜ™X]Y]ˆ˜Ü™X]Y]ˆJJKˆ‹‹š[™\ÝÜ“XYËœÛXÙJL
+K›X\
+Oˆ
+ÂˆYˆšYˆ\Nˆš[™\ÝÜˆˆ\ÈÛÛœÝˆ˜[YNˆ›˜[YH’[™\ÝÜˆ‹ˆ\ØÜš\[ÛŽˆYÙ]ˆ	Û˜Ø\][˜[™ÙH•‘ŸH	Ûš[™\ÝY[™Y™\™[˜ÙH•˜\š[Ý\ÈŸXˆÝ]\ÎˆœÝ]\ËˆÜ™X]Y]ˆ˜Ü™X]Y]ˆJJKˆKœÛÜ
+
+KŠHOˆ™]È]J‹˜Ü™X]Y]
+K™Ù][YJ
+HH™]È]JK˜Ü™X]Y]
+K™Ù][YJ
+JNÂˆˆ™\ËšœÛÛŠXYËœÛXÙJMJJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈXYÎˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚXYÈˆJNÂˆBˆJNÂ‚ˆËÈ\›Ý™HÜˆ™Z™XÝHÚÛ\Ø[HX[ˆ\œ]Ú
+‹Ø\KÛX\šÙ]XÙKØYZ[‹ÙX[ËÎšYÜÝ]\È‹™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝX[YH[X™\Š™\Kœ\˜[\ËšY
+NÂˆÛÛœÝÈÝ]\Ë™Z™XÝ[Û”™X\ÛÛˆHH™\K˜›ÙNÂˆˆYˆ
+VÈ˜\›Ý™Y‹›\ÝY‹œ™Z™XÝY‹[™\—Ü™]šY]È—Kš[˜ÛY\ÊÝ]\ÊJHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[YÝ]\ÈˆJNÂˆBˆˆÛÛœÝX[H]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[
+X[Y
+NÂˆYˆ
+YX[
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ‘X[›Ý›Ý[™ˆJNÂˆBˆˆÛÛœÝ\]YH]ØZ]ÝÜ˜YÙK\]UÚÛ\Ø[QX[
+X[YÈˆÝ]\Ëˆ‹‹Š™Z™XÝ[Û”™X\ÛÛˆ	‰ˆÈ›Ý\Îˆ™Z™XÝ[Û”™X\ÛÛˆJBˆJNÂˆˆYˆ
+X[œÝX›Z]YžJHÂˆÛÛœÝ›ÝYšXØ][Û•\HHÝ]\ÈOOH˜\›Ý™YˆÝ]\ÈOOH›\ÝYˆÈ™X[Ý\]Hˆˆ™X[Ý\]HŽÂˆÛÛœÝ›ÝYšXØ][Û•]HHÝ]\ÈOOH˜\›Ý™YˆÝ]\ÈOOH›\ÝYˆˆÈ[Ý\ˆX[]	ÙX[œ›Ü\PY™\ÜÈœ›Ü\HŸH\È™Y[ˆ\›Ý™YXˆˆÝ]\ÈOOHœ™Z™XÝY‚ˆÈ[Ý\ˆX[ÝX›Z\ÜÚ[Ûˆ™\]Z\™\È][[Û˜ˆˆ[Ý\ˆX[Ý]\È\È™Y[ˆ\]YÂˆÛÛœÝ›ÝYšXØ][Û“Y\ÜØYÙHHÝ]\ÈOOHœ™Z™XÝYˆ	‰ˆ™Z™XÝ[Û”™X\ÛÛ‚ˆÈ™X\ÛÛŽˆ	Ü™Z™XÝ[Û”™X\ÛÛŸXˆˆÝ]\ÈOOH˜\›Ý™YˆÝ]\ÈOOH›\ÝY‚ˆÈ–[Ý\ˆX[\È›ÝÈ]™HÛˆHX\šÙ]XÙKˆ‚ˆˆ[™Yš[™YÂˆˆ]ØZ]ÝÜ˜YÙK˜Ü™X]S›ÝYšXØ][ÛŠÂˆ\Ù\’YˆX[œÝX›Z]YžKˆ\Nˆ›ÝYšXØ][Û•\Kˆ]Nˆ›ÝYšXØ][Û•]KˆY\ÜØYÙNˆ›ÝYšXØ][Û“Y\ÜØYÙKˆ™[]Y\Nˆ™X[‹ˆ™[]YYˆX[Yˆ[šÎˆÛX\šÙ]XÙKÝÚÛ\Ø[\‹ÙX[ØˆJNÂˆBˆˆ™\ËšœÛÛŠ\]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\][™ÈX[Ý]\Îˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ\]HX[Ý]\ÈˆJNÂˆBˆJNÂ‚ˆËÈ\›Ý™HÜˆ™Z™XÝHØ\][›Ú™XÝˆ\œ]Ú
+‹Ø\KÛX\šÙ]XÙKØYZ[‹Ü›Ú™XÝËÎšYÜÝ]\È‹™\]Z\™TÝY™”›ÛK\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ›Ú™XÝYH[X™\Š™\Kœ\˜[\ËšY
+NÂˆÛÛœÝÈÝ]\Ë™Z™XÝ[Û”™X\ÛÛˆHH™\K˜›ÙNÂˆˆYˆ
+VÈ˜\›Ý™Y‹™[™[™È‹œ™Z™XÝY‹[™\—Ü™]šY]È—Kš[˜ÛY\ÊÝ]\ÊJHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[YÝ]\ÈˆJNÂˆBˆˆÛÛœÝ›Ú™XÝH]ØZ]ÝÜ˜YÙK™Ù]Ø\][›Ú™XÝ
+›Ú™XÝY
+NÂˆYˆ
+\›Ú™XÝ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”›Ú™XÝ›Ý›Ý[™ˆJNÂˆBˆˆÛÛœÝ\]YH]ØZ]ÝÜ˜YÙK\]PØ\][›Ú™XÝ
+›Ú™XÝYÈˆÝ]\Ëˆ‹‹Š™Z™XÝ[Û”™X\ÛÛˆ	‰ˆÈ›Ý\Îˆ™Z™XÝ[Û”™X\ÛÛˆJBˆJNÂˆˆYˆ
+›Ú™XÝ˜Ü™X]YžJHÂˆÛÛœÝ›ÝYšXØ][Û•]HHÝ]\ÈOOH˜\›Ý™YˆÝ]\ÈOOH™[™[™ÈˆˆÈ[Ý\ˆ›Ú™XÝ‰Ü›Ú™XÝ]_Hˆ\È™Y[ˆ\›Ý™YXˆˆÝ]\ÈOOHœ™Z™XÝY‚ˆÈ[Ý\ˆ›Ú™XÝÝX›Z\ÜÚ[Ûˆ™\]Z\™\È][[Û˜ˆˆ[Ý\ˆ›Ú™XÝÝ]\È\È™Y[ˆ\]YÂˆÛÛœÝ›ÝYšXØ][Û“Y\ÜØYÙHHÝ]\ÈOOHœ™Z™XÝYˆ	‰ˆ™Z™XÝ[Û”™X\ÛÛ‚ˆÈ™X\ÛÛŽˆ	Ü™Z™XÝ[Û”™X\ÛÛŸXˆˆÝ]\ÈOOH˜\›Ý™YˆÝ]\ÈOOH™[™[™È‚ˆÈ–[Ý\ˆ›Ú™XÝ\È›ÝÈÜ[ˆ›ÜˆØ\][™]šY]Ëˆ‚ˆˆ[™Yš[™YÂˆˆ]ØZ]ÝÜ˜YÙK˜Ü™X]S›ÝYšXØ][ÛŠÂˆ\Ù\’Yˆ›Ú™XÝ˜Ü™X]YžKˆ\Nˆ™X[Ý\]H‹ˆ]Nˆ›ÝYšXØ][Û•]KˆY\ÜØYÙNˆ›ÝYšXØ][Û“Y\ÜØYÙKˆ™[]Y\Nˆœ›Ú™XÝ‹ˆ™[]YYˆ›Ú™XÝYˆ[šÎˆÛX\šÙ]XÙKÙ™X[\ØØ\\‹Ü›Ú™XÝØˆJNÂˆBˆˆ™\ËšœÛÛŠ\]Y
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\][™È›Ú™XÝÝ]\Îˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ\]H›Ú™XÝÝ]\ÈˆJNÂˆBˆJNÂ‚ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆËÈÕTPTÑKPTÑQÕUÈS‘ÒS•È
+Ú]XœšY]]Ý\Ü
+BˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‚ˆËÈ[\ˆÈÚXÚÈYˆ\Ù\ˆ]][XØ]YšXH™\]]]
+\Ù\È^\›˜[Ý\Ù\—ÚYÛÛ[[œÊBˆÛÛœÝ\Ô™\]]]\Ù\ˆH
+™\Nˆ[žJNˆ›ÛÛX[ˆOˆÂˆ™]\›ˆH\™\K\Ù\Ë˜ÛZ[\ÏËœÝXˆ	‰ˆ\™\KœÝ\X˜\ÙU\Ù\ŽÂˆNÂ‚ˆËÈÝ\X˜\ÙHÚÛ\Ø[\ˆÝ]Âˆ\™Ù]
+‹Ø\KÜÝ\X˜\ÙKÛX\šÙ]XÙKÝÚÛ\Ø[\‹ÜÝ]È‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝÈÝÜ˜YÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆˆËÈ›Üˆ™\]]]\Ù\œËžH^\›˜[Ý\Ù\—ÚYÛÛ[[œÈš\œÝ[ˆ˜[˜XÚÈÈ™YÝ[\‚ˆËÈ›ÜˆÝ\X˜\ÙH]]\Ù\œË\ÙH™YÝ[\ˆÛÛ[[œÂˆ]X[ÈH]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[ÐžU\Ù\Š\Ù\’Y
+NÂˆYˆ
+X[Ë›[™ÝOOH	‰ˆ\Ô™\]]]\Ù\Š™\JJHÂˆX[ÈH]ØZ]Ý\X˜\ÙTÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[ÐžQ^\›˜[\Ù\Š\Ù\’Y
+NÂˆBˆˆ]”™\]Y\ÝÈH]ØZ]ÝÜ˜YÙK™Ù]•”™\]Y\ÝÐžU\Ù\Š\Ù\’Y
+NÂˆYˆ
+”™\]Y\ÝË›[™ÝOOH	‰ˆ\Ô™\]]]\Ù\Š™\JJHÂˆ”™\]Y\ÝÈH]ØZ]Ý\X˜\ÙTÝÜ˜YÙK™Ù]•”™\]Y\ÝÑ›Ü•ÚÛ\Ø[\žQ^\›˜[Y
+\Ù\’Y
+NÂˆB‚ˆÛÛœÝÝ]ÈHÂˆXÝ]™NˆX[Ë™š[\ŠOˆœÝ]\ÈOOH›\ÝYˆœÝ]\ÈOOH˜\›Ý™YˆœÝ]\ÈOOHPÕU‘HˆœÝ]\ÈOOH]˜Z[X›HŠK›[™Ýˆ[™[™ÎˆX[Ë™š[\ŠOˆœÝ]\ÈOOHœ[™[™×Ü™]šY]ÈˆœÝ]\ÈOOH[™\—Ü™]šY]ÈˆœÝ]\ÈOOH”S‘S‘ÈˆœÝ]\ÈOOH•[™\ˆ™]šY]ÈŠK›[™ÝˆÛÛˆX[Ë™š[\ŠOˆœÝ]\ÈOOHœÛÛˆœÝ]\ÈOOH˜ÛÜÙYˆœÝ]\ÈOOHÓÔÑQˆœÝ]\ÈOOH”ÛÛŠK›[™ÝˆÝ[›Û[YNˆX[Âˆ™š[\ŠOˆœÝ]\ÈOOHœÛÛˆœÝ]\ÈOOH˜ÛÜÙYˆœÝ]\ÈOOHÓÔÑQˆœÝ]\ÈOOH”ÛÛŠBˆœ™YXÙJ
+Ý[K
+HOˆÝ[H
+È
+˜\ÜÚYÛ›Y[Ù™YH
+K
+Kˆ”™\]Y\ÝÔ™XÙZ]™Yˆ”™\]Y\ÝË›[™Ýˆ”™\]Y\ÝÔ[™[™Îˆ”™\]Y\ÝË™š[\ŠˆOˆ‹œÝ]\ÈOOHœ[™[™Èˆ‹œÝ]\ÈOOH”S‘S‘ÈŠK›[™ÝˆNÂ‚ˆ™\ËšœÛÛŠÝ]ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÝ\X˜\ÙHÚÛ\Ø[\ˆÝ]Îˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚÝ]ÈˆJNÂˆBˆJNÂ‚ˆËÈÝ\X˜\ÙHÚÛ\Ø[\ˆX[Âˆ\™Ù]
+‹Ø\KÜÝ\X˜\ÙKÛX\šÙ]XÙKÝÚÛ\Ø[\‹ÙX[È‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝÈÝÜ˜YÙKÐØ[Y[Ø\ÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆ]X[ÈH]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[ÐžU\Ù\Š\Ù\’Y
+NÂˆYˆ
+X[Ë›[™ÝOOH	‰ˆ\Ô™\]]]\Ù\Š™\JJHÂˆX[ÈH]ØZ]Ý\X˜\ÙTÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[ÐžQ^\›˜[\Ù\Š\Ù\’Y
+NÂˆBˆ™\ËšœÛÛŠÐØ[Y[Ø\ÙJX[ÊJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÝ\X˜\ÙHÚÛ\Ø[\ˆX[Îˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚX[ÈˆJNÂˆBˆJNÂ‚ˆËÈÝ\X˜\ÙH[™\ÝÜˆÝ]Âˆ\™Ù]
+‹Ø\KÜÝ\X˜\ÙKÛX\šÙ]XÙKÚ[™\ÝÜ‹ÜÝ]È‹\ÒXœšY]][XØ]YØYX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝÈÝÜ˜YÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆ]ÛÛ[Z]Y[ÈH]ØZ]ÝÜ˜YÙK™Ù]Ø\][ÛÛ[Z]Y[ÐžU\Ù\Š\Ù\’Y
+NÂˆYˆ
+ÛÛ[Z]Y[Ë›[™ÝOOH	‰ˆ\Ô™\]]]\Ù\Š™\JJHÂˆÛÛ[Z]Y[ÈH]ØZ]Ý\X˜\ÙTÝÜ˜YÙK™Ù]Ø\][ÛÛ[Z]Y[ÐžQ^\›˜[\Ù\Š\Ù\’Y
+NÂˆBˆˆ]Ø]™Y][\ÈH]ØZ]ÝÜ˜YÙK™Ù]Ø]™Y][\Ê\Ù\’Y
+NÂˆYˆ
+Ø]™Y][\Ë›[™ÝOOH	‰ˆ\Ô™\]]]\Ù\Š™\JJHÂˆØ]™Y][\ÈH]ØZ]Ý\X˜\ÙTÝÜ˜YÙK™Ù]Ø]™Y][\ÐžQ^\›˜[\Ù\Š\Ù\’Y
+NÂˆBˆÛÛœÝš\ÚX›TØ]™Y][\ÈHØ]™Y][\Ë™š[\Š
+[žJHO‚ˆØ[XØÙ\ÜÓX\šÙ]›ÝÒ][U\J™\Ë[žKš][WÝ\JKˆ
+NÂ‚ˆÛÛœÝÝ]ÈHÂˆÝ[[™\ÝYˆÛÛ[Z]Y[Âˆ™š[\ŠÈOˆËœÝ]\ÈOOH˜XØÙ\YˆËœÝ]\ÈOOHPÐÑTQˆËœÝ]\ÈOOH˜ÛÛ[Z]YˆËœÝ]\ÈOOHXØÙ\YŠBˆœ™YXÙJ
+Ý[KÊHOˆÝ[H
+È
+Ë˜[[Ý[
+K
+KˆXÝ]™QX[ÎˆÛÛ[Z]Y[Ë™š[\ŠÈOˆˆËœÝ]\ÈOOH˜XØÙ\YˆËœÝ]\ÈOOHPÐÑTQˆËœÝ]\ÈOOH˜ÛÛ[Z]YˆËœÝ]\ÈOOHXØÙ\Y‚ˆ
+K›[™ÝˆØ]™YX[Îˆš\ÚX›TØ]™Y][\Ë›[™Ýˆ[™[™ÓÙ™™\œÎˆÛÛ[Z]Y[Ë™š[\ŠÈOˆˆËœÝ]\ÈOOHœ[™[™ÈˆËœÝ]\ÈOOH”S‘S‘ÈˆËœÝ]\ÈOOH”[™[™È‚ˆ
+K›[™ÝˆNÂ‚ˆ™\ËšœÛÛŠÝ]ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÝ\X˜\ÙH[™\ÝÜˆÝ]Îˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚÝ]ÈˆJNÂˆBˆJNÂ‚ˆËÈÝ\X˜\ÙH[™\ÝÜˆÛÛ[Z]Y[Âˆ\™Ù]
+‹Ø\KÜÝ\X˜\ÙKÛX\šÙ]XÙKÚ[™\ÝÜ‹ØÛÛ[Z]Y[È‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝÈÝÜ˜YÙKÐØ[Y[Ø\ÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆ]ÛÛ[Z]Y[ÈH]ØZ]ÝÜ˜YÙK™Ù]Ø\][ÛÛ[Z]Y[ÐžU\Ù\Š\Ù\’Y
+NÂˆYˆ
+ÛÛ[Z]Y[Ë›[™ÝOOH	‰ˆ\Ô™\]]]\Ù\Š™\JJHÂˆÛÛ[Z]Y[ÈH]ØZ]Ý\X˜\ÙTÝÜ˜YÙK™Ù]Ø\][ÛÛ[Z]Y[ÐžQ^\›˜[\Ù\Š\Ù\’Y
+NÂˆBˆ™\ËšœÛÛŠÐØ[Y[Ø\ÙJÛÛ[Z]Y[ÊJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÝ\X˜\ÙH[™\ÝÜˆÛÛ[Z]Y[Îˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚÛÛ[Z]Y[ÈˆJNÂˆBˆJNÂ‚ˆËÈÝ\X˜\ÙH™X[\ØØ\\ˆÝ]Âˆ\™Ù]
+‹Ø\KÜÝ\X˜\ÙKÛX\šÙ]XÙKÙ™X[\ØØ\\‹ÜÝ]È‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝÈÝÜ˜YÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆ]›Ú™XÝÈH]ØZ]ÝÜ˜YÙK™Ù]Ø\][›Ú™XÝÐžU\Ù\Š\Ù\’Y
+NÂˆYˆ
+›Ú™XÝË›[™ÝOOH	‰ˆ\Ô™\]]]\Ù\Š™\JJHÂˆ›Ú™XÝÈH]ØZ]Ý\X˜\ÙTÝÜ˜YÙK™Ù]Ø\][›Ú™XÝÐžQ^\›˜[\Ù\Š\Ù\’Y
+NÂˆBˆˆ]”™\]Y\ÝÈH]ØZ]ÝÜ˜YÙK™Ù]•”™\]Y\ÝÐžU\Ù\Š\Ù\’Y
+NÂˆYˆ
+”™\]Y\ÝË›[™ÝOOH	‰ˆ\Ô™\]]]\Ù\Š™\JJHÂˆ”™\]Y\ÝÈH]ØZ]Ý\X˜\ÙTÝÜ˜YÙK™Ù]•”™\]Y\ÝÐžQ^\›˜[\Ù\Š\Ù\’Y
+NÂˆB‚ˆÛÛœÝÝ]ÈHÂˆXÝ]™T›Ú™XÝÎˆ›Ú™XÝË™š[\ŠOˆˆœÝ]\ÈOOH™[™[™ÈˆœÝ]\ÈOOH˜XÝ]™HˆœÝ]\ÈOOHPÕU‘HˆœÝ]\ÈOOH‘•S‘S‘ÈˆœÝ]\ÈOOH‘[™[™È‚ˆ
+K›[™ÝˆÝ[˜Z\ÙYˆ›Ú™XÝËœ™YXÙJ
+Ý[K
+HOˆÝ[H
+È
+˜[[Ý[Ü˜Z\ÙY
+K
+KˆÝ[[™[™ÑÛØ[ˆ›Ú™XÝËœ™YXÙJ
+Ý[K
+HOˆÝ[H
+È
+™[™[™×ÙÛØ[
+K
+Kˆ›Ú™XÝÐÛÛ\]Yˆ›Ú™XÝË™š[\ŠOˆˆœÝ]\ÈOOH˜ÛÛ\]YˆœÝ]\ÈOOH™^]YˆœÝ]\ÈOOHÓÓTUQˆœÝ]\ÈOOHÛÛ\]Y‚ˆ
+K›[™Ýˆ”™\]Y\ÝÔÙ[ˆ”™\]Y\ÝË›[™ÝˆNÂ‚ˆ™\ËšœÛÛŠÝ]ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÝ\X˜\ÙH™X[\ØØ\\ˆÝ]Îˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚÝ]ÈˆJNÂˆBˆJNÂ‚ˆËÈÝ\X˜\ÙH™X[\ØØ\\ˆ›Ú™XÝÂˆ\™Ù]
+‹Ø\KÜÝ\X˜\ÙKÛX\šÙ]XÙKÙ™X[\ØØ\\‹Ü›Ú™XÝÈ‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝÈÝÜ˜YÙKÐØ[Y[Ø\ÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆ]›Ú™XÝÈH]ØZ]ÝÜ˜YÙK™Ù]Ø\][›Ú™XÝÐžU\Ù\Š\Ù\’Y
+NÂˆYˆ
+›Ú™XÝË›[™ÝOOH	‰ˆ\Ô™\]]]\Ù\Š™\JJHÂˆ›Ú™XÝÈH]ØZ]Ý\X˜\ÙTÝÜ˜YÙK™Ù]Ø\][›Ú™XÝÐžQ^\›˜[\Ù\Š\Ù\’Y
+NÂˆBˆ™\ËšœÛÛŠÐØ[Y[Ø\ÙJ›Ú™XÝÊJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÝ\X˜\ÙH™X[\ØØ\\ˆ›Ú™XÝÎˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]Ú›Ú™XÝÈˆJNÂˆBˆJNÂ‚ˆËÈÝ\X˜\ÙH^Y\ˆÝ]Âˆ\™Ù]
+‹Ø\KÜÝ\X˜\ÙKÛX\šÙ]XÙKØ^Y\‹ÜÝ]È‹\ÒXœšY]][XØ]YØYX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝÈÝÜ˜YÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆ]Ù™™\œÈH]ØZ]ÝÜ˜YÙK™Ù]^Y\“Ù™™\œÐžU\Ù\Š\Ù\’Y
+NÂˆYˆ
+Ù™™\œË›[™ÝOOH	‰ˆ\Ô™\]]]\Ù\Š™\JJHÂˆÙ™™\œÈH]ØZ]Ý\X˜\ÙTÝÜ˜YÙK™Ù]^Y\“Ù™™\œÐžQ^\›˜[\Ù\Š\Ù\’Y
+NÂˆBˆˆ]Ø]™Y][\ÈH]ØZ]ÝÜ˜YÙK™Ù]Ø]™Y][\Ê\Ù\’Y
+NÂˆYˆ
+Ø]™Y][\Ë›[™ÝOOH	‰ˆ\Ô™\]]]\Ù\Š™\JJHÂˆØ]™Y][\ÈH]ØZ]Ý\X˜\ÙTÝÜ˜YÙK™Ù]Ø]™Y][\ÐžQ^\›˜[\Ù\Š\Ù\’Y
+NÂˆBˆÛÛœÝš\ÚX›TØ]™Y][\ÈHØ]™Y][\Ë™š[\Š
+[žJHO‚ˆØ[XØÙ\ÜÓX\šÙ]›ÝÒ][U\J™\Ë[žKš][WÝ\JKˆ
+NÂ‚ˆÛÛœÝÝ]ÈHÂˆØ]™Y›Ü\Y\Îˆš\ÚX›TØ]™Y][\Ë™š[\Š
+Ø]™Y
+HO‚ˆÂˆ›\Ý[™È‹ˆÚÛ\Ø[WÙX[‹ˆœ™]Z[‹ˆœ™]Z[Û\Ý[™È‹ˆKš[˜ÛY\ÊØ]™Yš][WÝ\JBˆ
+K›[™Ýˆ[™[™ÓÙ™™\œÎˆÙ™™\œË™š[\ŠÈOˆËœÝ]\ÈOOHœ[™[™ÈˆËœÝ]\ÈOOH”S‘S‘ÈˆËœÝ]\ÈOOH”[™[™ÈŠK›[™ÝˆXØÙ\YÙ™™\œÎˆÙ™™\œË™š[\ŠÈOˆËœÝ]\ÈOOH˜XØÙ\YˆËœÝ]\ÈOOHPÐÑTQˆËœÝ]\ÈOOHXØÙ\YŠK›[™ÝˆÝ[\˜Ú\Ù\ÎˆÙ™™\œË™š[\ŠÈOˆËœÝ]\ÈOOH˜ÛÜÙYˆËœÝ]\ÈOOHÓÔÑQˆËœÝ]\ÈOOHÛÜÙYŠK›[™ÝˆNÂ‚ˆ™\ËšœÛÛŠÝ]ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÝ\X˜\ÙH^Y\ˆÝ]Îˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚÝ]ÈˆJNÂˆBˆJNÂ‚ˆËÈÝ\X˜\ÙH^Y\ˆÙ™™\œÂˆ\™Ù]
+‹Ø\KÜÝ\X˜\ÙKÛX\šÙ]XÙKØ^Y\‹ÛÙ™™\œÈ‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝÈÝÜ˜YÙKÐØ[Y[Ø\ÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆ]Ù™™\œÈH]ØZ]ÝÜ˜YÙK™Ù]^Y\“Ù™™\œÐžU\Ù\Š\Ù\’Y
+NÂˆYˆ
+Ù™™\œË›[™ÝOOH	‰ˆ\Ô™\]]]\Ù\Š™\JJHÂˆÙ™™\œÈH]ØZ]Ý\X˜\ÙTÝÜ˜YÙK™Ù]^Y\“Ù™™\œÐžQ^\›˜[\Ù\Š\Ù\’Y
+NÂˆBˆ™\ËšœÛÛŠÐØ[Y[Ø\ÙJÙ™™\œÊJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÝ\X˜\ÙH^Y\ˆÙ™™\œÎˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚÙ™™\œÈˆJNÂˆBˆJNÂ‚ˆËÈÝ\X˜\ÙHØ]™Y][\Âˆ\™Ù]
+‹Ø\KÜÝ\X˜\ÙKÛX\šÙ]XÙKÜØ]™Y‹\ÒXœšY]][XØ]YØYX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝÈÝÜ˜YÙKÐØ[Y[Ø\ÙHHH]ØZ]Ù]Ý\X˜\ÙTÝÜ˜YÙJ
+NÂˆ]Ø]™Y][\ÈH]ØZ]ÝÜ˜YÙK™Ù]Ø]™Y][\Ê\Ù\’Y
+NÂˆYˆ
+Ø]™Y][\Ë›[™ÝOOH	‰ˆ\Ô™\]]]\Ù\Š™\JJHÂˆØ]™Y][\ÈH]ØZ]Ý\X˜\ÙTÝÜ˜YÙK™Ù]Ø]™Y][\ÐžQ^\›˜[\Ù\Š\Ù\’Y
+NÂˆBˆ™\ËšœÛÛŠˆÐØ[Y[Ø\ÙJˆØ]™Y][\Ë™š[\Š
+[žJHO‚ˆØ[XØÙ\ÜÓX\šÙ]›ÝÒ][U\J™\Ë[žKš][WÝ\JKˆ
+Kˆ
+Kˆ
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈØ]™Y][\Îˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚØ]™Y][\ÈˆJNÂˆBˆJNÂ‚ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆËÈPT’ÑUPÑH”“ÕÔÑHTHS‘ÒS•ÂˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‚ˆËÈÙ][™]šY]ÙYÛ\ÝYÚÛ\Ø[HX[È›Üˆ\›Ý™Yœ›ÝÜÚ[™Âˆ\™Ù]
+‹Ø\KÛX\šÙ]XÙKÙX[È‹\ÒXœšY]][XØ]Y™\]Z\™SX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜË\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]X\šÙ]›ÝÒ[™[ÜžTš[˜Ú\[Y
+™\ÊNÂˆÛÛœÝX[ÈH]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[Ê
+NÂˆˆÛÛœÝš[\™YX[ÈHX[Ë™š[\Š\ÔX›XÕÚÛ\Ø[QX[
+NÂˆˆÛÛœÝ[š\]YTÝX›Z]\’YÈH\œ˜^K™œ›ÛJ™]ÈÙ]
+š[\™YX[Ë›X\
+OˆœÝX›Z]YžJK™š[\Š›ÛÛX[ŠJJH\ÈÝš[™Ö×NÂˆˆ]\Ù\“X\H™]ÈX\Ýš[™Ë[žOŠ
+NÂˆ]›Û\ÓX\H™]ÈX\Ýš[™Ë[žV×OŠ
+NÂˆ]™\]][Û“X\H™]ÈX\Ýš[™Ë[žOŠ
+NÂˆ]˜YÙ\ÓX\H™]ÈX\Ýš[™Ë[žV×OŠ
+NÂˆˆžHÂˆÛÛœÝÝ\Ù\œÔ™\Ý[›Û\Ë™\]][ÛœË˜YÙ\×HH]ØZ]›ÛZ\ÙK˜[
+ÂˆÝÜ˜YÙK™Ù]\Ù\œÐžRYÊ[š\]YTÝX›Z]\’YÊKˆÝÜ˜YÙK™Ù]›Û\Ñ›Ü•\Ù\œÊ[š\]YTÝX›Z]\’YÊKˆÝÜ˜YÙK™Ù]™\]][ÛœÑ›Ü•\Ù\œÊ[š\]YTÝX›Z]\’YÊKˆÝÜ˜YÙK™Ù]˜YÙ\Ñ›Ü•\Ù\œÊ[š\]YTÝX›Z]\’YÊBˆJNÂˆ\Ù\“X\H\Ù\œÔ™\Ý[Âˆ›Û\ÓX\H›Û\ÎÂˆ™\]][Û“X\H™\]][ÛœÎÂˆ˜YÙ\ÓX\H˜YÙ\ÎÂˆHØ]Ú
+\œŠHÂˆÛÛœÛÛKØ\›Š•Ø\›š[™Îˆ˜Z[YÈ™]ÚÛÛYH\Ù\ˆ]H›ÜˆX[Îˆ‹\œŠNÂˆBˆˆÛÛœÝYØ\Ý\Õ\Ù\’YÈH™]ÈÙ]Ýš[™ÏŠ
+NÂˆÛÛœÝ›Û\Ñ[šY\ÈH\œ˜^K™œ›ÛJ›Û\ÓX\™[šY\Ê
+JNÂˆ›Üˆ
+ÛÛœÝÚY›Û\×HÙˆ›Û\Ñ[šY\ÊHÂˆYˆ
+›Û\È	‰ˆ\œ˜^Kš\Ð\œ˜^J›Û\ÊH	‰ˆ›Û\ËœÛÛYJ
+Žˆ[žJHOˆ‹œ›ÛOËœÝ\ÕÚ]
+œYØ\Ý\×ÈŠJJHÂˆYØ\Ý\Õ\Ù\’YË˜Y
+Y
+NÂˆBˆBˆˆÛÛœÝX›XÑX[ÈHš[\™YX[Ë›X\
+
+
+HOˆÂˆÛÛœÝÝX›Z]\ˆHœÝX›Z]YžHÈ\Ù\“X\™Ù]
+œÝX›Z]YžJHˆ[ÂˆÛÛœÝ™\]][ÛˆHœÝX›Z]YžHÈ™\]][Û“X\™Ù]
+œÝX›Z]YžJH[ˆ[ÂˆÛÛœÝ˜YÙ\ÈHœÝX›Z]YžHÈ˜YÙ\ÓX\™Ù]
+œÝX›Z]YžJH×Hˆ×NÂˆˆ™]\›ˆÂˆ‹‹ÔX›XÕÚÛ\Ø[QX[
+ˆˆ\Ù\’YˆØ[•šY]Ù\’[š]X]SX\šÙ]›ÝÒŠ™\ÊKˆ
+Kˆ\ÔYØ\Ý\ÑX[ˆœÝX›Z]YžHÈYØ\Ý\Õ\Ù\’YËš\ÊœÝX›Z]YžJHˆ˜[ÙKˆÚÛ\Ø[\’[™›ÎˆÝX›Z]\ˆÈÂˆYˆÝX›Z]\‹šYˆš\œÝ˜[YNˆÝX›Z]\‹™š\œÝ˜[YKˆ\Ý˜[YNˆÝX›Z]\‹›\Ý˜[YKˆ›Ùš[R[XYÙU\›ˆÝX›Z]\‹œ›Ùš[R[XYÙU\›ˆHˆ[ˆÚÛ\Ø[\”™\]][ÛŽˆ™\]][ÛˆÈÂˆ\ÝØÛÜ™Nˆ™\]][Û‹\ÝØÛÜ™HÏÈ[ˆ˜][™Îˆ™\]][Û‹œ˜][™ÈÏÈ[ˆX[ÐÛÜÙYÛÝ[ˆ™\]][Û‹™X[ÐÛÜÙYÛÝ[ÏÈ[ˆÛ•[YPÛÜÚ[™ÜÐÛÝ[ˆ™\]][Û‹›Û•[YPÛÜÚ[™ÜÐÛÝ[ÏÈ[ˆHˆ[ˆÚÛ\Ø[\˜YÙ\Îˆ\œ˜^Kš\Ð\œ˜^J˜YÙ\ÊHÈ˜YÙ\Ë™š[\Š
+Žˆ[žJHOˆËš\ÐXÝ]™JK›X\
+
+Žˆ[žJHOˆ
+Âˆ\Nˆ‹˜˜YÙU\KˆX™[ˆ‹›X™[ˆXÛÛŽˆ‹šXÛÛ‹ˆÛÛÜŽˆ‹˜ÛÛÜ‹ˆJJHˆ×KˆNÂˆJNÂˆˆÛÛœÝÛÜYX[ÈHX›XÑX[ËœÛÜ
+
+KŠHOˆÂˆYˆ
+Kš\ÔYØ\Ý\ÑX[	‰ˆX‹š\ÔYØ\Ý\ÑX[
+H™]\›ˆLNÂˆYˆ
+XKš\ÔYØ\Ý\ÑX[	‰ˆ‹š\ÔYØ\Ý\ÑX[
+H™]\›ˆNÂˆ™]\›ˆ™]È]J‹˜Ü™X]Y]
+K™Ù][YJ
+HH™]È]JK˜Ü™X]Y]
+K™Ù][YJ
+NÂˆJNÂˆˆ™\ËšœÛÛŠÛÜYX[ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈX\šÙ]XÙHX[Îˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚX[ÈˆJNÂˆBˆJNÂ‚ˆËÈÙ]HÚ[™ÛHÚÛ\Ø[HX[žHQˆ\™Ù]
+‹Ø\KÛX\šÙ]XÙKÙX[ËÎšY‹\ÒXœšY]][XØ]Y™\]Z\™SX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜË\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]X\šÙ]›ÝÒ[™[ÜžTš[˜Ú\[Y
+™\ÊNÂˆÛÛœÝX[YH[X™\Š™\Kœ\˜[\ËšY
+NÂˆYˆ
+\Ó˜SŠX[Y
+JHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[YX[QˆJNÂˆBˆˆÛÛœÝX[H]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[
+X[Y
+NÂˆYˆ
+YX[Z\ÔX›XÕÚÛ\Ø[QX[
+X[
+JHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ‘X[›Ý›Ý[™ˆJNÂˆBˆˆ™\ËšœÛÛŠˆÔX›XÕÚÛ\Ø[QX[
+ˆX[ˆ\Ù\’YˆØ[•šY]Ù\’[š]X]SX\šÙ]›ÝÒŠ™\ÊKˆ
+Kˆ
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈX[ˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚX[ˆJNÂˆBˆJNÂ‚ˆËÈÝX›Z]H•ˆ™\]Y\Ý›ÜˆHX[ˆ\œÜÝ
+‹Ø\KÛX\šÙ]XÙKÚ‹\™\]Y\ÝÈ‹\ÒXœšY]][XØ]YØYX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]X\šÙ]›ÝÒ[™[ÜžTš[˜Ú\[Y
+™\ÊNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝX[YH[X™\Š™\K˜›ÙOË™X[Y
+NÂˆYˆ
+S[X™\‹š\ÔØY™R[YÙ\ŠX[Y
+HX[YH
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ‘X[›Ý›Ý[™ˆJNÂˆB‚ˆÛÛœÝX[H]ØZ]ÝÜ˜YÙK™Ù]ÚÛ\Ø[QX[
+X[Y
+NÂˆÛÛœÝXØÙ\ÜÈH]ØZ]™\ÛÛ™SYØXÞQX[XØÙ\ÜÊˆ™\Kˆ\Ù\’YˆÚÛ\Ø[WÙX[‹ˆX[Yˆ
+NÂˆÛÛœÝX[ÝÛ™\’YHX[ˆÈ™\ÛÛ™UÚÛ\Ø[QX[ÝÛ™\’Y
+X[
+Bˆˆ[ÂˆYˆ
+ˆYX[ˆXXØÙ\ÜÈˆXØ[’[š]X]SYØXÞQX[[\˜XÝ[ÛŠXØÙ\ÜË™\ÊHˆYX[ÝÛ™\’YˆXØ[”™\]Y\ÝX\šÙ]›ÝÒŠÂˆšY]Ù\’Yˆ\Ù\’YˆÝÛ™\’YˆX[ÝÛ™\’YˆØ[’[š]X]RŽˆØ[•šY]Ù\’[š]X]SX\šÙ]›ÝÒŠ™\ÊKˆJBˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ‘X[›Ý›Ý[™ˆJNÂˆB‚ˆÛÛœÝ^\Ý[™Ô™\]Y\ÝÈH]ØZ]ÝÜ˜YÙK™Ù]”™\]Y\ÝÐžQX[
+X[Y
+NÂˆYˆ
+ˆ^\Ý[™Ô™\]Y\ÝËœÛÛYJˆ
+™\]Y\Ý
+HO‚ˆ™\]Y\Ý™™X[\ØØ\\’YOOH\Ù\’Y	‰ˆ™\]Y\ÝœÝ]\ÈOOHœ[™[™È‹ˆ
+Bˆ
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÂˆY\ÜØYÙNˆ–[ÝH[™XYH]™HH[™[™È•ˆ™\]Y\Ý›Üˆ\ÈX[ˆ‹ˆJNÂˆB‚ˆÛÛœÝÛX[“Ü[Û˜[^H
+˜[YNˆ[šÛ›ÝÛ‹X^[™Ýˆ[X™\ŠHO‚ˆ\[Ùˆ˜[YHOOHœÝš[™Èˆ	‰ˆ˜[YKš[J
+BˆÈ˜[YKš[J
+KœÛXÙJX^[™Ý
+Bˆˆ[ÂˆÛÛœÝÜ]\˜Ù[H[X™\Š™\K˜›ÙOË˜\ÜÚYÛ›Y[Ü]\˜Ù[
+NÂˆÛÛœÝ›ÜÜÙY\ÜÚYÛ›Y[™YHH[X™\Š™\K˜›ÙOËœ›ÜÜÙY\ÜÚYÛ›Y[™YJNÂˆˆÛÛœÝ”™\]Y\ÝH]ØZ]ÝÜ˜YÙK˜Ü™X]R”™\]Y\Ý
+ÂˆX[Yˆ™X[\ØØ\\’Yˆ\Ù\’YˆÚÛ\Ø[\’YˆX[ÝÛ™\’YˆY\ÜØYÙNˆÛX[“Ü[Û˜[^
+™\K˜›ÙOË›Y\ÜØYÙK—Ì
+Kˆ[[™YÝ˜]YÞNˆÛX[“Ü[Û˜[^
+ˆ™\K˜›ÙOËš[[™YÝ˜]YÞHÏÈ™\K˜›ÙOËœ\™\”›ÛKˆLˆ
+Kˆ[™[™ÔÛÝ\˜ÙNˆÛX[“Ü[Û˜[^
+™\K˜›ÙOË™[™[™ÔÛÝ\˜ÙKL
+Kˆ›ÜÜÙY\ÜÚYÛ›Y[™YN‚ˆ[X™\‹š\Ñš[š]J›ÜÜÙY\ÜÚYÛ›Y[™YJH	‰‚ˆ›ÜÜÙY\ÜÚYÛ›Y[™YHHˆÈ›ÜÜÙY\ÜÚYÛ›Y[™YBˆˆ[ˆ›ÜÜÙY•”Ü]‚ˆ[X™\‹š\Ñš[š]JÜ]\˜Ù[
+H	‰‚ˆÜ]\˜Ù[H	‰‚ˆÜ]\˜Ù[HLˆÈ	ÜÜ]\˜Ù[KÉÌLHÜ]\˜Ù[Xˆˆ[ˆ›ÜÜÙY[Y[[™NˆÛX[“Ü[Û˜[^
+ˆ™\K˜›ÙOËœ›ÜÜÙY[Y[[™KˆLˆ
+Kˆ^\šY[˜ÙS›Ý\Îˆ\œ˜^Kš\Ð\œ˜^J™\K˜›ÙOË˜ÛÛšX][ÛœÊBˆÈ™\K˜›ÙK˜ÛÛšX][ÛœÂˆ™š[\Š
+][Nˆ[šÛ›ÝÛŠNˆ][H\ÈÝš[™ÈOˆ\[Ùˆ][HOOHœÝš[™ÈŠBˆœÛXÙJLŠBˆš›Ú[Š‹ŠBˆœÛXÙJ—Ì
+H[ˆˆ[ˆJNÂ‚ˆYˆ
+X[	‰ˆX[œÝX›Z]YžJHÂˆ]ØZ]ÝÜ˜YÙK˜Ü™X]S›ÝYšXØ][ÛŠÂˆ\Ù\’YˆX[œÝX›Z]YžKˆ\Nˆ™X[Ú[\™\Ý‹ˆ]Nˆ™]È•ˆ™\]Y\ÝÛˆ[Ý\ˆX[ˆY\ÜØYÙNˆX[œ›Ü\PY™\ÜÈÈH™X[\ØØ\\ˆ\È[\™\ÝY[ˆ	ÙX[œ›Ü\PY™\ÜßXˆ”ÛÛY[Û™H\È[\™\ÝY[ˆ[Ý\ˆÚÛ\Ø[HX[‹ˆ™[]Y\Nˆ™X[‹ˆ™[]YYˆX[Yˆ[šÎˆÛX\šÙ]XÙKÝÚÛ\Ø[\‹ÙX[ØˆJNÂˆB‚ˆ™\ËœÝ]\ÊŒJKšœÛÛŠ”™\]Y\Ý
+NÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™È•ˆ™\]Y\Ýˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈÝX›Z]•ˆ™\]Y\ÝˆJNÂˆBˆJNÂ‚ˆËÈÙ][™]šY]ÙYØ\][›Ú™XÝÈ›Üˆ\›Ý™Yœ›ÝÜÚ[™Âˆ\™Ù]
+‹Ø\KÛX\šÙ]XÙKÜ›Ú™XÝÈ‹\ÒXœšY]][XØ]Y™\]Z\™SX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜË\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ›Ú™XÝÈH]ØZ]ÝÜ˜YÙK™Ù]Ø\][›Ú™XÝÊ
+NÂˆÛÛœÝ\Ù\œÈH]ØZ]ÝÜ˜YÙK™Ù][\Ù\œÊ
+NÂˆˆÛÛœÝYØ\Ý\Õ\Ù\’YÈH™]ÈÙ]Ýš[™ÏŠ
+NÂˆ›Üˆ
+ÛÛœÝ\Ù\ˆÙˆ\Ù\œÊHÂˆÛÛœÝ›Û\ÈH]ØZ]ÝÜ˜YÙK™Ù]\Ù\”›Û\Ê\Ù\‹šY
+NÂˆÛÛœÝ\ÔYØ\Ý\Ô›ÛHH›Û\ËœÛÛYJˆOˆ‹œ›ÛKœÝ\ÕÚ]
+œYØ\Ý\×ÈŠJNÂˆYˆ
+\ÔYØ\Ý\Ô›ÛJHÂˆYØ\Ý\Õ\Ù\’YË˜Y
+\Ù\‹šY
+NÂˆBˆBˆˆÛÛœÝX›XÔ›Ú™XÝÈH›Ú™XÝÂˆ™š[\Š\ÔX›XÐØ\][›Ú™XÝ
+Bˆ›X\
+Oˆ
+Âˆ‹‹ÔX›XÐØ\][›Ú™XÝ
+
+Kˆ\ÔYØ\Ý\Ô›Ú™XÝˆ˜Ü™X]YžHÈYØ\Ý\Õ\Ù\’YËš\Ê˜Ü™X]YžJHˆ˜[ÙKˆJJBˆœÛÜ
+
+KŠHOˆÂˆYˆ
+Kš\ÔYØ\Ý\Ô›Ú™XÝ	‰ˆX‹š\ÔYØ\Ý\Ô›Ú™XÝ
+H™]\›ˆLNÂˆYˆ
+XKš\ÔYØ\Ý\Ô›Ú™XÝ	‰ˆ‹š\ÔYØ\Ý\Ô›Ú™XÝ
+H™]\›ˆNÂˆ™]\›ˆ™]È]J‹˜Ü™X]Y]
+K™Ù][YJ
+HH™]È]JK˜Ü™X]Y]
+K™Ù][YJ
+NÂˆJNÂˆˆ™\ËšœÛÛŠX›XÔ›Ú™XÝÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈX\šÙ]XÙH›Ú™XÝÎˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]Ú›Ú™XÝÈˆJNÂˆBˆJNÂ‚ˆËÈÙ]HÚ[™ÛHØ\][›Ú™XÝžHQˆ\™Ù]
+‹Ø\KÛX\šÙ]XÙKÜ›Ú™XÝËÎšY‹\ÒXœšY]][XØ]Y™\]Z\™SX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜË\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ›Ú™XÝYH[X™\Š™\Kœ\˜[\ËšY
+NÂˆYˆ
+\Ó˜SŠ›Ú™XÝY
+JHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[Y›Ú™XÝQˆJNÂˆBˆˆÛÛœÝ›Ú™XÝH]ØZ]ÝÜ˜YÙK™Ù]Ø\][›Ú™XÝ
+›Ú™XÝY
+NÂˆYˆ
+\›Ú™XÝZ\ÔX›XÐØ\][›Ú™XÝ
+›Ú™XÝ
+JHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”›Ú™XÝ›Ý›Ý[™ˆJNÂˆBˆˆ™\ËšœÛÛŠÔX›XÐØ\][›Ú™XÝ
+›Ú™XÝ
+JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È›Ú™XÝˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]Ú›Ú™XÝˆJNÂˆBˆJNÂ‚ˆËÈÝX›Z][™\ÝY[[\™\Ý›ÜˆHØ\][›Ú™XÝˆ\œÜÝ
+‹Ø\KÛX\šÙ]XÙKÚ[™\ÝY[Z[\™\Ý‹\ÒXœšY]][XØ]YØYX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ]][XØ][Ûˆ™\]Z\™YˆJNÂˆB‚ˆÛÛœÝÈ›Ú™XÝY[[Ý[ÝXÝ\™T™Y™\™[˜ÙK›Ý\ÈHH™\K˜›ÙNÂˆˆYˆ
+\›Ú™XÝYX[[Ý[
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”›Ú™XÝQ[™[[Ý[\™H™\]Z\™YˆJNÂˆB‚ˆÛÛœÝ›Ú™XÝH]ØZ]ÝÜ˜YÙK™Ù]Ø\][›Ú™XÝ
+[X™\Š›Ú™XÝY
+JNÂˆÛÛœÝXØÙ\ÜÈH]ØZ]™\ÛÛ™SYØXÞQX[XØÙ\ÜÊˆ™\Kˆ\Ù\’Yˆ˜Ø\][Ü›Ú™XÝ‹ˆ[X™\Š›Ú™XÝY
+Kˆ
+NÂˆYˆ
+\›Ú™XÝXXØÙ\ÜÈXØ[’[š]X]SYØXÞQX[[\˜XÝ[ÛŠXØÙ\ÜË™\ÊJHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”›Ú™XÝ›Ý›Ý[™ˆJNÂˆB‚ˆYˆ
+[[Ý[
+›Ú™XÝ›Z[’[™\ÝY[
+JHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈˆY\ÜØYÙNˆZ[š[][H[™\ÝY[\È		Ü›Ú™XÝ›Z[’[™\ÝY[ËÓØØ[TÝš[™Ê
+_XˆJNÂˆB‚ˆËÈÜ™X]H[ˆ[™\ÝY[Ù™™\‚ˆÛÛœÝÙ™™\ˆH]ØZ]ÝÜ˜YÙK˜Ü™X]R[™\ÝY[Ù™™\ŠÂˆ›Ú™XÝYˆ[X™\Š›Ú™XÝY
+Kˆ[™\ÝÜ’Yˆ\Ù\’Yˆ[[Ý[Ù™™\™Yˆ[X™\Š[[Ý[
+KˆÝXÝ\™U\NˆÝXÝ\™T™Y™\™[˜ÙH›Ú™XÝœÝXÝ\™Kˆ›Ý\Îˆ›Ý\È[ˆ™\]Y\ÝY›ÛNˆ“‹ˆ›ÜÜÙY[\™\Ý˜]Nˆ[ˆ›ÜÜÙY\]Z]T\˜Ù[ˆ[ˆ›ÜÜÙY›Ùš]Ü]ˆ[ˆ›ÜÜÙYØ[‘\˜][ÛŽˆ[ˆJNÂ‚ˆYˆ
+›Ú™XÝ˜Ü™X]YžJHÂˆ]ØZ]ÝÜ˜YÙK˜Ü™X]S›ÝYšXØ][ÛŠÂˆ\Ù\’Yˆ›Ú™XÝ˜Ü™X]YžKˆ\Nˆš[™\ÝY[ÛÙ™™\ˆ‹ˆ]Nˆ™]È[™\ÝY[[\™\Ý[ˆ‰Ü›Ú™XÝ]_H˜ˆY\ÜØYÙNˆ[ˆ[™\ÝÜˆ\È[\™\ÝY[ˆ[™\Ý[™È		Ó[X™\Š[[Ý[
+KÓØØ[TÝš[™Ê
+_Xˆ™[]Y\Nˆœ›Ú™XÝ‹ˆ™[]YYˆ[X™\Š›Ú™XÝY
+Kˆ[šÎˆÛX\šÙ]XÙKÙ™X[\ØØ\\‹Ü›Ú™XÝØˆJNÂˆB‚ˆ™\ËœÝ]\ÊŒJKšœÛÛŠÈˆY\ÜØYÙNˆ’[™\ÝY[[\™\ÝÝX›Z]YÝXØÙ\ÜÙ[H‹ˆÙ™™\’YˆÙ™™\‹šYˆJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÝX›Z][™È[™\ÝY[[\™\Ýˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈÝX›Z][™\ÝY[[\™\ÝˆJNÂˆBˆJNÂ‚ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆËÈS‘PT’ÑUPÑHTÒ“ÐT‘THS‘ÒS•ÂˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‚ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆËÈQRSˆUQUÑÈS‘ÒS•ÂˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‚ˆËÈÙ]]Y]ÙÜÈ
+YZ[ˆÛ›JBˆ\™Ù]
+‹Ø\KØ]Y][ÙÜÈ‹\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\ˆH™\K\Ù\ˆ\È[žNÂˆYˆ
+]\Ù\ŠHÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ“›Ý]][XØ]YˆJNÂˆB‚ˆËÈÚXÚÈYZ[ˆ\›Z\ÜÚ[ÛˆšXHÝ\X˜\ÙH›Ùš[BˆÛÛœÝ›Ùš[HH]ØZ]Ù]\Ù\”›Ùš[J\Ù\‹šY
+NÂˆYˆ
+\›Ùš[H›Ùš[Kœš[X\žWÜ›ÛHOOH˜YZ[ˆŠHÂˆ™]\›ˆ™\ËœÝ]\ÊÊKšœÛÛŠÈY\ÜØYÙNˆYZ[ˆXØÙ\ÜÈ™\]Z\™YˆJNÂˆB‚ˆÛÛœÝÈ[Z]HL‹Ù™œÙ]HŒ‹XÝ[Û•\KYZ[•\Ù\’YHH™\Kœ]Y\žNÂˆˆËÈ˜[Y]HYÚ[˜][ÛˆÚ]™X\ÛÛ˜X›H›Ý[™ÂˆÛÛœÝ\œÙY[Z]HX]›Z[ŠX]›X^
+K[X™\Š[Z]
+HL
+KL
+NÂˆÛÛœÝ\œÙYÙ™œÙ]HX]›X^
+[X™\ŠÙ™œÙ]
+H
+NÂˆˆÛÛœÝÙÜÈH]ØZ]ÝÜ˜YÙK™Ù]]Y]ÙÜÊÂˆ[Z]ˆ\œÙY[Z]ˆÙ™œÙ]ˆ\œÙYÙ™œÙ]ˆXÝ[Û•\NˆXÝ[Û•\H\ÈÝš[™È[™Yš[™YˆYZ[•\Ù\’YˆYZ[•\Ù\’Y\ÈÝš[™È[™Yš[™YˆJNÂ‚ˆÛÛœÝÝ[H]ØZ]ÝÜ˜YÙK™Ù]]Y]ÙÐÛÝ[
+ÂˆXÝ[Û•\NˆXÝ[Û•\H\ÈÝš[™È[™Yš[™YˆYZ[•\Ù\’YˆYZ[•\Ù\’Y\ÈÝš[™È[™Yš[™YˆJNÂ‚ˆ™\ËšœÛÛŠÈÙÜËÝ[[Z]ˆ\œÙY[Z]Ù™œÙ]ˆ\œÙYÙ™œÙ]JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È]Y]ÙÜÎˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]Ú]Y]ÙÜÈˆJNÂˆBˆJNÂ‚ˆËÈÙ]Ú[™ÛH]Y]ÙÈ[žH
+YZ[ˆÛ›JBˆ\™Ù]
+‹Ø\KØ]Y][ÙÜËÎšY‹\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\ˆH™\K\Ù\ˆ\È[žNÂˆYˆ
+]\Ù\ŠHÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ“›Ý]][XØ]YˆJNÂˆB‚ˆÛÛœÝ›Ùš[HH]ØZ]Ù]\Ù\”›Ùš[J\Ù\‹šY
+NÂˆYˆ
+\›Ùš[H›Ùš[Kœš[X\žWÜ›ÛHOOH˜YZ[ˆŠHÂˆ™]\›ˆ™\ËœÝ]\ÊÊKšœÛÛŠÈY\ÜØYÙNˆYZ[ˆXØÙ\ÜÈ™\]Z\™YˆJNÂˆB‚ˆÛÛœÝYH[X™\Š™\Kœ\˜[\ËšY
+NÂˆÛÛœÝÙÈH]ØZ]ÝÜ˜YÙK™Ù]]Y]ÙÐžRY
+Y
+NÂ‚ˆYˆ
+[ÙÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ]Y]ÙÈ›Ý›Ý[™ˆJNÂˆB‚ˆ™\ËšœÛÛŠÙÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È]Y]ÙÎˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]Ú]Y]ÙÈˆJNÂˆBˆJNÂ‚ˆËÈÜ™X]H]Y]ÙÈ[žH
+[\›˜[\ÙKYZ[‹]šYÙÙ\™YXÝ[ÛœÊBˆ\œÜÝ
+‹Ø\KØ]Y][ÙÜÈ‹\Þ[˜È
+™\K™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\ˆH™\K\Ù\ˆ\È[žNÂˆYˆ
+]\Ù\ŠHÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ“›Ý]][XØ]YˆJNÂˆB‚ˆÛÛœÝ›Ùš[HH]ØZ]Ù]\Ù\”›Ùš[J\Ù\‹šY
+NÂˆYˆ
+\›Ùš[H›Ùš[Kœš[X\žWÜ›ÛHOOH˜YZ[ˆŠHÂˆ™]\›ˆ™\ËœÝ]\ÊÊKšœÛÛŠÈY\ÜØYÙNˆYZ[ˆXØÙ\ÜÈ™\]Z\™YˆJNÂˆB‚ˆÛÛœÝ]Y]ÙÑ]HHÂˆYZ[•\Ù\’Yˆ\Ù\‹šYˆYZ[‘[XZ[ˆ\Ù\‹™[XZ[[ˆYZ[“˜[YNˆ\Ù\‹™š\œÝ˜[YHÈ	Ý\Ù\‹™š\œÝ˜[Y_H	Ý\Ù\‹›\Ý˜[YHˆŸXš[J
+Hˆ\Ù\‹\Ù\›˜[YH[ˆXÝ[Û•\Nˆ™\K˜›ÙK˜XÝ[Û•\Kˆ™\ÛÝ\˜ÙU\Nˆ™\K˜›ÙKœ™\ÛÝ\˜ÙU\H[ˆ™\ÛÝ\˜ÙRYˆ™\K˜›ÙKœ™\ÛÝ\˜ÙRY[ˆ\ØÜš\[ÛŽˆ™\K˜›ÙK™\ØÜš\[Û‹ˆ™]š[Ý\Õ˜[YNˆ™\K˜›ÙKœ™]š[Ý\Õ˜[YHÈ”ÓÓ‹œÝš[™ÚYžJ™\K˜›ÙKœ™]š[Ý\Õ˜[YJHˆ[ˆ™]Õ˜[YNˆ™\K˜›ÙK›™]Õ˜[YHÈ”ÓÓ‹œÝš[™ÚYžJ™\K˜›ÙK›™]Õ˜[YJHˆ[ˆ\Y™\ÜÎˆ™\Kš\[ˆ\Ù\YÙ[ˆ™\KšXY\œÖÈ\Ù\‹XYÙ[—H[ˆNÂ‚ˆÛÛœÝ˜[Y][ÛˆH[œÙ\YZ[]Y]ÙÔØÚ[XKœØY™T\œÙJ]Y]ÙÑ]JNÂˆYˆ
+]˜[Y][Û‹œÝXØÙ\ÜÊHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈˆY\ÜØYÙNˆ’[˜[Y]Y]ÙÈ]H‹ˆ\œ›ÜœÎˆœ›ÛQ\œ›ÜŠ˜[Y][Û‹™\œ›ÜŠKÔÝš[™Ê
+HˆJNÂˆB‚ˆÛÛœÝÙÈH]ØZ]ÝÜ˜YÙK˜Ü™X]P]Y]ÙÊ˜[Y][Û‹™]JNÂ‚ˆ™\ËœÝ]\ÊŒJKšœÛÛŠÙÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™È]Y]ÙÎˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈÜ™X]H]Y]ÙÈˆJNÂˆBˆJNÂ‚ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆËÈS‘QRSˆUQUÑÈS‘ÒS•ÂˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‚ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆËÈSSUPÔÈ	ˆTÒ“ÐT‘S‘ÒS•ÂˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‚ˆËÈÙ]\Ù\ˆ\Ú›Ø\™[˜[]XÜÂˆ\™Ù]
+‹Ø\KØ[˜[]XÜËÙ\Ú›Ø\™Î\Ù\’YÈ‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆÛÛœÝ™\]Y\ÝY\Ù\’YH™\Kœ\˜[\Ë\Ù\’YÂˆYˆ
+ˆ]\Ù\’Yˆ
+™\]Y\ÝY\Ù\’Y	‰‚ˆ™\]Y\ÝY\Ù\’YOOH\Ù\’Y	‰‚ˆJ]ØZ]\ÓX\šÙ]›ÝÔÝY™XØÙ\ÜÊ™\K\Ù\’Y
+JJBˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ[˜[]XÜÈ›Ý›Ý[™ˆJNÂˆBˆˆÛÛœÝÝ]ÈHÂˆÝ[X[ÕšY]ÙYˆˆX[ÔØ]™YˆˆÙ™™\œÔÝX›Z]YˆˆX[ÕÛÛŽˆˆÝ[[™\ÝYˆˆÝ[™]\›œÎˆˆ]™Ô“ÒNˆˆXÝ]™S™YÛÝX][ÛœÎˆˆ[™[™ÓÙ™™\œÎˆˆ[ÛQÜ›ÝÝˆˆNÂ‚ˆ™\ËšœÛÛŠÝ]ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È\Ú›Ø\™[˜[]XÜÎˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]Ú[˜[]XÜÈˆJNÂˆBˆJNÂ‚ˆËÈÙ]\Ù\ˆXÝ]š]H™YYˆ\™Ù]
+‹Ø\KØ[˜[]XÜËØXÝ]š]KÎ\Ù\’YÈ‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆÛÛœÝ™\]Y\ÝY\Ù\’YH™\Kœ\˜[\Ë\Ù\’YÂˆYˆ
+ˆ]\Ù\’Yˆ
+™\]Y\ÝY\Ù\’Y	‰‚ˆ™\]Y\ÝY\Ù\’YOOH\Ù\’Y	‰‚ˆJ]ØZ]\ÓX\šÙ]›ÝÔÝY™XØÙ\ÜÊ™\K\Ù\’Y
+JJBˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆXÝ]š]H›Ý›Ý[™ˆJNÂˆBˆ™\ËšœÛÛŠ×JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈXÝ]š]Nˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚXÝ]š]HˆJNÂˆBˆJNÂ‚ˆËÈÙ]X\šÙ][œÚYÚÂˆ\™Ù]
+‹Ø\KØ[˜[]XÜËÛX\šÙ]Z[œÚYÚÈ‹\ÒXœšY]][XØ]Y\Þ[˜È
+Ü™\K™\ÊHOˆÂˆžHÂˆ™\ËšœÛÛŠ×JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈX\šÙ][œÚYÚÎˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]Ú[œÚYÚÈˆJNÂˆBˆJNÂ‚ˆËÈÙ]™YÛÝX][Ûˆ[˜[]XÜÂˆ\™Ù]
+‹Ø\KØ[˜[]XÜËÛ™YÛÝX][ÛœËÎ\Ù\’YÈ‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆÛÛœÝ™\]Y\ÝY\Ù\’YH™\Kœ\˜[\Ë\Ù\’YÂˆYˆ
+ˆ]\Ù\’Yˆ
+™\]Y\ÝY\Ù\’Y	‰‚ˆ™\]Y\ÝY\Ù\’YOOH\Ù\’Y	‰‚ˆJ]ØZ]\ÓX\šÙ]›ÝÔÝY™XØÙ\ÜÊ™\K\Ù\’Y
+JJBˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“™YÛÝX][Ûˆ[˜[]XÜÈ›Ý›Ý[™ˆJNÂˆBˆÛÛœÝÝ]ÈHÂˆÝ[™YÛÝX][ÛœÎˆˆÝXØÙ\ÜÔ˜]Nˆˆ]™\˜YÙPÛÝ[\œÎˆˆ]™\˜YÙU[YUÐÛÜÙNˆˆ]™\˜YÙQ\ØÛÝ[ˆˆ™\ÝX[Ø]™Yˆˆ™XÙ[™[™ˆœÝX›H‹ˆÝ˜]YÞTØÛÜ™NˆˆNÂˆ™\ËšœÛÛŠÝ]ÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È™YÛÝX][Ûˆ[˜[]XÜÎˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]Ú™YÛÝX][Ûˆ[˜[]XÜÈˆJNÂˆBˆJNÂ‚ˆËÈÙ]™YÛÝX][Ûˆ[œÚYÚÂˆ\™Ù]
+‹Ø\KØ[˜[]XÜËÛ™YÛÝX][Û‹Z[œÚYÚËÎ\Ù\’YÈ‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆÛÛœÝ™\]Y\ÝY\Ù\’YH™\Kœ\˜[\Ë\Ù\’YÂˆYˆ
+ˆ]\Ù\’Yˆ
+™\]Y\ÝY\Ù\’Y	‰‚ˆ™\]Y\ÝY\Ù\’YOOH\Ù\’Y	‰‚ˆJ]ØZ]\ÓX\šÙ]›ÝÔÝY™XØÙ\ÜÊ™\K\Ù\’Y
+JJBˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“™YÛÝX][Ûˆ[œÚYÚÈ›Ý›Ý[™ˆJNÂˆBˆ™\ËšœÛÛŠ×JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È™YÛÝX][Ûˆ[œÚYÚÎˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]Ú™YÛÝX][Ûˆ[œÚYÚÈˆJNÂˆBˆJNÂ‚ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆËÈRHÕTUSÓˆS‘ÒS•ÂˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‚ˆËÈÙ]RHÝ\˜]YX[Âˆ\™Ù]
+‹Ø\KØZKØÝ\˜]YYX[ËÎ\Ù\’YÈ‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆÛÛœÝ™\]Y\ÝY\Ù\’YH™\Kœ\˜[\Ë\Ù\’YÂˆYˆ
+ˆ]\Ù\’Yˆ
+™\]Y\ÝY\Ù\’Y	‰‚ˆ™\]Y\ÝY\Ù\’YOOH\Ù\’Y	‰‚ˆJ]ØZ]\ÓX\šÙ]›ÝÔÝY™XØÙ\ÜÊ™\K\Ù\’Y
+JJBˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆÝ\˜]YX[È›Ý›Ý[™ˆJNÂˆBˆ™\ËšœÛÛŠ×JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÝ\˜]YX[Îˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚÝ\˜]YX[ÈˆJNÂˆBˆJNÂ‚ˆËÈÝX›Z]Ý\˜][Ûˆ™YY˜XÚÂˆ\œÜÝ
+‹Ø\KØZKØÝ\˜][Û‹Y™YY˜XÚÈ‹\ÒXœšY]][XØ]Y\Þ[˜È
+Ü™\K™\ÊHOˆÂˆžHÂˆ™\ËœÝ]\ÊLJKšœÛÛŠÈY\ÜØYÙNˆÝ\˜][Ûˆ™YY˜XÚÈ\È›Ý]˜Z[X›HY]ˆJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆØ]š[™ÈÝ\˜][Ûˆ™YY˜XÚÎˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈØ]™H™YY˜XÚÈˆJNÂˆBˆJNÂ‚ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆËÈÒT‘QÐUÒTÕS‘ÒS•ÂˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‚ˆËÈÙ]Ú\™YØ]Ú\ÝÂˆ\™Ù]
+‹Ø\KÝØ]Ú\ÝËÜÚ\™YÎ\Ù\’YÈ‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆÛÛœÝ™\]Y\ÝY\Ù\’YH™\Kœ\˜[\Ë\Ù\’YÂˆYˆ
+ˆ]\Ù\’Yˆ
+™\]Y\ÝY\Ù\’Y	‰‚ˆ™\]Y\ÝY\Ù\’YOOH\Ù\’Y	‰‚ˆJ]ØZ]\ÓX\šÙ]›ÝÔÝY™XØÙ\ÜÊ™\K\Ù\’Y
+JJBˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ•Ø]Ú\ÝÈ›Ý›Ý[™ˆJNÂˆBˆ™\ËšœÛÛŠ×JNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÚ\™YØ]Ú\ÝÎˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚØ]Ú\ÝÈˆJNÂˆBˆJNÂ‚ˆËÈÜ™X]HÚ\™YØ]Ú\Ýˆ\œÜÝ
+‹Ø\KÝØ]Ú\ÝËÜÚ\™Y‹\ÒXœšY]][XØ]Y\Þ[˜È
+Ü™\K™\ÊHOˆÂˆžHÂˆ™\ËœÝ]\ÊLJKšœÛÛŠÈY\ÜØYÙNˆ”Ú\™YØ]Ú\ÝÈ\™H›Ý]˜Z[X›HY]ˆJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™ÈÚ\™YØ]Ú\Ýˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈÜ™X]HØ]Ú\ÝˆJNÂˆBˆJNÂ‚ˆËÈÙ]Ø]Ú\ÝX[Âˆ\™Ù]
+‹Ø\KÝØ]Ú\ÝËÜÚ\™YÎØ]Ú\ÝYÙX[È‹\ÒXœšY]][XØ]Y\Þ[˜È
+Ü™\K™\ÊHOˆÂˆžHÂˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ•Ø]Ú\Ý›Ý›Ý[™ˆJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈØ]Ú\ÝX[Îˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚØ]Ú\ÝX[ÈˆJNÂˆBˆJNÂ‚ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆËÈTÑTˆÓ“ÐT‘S‘ÈS‘ÒS•ÂˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‚ˆËÈØ]™HÛ˜›Ø\™[™È]Bˆ\œÜÝ
+‹Ø\KÝ\Ù\‹ÛÛ˜›Ø\™[™È‹\ÒXœšY]][XØ]Y\Þ[˜È
+Ü™\K™\ÊHOˆÂˆžHÂˆ™\ËœÝ]\ÊLJKšœÛÛŠÈY\ÜØYÙNˆ“Û˜›Ø\™[™È™Y™\™[˜Ù\È\™H›Ý]˜Z[X›HY]ˆJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆØ]š[™ÈÛ˜›Ø\™[™È]Nˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈØ]™HÛ˜›Ø\™[™È]HˆJNÂˆBˆJNÂ‚ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆËÈÐÕSQS•TÐQS‘ÒS•ÂˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‚ˆËÈÙ]ØÝ[Y[È›ÜˆHX[ˆ\™Ù]
+‹Ø\KÙØÝ[Y[ËÎ™X[YÎ™X[\OÈ‹\ÒXœšY]][XØ]Y\Þ[˜È
+Ü™\K™\ÊHOˆÂˆžHÂˆ™\ËœÝ]\ÊLJKšœÛÛŠÈY\ÜØYÙNˆ•\ÙHH]]Üš^™YX[]H›ÛÛH›ÜˆØÝ[Y[ÈˆJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈØÝ[Y[Îˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚØÝ[Y[ÈˆJNÂˆBˆJNÂ‚ˆËÈ\ØYØÝ[Y[
+[™YžHØš™XÝÝÜ˜YÙH›Ý]\ÊBˆ\œÜÝ
+‹Ø\KÙØÝ[Y[ËÝ\ØY‹\ÒXœšY]][XØ]Y\Þ[˜È
+Ü™\K™\ÊHOˆÂˆžHÂˆ™\ËœÝ]\ÊLJKšœÛÛŠÈY\ÜØYÙNˆ•\ÙHH]]Üš^™YX[]H›ÛÛH›Üˆ\ØYÈˆJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ\ØY[™ÈØÝ[Y[ˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ\ØYØÝ[Y[ˆJNÂˆBˆJNÂ‚ˆËÈ[]HØÝ[Y[ˆ\™[]J‹Ø\KÙØÝ[Y[ËÎ™ØÝ[Y[Y‹\ÒXœšY]][XØ]Y\Þ[˜È
+Ü™\K™\ÊHOˆÂˆžHÂˆ™\ËœÝ]\ÊLJKšœÛÛŠÈY\ÜØYÙNˆ•\ÙHH]]Üš^™YX[]H›ÛÛHÈX[˜YÙHØÝ[Y[ÈˆJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ[][™ÈØÝ[Y[ˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ[]HØÝ[Y[ˆJNÂˆBˆJNÂ‚ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆËÈS‘SSUPÔÈ	ˆ‘PUT‘HS‘ÒS•ÂˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‚ˆËÈÙ[™\˜]HØ\][›Ú™XÝ‚ˆ\™Ù]
+‹Ø\KÜ‹ØØ\][\›Ú™XÝÎšY‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\Ë˜ÛZ[\ÏËœÝXˆ™\KœÝ\X˜\ÙU\Ù\ËšYÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝ›Ú™XÝYH[X™\Š™\Kœ\˜[\ËšY
+NÂˆÛÛœÝ›Ú™XÝH]ØZ]ÝÜ˜YÙK™Ù]Ø\][›Ú™XÝ
+›Ú™XÝY
+NÂˆˆYˆ
+\›Ú™XÝ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”›Ú™XÝ›Ý›Ý[™ˆJNÂˆBˆYˆ
+ˆ›Ú™XÝ˜Ü™X]YžHOOH\Ù\’Y	‰‚ˆJ]ØZ]\ÓX\šÙ]›ÝÔÝY™XØÙ\ÜÊ™\K\Ù\’Y
+JBˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ”›Ú™XÝ›Ý›Ý[™ˆJNÂˆBˆˆÛÛœÝY™™\ˆH]ØZ]Ù[™\˜]QX[XÚÙ]ŠÂˆ]Nˆ›Ú™XÝ]Kˆ\Nˆ˜Ø\][‹ˆ›Ü\PY™\ÜÎˆ›Ú™XÝ›ØØ][Ûˆˆ‹ˆ›Ü\U\Nˆ›Ú™XÝœ›Ü\U\H[™Yš[™Yˆ\Žˆ›Ú™XÝœ›Ú™XÝYT•ˆ[™Yš[™Yˆ\˜Ú\ÙTšXÙNˆ›Ú™XÝœ\˜Ú\ÙTšXÙH[™Yš[™Yˆ™ZXÛÜÝˆ›Ú™XÝœ™ZXYÙ][™Yš[™Yˆ^XÝY›Ùš]ˆ›Ú™XÝœ›Ú™XÝY™]\›ˆÈˆ
+›Ú™XÝ™[™[™ÑÛØ[
+H
+ˆ
+\œÙQ›Ø]
+›Ú™XÝœ›Ú™XÝY™]\›ŠHÈL
+Hˆˆ[™Yš[™Yˆ\ØÜš\[ÛŽˆ›Ú™XÝ™\ØÜš\[Ûˆ[™Yš[™YˆYÚYÚÎˆ[™Yš[™Yˆ[Y[[™Nˆ›Ú™XÝšÛ\š[Ù[™Yš[™YˆÜ\˜]Ü“˜[YNˆ›Ú™XÝ˜Ü™X]YžH‘™X[\ØØ\\ˆÜ\˜]Üˆ‹ˆJNÂˆˆ™\ËœÙ]XY\ŠÛÛ[U\H‹˜\XØ][Û‹ÜˆŠNÂˆ™\ËœÙ]XY\ŠˆÛÛ[Q\ÜÜÚ][Ûˆ‹ˆ]XÚY[Èš[[˜[YOH˜Ø\][\›Ú™XÝIÜ›Ú™XÝYKIÑ]K››ÝÊ
+_Kœˆ˜ˆ
+NÂˆ™\ËœÙ[™
+Y™™\ŠNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÙ[™\˜][™ÈØ\][›Ú™XÝŽˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈÙ[™\˜]HˆˆJNÂˆBˆJNÂ‚ˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOBˆËÈPT’ÑU“ÕÈÐS“Ó’PÐSÑ‘‘Tˆ	ˆ‘QÓÕPUSÓˆTBˆËÈOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOB‚ˆËÈÜ™X]HH™]ÈÙ™™\ˆ
+[šYšYYXÜ›ÜÜÈ[[™\ÊBˆ\œÜÝ
+‹Ø\KÛX\šÙ]›ÝËÛÙ™™\œÈ‹\ÒXœšY]][XØ]YØYX\šÙ]›ÝÒ[™[ÜžPXØÙ\ÜÐÛÛ^\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YHÙ]]]\Ù\’Y
+™\JNÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝÈ[™KX[YÙ™™\’Ú[™^[ØY^\™\Ð]HH™\K˜›ÙNÂˆÛÛœÝ›Ü›X[^™Y[™HBˆ\[Ùˆ[™HOOHœÝš[™ÈˆÈ[™Kš[J
+KÕ\\Ø\ÙJ
+HˆˆŽÂˆÛÛœÝ[Y\šXÑX[YH[X™\ŠX[Y
+NÂˆˆYˆ
+ˆVÈ•ÒÓTÐSH‹ÐTUS‹“TÕS‘È—Kš[˜ÛY\Ê›Ü›X[^™Y[™JHˆS[X™\‹š\ÔØY™R[YÙ\Š[Y\šXÑX[Y
+Hˆ[Y\šXÑX[YHˆ\[ÙˆÙ™™\’Ú[™OOHœÝš[™Èˆˆ\^[ØYˆ\[Ùˆ^[ØYOOH›Øš™XÝˆˆ\œ˜^Kš\Ð\œ˜^J^[ØY
+Bˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[YÙ™™\ˆ]Z[ÈˆJNÂˆB‚ˆÛÛœÝ[ÝÙYÚ[™Îˆ™XÛÜ™Ýš[™Ë™XYÛ›HÝš[™Ö×OˆHÂˆÒÓTÐSNˆÈ•ÒÓTÐSWÐTÔÒQÓ“QS•‹•ÒÓTÐSWÒ•ˆ—KˆÐTUSˆÈÐTUSÒS•‘TÕQS•—KˆTÕS‘ÎˆÈ“TÕS‘×ÒS”URT–H‹”ÒÕÒS‘×Ô‘TUQTÕ—KˆNÂˆYˆ
+X[ÝÙYÚ[™ÖÛ›Ü›X[^™Y[™WKš[˜ÛY\ÊÙ™™\’Ú[™
+JHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[YÙ™™\ˆ]Z[ÈˆJNÂˆB‚ˆÛÛœÝ\œÙY^\žHBˆ\[Ùˆ^\™\Ð]OOHœÝš[™Èˆ	‰ˆ^\™\Ð]ˆÈ™]È]J^\™\Ð]
+Bˆˆ[ÂˆÛÛœÝÙ™™\Ü™X]Y]H™]È]J
+NÂˆYˆ
+ˆ\œÙY^\žH	‰‚ˆ
+[X™\‹š\Ó˜SŠ\œÙY^\žK™Ù][YJ
+JHˆ\œÙY^\žK™Ù][YJ
+HHÙ™™\Ü™X]Y]™Ù][YJ
+JBˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[YÙ™™\ˆ]Z[ÈˆJNÂˆB‚ˆÛÛœÝXØÙ\ÜÈH]ØZ]™\ÛÛ™SYØXÞQX[XØÙ\ÜÊˆ™\Kˆ\Ù\’Yˆ›Ü›X[^™Y[™Kˆ[Y\šXÑX[Yˆ
+NÂˆYˆ
+ˆXXØÙ\ÜÈˆXXØÙ\ÜË›ÝÛ™\’Yˆ
+XXØÙ\ÜËš\ÓÝÛ™\ˆ	‰‚ˆXXØÙ\ÜËš\Ô\XÚ\[	‰‚ˆXXØÙ\ÜËš\ÔÝY™ˆ	‰‚ˆJ™\Ë›ØØ[Ë˜Ø[XØÙ\ÜÔ™]šY]ÙYX\šÙ]›ÝÒ[™[ÜžHOOHYH	‰‚ˆ\ÔX›XÓYØXÞQX[
+XØÙ\ÜÊJJBˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ‘X[›Ý›Ý[™ˆJNÂˆB‚ˆÛÛœÝX[™YÛÝX][ÛœÈH]ØZ]ÝÜ˜YÙK™Ù]X\šÙ]›ÝÓ™YÛÝX][ÛœÐžQX[
+ˆ›Ü›X[^™Y[™Kˆ[Y\šXÑX[Yˆ
+NÂˆÛÛœÝ]]Üš]]]™S™YÛÝX][ÛœÈHX[™YÛÝX][ÛœË™š[\Šˆ
+[žJHO‚ˆ\ÓX\šÙ]›ÝÓ™YÛÝX][Û›Ý[™Ð]]Üš]]]™QX[
+[žKÂˆ[™Nˆ›Ü›X[^™Y[™KˆX[Yˆ[Y\šXÑX[YˆÝÛ™\’YˆXØÙ\ÜË›ÝÛ™\’YKˆJH	‰‚ˆ
+[žKœÜÝ\’YOOH\Ù\’Y[žK˜ÛÝ[\œ\RYOOH\Ù\’Y
+Kˆ
+NÂˆYˆ
+]]Üš]]]™S™YÛÝX][ÛœË›[™ÝˆJHÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÂˆY\ÜØYÙNˆ“Ù™™\ˆÝ]HÚ[™ÙYˆ™Yœ™\Ú[™žHYØZ[ˆ‹ˆJNÂˆBˆÛÛœÝ^\Ý[™Ó™YÛÝX][ÛˆH]]Üš]]]™S™YÛÝX][ÛœÖÌNÂˆYˆ
+^\Ý[™Ó™YÛÝX][ÛŠHÂˆYˆ
+^\Ý[™Ó™YÛÝX][Û‹œÝ]\ÈOOH˜XÝ]™HŠHÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ“™YÛÝX][Ûˆ\È›ÝXÝ]™HˆJNÂˆBˆH[ÙHYˆ
+XØÙ\ÜËš\ÓÝÛ™\ŠHÂˆËÈHX[ÝÛ™\ˆØ[››ÝÚÛÜÙH[ˆ\˜š]˜\žH™XÚ\Y[›ÝYÚ\ÂˆËÈX[[]™[[™Ú[‚ˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ‘X[›Ý›Ý[™ˆJNÂˆB‚ˆÛÛœÝ™XÚ\Y[YH^\Ý[™Ó™YÛÝX][Û‚ˆÈ^\Ý[™Ó™YÛÝX][Û‹œÜÝ\’YOOH\Ù\’YˆÈ^\Ý[™Ó™YÛÝX][Û‹˜ÛÝ[\œ\RYˆˆ^\Ý[™Ó™YÛÝX][Û‹œÜÝ\’YˆˆXØÙ\ÜË›ÝÛ™\’YÂˆÛÛœÝÛÝ[\œ\RYBˆ^\Ý[™Ó™YÛÝX][ÛË˜ÛÝ[\œ\RYÏÈ\Ù\’YÂ‚ˆËÈX›XÈÜÈ[[[Û˜[HÛZ]ÝÛ™\ˆQËˆHÝÜ˜YÙH˜[œØXÝ[Û‚ˆËÈ™XÙZ]™\ÈHÝÛ™\ˆ™\ÛÛ™Yœ›ÛHH]]Üš]]]™HX[™XÛÜ™™]™\‚ˆËÈH\XÚ\[Y[]HÛÜYYœ›ÛHH™KYš^™YÛÝX][Ûˆ›ÝË‚ˆÛÛœÝÜ™X]T™\Ý[H]ØZ]ÝÜ˜YÙK˜Ü™X]PÝ\œ™[X\šÙ]›ÝÓÙ™™\ŠÂˆ[™Nˆ›Ü›X[^™Y[™KˆX[Yˆ[Y\šXÑX[YˆÜÝ\’YˆXØÙ\ÜË›ÝÛ™\’YˆÛÝ[\œ\RYˆÜ™X]YžNˆ\Ù\’Yˆ™XÚ\Y[YˆÙ™™\’Ú[™ˆ^[ØYˆ^\™\Ð]ˆ\œÙY^\žKˆ›ÝÎˆÙ™™\Ü™X]Y]ˆJNÂˆYˆ
+XÜ™X]T™\Ý[›ÚÊHÂˆYˆ
+Ü™X]T™\Ý[œ™X\ÛÛˆOOHš[˜[YÜ^[ØYŠHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[YÙ™™\ˆ\›\ÈˆJNÂˆBˆYˆ
+Ü™X]T™\Ý[œ™X\ÛÛˆOOHš[˜[YÙ^\žHŠHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ’[˜[YÙ™™\ˆ]Z[ÈˆJNÂˆBˆYˆ
+Ü™X]T™\Ý[œ™X\ÛÛˆOOHš[˜[YÜ\XÚ\[ÈŠHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ‘X[›Ý›Ý[™ˆJNÂˆBˆYˆ
+Ü™X]T™\Ý[œ™X\ÛÛˆOOH›™YÛÝX][Û—Ú[˜XÝ]™HŠHÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ“™YÛÝX][Ûˆ\È›ÝXÝ]™HˆJNÂˆBˆYˆ
+Ü™X]T™\Ý[œ™X\ÛÛˆOOH˜XÝ]™WÛÙ™™\—Ù^\ÝÈŠHÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÂˆY\ÜØYÙNˆHÝ\œ™[Ù™™\ˆ\È[™XYH]ØZ][™ÈH™\ÜÛœÙH‹ˆJNÂˆBˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÂˆY\ÜØYÙNˆ“Ù™™\ˆÝ]HÚ[™ÙYˆ™Yœ™\Ú[™žHYØZ[ˆ‹ˆJNÂˆBˆÛÛœÝÈÙ™™\‹™YÛÝX][ÛˆHHÜ™X]T™\Ý[Â‚ˆËÈœ›ØYØ\ÝÈ™XÚ\Y[šXHÙX”ÛØÚÙ]ˆÛÛœÝœ›ØYØ\ÝÕ\Ù\ˆH
+\\È[žJK˜œ›ØYØ\ÝÕ\Ù\ŽÂˆYˆ
+œ›ØYØ\ÝÕ\Ù\ŠHÂˆœ›ØYØ\ÝÕ\Ù\Š™XÚ\Y[YÂˆ\Nˆ	ÛÙ™™\—Ý\]IËˆ^[ØYˆÂˆÙ™™\’YˆÙ™™\‹šYˆ™YÛÝX][Û’Yˆ™YÛÝX][Û‹šYˆ[™Nˆ›Ü›X[^™Y[™KˆÙ™™\’Ú[™ˆÝ]\Îˆ	ÜÙ[	ËˆBˆJNÂˆB‚ˆ™\ËœÝ]\ÊŒJKšœÛÛŠÈÙ™™\‹™YÛÝX][ÛˆJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÜ™X][™ÈÙ™™\Žˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈÜ™X]HÙ™™\ˆˆJNÂˆBˆJNÂ‚ˆËÈÙ]Ù™™\œÈ›ÜˆHX[ˆ\™Ù]
+‹Ø\KÛX\šÙ]›ÝËÛÙ™™\œËÙX[Î›[™KÎ™X[Y‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\Ë˜ÛZ[\ÏËœÝXˆ™\KœÝ\X˜\ÙU\Ù\ËšYÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝÈ[™KX[YHH™\Kœ\˜[\ÎÂˆÛÛœÝÙ™™\œÈH]ØZ]ÝÜ˜YÙK™Ù]X\šÙ]›ÝÓÙ™™\œÐžQX[
+[™K\œÙR[
+X[Y
+JNÂˆÛÛœÝš\ÚX›SÙ™™\œÈH]ØZ]\ÓX\šÙ]›ÝÔÝY™XØÙ\ÜÊ™\K\Ù\’Y
+BˆÈÙ™™\œÂˆˆš[\“X\šÙ]›ÝÓÙ™™\œÑ›Ü•\Ù\Š\Ù\’YÙ™™\œÊNÂˆ™\ËšœÛÛŠš\ÚX›SÙ™™\œÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÙ™™\œÎˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚÙ™™\œÈˆJNÂˆBˆJNÂ‚ˆËÈÙ]^HÙ™™\œÂˆ\™Ù]
+‹Ø\KÛX\šÙ]›ÝËÛÙ™™\œËÛ^H‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\Ë˜ÛZ[\ÏËœÝXˆ™\KœÝ\X˜\ÙU\Ù\ËšYÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝÙ[H]ØZ]ÝÜ˜YÙK™Ù]X\šÙ]›ÝÓÙ™™\œÐžU\Ù\Š\Ù\’Y
+NÂˆÛÛœÝ™XÙZ]™YH]ØZ]ÝÜ˜YÙK™Ù]X\šÙ]›ÝÓÙ™™\œÔ™XÙZ]™YžU\Ù\Š\Ù\’Y
+NÂˆˆ™\ËšœÛÛŠÈÙ[™XÙZ]™YJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È^HÙ™™\œÎˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚÙ™™\œÈˆJNÂˆBˆJNÂ‚ˆËÈÙ]Ú[™ÛHÙ™™\‚ˆ\™Ù]
+‹Ø\KÛX\šÙ]›ÝËÛÙ™™\œËÎ›Ù™™\’Y‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\Ë˜ÛZ[\ÏËœÝXˆ™\KœÝ\X˜\ÙU\Ù\ËšYÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝÙ™™\’YH\œÙR[
+™\Kœ\˜[\Ë›Ù™™\’Y
+NÂˆÛÛœÝÙ™™\ˆH]ØZ]ÝÜ˜YÙK™Ù]X\šÙ]›ÝÓÙ™™\ŠÙ™™\’Y
+NÂˆˆYˆ
+[Ù™™\ŠHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“Ù™™\ˆ›Ý›Ý[™ˆJNÂˆB‚ˆÛÛœÝX^T™XYÙ™™\ˆBˆØ[XØÙ\ÜÓX\šÙ]›ÝÓÙ™™\Š\Ù\’YÙ™™\ŠHˆ
+]ØZ]\ÓX\šÙ]›ÝÔÝY™XØÙ\ÜÊ™\K\Ù\’Y
+JNÂˆYˆ
+[X^T™XYÙ™™\ŠHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“Ù™™\ˆ›Ý›Ý[™ˆJNÂˆBˆˆ™\ËšœÛÛŠÙ™™\ŠNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™ÈÙ™™\Žˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]ÚÙ™™\ˆˆJNÂˆBˆJNÂ‚ˆËÈ™\ÜÛ™È[ˆÙ™™\ˆ
+XØÙ\™Z™XÝÛÝ[\ŠBˆ\œÜÝ
+‹Ø\KÛX\šÙ]›ÝËÛÙ™™\œËÎ›Ù™™\’YÜ™\ÜÛ™‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\Ë˜ÛZ[\ÏËœÝXˆ™\KœÝ\X˜\ÙU\Ù\ËšYÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝÙ™™\’YH[X™\Š™\Kœ\˜[\Ë›Ù™™\’Y
+NÂˆÛÛœÝÈXÝ[Û‹ÛÝ[\”^[ØYHH™\K˜›ÙNÂˆYˆ
+S[X™\‹š\ÔØY™R[YÙ\ŠÙ™™\’Y
+HÙ™™\’YH
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“Ù™™\ˆ›Ý›Ý[™ˆJNÂˆBˆYˆ
+VÈ˜XØÙ\‹œ™Z™XÝ‹˜ÛÝ[\ˆ—Kš[˜ÛY\ÊXÝ[ÛŠJHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÂˆY\ÜØYÙNˆ’[˜[YXÝ[Û‹ˆ]\Ý™H	ØXØÙ\	Ë	Ü™Z™XÝ	ËÜˆ	ØÛÝ[\‰È‹ˆJNÂˆBˆYˆ
+ˆXÝ[ÛˆOOH˜ÛÝ[\ˆˆ	‰‚ˆ
+XÛÝ[\”^[ØYˆ\[ÙˆÛÝ[\”^[ØYOOH›Øš™XÝˆˆ\œ˜^Kš\Ð\œ˜^JÛÝ[\”^[ØY
+JBˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÂˆY\ÜØYÙNˆH˜[YÛÝ[\ˆÙ™™\ˆ\È™\]Z\™Y‹ˆJNÂˆB‚ˆÛÛœÝÙ™™\ˆH]ØZ]ÝÜ˜YÙK™Ù]X\šÙ]›ÝÓÙ™™\ŠÙ™™\’Y
+NÂˆYˆ
+[Ù™™\ŠHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“Ù™™\ˆ›Ý›Ý[™ˆJNÂˆB‚ˆËÈÛ›HHÝ\œ™[™XÚ\Y[X^HXØÙ\™Z™XÝÜˆÛÝ[\‹ˆBˆËÈÜ™X]ÜˆØ[ˆšY]ÈÜˆÚ]˜]È[ˆÙ™™\‹]Ø[››ÝXØÙ\Z\ˆÝÛ‚ˆËÈ\›\ÈÛˆHÝ\ˆ\IÜÈ™Z[‹‚ˆYˆ
+Ù™™\‹œ™XÚ\Y[YOOH\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“Ù™™\ˆ›Ý›Ý[™ˆJNÂˆB‚ˆÛÛœÝ™YÛÝX][ÛˆBˆÙ™™\‹›™YÛÝX][Û’YOOH[ˆÈ]ØZ]ÝÜ˜YÙK™Ù]X\šÙ]›ÝÓ™YÛÝX][ÛŠÙ™™\‹›™YÛÝX][Û’Y
+Bˆˆ[™Yš[™YÂˆÛÛœÝXØÙ\ÜÈH]ØZ]™\ÛÛ™SYØXÞQX[XØÙ\ÜÊˆ™\Kˆ\Ù\’YˆÙ™™\‹›[™KˆÙ™™\‹™X[Yˆ
+NÂˆYˆ
+ˆ[™YÛÝX][ÛˆˆXXØÙ\ÜÈˆXXØÙ\ÜË›ÝÛ™\’Yˆ
+XXØÙ\ÜËš\ÓÝÛ™\ˆ	‰‚ˆXXØÙ\ÜËš\Ô\XÚ\[	‰‚ˆXXØÙ\ÜËš\ÔÝY™ˆ	‰‚ˆZ\ÔX›XÓYØXÞQX[
+XØÙ\ÜÊJHˆZ\ÓX\šÙ]›ÝÓ™YÛÝX][Û›Ý[™Ð]]Üš]]]™QX[
+™YÛÝX][Û‹Âˆ[™NˆÙ™™\‹›[™KˆX[YˆÙ™™\‹™X[YˆÝÛ™\’YˆXØÙ\ÜË›ÝÛ™\’YˆJHˆZ\ÓX\šÙ]›ÝÓÙ™™\ÛÛœÚ\Ý[Ú]™YÛÝX][ÛŠÙ™™\‹™YÛÝX][ÛŠBˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“Ù™™\ˆ›Ý›Ý[™ˆJNÂˆB‚ˆÛÛœÝ™\ÜÛœÙT™\Ý[H]ØZ]ÝÜ˜YÙKœ™\ÜÛ™ÐÝ\œ™[X\šÙ]›ÝÓÙ™™\ŠÂˆÙ™™\’Yˆ\Ù\’YˆXÝ[ÛŽˆXÝ[Ûˆ\È˜XØÙ\ˆœ™Z™XÝˆ˜ÛÝ[\ˆ‹ˆÛÝ[\”^[ØYˆ]]Üš]]]™SÝÛ™\’YˆXØÙ\ÜË›ÝÛ™\’YˆJNÂˆYˆ
+\™\ÜÛœÙT™\Ý[›ÚÊHÂˆYˆ
+ˆ™\ÜÛœÙT™\Ý[œ™X\ÛÛˆOOH››ÝÙ›Ý[™ˆˆ™\ÜÛœÙT™\Ý[œ™X\ÛÛˆOOH››ÝÜ™XÚ\Y[‚ˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“Ù™™\ˆ›Ý›Ý[™ˆJNÂˆBˆYˆ
+™\ÜÛœÙT™\Ý[œ™X\ÛÛˆOOHš[˜[YØÛÝ[\ˆŠHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÂˆY\ÜØYÙNˆH˜[YÛÝ[\ˆÙ™™\ˆ\È™\]Z\™Y‹ˆJNÂˆBˆYˆ
+™\ÜÛœÙT™\Ý[œ™X\ÛÛˆOOHš[˜[YÛÙ™™\—Ü^[ØYŠHÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÂˆY\ÜØYÙNˆ“Ù™™\ˆ\›\È\™H[˜[Y[™Ø[››Ý™HXØÙ\Y‹ˆJNÂˆBˆYˆ
+™\ÜÛœÙT™\Ý[œ™X\ÛÛˆOOH›Ù™™\—Ù^\™YŠHÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ“Ù™™\ˆ\È^\™YˆJNÂˆBˆYˆ
+™\ÜÛœÙT™\Ý[œ™X\ÛÛˆOOH›™YÛÝX][Û—Ú[˜XÝ]™HŠHÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ“™YÛÝX][Ûˆ\È›ÝXÝ]™HˆJNÂˆBˆYˆ
+™\ÜÛœÙT™\Ý[œ™X\ÛÛˆOOHœÝ[WÛÙ™™\ˆŠHÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÂˆY\ÜØYÙNˆ“Ù™™\ˆ\È›ÈÛ™Ù\ˆHÝ\œ™[Ù™™\ˆ‹ˆJNÂˆBˆYˆ
+™\ÜÛœÙT™\Ý[œ™X\ÛÛˆOOH˜[™XYWÜ™\ÛÛ™YŠHÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÂˆY\ÜØYÙNˆ“Ù™™\ˆ\È[™XYH™Y[ˆ™\ÛÛ™Y‹ˆJNÂˆBˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÂˆY\ÜØYÙNˆ“Ù™™\ˆÝ]HÚ[™ÙYˆ™Yœ™\Ú[™žHYØZ[ˆ‹ˆJNÂˆB‚ˆYˆ
+™\ÜÛœÙT™\Ý[˜XÝ[ÛˆOOH˜ÛÝ[\™YŠHÂˆËÈœ›ØYØ\ÝÈÜšYÚ[˜[Ù™™\™\‚ˆÛÛœÝœ›ØYØ\ÝÕ\Ù\ˆH
+\\È[žJK˜œ›ØYØ\ÝÕ\Ù\ŽÂˆYˆ
+œ›ØYØ\ÝÕ\Ù\ŠHÂˆœ›ØYØ\ÝÕ\Ù\Š™\ÜÛœÙT™\Ý[›Ù™™\‹œ™XÚ\Y[YÂˆ\Nˆ	ÛÙ™™\—Ý\]IËˆ^[ØYˆÂˆÙ™™\’Yˆ™\ÜÛœÙT™\Ý[›Ù™™\‹šYˆ™YÛÝX][Û’Yˆ™\ÜÛœÙT™\Ý[›™YÛÝX][Û‹šYˆ[™Nˆ™\ÜÛœÙT™\Ý[›Ù™™\‹›[™KˆÙ™™\’Ú[™ˆ™\ÜÛœÙT™\Ý[›Ù™™\‹›Ù™™\’Ú[™ˆÝ]\Îˆ	ØÛÝ[\™Y	ËˆBˆJNÂˆBˆB‚ˆ™\ËšœÛÛŠÂˆÙ™™\Žˆ™\ÜÛœÙT™\Ý[›Ù™™\‹ˆXÝ[ÛŽˆ™\ÜÛœÙT™\Ý[˜XÝ[Û‹ˆJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™\ÜÛ™[™ÈÈÙ™™\Žˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™\ÜÛ™ÈÙ™™\ˆˆJNÂˆBˆJNÂ‚ˆËÈÙ]™YÛÝX][ÛˆžHQˆ\™Ù]
+‹Ø\KÛX\šÙ]›ÝËÛ™YÛÝX][ÛœËÎ›™YÛÝX][Û’Y
+
+ÊH‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\Ë˜ÛZ[\ÏËœÝXˆ™\KœÝ\X˜\ÙU\Ù\ËšYÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝ™YÛÝX][Û’YH\œÙR[
+™\Kœ\˜[\Ë›™YÛÝX][Û’Y
+NÂˆˆÛÛœÝ™YÛÝX][ÛˆH]ØZ]ÝÜ˜YÙK™Ù]X\šÙ]›ÝÓ™YÛÝX][ÛŠ™YÛÝX][Û’Y
+NÂˆYˆ
+[™YÛÝX][ÛŠHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“™YÛÝX][Ûˆ›Ý›Ý[™ˆJNÂˆB‚ˆÛÛœÝ\Ô\XÚ\[Bˆ™YÛÝX][Û‹œÜÝ\’YOOH\Ù\’Y™YÛÝX][Û‹˜ÛÝ[\œ\RYOOH\Ù\’YÂˆYˆ
+Z\Ô\XÚ\[	‰ˆJ]ØZ]\ÓX\šÙ]›ÝÔÝY™XØÙ\ÜÊ™\K\Ù\’Y
+JJHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“™YÛÝX][Ûˆ›Ý›Ý[™ˆJNÂˆB‚ˆËÈÙ][Ù™™\œÈ[ˆ\È™YÛÝX][Û‚ˆÛÛœÝÙ™™\œÈH]ØZ]ÝÜ˜YÙK™Ù]X\šÙ]›ÝÓÙ™™\œÐžS™YÛÝX][ÛŠ™YÛÝX][Û’Y
+NÂˆˆËÈÙ]Y\ÜØYÙ\ÂˆÛÛœÝY\ÜØYÙ\ÈH]ØZ]ÝÜ˜YÙK™Ù]™YÛÝX][Û“Y\ÜØYÙ\Ê™YÛÝX][Û’Y
+NÂˆˆ™\ËšœÛÛŠÈ™YÛÝX][Û‹Ù™™\œËY\ÜØYÙ\ÈJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È™YÛÝX][ÛŽˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]Ú™YÛÝX][ÛˆˆJNÂˆBˆJNÂ‚ˆËÈÙ]^H™YÛÝX][ÛœÂˆ\™Ù]
+‹Ø\KÛX\šÙ]›ÝËÛ™YÛÝX][ÛœËÛ^H‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\Ë˜ÛZ[\ÏËœÝXˆ™\KœÝ\X˜\ÙU\Ù\ËšYÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝ™YÛÝX][ÛœÈH]ØZ]ÝÜ˜YÙK™Ù]X\šÙ]›ÝÓ™YÛÝX][ÛœÐžU\Ù\Š\Ù\’Y
+NÂˆ™\ËšœÛÛŠ™YÛÝX][ÛœÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È™YÛÝX][ÛœÎˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]Ú™YÛÝX][ÛœÈˆJNÂˆBˆJNÂ‚ˆËÈÙ]™YÛÝX][ÛœÈ›ÜˆHX[ˆ\™Ù]
+‹Ø\KÛX\šÙ]›ÝËÛ™YÛÝX][ÛœËÙX[Î›[™KÎ™X[Y‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\Ë˜ÛZ[\ÏËœÝXˆ™\KœÝ\X˜\ÙU\Ù\ËšYÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆBˆˆÛÛœÝÈ[™KX[YHH™\Kœ\˜[\ÎÂˆÛÛœÝ™YÛÝX][ÛœÈH]ØZ]ÝÜ˜YÙK™Ù]X\šÙ]›ÝÓ™YÛÝX][ÛœÐžQX[
+[™K\œÙR[
+X[Y
+JNÂˆˆÛÛœÝ\Ù\“™YÛÝX][ÛœÈH]ØZ]\ÓX\šÙ]›ÝÔÝY™XØÙ\ÜÊ™\K\Ù\’Y
+BˆÈ™YÛÝX][ÛœÂˆˆ™YÛÝX][ÛœË™š[\Šˆ
+Žˆ[žJHOˆ‹œÜÝ\’YOOH\Ù\’Y‹˜ÛÝ[\œ\RYOOH\Ù\’Yˆ
+NÂˆˆ™\ËšœÛÛŠ\Ù\“™YÛÝX][ÛœÊNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›Üˆ™]Ú[™È™YÛÝX][ÛœÎˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈ™]Ú™YÛÝX][ÛœÈˆJNÂˆBˆJNÂ‚ˆËÈÙ[™Y\ÜØYÙH[ˆ™YÛÝX][Ûˆ›ÛÛBˆ\œÜÝ
+‹Ø\KÛX\šÙ]›ÝËÛ™YÛÝX][ÛœËÎ›™YÛÝX][Û’YÛY\ÜØYÙ\È‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\Ë˜ÛZ[\ÏËœÝXˆ™\KœÝ\X˜\ÙU\Ù\ËšYÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝ™YÛÝX][Û’YH\œÙR[
+™\Kœ\˜[\Ë›™YÛÝX][Û’Y
+NÂˆÛÛœÝÛÛ[Bˆ\[Ùˆ™\K˜›ÙOË˜ÛÛ[OOHœÝš[™ÈˆÈ™\K˜›ÙK˜ÛÛ[š[J
+HˆˆŽÂˆYˆ
+XÛÛ[ÛÛ[›[™ÝˆWÌ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“Y\ÜØYÙH\È™\]Z\™YˆJNÂˆB‚ˆÛÛœÝ™YÛÝX][ÛˆH]ØZ]ÝÜ˜YÙK™Ù]X\šÙ]›ÝÓ™YÛÝX][ÛŠ™YÛÝX][Û’Y
+NÂˆYˆ
+[™YÛÝX][ÛŠHÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“™YÛÝX][Ûˆ›Ý›Ý[™ˆJNÂˆB‚ˆËÈÚXÚÈXØÙ\ÜÂˆYˆ
+™YÛÝX][Û‹œÜÝ\’YOOH\Ù\’Y	‰ˆ™YÛÝX][Û‹˜ÛÝ[\œ\RYOOH\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“™YÛÝX][Ûˆ›Ý›Ý[™ˆJNÂˆB‚ˆÛÛœÝY\ÜØYÙHH]ØZ]ÝÜ˜YÙK˜Ü™X]S™YÛÝX][Û“Y\ÜØYÙJÂˆ™YÛÝX][Û’YˆÙ[™\’Yˆ\Ù\’YˆÛÛ[ˆY\ÜØYÙU\Nˆ^‹ˆ™[]YÙ™™\’Yˆ[ˆJNÂ‚ˆËÈœ›ØYØ\ÝÈHÝ\ˆ\BˆÛÛœÝ™XÚ\Y[YH™YÛÝX][Û‹œÜÝ\’YOOH\Ù\’YÈ™YÛÝX][Û‹˜ÛÝ[\œ\RYˆ™YÛÝX][Û‹œÜÝ\’YÂˆÛÛœÝœ›ØYØ\ÝÕ\Ù\ˆH
+\\È[žJK˜œ›ØYØ\ÝÕ\Ù\ŽÂˆYˆ
+œ›ØYØ\ÝÕ\Ù\ŠHÂˆœ›ØYØ\ÝÕ\Ù\Š™XÚ\Y[YÂˆ\Nˆ	Û™]×ÛY\ÜØYÙIËˆ^[ØYˆÂˆ™YÛÝX][Û’YˆY\ÜØYÙRYˆY\ÜØYÙKšYˆÙ[™\’Yˆ\Ù\’YˆÛÛ[ˆBˆJNÂˆB‚ˆ™\ËœÝ]\ÊŒJKšœÛÛŠY\ÜØYÙJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆÙ[™[™ÈY\ÜØYÙNˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈÙ[™Y\ÜØYÙHˆJNÂˆBˆJNÂ‚ˆËÈX\šÈY\ÜØYÙ\È\È™XYˆ\œÜÝ
+‹Ø\KÛX\šÙ]›ÝËÛ™YÛÝX][ÛœËÎ›™YÛÝX][Û’YÜ™XY‹\ÒXœšY]][XØ]Y\Þ[˜È
+™\Nˆ[žK™\ÊHOˆÂˆžHÂˆÛÛœÝ\Ù\’YH™\K\Ù\Ë˜ÛZ[\ÏËœÝXˆ™\KœÝ\X˜\ÙU\Ù\ËšYÂˆYˆ
+]\Ù\’Y
+HÂˆ™]\›ˆ™\ËœÝ]\ÊJKšœÛÛŠÈY\ÜØYÙNˆ•[˜]]Üš^™YˆJNÂˆB‚ˆÛÛœÝ™YÛÝX][Û’YH\œÙR[
+™\Kœ\˜[\Ë›™YÛÝX][Û’Y
+NÂˆÛÛœÝ™YÛÝX][ÛˆH]ØZ]ÝÜ˜YÙK™Ù]X\šÙ]›ÝÓ™YÛÝX][ÛŠ™YÛÝX][Û’Y
+NÂˆYˆ
+ˆ[™YÛÝX][Ûˆˆ
+™YÛÝX][Û‹œÜÝ\’YOOH\Ù\’Y	‰‚ˆ™YÛÝX][Û‹˜ÛÝ[\œ\RYOOH\Ù\’Y
+Bˆ
+HÂˆ™]\›ˆ™\ËœÝ]\Ê
+KšœÛÛŠÈY\ÜØYÙNˆ“™YÛÝX][Ûˆ›Ý›Ý[™ˆJNÂˆB‚ˆ]ØZ]ÝÜ˜YÙK›X\šÓ™YÛÝX][Û“Y\ÜØYÙ\Ð\Ô™XY
+™YÛÝX][Û’Y\Ù\’Y
+NÂˆˆ™\ËšœÛÛŠÈÝXØÙ\ÜÎˆYHJNÂˆHØ]Ú
+\œ›ÜŠHÂˆÛÛœÛÛK™\œ›ÜŠ‘\œ›ÜˆX\šÚ[™ÈY\ÜØYÙ\È\È™XYˆ‹\œ›ÜŠNÂˆ™\ËœÝ]\ÊL
+KšœÛÛŠÈY\ÜØYÙNˆ‘˜Z[YÈX\šÈY\ÜØYÙ\È\È™XYˆJNÂˆBˆJNÂ‚ˆËÈÝ˜]YÞHXˆ8 %›Ü\H[˜[\Ú\È›Ý]\È
+\ÚÈÎ
+BˆÛÛœÝÈ™YÚ\Ý\”›Ü\P[˜[\Ú\Ô›Ý]\ÈHH]ØZ][\Ü
+‹‹Ü›Ü\P[˜[\Ú\Ô›Ý]\ÈŠNÂˆ™YÚ\Ý\”›Ü\P[˜[\Ú\Ô›Ý]\Ê\È\Ð]][XØ]Yˆ\ÒXœšY]][XØ]YJNÂ‚ˆÛÛœÝÈ™YÚ\Ý\”Ý˜]YÞSX”›Ý]\ÈHH]ØZ][\Ü
+‹‹ÜÝ˜]YÞSX”›Ý]\ÈŠNÂˆ™YÚ\Ý\”Ý˜]YÞSX”›Ý]\Ê\È\Ð]][XØ]Yˆ\ÒXœšY]][XØ]YYZ[‘[XZ[ÎˆQRS—ÑSPRSÈJNÂ‚ˆ™]\›ˆÙ\™\ŽÂŸB
