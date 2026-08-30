@@ -15,16 +15,13 @@ import {
   FileText,
   DollarSign,
   CheckCircle,
-  Users,
   Shield,
-  TrendingUp,
   Loader2,
   Sparkles,
   Crown,
   Target,
   Building2,
   Clock,
-  Award,
   Lock,
   AlertCircle,
   Wrench,
@@ -104,7 +101,7 @@ function LockedScreen({ reason, currentRole }: { reason: "login" | "role"; curre
                   Sign in to your account to submit deals to the MarketFlow platform.
                 </p>
                 <div className="space-y-3">
-                  <a href="/api/login">
+                  <a href="/login">
                     <Button className="w-full gap-2" data-testid="button-login-submit">
                       <ArrowRight className="w-4 h-4" />
                       Sign In to Continue
@@ -244,7 +241,7 @@ function AuthenticatedSubmitPage({ isPegasus, isPreviewMode = false }: { isPegas
           </TabsTrigger>
           <TabsTrigger value="capital" className="gap-2" data-testid="tab-submit-capital">
             <PiggyBank className="w-4 h-4" />
-            <span className="hidden sm:inline">Capital Raise</span>
+            <span className="hidden sm:inline">Capital Info</span>
           </TabsTrigger>
           <TabsTrigger value="listing" className="gap-2" data-testid="tab-submit-listing">
             <Home className="w-4 h-4" />
@@ -259,7 +256,7 @@ function AuthenticatedSubmitPage({ isPegasus, isPreviewMode = false }: { isPegas
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }} />
             </div>
-            <WholesaleSidebar isPegasus={isPegasus} />
+            <WholesaleSidebar />
           </div>
         </TabsContent>
 
@@ -280,7 +277,7 @@ function AuthenticatedSubmitPage({ isPegasus, isPreviewMode = false }: { isPegas
                 terms here. A capital conversation can begin only as a relationship inquiry;
                 any project, diligence, eligibility, and written terms are handled separately.
               </p>
-              <Link href="/capital">
+              <Link href="/capital#capital-introduction">
                 <Button variant="outline" data-testid="button-capital-relationship-info">
                   Review the capital relationship process
                   <ArrowRight className="ml-2 w-4 h-4" />
@@ -297,7 +294,7 @@ function AuthenticatedSubmitPage({ isPegasus, isPreviewMode = false }: { isPegas
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }} />
             </div>
-            <ListingSidebar isPegasus={isPegasus} />
+            <ListingSidebar />
           </div>
         </TabsContent>
       </Tabs>
@@ -305,7 +302,7 @@ function AuthenticatedSubmitPage({ isPegasus, isPreviewMode = false }: { isPegas
   );
 }
 
-function WholesaleSidebar({ isPegasus }: { isPegasus: boolean }) {
+function WholesaleSidebar() {
   return (
     <div className="space-y-6">
       <Card>
@@ -340,147 +337,40 @@ function WholesaleSidebar({ isPegasus }: { isPegasus: boolean }) {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-primary" />
-            Review Timeline
+            <FileText className="w-5 h-5 text-primary" />
+            Review sequence
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 text-sm">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">1</div>
             <div>
-              <p className="font-medium">Initial Review</p>
-              <p className="text-muted-foreground text-xs">Within 24 hours</p>
+              <p className="font-medium">Record check</p>
+              <p className="text-muted-foreground text-xs">Required fields and ownership context are checked</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">2</div>
             <div>
-              <p className="font-medium">Deep Analysis</p>
-              <p className="text-muted-foreground text-xs">1-2 business days</p>
+              <p className="font-medium">Fit assessment</p>
+              <p className="text-muted-foreground text-xs">Numbers, title, access, and authorization may be verified</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">3</div>
             <div>
-              <p className="font-medium">Approval Decision</p>
-              <p className="text-muted-foreground text-xs">You'll be notified</p>
+              <p className="font-medium">Outcome</p>
+              <p className="text-muted-foreground text-xs">A status or next step is recorded when appropriate</p>
             </div>
           </div>
         </CardContent>
       </Card>
       
-      {isPegasus && (
-        <Card className="border-primary/30 bg-primary/5">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Crown className="w-5 h-5 text-primary" />
-              Pegasus Privileges
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm space-y-2">
-            <p className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-primary" />
-              Priority listing placement
-            </p>
-            <p className="flex items-center gap-2">
-              <Award className="w-4 h-4 text-primary" />
-              Verified Pegasus badge on deals
-            </p>
-            <p className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-primary" />
-              Expedited review process
-            </p>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }
 
-function CapitalRaiseSidebar({ isPegasus }: { isPegasus: boolean }) {
-  return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <PiggyBank className="w-5 h-5 text-green-600" />
-            Capital Raise Requirements
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-3 text-sm">
-            <li className="flex items-start gap-3">
-              <FileText className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-              <span>Clear investment thesis and exit strategy</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <DollarSign className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-              <span>Realistic projected returns with supporting data</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <Users className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-              <span>Operator track record and experience</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <Shield className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-              <span>Proper deal structure and legal documentation</span>
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-primary" />
-            Investment Structures
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm">
-          <div className="p-3 rounded-lg bg-muted/50">
-            <p className="font-medium">Equity</p>
-            <p className="text-muted-foreground text-xs">Ownership stake with profit sharing</p>
-          </div>
-          <div className="p-3 rounded-lg bg-muted/50">
-            <p className="font-medium">Debt</p>
-            <p className="text-muted-foreground text-xs">Fixed interest loans with set terms</p>
-          </div>
-          <div className="p-3 rounded-lg bg-muted/50">
-            <p className="font-medium">Hybrid</p>
-            <p className="text-muted-foreground text-xs">Combination of debt and equity</p>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {isPegasus && (
-        <Card className="border-primary/30 bg-primary/5">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Crown className="w-5 h-5 text-primary" />
-              Pegasus Privileges
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm space-y-2">
-            <p className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-primary" />
-              Featured placement to investors
-            </p>
-            <p className="flex items-center gap-2">
-              <Award className="w-4 h-4 text-primary" />
-              Verified operator badge
-            </p>
-            <p className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-primary" />
-              Priority capital matching
-            </p>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  );
-}
-
-function ListingSidebar({ isPegasus }: { isPegasus: boolean }) {
+function ListingSidebar() {
   return (
     <div className="space-y-6">
       <Card>
@@ -521,40 +411,16 @@ function ListingSidebar({ isPegasus }: { isPegasus: boolean }) {
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           <div className="p-3 rounded-lg bg-muted/50">
-            <p className="font-medium">On Market</p>
-            <p className="text-muted-foreground text-xs">Active MLS listings open to all buyers</p>
+            <p className="font-medium">Public listing</p>
+            <p className="text-muted-foreground text-xs">Active listing distributed through its authorized listing channel</p>
           </div>
           <div className="p-3 rounded-lg bg-muted/50">
-            <p className="font-medium">Off Market</p>
-            <p className="text-muted-foreground text-xs">Exclusive listings for platform members</p>
+            <p className="font-medium">Direct submission</p>
+            <p className="text-muted-foreground text-xs">Private record shared only after review and authorization</p>
           </div>
         </CardContent>
       </Card>
       
-      {isPegasus && (
-        <Card className="border-primary/30 bg-primary/5">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Crown className="w-5 h-5 text-primary" />
-              Pegasus Privileges
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm space-y-2">
-            <p className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-primary" />
-              Featured listing placement
-            </p>
-            <p className="flex items-center gap-2">
-              <Award className="w-4 h-4 text-primary" />
-              Verified agent badge
-            </p>
-            <p className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-primary" />
-              Priority buyer matching
-            </p>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

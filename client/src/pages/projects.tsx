@@ -296,7 +296,7 @@ function ProjectsGrid() {
             <div className="flex justify-center">
               {showingNelsonFallback ? (
                 <a
-                  href="/submit"
+                  href="/bring-an-opportunity"
                   className="inline-flex items-center justify-center min-h-[44px] px-8 text-sm uppercase tracking-[0.15em] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-md shadow-lg transition-all duration-300 hover:-translate-y-0.5"
                   data-testid="link-projects-strategy-review"
                 >

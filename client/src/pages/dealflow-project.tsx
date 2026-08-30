@@ -14,7 +14,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useDealAction } from "@/contexts/deal-action-context";
 import { 
   Building2, 
   DollarSign, 
@@ -39,7 +38,6 @@ import {
   MessageCircle,
   Share2,
   Info,
-  Zap,
   Award,
   ThumbsUp,
   AlertTriangle,
@@ -112,7 +110,6 @@ interface CapitalProject {
 export default function DealflowProject() {
   const { user, isAuthenticated, isAdmin } = useSupabaseAuth();
   const { toast } = useToast();
-  const { openDealAction, openInStudio } = useDealAction();
   const [, params] = useRoute("/dealflow/project/:id");
   const projectId = params?.id ? parseInt(params.id) : null;
   const [isSaved, setIsSaved] = useState(false);
@@ -640,7 +637,7 @@ export default function DealflowProject() {
                   <Card>
                     <CardContent className="pt-5 pb-4">
                       <p className="text-sm text-muted-foreground">Structure</p>
-                      <p className="text-xl font-bold">{project.structure || "Equity"}</p>
+                      <p className="text-xl font-bold">{project.structure || "Not provided"}</p>
                     </CardContent>
                   </Card>
                   <Card>
@@ -652,13 +649,13 @@ export default function DealflowProject() {
                   <Card>
                     <CardContent className="pt-5 pb-4">
                       <p className="text-sm text-muted-foreground">Target Return</p>
-                      <p className="text-xl font-bold text-green-600">{project.projectedReturn || "15-20%"}</p>
+                      <p className="text-xl font-bold text-green-600">{project.projectedReturn || "Not provided"}</p>
                     </CardContent>
                   </Card>
                   <Card>
                     <CardContent className="pt-5 pb-4">
                       <p className="text-sm text-muted-foreground">Hold Period</p>
-                      <p className="text-xl font-bold">{project.holdPeriod || "12-18 mo"}</p>
+                      <p className="text-xl font-bold">{project.holdPeriod || "Not provided"}</p>
                     </CardContent>
                   </Card>
                 </div>
@@ -703,20 +700,14 @@ export default function DealflowProject() {
               <TabsContent value="offers" className="mt-6 space-y-4">
                 <Card className="border-2 border-dashed border-primary/30">
                   <CardContent className="py-6 text-center">
-                    {projectId && (
-                      <>
-                        <Button onClick={() => openDealAction(projectId, "capital_accept")} className="gap-2" data-testid="button-accept-terms">
-                          <CheckCircle2 className="w-4 h-4" />
-                          Accept Terms
-                        </Button>
-                        <Button variant="outline" onClick={() => openInStudio(projectId, "capital")} className="gap-2 ml-2" data-testid="button-counter-offer">
-                          <Zap className="w-4 h-4" />
-                          Counter Offer
-                        </Button>
-                      </>
-                    )}
+                    <Link href="/capital#capital-introduction">
+                      <Button variant="outline" className="gap-2" data-testid="button-capital-relationship-info">
+                        <Info className="w-4 h-4" />
+                        Relationship information
+                      </Button>
+                    </Link>
                     <p className="text-xs text-muted-foreground mt-2">
-                      Submit your terms and start negotiating
+                      MarketFlow does not accept or counter project terms through this record.
                     </p>
                   </CardContent>
                 </Card>
@@ -725,8 +716,8 @@ export default function DealflowProject() {
                   <Card>
                     <CardContent className="py-12 text-center text-muted-foreground">
                       <MessageCircle className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p className="font-medium">No offers yet</p>
-                      <p className="text-sm">Be the first to make an investment offer</p>
+                      <p className="font-medium">No offer records</p>
+                      <p className="text-sm">Any later discussion remains separate and conditional.</p>
                     </CardContent>
                   </Card>
                 ) : (
@@ -839,8 +830,8 @@ export default function DealflowProject() {
                   <Card>
                     <CardContent className="py-12 text-center text-muted-foreground">
                       <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                      <p className="font-medium">No investors yet</p>
-                      <p className="text-sm">Be the first to submit capital interest</p>
+                      <p className="font-medium">No participant records</p>
+                      <p className="text-sm">Participant status appears only after an authorized update.</p>
                     </CardContent>
                   </Card>
                 ) : (
@@ -930,7 +921,7 @@ export default function DealflowProject() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Structure</span>
-                    <span className="font-medium">{project.structure || "Equity"}</span>
+                    <span className="font-medium">{project.structure || "Not provided"}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Investors</span>
@@ -938,38 +929,21 @@ export default function DealflowProject() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Target Return</span>
-                    <span className="font-medium text-green-600">{project.projectedReturn}</span>
+                    <span className="font-medium text-green-600">{project.projectedReturn || "Not provided"}</span>
                   </div>
                 </div>
 
-                {project.status === "OPEN_FOR_INVESTMENT" && projectId && (
+                {project.status === "OPEN_FOR_INVESTMENT" && (
                   <div className="space-y-2 pt-2">
-                    <Button 
-                      className="w-full" 
-                      size="lg"
-                      onClick={() => openDealAction(projectId, "capital_accept")}
-                      data-testid="button-accept-terms"
-                    >
-                      <CheckCircle2 className="w-4 h-4 mr-2" />
-                      Accept Terms
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      className="w-full" 
-                      onClick={() => openInStudio(projectId, "capital")}
-                      data-testid="button-counter-offer"
-                    >
-                      <Zap className="w-4 h-4 mr-2" />
-                      Counter Offer
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      className="w-full"
-                      data-testid="button-schedule-call"
-                    >
-                      <Calendar className="w-4 h-4 mr-2" />
-                      Schedule a Call
-                    </Button>
+                    <p className="text-sm text-muted-foreground">
+                      This status is record context, not an invitation or executable offering.
+                    </p>
+                    <Link href="/capital#capital-introduction">
+                      <Button variant="outline" className="w-full" data-testid="button-capital-relationship-sidebar">
+                        <Info className="w-4 h-4 mr-2" />
+                        Relationship information
+                      </Button>
+                    </Link>
                   </div>
                 )}
               </CardContent>
@@ -988,7 +962,7 @@ export default function DealflowProject() {
                     <Clock className="w-5 h-5 text-primary" />
                   </div>
                   <div>
-                    <p className="font-medium">{project.holdPeriod || "12-18 months"}</p>
+                    <p className="font-medium">{project.holdPeriod || "Not provided"}</p>
                     <p className="text-sm text-muted-foreground">Expected hold period</p>
                   </div>
                 </div>
@@ -1073,32 +1047,19 @@ export default function DealflowProject() {
                 {!(project.askingInterestRate || project.askingLoanDuration || project.askingEquityPercent || project.askingProfitSplit) && (
                   <div className="text-center py-4 text-muted-foreground">
                     <p className="text-sm">Terms to be discussed</p>
-                    <p className="text-xs">Submit an offer to start negotiation</p>
+                    <p className="text-xs">No executable terms are available through this record.</p>
                   </div>
                 )}
                 
                 {/* Action Buttons - Uses canonical form router */}
-                {projectId && (
-                  <div className="pt-2 space-y-2">
-                    <Button 
-                      onClick={() => openDealAction(projectId, "capital_accept")}
-                      className="w-full"
-                      data-testid="button-accept-terms-sidebar"
-                    >
-                      <CheckCircle2 className="w-4 h-4 mr-2" />
-                      Accept Terms
+                <div className="pt-2">
+                  <Link href="/capital#capital-introduction">
+                    <Button variant="outline" className="w-full" data-testid="button-capital-relationship-terms">
+                      <Info className="w-4 h-4 mr-2" />
+                      Relationship information
                     </Button>
-                    <Button 
-                      variant="outline"
-                      onClick={() => openInStudio(projectId, "capital")}
-                      className="w-full"
-                      data-testid="button-counter-offer-sidebar"
-                    >
-                      <Zap className="w-4 h-4 mr-2" />
-                      Counter Offer
-                    </Button>
-                  </div>
-                )}
+                  </Link>
+                </div>
               </CardContent>
             </Card>
 

@@ -265,7 +265,7 @@ export default function MarketplaceDreamscaperPage() {
                 <CardTitle className="text-lg">Browse Wholesale Deals</CardTitle>
               </div>
               <CardDescription>
-                Discover off-market properties from verified wholesalers. Submit JV requests on deals that match your investment criteria.
+                Review authorized property records from participating sources. Submit a JV request only when the deal and your mandate fit.
               </CardDescription>
             </CardHeader>
             <CardContent>

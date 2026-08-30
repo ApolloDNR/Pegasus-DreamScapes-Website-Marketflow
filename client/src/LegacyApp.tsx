@@ -95,12 +95,7 @@ import Signup from "@/pages/signup";
 import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
 
-const About = lazy(() => import("@/pages/about"));
-const Development = lazy(() => import("@/pages/development"));
-const Sell = lazy(() => import("@/pages/sell"));
-const Invest = lazy(() => import("@/pages/invest"));
 const Projects = lazy(() => import("@/pages/projects"));
-const ProjectDetail = lazy(() => import("@/pages/project-detail"));
 const Calculators = lazy(() => import("@/pages/calculators"));
 const StrategyLabLibrary = lazy(() => import("@/pages/strategy-lab-library"));
 const StrategyLabSubmitted = lazy(() => import("@/pages/strategy-lab-submitted"));
@@ -115,12 +110,10 @@ const SubmitPropertyPage = lazy(() => import("@/pages/submit-property"));
 const PegasusStandardPage = lazy(() => import("@/pages/pegasus-standard"));
 const DepartmentsPage = lazy(() => import("@/pages/departments"));
 const CaseStudyPage = lazy(() => import("@/pages/case-study"));
-const CapitalPage = lazy(() => import("@/pages/capital"));
 const ConnectPage = lazy(() => import("@/pages/connect"));
 const NelsonDrPage = lazy(() => import("@/pages/project-nelson-dr"));
 const MarketflowAccess = lazy(() => import("@/pages/marketflow-access"));
 const MarketflowBuyboxes = lazy(() => import("@/pages/marketflow-buyboxes"));
-const Contact = lazy(() => import("@/pages/contact"));
 const DealflowProject = lazy(() => import("@/pages/dealflow-project"));
 const DealflowCommunity = lazy(() => import("@/pages/dealflow-community"));
 const DealflowMessages = lazy(() => import("@/pages/dealflow-messages"));
@@ -156,7 +149,6 @@ const DealBlueprint = lazy(() => import("@/pages/deal-blueprint"));
 const VendorNetwork = lazy(() => import("@/pages/vendor-network"));
 const Systems = lazy(() => import("@/pages/systems"));
 const Education = lazy(() => import("@/pages/education"));
-const Ecosystem = lazy(() => import("@/pages/ecosystem"));
 const FAQ = lazy(() => import("@/pages/faq"));
 
 export const legacyRedirects: [string, string][] = [
@@ -188,8 +180,6 @@ export function Router() {
       <Route path="/signup" component={Signup} />
       <Route path="/forgot-password" component={ForgotPassword} />
       <Route path="/reset-password" component={ResetPassword} />
-      <Route path="/about" component={About} />
-      <Route path="/development" component={Development} />
       {/* Master Blueprint v5.1 (§31): "Bring an Opportunity" is the primary
        * public action — the canonical URL of the multi-step intake desk.
        * /submit-property 301s here via legacyRedirects. */}
@@ -197,11 +187,9 @@ export function Router() {
       <Route path="/pegasus-standard" component={PegasusStandardPage} />
       <Route path="/departments" component={DepartmentsPage} />
       <Route path="/case-study" component={CaseStudyPage} />
-      <Route path="/capital" component={CapitalPage} />
       <Route path="/connect" component={ConnectPage} />
       <Route path="/projects" component={Projects} />
       <Route path="/projects/nelson-dr" component={NelsonDrPage} />
-      <Route path="/projects/:slug" component={ProjectDetail} />
       {/* Website Spec v4 — /strategy-lab is a live prototype shell page again
        * (mounted via PEGASUS_URLS above). The /strategy-lab/* tool subroutes
        * below stay live as their own standalone surfaces. */}
@@ -218,14 +206,9 @@ export function Router() {
       {/* Restored to the live public surface: the full FAQ page (accordion +
        * FAQPage JSON-LD), fed by the shared/faq-data.ts source of truth. */}
       <Route path="/faq" component={FAQ} />
-      {/* /ecosystem is a footer-linked surface. Website Spec v4 restores the
-       * public /peggy page to a live prototype shell page (mounted via
-       * PEGASUS_URLS above), alongside the in-shell Peggy concierge widget. */}
-      <Route path="/ecosystem" component={Ecosystem} />
       {/* Website Spec v4 — Represent With Apollo is a live prototype shell page
        * again (mounted via PEGASUS_URLS above). The legacy /deal-architecture
        * URL 301s forward to /deal-strategy via legacyRedirects above. */}
-      <Route path="/contact" component={Contact} />
       {/* Empire Doctrine v1.0.1 / Amendment 2: /systems, /education,
        * /calculators, /buyers, /wholesale, /capital-raising, /dreamspace
        * are removed from the public surface. /ecosystem is restored by

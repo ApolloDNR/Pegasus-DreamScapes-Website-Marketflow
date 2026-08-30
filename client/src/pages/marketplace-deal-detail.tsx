@@ -457,7 +457,7 @@ function DealDetailPage() {
             </CardHeader>
             <CardContent>
               <div className="rounded-lg border border-dashed p-5 text-center">
-                <p className="font-medium">No verified updates have been posted yet.</p>
+                <p className="font-medium">No current updates have been posted yet.</p>
                 <p className="mt-1 text-sm text-muted-foreground">
                   Deal-team milestones will appear here when they are added to the record.
                 </p>

@@ -95,7 +95,7 @@ export const APOLLO_FORM: FormCfg = {
   ],
   intent: 'representation',
   heading: <>Work with <span className="italic text-[var(--accent)]">Apollo.</span></>,
-  lead: 'Tell us whether you are looking to sell or buy. Apollo represents clients as a licensed agent through Keller Williams Realty East Bay, and will follow up to discuss representation. Submitting this is not a listing or buyer agreement.',
+  lead: 'Tell us whether you are looking to sell or buy. This records a request for a conditional representation conversation. Any representation requires fit, conflict checks, and a separate signed agreement; submitting this is not a listing or buyer agreement.',
   submit: 'Request representation',
   third: { label: 'Property address or target area', placeholder: 'Street, city, or neighborhood', kind: 'context' },
   messageLabel: 'What you are looking to do',
@@ -111,6 +111,23 @@ export const INVESTMENTS_FORM: FormCfg = {
   third: { label: 'Capital range or property context', placeholder: 'Optional', kind: 'context' },
   messageLabel: 'What you are exploring',
   messagePlaceholder: 'Project types, risk tolerance, timeline, or a specific deal...',
+};
+
+export const CAPITAL_RELATIONSHIP_FORM: FormCfg = {
+  role: 'Introduced relationship',
+  intent: 'capital-introduction',
+  heading: <>Continue a <span className="italic text-[var(--accent)]">private introduction.</span></>,
+  lead: 'Use this form only if Apollo already knows you or someone personally introduced you. Share who connected you and enough context to continue that relationship. Submitting does not create access, eligibility, or an agreement.',
+  submit: 'Send relationship context',
+  third: {
+    label: 'Who introduced you?',
+    placeholder: 'Name and relationship',
+    kind: 'context',
+  },
+  thirdRequired: true,
+  messageLabel: 'Relationship context',
+  messagePlaceholder: 'How you know Apollo or Pegasus and what prompted you to reach out.',
+  messageRequired: true,
 };
 
 /* ----------------------------------------------------------------
@@ -280,18 +297,18 @@ export function LeadForm({
       ) : cfg.third ? (
         <div className="sm:col-span-1">
           <label htmlFor={`${uid}-third`} className="pg-field-label block mb-2">{cfg.third.label}</label>
-          <input id={`${uid}-third`} className="pg-field" value={form.third} onChange={onField('third')} placeholder={cfg.third.placeholder} />
+          <input id={`${uid}-third`} className="pg-field" required={cfg.thirdRequired} value={form.third} onChange={onField('third')} placeholder={cfg.third.placeholder} />
         </div>
       ) : null}
       {showRole && cfg.third && (
         <div className="sm:col-span-2">
           <label htmlFor={`${uid}-third`} className="pg-field-label block mb-2">{cfg.third.label}</label>
-          <input id={`${uid}-third`} className="pg-field" value={form.third} onChange={onField('third')} placeholder={cfg.third.placeholder} />
+          <input id={`${uid}-third`} className="pg-field" required={cfg.thirdRequired} value={form.third} onChange={onField('third')} placeholder={cfg.third.placeholder} />
         </div>
       )}
       <div className="sm:col-span-2">
         <label htmlFor={`${uid}-message`} className="pg-field-label block mb-2">{cfg.messageLabel}</label>
-        <textarea id={`${uid}-message`} className="pg-field resize-none" rows={3} value={form.message} onChange={onField('message')} placeholder={cfg.messagePlaceholder} />
+        <textarea id={`${uid}-message`} className="pg-field resize-none" rows={3} required={cfg.messageRequired} value={form.message} onChange={onField('message')} placeholder={cfg.messagePlaceholder} />
       </div>
       {createLead.isError && (
         <div role="alert" aria-live="assertive" aria-atomic="true" className="pg-form-error sm:col-span-2 flex items-start gap-3 rounded-[4px] px-4 py-3 text-[0.82rem] leading-relaxed">
@@ -1140,8 +1157,8 @@ export function StrategyTierStrip() {
       cta: 'You are using it above', action: null as null | (() => void), emphasis: false,
     },
     {
-      key: 'snapshot', name: 'Property Read', price: 'Included / Written Read',
-      desc: 'Send the situation and Acquisitions returns a short, candid written read within 48 hours.',
+      key: 'snapshot', name: 'Property Read', price: 'Conditional / Written Read',
+      desc: 'Send the situation for a short written read when the facts, fit, and current capacity support one. Timing is not guaranteed.',
       cta: 'Request a Property Read', action: () => goSubmit(), emphasis: true,
     },
     {

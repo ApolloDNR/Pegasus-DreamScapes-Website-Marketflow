@@ -67,8 +67,10 @@ export type FormCfg = {
     placeholder: string;
     kind?: 'context' | 'property-address';
   } | null;
+  thirdRequired?: boolean;
   messageLabel: string;
   messagePlaceholder: string;
+  messageRequired?: boolean;
   roleOptions?: string[];
 };
 

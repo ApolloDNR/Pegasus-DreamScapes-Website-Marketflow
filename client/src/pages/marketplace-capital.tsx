@@ -136,10 +136,12 @@ function CapitalPage() {
       <ScrollReveal>
         <div className="mb-8">
           <h1 className="text-3xl font-bold tracking-tight mb-2" data-testid="text-capital-title">
-            Capital Opportunities
+            Capital Project Records
           </h1>
           <p className="text-muted-foreground">
-            Browse investment opportunities from verified Dreamscapers. Choose between debt and equity structures that match your investment criteria.
+            Review project records shared by authorized operators. Any participation requires
+            separate diligence, eligibility, and written terms; nothing here is an offer or a
+            promise of results.
           </p>
         </div>
       </ScrollReveal>
@@ -223,7 +225,7 @@ function CapitalPage() {
             </div>
             <h3 className="text-lg font-semibold mb-2">No Projects Found</h3>
             <p className="text-muted-foreground text-center max-w-md mb-4">
-              No capital opportunities match your current filters. Try adjusting your search criteria.
+              No project records match your current filters. Try adjusting your search criteria.
             </p>
             <Button variant="outline" onClick={() => {
               setSearchQuery("");
@@ -252,7 +254,7 @@ function CapitalPage() {
       )}
 
       <div className="mt-8 text-center text-sm text-muted-foreground">
-        Showing {filteredProjects.length} of {projects?.length || 0} capital opportunities
+        Showing {filteredProjects.length} of {projects?.length || 0} project records
       </div>
     </div>
   );
@@ -362,7 +364,9 @@ function ProjectCard({ project, onProtectedAction, onSave, isSaved, isSaving }: 
                 <div>
                   <p className="text-xs text-muted-foreground">Minimum Capital</p>
                   <p className="text-sm font-medium">
-                    ${((project.minInvestment || 0) / 1000).toFixed(0)}K
+                    {project.minInvestment
+                      ? `$${(project.minInvestment / 1000).toFixed(0)}K`
+                      : "Not provided"}
                   </p>
                 </div>
               </div>
@@ -374,7 +378,7 @@ function ProjectCard({ project, onProtectedAction, onSave, isSaved, isSaving }: 
                 <div>
                   <p className="text-xs text-muted-foreground">Projected Return</p>
                   <p className="text-sm font-medium">
-                    {project.projectedReturn || "15-20%"}
+                    {project.projectedReturn || "Not provided"}
                   </p>
                 </div>
               </div>
@@ -416,7 +420,7 @@ function ProjectCard({ project, onProtectedAction, onSave, isSaved, isSaving }: 
                 disabled={isFunded} 
                 data-testid={`button-view-project-${project.id}`}
               >
-                {isFunded ? "Fully Funded" : "View Opportunity"}
+                {isFunded ? "Record Closed" : "View Project Record"}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </Link>

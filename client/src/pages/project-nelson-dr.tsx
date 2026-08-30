@@ -403,7 +403,7 @@ export default function NelsonDrPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3">
-            <Link href="/submit">
+            <Link href="/bring-an-opportunity">
               <Button
                 size="lg"
                 className="bg-primary hover:bg-primary/90 text-primary-foreground text-[12px] uppercase tracking-[0.18em] font-semibold px-7 h-12 rounded-sm w-full sm:w-auto"

@@ -273,6 +273,8 @@ describe("UUID-backed Supabase property detail", () => {
       "href",
       "tel:+19257448525",
     );
+    expect(screen.getByText("Direct follow-up when appropriate")).toBeInTheDocument();
+    expect(screen.queryByText(/response within 24 hours/i)).toBeNull();
     expect(boundary.openDealAction).not.toHaveBeenCalled();
 
     await act(async () => {

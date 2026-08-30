@@ -319,7 +319,7 @@ function CapitalDetailPage() {
                   )}
                   <div className="text-center">
                     <p className="text-xs text-muted-foreground mb-1">Projected Return</p>
-                    <p className="font-semibold text-green-600">{project.projectedReturn || "15-20%"}</p>
+                    <p className="font-semibold text-green-600">{project.projectedReturn || "Not provided"}</p>
                   </div>
                   <div className="text-center">
                     <p className="text-xs text-muted-foreground mb-1">Hold Period</p>
@@ -628,8 +628,8 @@ function CommitCapitalForm({ project, onClose }: { project: CapitalProject; onCl
       });
 
       toast({
-        title: "Interest Submitted",
-        description: "The operator will review your interest and reach out soon.",
+        title: "Interest Recorded",
+        description: "Your request was recorded for conditional review. Follow-up is not guaranteed.",
       });
       onClose();
     } catch (error: any) {
@@ -648,7 +648,8 @@ function CommitCapitalForm({ project, onClose }: { project: CapitalProject; onCl
       <DialogHeader>
         <DialogTitle>Submit Capital Interest</DialogTitle>
         <DialogDescription>
-          Submit your interest in reviewing {project.title}. The operator will contact you with next steps.
+          Record your interest in reviewing {project.title}. This does not create acceptance,
+          participation, or a commitment by either side.
         </DialogDescription>
       </DialogHeader>
 

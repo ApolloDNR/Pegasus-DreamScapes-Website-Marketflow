@@ -146,7 +146,6 @@ describe("production SPA HTML routing", () => {
   it.each([
     "/about",
     "/projects/nelson-dr",
-    "/projects/a-real-project",
     "/marketflow/access",
     "/marketflow/deals/42",
     "/marketflow/listings/42",
@@ -181,6 +180,7 @@ describe("production SPA HTML routing", () => {
     "/definitely-missing",
     "/privacy/extra",
     "/marketflow/access/extra",
+    "/projects/a-real-project",
     "/projects/one/two",
   ])("returns dedicated noindex HTTP 404 HTML for %s", (pathname) => {
     const response = requestHtml(pathname);

@@ -543,6 +543,10 @@ describe("marketflow-submit page gating", () => {
     renderWithProviders(<MarketflowSubmit />);
 
     expect(screen.getByTestId("button-login-submit")).toBeInTheDocument();
+    expect(screen.getByTestId("button-login-submit").closest("a")).toHaveAttribute(
+      "href",
+      "/login",
+    );
     expect(screen.queryByTestId("text-submit-deal-title")).toBeNull();
     expect(screen.queryByTestId("wholesale-deal-form-stub")).toBeNull();
   });
@@ -599,7 +603,23 @@ describe("marketflow-submit page gating", () => {
     expect(await screen.findByTestId("capital-relationship-hold")).toHaveTextContent(
       "not accepting capital raise submissions",
     );
+    expect(screen.getByTestId("button-capital-relationship-info").closest("a")).toHaveAttribute(
+      "href",
+      "/capital#capital-introduction",
+    );
     expect(screen.queryByTestId("capital-raise-form-stub")).toBeNull();
+  });
+
+  it("describes review as a conditional sequence without SLAs or internal privileges", async () => {
+    setAuthState("wholesaler");
+    const { default: MarketflowSubmit } = await import(
+      "@/pages/marketflow-submit"
+    );
+
+    renderWithProviders(<MarketflowSubmit />);
+
+    expect(screen.getByText("Record check")).toBeInTheDocument();
+    expect(screen.queryByText(/within 24 hours|1-2 business days|Pegasus Privileges|expedited review/i)).toBeNull();
   });
 
   it("admins (without wholesaler/dreamscaper role) hit the role-locked screen", async () => {

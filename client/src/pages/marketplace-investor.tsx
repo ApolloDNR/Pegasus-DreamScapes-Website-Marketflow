@@ -243,7 +243,7 @@ export default function MarketplaceInvestorPage() {
                   Expanded portfolio · controlled pilot
                 </Button>
                 <p id="portfolio-pilot-note" className="mt-2 text-center text-xs text-muted-foreground">
-                  Your verified commitments remain visible in the summary above.
+                  Your recorded commitments remain visible in the summary above.
                 </p>
               </CardContent>
             </Card>

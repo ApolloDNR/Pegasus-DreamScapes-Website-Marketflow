@@ -35,6 +35,7 @@ export const SPA_EXACT_PATHS = new Set<string>([
   "/departments",
   "/case-study",
   "/projects",
+  "/projects/nelson-dr",
   "/strategy-lab/library",
   "/strategy-lab/submitted",
   "/strategy-lab/blueprint-confirmed",
@@ -126,7 +127,6 @@ export const SPA_EXACT_PATHS = new Set<string>([
 ]);
 
 export const SPA_PATTERN_PATHS: readonly RegExp[] = [
-  /^\/projects\/[^/]+$/,
   /^\/snapshot\/(?:calc|property)\/[^/]+$/,
   /^\/snapshot\/[^/]+$/,
   /^\/dealflow\/project\/[^/]+$/,

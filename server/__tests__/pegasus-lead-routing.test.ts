@@ -12,6 +12,7 @@ describe("Pegasus reusable lead routing", () => {
     ["representation", "Buy a home (Buyer representation)", "buyer"],
     ["deal-finder", "Deal finder / Wholesaler", "wholesaler"],
     ["capital-partner", "Capital partner", "investor"],
+    ["capital-introduction", "Introduced relationship", "investor"],
     ["operator", "Operator / Vendor", "vendor"],
     ["referral", "Referral partner", "referral"],
     ["contact", "Something else", "contact"],

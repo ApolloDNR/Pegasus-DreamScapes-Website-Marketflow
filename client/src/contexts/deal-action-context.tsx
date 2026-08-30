@@ -167,7 +167,7 @@ export function DealActionProvider({ children }: DealActionProviderProps) {
 }
 
 function DealActionModal() {
-  const { state, closeDealAction, openInStudio } = useDealAction();
+  const { state, closeDealAction } = useDealAction();
   const { isOpen, dealId, dealType, actionType, mode, existingOfferId } = state;
 
   if (!isOpen || !dealId || !actionType) return null;
@@ -209,22 +209,12 @@ function DealActionModal() {
     }
     
     // ========== CAPITAL LANE FORMS ==========
-    // Capital Accept Terms (fast path - investment amount + acknowledgements)
     if (actionType === "capital_accept") {
-      return (
-        <CapitalAcceptTermsModal
-          projectId={Number(dealId)}
-          onClose={closeDealAction}
-        />
-      );
+      return <CapitalRelationshipHoldModal onClose={closeDealAction} />;
     }
     
-    // Capital Counter - redirects to Offer Studio (should not render modal)
     if (actionType === "capital_counter") {
-      // Counter offers go to Offer Studio - close modal and redirect
-      closeDealAction();
-      openInStudio(dealId, "capital");
-      return null;
+      return <CapitalRelationshipHoldModal onClose={closeDealAction} />;
     }
     
     // ========== LISTINGS LANE FORMS ==========
@@ -268,14 +258,8 @@ function DealActionModal() {
       );
     }
     
-    // Legacy capital_invest - route to accept
     if (actionType === "capital_invest") {
-      return (
-        <CapitalAcceptTermsModal
-          projectId={Number(dealId)}
-          onClose={closeDealAction}
-        />
-      );
+      return <CapitalRelationshipHoldModal onClose={closeDealAction} />;
     }
     
     // Legacy listing_inquiry - route to request info
@@ -297,6 +281,35 @@ function DealActionModal() {
         {renderForm()}
       </DialogContent>
     </Dialog>
+  );
+}
+
+function CapitalRelationshipHoldModal({ onClose }: { onClose: () => void }) {
+  return (
+    <>
+      <DialogHeader>
+        <DialogTitle>Capital relationships begin privately</DialogTitle>
+        <DialogDescription>
+          MarketFlow does not accept, counter, or commit to project terms through this record.
+        </DialogDescription>
+      </DialogHeader>
+      <div className="space-y-4 pt-2">
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          A project status or submitted term is context only. Any later discussion requires a
+          separate relationship, diligence, eligibility, and written documentation.
+        </p>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <a href="/capital#capital-introduction" className="flex-1">
+            <Button variant="outline" className="w-full">
+              Relationship information
+            </Button>
+          </a>
+          <Button type="button" variant="ghost" onClick={onClose} className="flex-1">
+            Close
+          </Button>
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -1818,8 +1831,8 @@ function CapitalAcceptTermsModal({ projectId, onClose }: CapitalAcceptFormProps)
     },
     onSuccess: () => {
       toast({
-        title: "Investment Accepted",
-        description: "You've accepted the operator's terms. They will be notified.",
+        title: "Interest Recorded",
+        description: "Your request was recorded for conditional review. It does not accept terms or create a commitment.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/capital-projects"] });
       queryClient.invalidateQueries({ queryKey: ["/api/supabase/capital-investments"] });
@@ -1889,10 +1902,10 @@ function CapitalAcceptTermsModal({ projectId, onClose }: CapitalAcceptFormProps)
     <>
       <DialogHeader>
         <DialogTitle data-testid="dialog-title-capital-accept">
-          Capital Accept Terms
+          Capital Relationship Context
         </DialogTitle>
         <DialogDescription>
-          Accept the capital participation request as posted
+          Record context only; MarketFlow does not execute or accept project terms here
         </DialogDescription>
       </DialogHeader>
 
@@ -2030,7 +2043,7 @@ function CapitalAcceptTermsModal({ projectId, onClose }: CapitalAcceptFormProps)
                 type="number"
                 value={investmentAmount}
                 onChange={(e) => setInvestmentAmount(e.target.value)}
-                placeholder={String(project?.minInvestment || 25000)}
+                placeholder={project?.minInvestment ? String(project.minInvestment) : "Amount"}
                 className="w-full pl-7 pr-3 py-2 border rounded-md"
                 data-testid="input-capital-accept-amount"
               />
@@ -2063,7 +2076,7 @@ function CapitalAcceptTermsModal({ projectId, onClose }: CapitalAcceptFormProps)
                 data-testid="checkbox-capital-acknowledge-terms"
               />
               <span className="text-sm">
-                I acknowledge and accept the investment terms as posted, including the {project?.structure || "equity"} structure with {project?.askingInterestRate || project?.askingPreferredReturn || "stated"} target return.
+                I understand the displayed terms are submitted record context and may be incomplete or unverified. Checking this box does not accept them.
               </span>
             </label>
             
@@ -2076,7 +2089,7 @@ function CapitalAcceptTermsModal({ projectId, onClose }: CapitalAcceptFormProps)
                 data-testid="checkbox-capital-acknowledge-risk"
               />
               <span className="text-sm">
-                I understand that real estate investments carry risk and returns are not guaranteed. I have reviewed the project details and am making an informed investment decision.
+                I understand this request does not create participation, an allocation, an agreement, or a promise of follow-up.
               </span>
             </label>
           </div>
@@ -2093,7 +2106,7 @@ function CapitalAcceptTermsModal({ projectId, onClose }: CapitalAcceptFormProps)
             data-testid="button-submit-capital-accept"
           >
             {submitMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            Accept Terms
+            Record Interest
           </Button>
         </div>
       </div>

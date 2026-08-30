@@ -26,7 +26,7 @@ export function classifyPegasusLead({
   const normalizedIntent = clean(intent, 100).toLowerCase();
   const normalizedRole = clean(role, 160).toLowerCase();
 
-  if (["capital-partner", "investment", "capital", "funding"].includes(normalizedIntent)) {
+  if (["capital-partner", "capital-introduction", "investment", "capital", "funding"].includes(normalizedIntent)) {
     return "investor";
   }
   if (["operator", "vendor"].includes(normalizedIntent)) return "vendor";

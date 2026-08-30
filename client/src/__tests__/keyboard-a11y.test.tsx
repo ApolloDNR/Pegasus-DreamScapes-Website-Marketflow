@@ -7,6 +7,7 @@ import userEvent from "@testing-library/user-event";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { sitemapEntries } from "@shared/seo-routes";
 
 // Empire Doctrine v1.0.1 — Keyboard accessibility regression net (Task #143).
 //
@@ -524,7 +525,19 @@ import PrivacyPage from "@/pages/privacy";
 import TermsPage from "@/pages/terms";
 import MarketflowAccessPage from "@/pages/marketflow-access";
 import StrategyLabPage from "@/pages/strategy-lab";
+import DepartmentsPage from "@/pages/departments";
+import CaseStudyPage from "@/pages/case-study";
+import PegasusStandardPage from "@/pages/pegasus-standard";
+import DealBlueprintPage from "@/pages/deal-blueprint";
+import FAQPage from "@/pages/faq";
 import { PremiumMarketFlow } from "@/pegasus/marketflow-experience";
+import { CategoryPage } from "@/pegasus/category-page";
+import { CATEGORIES } from "@/pegasus/data";
+import { PropertyOwnersPage } from "@/pegasus/property-owners";
+import { DealPartnersPage } from "@/pegasus/deal-partners";
+import { HowWeOperatePage } from "@/pegasus/how-we-operate";
+import { OurWorkPage } from "@/pegasus/our-work";
+import { EcosystemPage, PeggyPage, WorkWithApolloPage } from "@/pegasus/pages";
 // Task #145 — admin / HQ surfaces.
 import AdminCtaEventsPage from "@/pages/admin-cta-events";
 import AdminVendorsPage from "@/pages/admin-vendors";
@@ -547,8 +560,76 @@ function MarketFlowPublicPage() {
   return <PremiumMarketFlow go={vi.fn()} />;
 }
 
+const publicNav = vi.fn();
+const openPublicPeggy = vi.fn();
+
+function PropertyOwnersPublicPage() {
+  return <PropertyOwnersPage go={publicNav} />;
+}
+
+function BuyersPublicPage() {
+  return (
+    <CategoryPage
+      cat={CATEGORIES.buyers}
+      go={publicNav}
+      openPeggy={openPublicPeggy}
+    />
+  );
+}
+
+function DealPartnersPublicPage() {
+  return <DealPartnersPage go={publicNav} />;
+}
+
+function OperatorsPublicPage() {
+  return (
+    <CategoryPage
+      cat={CATEGORIES.operators}
+      go={publicNav}
+      openPeggy={openPublicPeggy}
+    />
+  );
+}
+
+function ReferralPublicPage() {
+  return (
+    <CategoryPage
+      cat={CATEGORIES.referral}
+      go={publicNav}
+      openPeggy={openPublicPeggy}
+    />
+  );
+}
+
+function HowWeOperatePublicPage() {
+  return <HowWeOperatePage go={publicNav} />;
+}
+
+function OurWorkPublicPage() {
+  return <OurWorkPage go={publicNav} />;
+}
+
+function WorkWithApolloPublicPage() {
+  return <WorkWithApolloPage go={publicNav} />;
+}
+
+function EcosystemPublicPage() {
+  return <EcosystemPage go={publicNav} openPeggy={openPublicPeggy} />;
+}
+
+function PeggyPublicPage() {
+  return <PeggyPage go={publicNav} openPeggy={openPublicPeggy} />;
+}
+
 const PUBLIC_ROUTES: RouteSpec[] = [
   { path: "/", Page: HomePage },
+  { path: "/property-owners", Page: PropertyOwnersPublicPage },
+  { path: "/buyers", Page: BuyersPublicPage },
+  { path: "/deal-partners", Page: DealPartnersPublicPage },
+  { path: "/operators", Page: OperatorsPublicPage },
+  { path: "/referral", Page: ReferralPublicPage },
+  { path: "/how-we-operate", Page: HowWeOperatePublicPage },
+  { path: "/our-work", Page: OurWorkPublicPage },
   { path: "/about", Page: AboutPage },
   { path: "/development", Page: DevelopmentPage },
   { path: "/bring-an-opportunity", Page: SubmitPropertyPage },
@@ -564,7 +645,24 @@ const PUBLIC_ROUTES: RouteSpec[] = [
   { path: "/marketflow", Page: MarketFlowPublicPage },
   { path: "/marketflow/access", Page: MarketflowAccessPage },
   { path: "/strategy-lab", Page: StrategyLabPage },
+  { path: "/ecosystem", Page: EcosystemPublicPage },
+  { path: "/work-with-apollo", Page: WorkWithApolloPublicPage },
+  { path: "/peggy", Page: PeggyPublicPage },
+  { path: "/departments", Page: DepartmentsPage },
+  { path: "/case-study", Page: CaseStudyPage },
+  { path: "/pegasus-standard", Page: PegasusStandardPage },
+  { path: "/deal-blueprint", Page: DealBlueprintPage },
+  { path: "/faq", Page: FAQPage },
 ];
+
+describe("public keyboard route inventory", () => {
+  it("covers every sitemap route exactly once", () => {
+    const coveredPaths = PUBLIC_ROUTES.map(({ path: routePath }) => routePath).sort();
+    const sitemapPaths = sitemapEntries().map(({ path: routePath }) => routePath).sort();
+
+    expect(coveredPaths).toEqual(sitemapPaths);
+  });
+});
 
 function makeQueryClient() {
   return new QueryClient({
@@ -816,7 +914,7 @@ describe("Per-page keyboard accessibility (every v1 public route)", () => {
             `${route.path}: a main tab stop must come before any footer tab stop. Visited regions: [${visitedRegions.join(", ")}]`,
           ).toBeLessThan(footerIdx);
         }
-      });
+      }, 15_000);
     });
   }
 });

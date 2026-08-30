@@ -340,7 +340,7 @@ export default function MarketplaceWholesalerPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Connect with verified Dreamscapers and investors in our network.
+                  Buyer introductions are coordinated only when a real opportunity and mandate fit.
                 </p>
                 <Button
                   type="button"
@@ -385,7 +385,7 @@ export default function MarketplaceWholesalerPage() {
                   <CardTitle className="text-lg">Become a Pegasus Wholesaler</CardTitle>
                 </div>
                 <CardDescription>
-                  Get verified status, priority listing, and access to exclusive buyer networks
+                  Keep private submissions, status updates, and buyer-routing records in one workspace
                 </CardDescription>
               </CardHeader>
               <CardContent>

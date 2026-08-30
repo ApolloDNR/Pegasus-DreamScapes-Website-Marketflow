@@ -5,6 +5,7 @@ import {
   LEGACY_SPA_EXACT_REDIRECTS,
   LEGACY_SPA_PREFIX_REDIRECTS,
 } from "@shared/redirects";
+import { PEGASUS_URLS } from "@/pegasus/routes";
 
 // Website Brief v1.0 §1 / route-map enforcement. This test inspects the
 // route maps directly (App.tsx legacyRedirects + server/routes.ts LEGACY
@@ -150,6 +151,15 @@ describe("Route map (Website Brief v1.0 §1)", () => {
         isRegistered(route),
         `Canonical route ${route} is neither a literal App.tsx Route nor a Pegasus URL`,
       ).toBe(true);
+    }
+  });
+
+  it("mounts Pegasus-shell public routes only through PEGASUS_URLS", () => {
+    for (const route of PEGASUS_URLS) {
+      expect(
+        appSrc.includes(`path="${route}"`),
+        `${route} is already mounted by PEGASUS_URLS and must not have an unreachable literal Route`,
+      ).toBe(false);
     }
   });
 

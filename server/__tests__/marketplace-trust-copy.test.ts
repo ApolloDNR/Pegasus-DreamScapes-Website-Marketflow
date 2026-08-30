@@ -18,6 +18,48 @@ const capitalDetailSource = readFileSync(
   "utf8",
 );
 
+const capitalIndexSource = readFileSync(
+  resolve(
+    import.meta.dirname,
+    "../../client/src/pages/marketplace-capital.tsx",
+  ),
+  "utf8",
+);
+
+const peggyCharmSource = readFileSync(
+  resolve(import.meta.dirname, "../../client/src/components/peggy-charm.tsx"),
+  "utf8",
+);
+
+const dealflowProjectSource = readFileSync(
+  resolve(import.meta.dirname, "../../client/src/pages/dealflow-project.tsx"),
+  "utf8",
+);
+
+const capitalStudioSource = readFileSync(
+  resolve(
+    import.meta.dirname,
+    "../../client/src/components/capital-raise-investment-studio.tsx",
+  ),
+  "utf8",
+);
+
+const dealActionSource = readFileSync(
+  resolve(
+    import.meta.dirname,
+    "../../client/src/contexts/deal-action-context.tsx",
+  ),
+  "utf8",
+);
+
+const strategyTierSource = readFileSync(
+  resolve(
+    import.meta.dirname,
+    "../../client/src/lib/strategy-tier-ranges.ts",
+  ),
+  "utf8",
+);
+
 const negotiationAnalyticsSource = readFileSync(
   resolve(
     import.meta.dirname,
@@ -52,7 +94,33 @@ describe("marketplace deal trust copy", () => {
   it("labels unavailable source details and milestones truthfully", () => {
     expect(dealDetailSource).toContain("Source identity is kept private");
     expect(dealDetailSource).toContain(
-      "No verified updates have been posted yet.",
+      "No current updates have been posted yet.",
+    );
+  });
+
+  it("does not invent projected returns when a capital record omits them", () => {
+    const capitalSurfaces = `${capitalIndexSource}\n${capitalDetailSource}`;
+    expect(capitalSurfaces).not.toContain('projectedReturn || "15-20%"');
+    expect(capitalSurfaces).not.toContain(
+      "Browse investment opportunities from verified Dreamscapers",
+    );
+    expect(capitalSurfaces).toContain('projectedReturn || "Not provided"');
+  });
+
+  it("removes unsupported ROI, timing, and buyer-vetting claims", () => {
+    expect(peggyCharmSource).not.toMatch(/15-20% ROI|3x higher acceptance|40% faster/);
+    expect(dealflowProjectSource).not.toContain('project.projectedReturn || "15-20%"');
+    expect(dealflowProjectSource).not.toMatch(/project\.holdPeriod \|\| "12-18/);
+    expect(strategyTierSource).not.toContain("placed to a vetted buyer");
+  });
+
+  it("does not invent capital minimums, preferential treatment, or executable acceptance", () => {
+    expect(capitalStudioSource).not.toContain("project.minInvestment || 25000");
+    expect(capitalStudioSource).not.toContain("preferred treatment");
+    expect(capitalStudioSource).not.toContain("Larger commitments often unlock better terms");
+    expect(dealflowProjectSource).not.toContain('data-testid="button-accept-terms"');
+    expect(dealActionSource).toContain(
+      'if (actionType === "capital_accept") {\n      return <CapitalRelationshipHoldModal',
     );
   });
 

@@ -805,7 +805,7 @@ function NegotiationRoom() {
                 </div>
                 <div>
                   <p className="font-medium">Wholesaler #{((deal as any).externalWholesalerId || deal.submittedBy)?.slice(-6) || "—"}</p>
-                  <p className="text-xs text-muted-foreground">Verified Seller</p>
+                  <p className="text-xs text-muted-foreground">Seller-side contact</p>
                 </div>
               </div>
               <Badge variant="secondary" className="gap-1">

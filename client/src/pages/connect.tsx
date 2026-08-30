@@ -36,7 +36,7 @@ type ConnectLane = {
 const LANES: ConnectLane[] = [
   {
     id: "property-situation",
-    href: "/submit?intent=property",
+    href: "/bring-an-opportunity?intent=property",
     audience: "Property owner",
     routeCode: "PROPERTY READ",
     label: "I need to sell or solve a property situation",
@@ -307,8 +307,8 @@ function Hero({
 
           <div className="connect-actions">
             <Link
-              href="/submit?intent=property"
-              onClick={() => trackCtaClick("connect", "Send a property", "/submit?intent=property")}
+              href="/bring-an-opportunity?intent=property"
+              onClick={() => trackCtaClick("connect", "Send a property", "/bring-an-opportunity?intent=property")}
               className="connect-primary"
               data-testid="link-connect-submit"
             >

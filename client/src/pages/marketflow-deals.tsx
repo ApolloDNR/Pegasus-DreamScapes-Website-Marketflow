@@ -482,7 +482,7 @@ function DealsPage() {
                 <Eye className="w-5 h-5 text-amber-600" />
                 <div>
                   <h3 className="font-medium">Private beta preview: {guestRole?.replace(/_/g, ' ')}</h3>
-                  <p className="text-sm text-muted-foreground">Approved members can view reviewed opportunities and take action when real inventory is available.</p>
+                  <p className="text-sm text-muted-foreground">Authorized participants can view reviewed records and take action when real inventory is available.</p>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -2472,7 +2472,7 @@ function ListingCard({ listing, onView, onRequestInfo, onScheduleShowing, isSave
     if (type === "on_market") {
       return <Badge className="bg-green-600 text-white text-[10px]">On Market</Badge>;
     }
-    return <Badge variant="secondary" className="text-[10px]">Off Market</Badge>;
+    return <Badge variant="secondary" className="text-[10px]">Direct submission</Badge>;
   };
 
   const getConditionBadge = (condition: string | undefined) => {
