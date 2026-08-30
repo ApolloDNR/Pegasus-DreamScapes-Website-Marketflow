@@ -19,6 +19,8 @@ export default function Terms() {
     description:
       "Terms of service for Pegasus Dreamscapes Corp.: the public website, Strategy Review intake, and MarketFlow access.",
     image: "/og/default.png",
+    noIndex: true,
+    noCanonical: true,
   });
 
   return (

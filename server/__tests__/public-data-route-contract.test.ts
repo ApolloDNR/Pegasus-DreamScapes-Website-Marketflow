@@ -312,9 +312,6 @@ describe("reviewed inventory data route contract", () => {
     expect(routesSource).toMatch(
       /return res\.json\(toPublicCapitalProject\(project\)\)/s,
     );
-    expect(routesSource).toMatch(
-      /return res\.json\(toPublicUserProfile\(user\)\)/s,
-    );
   });
 
   it("keeps sensitive PDFs and user activity behind verified identity", () => {

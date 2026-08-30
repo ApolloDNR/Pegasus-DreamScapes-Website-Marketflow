@@ -48,6 +48,10 @@ import { setupAuth, isAuthenticated } from "./replitAuth";
 import { registerOpportunityRoutes } from "./opportunityRoutes";
 import { registerUserProvisioningRoute } from "./user-provisioning-routes";
 import { registerUserProfileRoute } from "./user-profile-route";
+import {
+  createIsEligibleMarketflowMessageRecipient,
+  registerApiPrivacyRoutes,
+} from "./api-privacy-routes";
 import { registerMarketflowCommunityGate } from "./marketflow-community-access";
 import { supabaseAuthMiddleware, extractSupabaseUser } from "./supabaseAuth";
 import { generateTermSheetPDF } from "./term-sheet-generator";
@@ -64,7 +68,7 @@ import {
   getUserBadges,
   updateUserProfile
 } from "./lib/supabase";
-import { sendEmail, sendSellerLeadNotification, sendInvestorLeadNotification, sendBuyerLeadNotification, sendVendorLeadNotification, sendDealSubmissionNotification, sendMessageNotification, sendDealUpdateNotification, sendSavedAnalysisPDFEmail } from "./email";
+import { sendEmail, sendSellerLeadNotification, sendInvestorLeadNotification, sendBuyerLeadNotification, sendVendorLeadNotification, sendDealSubmissionNotification, sendDealUpdateNotification, sendSavedAnalysisPDFEmail } from "./email";
 import {
   buildGenericLeadNotificationData,
   mergeLeadConsentAudit,
@@ -278,6 +282,14 @@ const requireMarketflowInventoryAccess =
   createRequireMarketflowInventoryAccess(
     marketflowInventoryAccessDependencies,
   );
+const isEligibleMarketflowMessageRecipient =
+  createIsEligibleMarketflowMessageRecipient({
+    getUserProfile,
+    getUserRoles: (userId) => storage.getUserRoles(userId),
+    getUser: (userId) => storage.getUser(userId),
+    hasStaffRole: (userId) => storage.hasAnyStaffRole(userId),
+    adminEmails: ADMIN_EMAILS,
+  });
 const loadMarketflowInventoryAccessContext = async (
   req: Request,
   res: Response,
@@ -563,6 +575,31 @@ export async function registerRoutes(
     },
   });
 
+  registerApiPrivacyRoutes(app, {
+    isHybridAuthenticated,
+    requireApprovedMarketflowAccess: requireMarketflowInventoryAccess,
+    dealPacketRateLimit: rateLimit(10, 60_000),
+    messageWriteRateLimit: rateLimit(30, 60_000),
+    getAuthenticatedUserId: getAuthUserId,
+    hasStaffAccess: hasMarketflowStaffAccess,
+    isEligibleMessageRecipient: isEligibleMarketflowMessageRecipient,
+    getUser: (userId) => storage.getUser(userId),
+    toPublicUserProfile,
+    getUserStats: (userId) => storage.getUserStats(userId),
+    getUserReputation: (userId) => storage.getUserReputation(userId),
+    getUserBadges: (userId) => storage.getUserBadges(userId),
+    getSupabaseReputation: getUserReputation,
+    getSupabaseBadges: getUserBadges,
+    getDirectMessages: (userId) => storage.getDirectMessages(userId),
+    getConversation: (userId, otherUserId) =>
+      storage.getConversation(userId, otherUserId),
+    createDirectMessage: (message) => storage.createDirectMessage(message),
+    markMessageRead: (id) => storage.markMessageRead(id),
+    getAllSiteContent: () => storage.getAllSiteContent(),
+    getSiteContent: (key) => storage.getSiteContent(key),
+    generateDealPacketPDF,
+  });
+
   // Update user profile (own profile only)
   app.patch('/api/supabase/profile', isHybridAuthenticated, async (req: any, res) => {
     try {
@@ -625,35 +662,6 @@ export async function registerRoutes(
     } catch (error) {
       console.error('Error assigning role:', error);
       res.status(500).json({ message: 'Failed to assign role' });
-    }
-  });
-
-  // Get user reputation from Supabase
-  app.get('/api/supabase/reputation/:userId', async (req, res) => {
-    try {
-      const { userId } = req.params;
-      const reputation = await getUserReputation(userId);
-      
-      if (!reputation) {
-        return res.status(404).json({ message: 'Reputation not found' });
-      }
-      
-      res.json(reputation);
-    } catch (error) {
-      console.error('Error fetching reputation:', error);
-      res.status(500).json({ message: 'Failed to fetch reputation' });
-    }
-  });
-
-  // Get user badges from Supabase
-  app.get('/api/supabase/badges/:userId', async (req, res) => {
-    try {
-      const { userId } = req.params;
-      const badges = await getUserBadges(userId);
-      res.json(badges);
-    } catch (error) {
-      console.error('Error fetching badges:', error);
-      res.status(500).json({ message: 'Failed to fetch badges' });
     }
   });
 
@@ -3331,31 +3339,6 @@ export async function registerRoutes(
   // SITE CONTENT - Inline Edit Mode
   // ============================================
 
-  // Public: Get all site content (for initial load)
-  app.get("/api/site-content", async (req, res) => {
-    try {
-      const allContent = await storage.getAllSiteContent();
-      return res.json(allContent);
-    } catch (error) {
-      console.error("Error fetching site content:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Public: Get specific site content by key
-  app.get("/api/site-content/:key", async (req, res) => {
-    try {
-      const content = await storage.getSiteContent(req.params.key);
-      if (!content) {
-        return res.status(404).json({ message: "Content not found" });
-      }
-      return res.json(content);
-    } catch (error) {
-      console.error("Error fetching site content:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
   // Admin: Upsert site content (create or update)
   app.put("/api/admin/site-content", isAuthenticated, requireStaffRole, async (req: any, res) => {
     try {
@@ -4271,107 +4254,6 @@ export async function registerRoutes(
       return res.json({ success: true });
     } catch (error) {
       console.error("Error removing saved deal:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // =====================================================
-  // Direct Messaging Routes
-  // =====================================================
-  
-  // Get user's messages
-  app.get("/api/messages", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const messages = await storage.getDirectMessages(userId);
-      return res.json(messages);
-    } catch (error) {
-      console.error("Error fetching messages:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get conversation with another user
-  app.get("/api/messages/conversation/:otherUserId", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const { otherUserId } = req.params;
-      const messages = await storage.getConversation(userId, otherUserId);
-      return res.json(messages);
-    } catch (error) {
-      console.error("Error fetching conversation:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Send a message
-  app.post("/api/messages", isAuthenticated, async (req: any, res) => {
-    try {
-      const senderId = req.user.claims.sub;
-      const { receiverId, subject, content, parentId } = req.body;
-      
-      const message = await storage.createDirectMessage({
-        senderId,
-        receiverId,
-        subject,
-        content,
-        parentId
-      });
-      
-      // Send email notification for new message (async, don't block response)
-      sendMessageNotification({
-        recipientEmail: process.env.STAFF_NOTIFICATION_EMAIL || 'messages@pegasusdreamscapes.com',
-        recipientName: 'User',
-        senderName: req.user.claims.name || 'A user',
-        messagePreview: content?.substring(0, 200) || '',
-        dealTitle: subject,
-      }).catch(err => console.error('Failed to send message email:', err));
-      
-      // Send real-time notification to receiver via WebSocket
-      const broadcastToUser = (app as any).broadcastToUser;
-      if (broadcastToUser && receiverId) {
-        broadcastToUser(receiverId, {
-          type: 'new_message',
-          payload: { messageId: message.id, senderId, subject }
-        });
-      }
-      
-      return res.status(201).json(message);
-    } catch (error) {
-      console.error("Error sending message:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Mark message as read
-  app.patch("/api/messages/:id/read", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const id = Number(req.params.id);
-      
-      // Verify the message belongs to this user
-      const messages = await storage.getDirectMessages(userId);
-      const message = messages.find(m => m.id === id);
-      if (!message || message.receiverId !== userId) {
-        return res.status(404).json({ message: "Message not found" });
-      }
-      
-      const updated = await storage.markMessageRead(id);
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error marking message as read:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get unread message count
-  app.get("/api/messages/unread-count", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const count = await storage.getUnreadMessageCount(userId);
-      return res.json({ count });
-    } catch (error) {
-      console.error("Error getting unread count:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -5322,101 +5204,6 @@ export async function registerRoutes(
     }
   });
 
-  // =====================================================
-  // User Profile Routes
-  // =====================================================
-  
-  // Get user profile by ID
-  app.get("/api/users/:userId", async (req, res) => {
-    try {
-      const { userId } = req.params;
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      return res.json(toPublicUserProfile(user));
-    } catch (error) {
-      console.error("Error fetching user profile:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // =====================================================
-  // User Reviews Routes
-  // =====================================================
-  
-  // Get reviews for a user
-  app.get("/api/users/:userId/reviews", async (req, res) => {
-    try {
-      const { userId } = req.params;
-      const reviews = await storage.getUserReviews(userId);
-      return res.json(reviews.filter((review) => review.isPublic === true));
-    } catch (error) {
-      console.error("Error fetching user reviews:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get my given reviews
-  app.get("/api/my-reviews", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const reviews = await storage.getReviewsByReviewer(userId);
-      return res.json(reviews);
-    } catch (error) {
-      console.error("Error fetching my reviews:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Create review
-  app.post("/api/reviews", isAuthenticated, async (req: any, res) => {
-    return res.status(501).json({
-      message:
-        "Reviews are unavailable until Pegasus can verify a completed transaction.",
-    });
-  });
-
-  // Respond to review (reviewee only)
-  app.post("/api/reviews/:id/respond", isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const id = Number(req.params.id);
-      const { response } = req.body;
-      
-      // Verify this is the reviewee
-      const review = await storage.getUserReview(id);
-      if (!review) {
-        return res.status(404).json({ message: "Review not found" });
-      }
-      if (review.revieweeId !== userId) {
-        return res.status(403).json({ message: "Only the reviewee can respond to this review" });
-      }
-      
-      const updated = await storage.respondToReview(id, response);
-      return res.json(updated);
-    } catch (error) {
-      console.error("Error responding to review:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // =====================================================
-  // User Stats Routes
-  // =====================================================
-  
-  // Get user stats
-  app.get("/api/users/:userId/stats", async (req, res) => {
-    try {
-      const { userId } = req.params;
-      const stats = await storage.getUserStats(userId);
-      return res.json(stats || {});
-    } catch (error) {
-      console.error("Error fetching user stats:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
   // Get user activity (timeline of recent actions)
   app.get("/api/users/:userId/activity", isHybridAuthenticated, async (req: any, res) => {
     try {
@@ -5437,36 +5224,6 @@ export async function registerRoutes(
       return res.json(activities);
     } catch (error) {
       console.error("Error fetching user activity:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get user reputation
-  app.get("/api/users/:userId/reputation", async (req, res) => {
-    try {
-      const { userId } = req.params;
-      if (!userId || userId.length < 1 || userId.length > 100) {
-        return res.status(400).json({ message: "Invalid user ID" });
-      }
-      const reputation = await storage.getUserReputation(userId);
-      return res.json(reputation || null);
-    } catch (error) {
-      console.error("Error fetching user reputation:", error);
-      return res.status(500).json({ message: "Internal server error" });
-    }
-  });
-
-  // Get user badges
-  app.get("/api/users/:userId/badges", async (req, res) => {
-    try {
-      const { userId } = req.params;
-      if (!userId || userId.length < 1 || userId.length > 100) {
-        return res.status(400).json({ message: "Invalid user ID" });
-      }
-      const badges = await storage.getUserBadges(userId);
-      return res.json(badges || []);
-    } catch (error) {
-      console.error("Error fetching user badges:", error);
       return res.status(500).json({ message: "Internal server error" });
     }
   });
@@ -6919,31 +6676,6 @@ export async function registerRoutes(
       }
     },
   );
-
-  // Generate deal packet PDF
-  app.post("/api/pdf/deal-packet", async (req, res) => {
-    try {
-      const dealData = req.body;
-      
-      if (!dealData.title || !dealData.type || !dealData.propertyAddress) {
-        return res.status(400).json({ 
-          message: "title, type, and propertyAddress are required" 
-        });
-      }
-      
-      const buffer = await generateDealPacketPDF(dealData);
-      
-      res.setHeader("Content-Type", "application/pdf");
-      res.setHeader(
-        "Content-Disposition", 
-        `attachment; filename="deal-packet-${Date.now()}.pdf"`
-      );
-      res.send(buffer);
-    } catch (error) {
-      console.error("Error generating deal packet PDF:", error);
-      res.status(500).json({ message: "Failed to generate PDF" });
-    }
-  });
 
   // Generate wholesale deal PDF
   app.get("/api/pdf/wholesale-deal/:id", isHybridAuthenticated, async (req: any, res) => {

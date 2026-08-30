@@ -15,6 +15,13 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CapitalRelationshipOnlyNotice } from "@/components/capital-relationship-only-notice";
 import {
+  firstMarketflowMoney,
+  formatMarketflowMoney,
+  isPositiveMarketflowMoney,
+  normalizeMarketflowMoney,
+  readWholesaleFinancials,
+} from "@/components/marketflow-financial-truth";
+import {
   ArrowLeft,
   Building2,
   Sparkles,
@@ -50,6 +57,11 @@ type OfferStatus = "pending" | "accepted" | "rejected" | "countered";
 
 type OfferStudioDeal = Record<string, any> & {
   askingPrice?: number;
+  arv?: number;
+  estimatedRepairs?: number;
+  repairEstimate?: number;
+  repairCost?: number;
+  repairCosts?: number;
   propertyAddress?: string;
 };
 
@@ -120,7 +132,7 @@ interface LadderOffer {
   timestamp: Date;
   status: OfferStatus;
   terms: {
-    offerPrice: number;
+    offerPrice: number | null;
     earnestMoney: number;
     closeDate: string;
     inspectionPeriod: number;
@@ -139,10 +151,10 @@ function transformOffer(offer: MarketflowOffer, currentUserId?: string): LadderO
     timestamp: new Date(offer.createdAt!),
     status: (offer.status as OfferStatus) || "pending",
     terms: {
-      offerPrice:
-        (payload.offerPrice as number) ||
-        (payload.assignmentFee as number) ||
-        0,
+      offerPrice: firstMarketflowMoney(
+        payload.offerPrice,
+        payload.assignmentFee,
+      ),
       earnestMoney: (payload.earnestMoney as number) || 0,
       closeDate:
         (payload.closeDate as string) ||
@@ -156,13 +168,7 @@ function transformOffer(offer: MarketflowOffer, currentUserId?: string): LadderO
   };
 }
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
+const formatCurrency = formatMarketflowMoney;
 
 function StatusBadge({ status }: { status: OfferStatus }) {
   switch (status) {
@@ -344,7 +350,7 @@ export default function MarketflowOfferStudioPage() {
       }
       return;
     }
-    if (latestOffer.side === "them") {
+    if (latestOffer.side === "them" && latestOffer.terms.offerPrice !== null) {
       setComposer({
         offerPrice: String(latestOffer.terms.offerPrice),
         earnestMoney: String(latestOffer.terms.earnestMoney ?? 5000),
@@ -609,7 +615,13 @@ export default function MarketflowOfferStudioPage() {
   }
 
   const propertyAddress = deal.propertyAddress || deal.title || deal.address || "Untitled deal";
-  const askingPrice = deal.askingPrice ?? 0;
+  const financials = readWholesaleFinancials(deal);
+  const askingPrice = financials.price;
+  const repairs = financials.repairs;
+  const hasRequiredDealFinancials =
+    lane === "LISTING"
+      ? isPositiveMarketflowMoney(askingPrice)
+      : financials.hasRequiredInputs;
 
   return (
     <div className="min-h-screen bg-background flex flex-col" data-testid="page-offer-studio">
@@ -676,14 +688,16 @@ export default function MarketflowOfferStudioPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Asking</span>
-                <span className="font-semibold tabular-nums">{formatCurrency(askingPrice)}</span>
+                <span className="font-semibold tabular-nums" data-testid="text-context-asking-price">{formatCurrency(askingPrice)}</span>
               </div>
-              {deal.arv ? (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">ARV</span>
-                  <span className="font-semibold tabular-nums">{formatCurrency(deal.arv)}</span>
-                </div>
-              ) : null}
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">ARV</span>
+                <span className="font-semibold tabular-nums" data-testid="text-context-arv">{formatCurrency(normalizeMarketflowMoney(deal.arv))}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Repairs</span>
+                <span className="font-semibold tabular-nums" data-testid="text-context-repairs">{formatCurrency(repairs)}</span>
+              </div>
               {deal.assignmentFee ? (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Assignment Fee</span>
@@ -778,7 +792,10 @@ export default function MarketflowOfferStudioPage() {
                               "{offer.terms.notes}"
                             </p>
                           )}
-                          {offer.status === "pending" && offer.side === "them" && !agreementReached && (
+                          {offer.status === "pending" &&
+                            offer.side === "them" &&
+                            !agreementReached &&
+                            isPositiveMarketflowMoney(offer.terms.offerPrice) && (
                             <div className="flex gap-2 mt-3">
                               <Button
                                 size="sm"
@@ -814,6 +831,25 @@ export default function MarketflowOfferStudioPage() {
 
         {/* CENTER: Counter-offer composer */}
         <main className="p-6 overflow-y-auto">
+          {!hasRequiredDealFinancials ? (
+            <Card
+              className="flex h-full flex-col items-center justify-center border-dashed p-8 text-center"
+              data-testid="state-offer-studio-financials-incomplete"
+            >
+              <AlertCircle className="mb-4 h-8 w-8 text-amber-600" />
+              <CardTitle className="font-serif text-xl">Financial record incomplete</CardTitle>
+              <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
+                {lane === "LISTING"
+                  ? "A list or asking price must be provided on the reviewed record before Offer Studio financial actions are available."
+                  : "Price, ARV, and repairs must be provided on the reviewed record before Offer Studio financial actions are available."}
+              </p>
+              <Link href={`/marketflow/deals/${dealId}`}>
+                <Button variant="outline" className="mt-6">
+                  Review deal record
+                </Button>
+              </Link>
+            </Card>
+          ) : (
           <Card className="h-full flex flex-col">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -823,7 +859,10 @@ export default function MarketflowOfferStudioPage() {
                     ? "Counter Offer"
                     : "New Offer"}
                 </CardTitle>
-                {latestOffer && latestOffer.side === "them" && latestOffer.status === "pending" && (
+                {latestOffer &&
+                  latestOffer.side === "them" &&
+                  latestOffer.status === "pending" &&
+                  isPositiveMarketflowMoney(latestOffer.terms.offerPrice) && (
                   <Badge variant="secondary" className="text-xs" data-testid="badge-countering">
                     <ArrowRightLeft className="w-3 h-3 mr-1" />
                     Replying to {formatCurrency(latestOffer.terms.offerPrice)}
@@ -1037,6 +1076,7 @@ export default function MarketflowOfferStudioPage() {
               </div>
             </CardContent>
           </Card>
+          )}
         </main>
 
         {/* RIGHT: AI advisor */}
@@ -1044,7 +1084,7 @@ export default function MarketflowOfferStudioPage() {
           <PeggyAdvisor
             dealInfo={{
               propertyAddress,
-              askingPrice,
+              askingPrice: askingPrice ?? undefined,
               arv: deal.arv,
               lane,
             }}
@@ -1194,7 +1234,7 @@ export default function MarketflowOfferStudioPage() {
 // Peggy advisor pane (right-rail full height)
 // =====================================================
 interface AdvisorProps {
-  dealInfo: { propertyAddress: string; askingPrice: number; arv?: number; lane: Lane };
+  dealInfo: { propertyAddress: string; askingPrice?: number; arv?: number; lane: Lane };
   offers: LadderOffer[];
   agreementReached: boolean;
 }

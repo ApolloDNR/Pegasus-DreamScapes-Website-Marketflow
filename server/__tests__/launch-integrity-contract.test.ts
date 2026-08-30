@@ -53,21 +53,6 @@ describe("launch integrity contract", () => {
     );
   });
 
-  it("only exposes public reviews and disables unverifiable review creation", () => {
-    const readRoute = routeSlice(
-      'app.get("/api/users/:userId/reviews"',
-      "// Get my given reviews",
-    );
-    expect(readRoute).toContain("review.isPublic === true");
-
-    const createRoute = routeSlice(
-      'app.post("/api/reviews"',
-      "// Respond to review",
-    );
-    expect(createRoute).toContain("res.status(501)");
-    expect(createRoute).not.toContain("storage.createUserReview(");
-  });
-
   it("derives JV recipients from a reviewed public deal and transitions once", () => {
     const createRoute = routeSlice(
       'app.post("/api/marketplace/jv-requests"',

@@ -124,7 +124,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
     title: tag("Our Work — Nelson Drive"),
     description:
       "Nelson Drive public record: acquired about $600K, renovated for $105K, sold for $840K. Limited figures only; not net profit or return.",
-    image: `${SITE_URL}/og/case-study.png`,
+    image: `${SITE_URL}/og/nelson-dr.png`,
   },
   "/investments": {
     title: tag("Capital Relationship Review"),
@@ -267,18 +267,21 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
     description:
       "Operating-company and brokerage-role disclosures, including site-listed Keller Williams East Bay and DRE details that visitors should verify.",
     image: `${SITE_URL}/og/disclosures.png`,
+    noIndex: true,
   },
   "/privacy": {
     title: tag("Privacy"),
     description:
       "Privacy notice for Pegasus Dreamscapes Corp: what we collect, how we use it, and how to reach us. Draft pending qualified legal review.",
     image: `${SITE_URL}/og/privacy.png`,
+    noIndex: true,
   },
   "/terms": {
     title: tag("Terms"),
     description:
       "Terms of use for the Pegasus Dreamscapes website, Strategy Review intake, and MarketFlow access. Draft pending qualified legal review.",
     image: `${SITE_URL}/og/terms.png`,
+    noIndex: true,
   },
 
   "/faq": {
@@ -326,6 +329,7 @@ const SITEMAP_EXCLUDE_RE: RegExp[] = [
   /^\/profile\//,
   /^\/snapshot(\/|$)/,
   /^\/saved$/,
+  /^\/(privacy|terms|disclosures)$/,
   /^\/investments$/,
   /^\/submit$/,
   /^\/marketflow\/(admin|dashboard|messages|submit|negotiate)(\/|$)/,
@@ -352,6 +356,9 @@ export const ROBOTS_DISALLOW: string[] = [
   "/profile/",
   "/snapshot/",
   "/saved",
+  "/privacy",
+  "/terms",
+  "/disclosures",
   "/investments",
   "/library",
   "/marketflow/admin",

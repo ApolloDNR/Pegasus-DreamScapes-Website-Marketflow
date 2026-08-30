@@ -15,6 +15,13 @@ import { useToast } from "@/hooks/use-toast";
 import { OfferStudio, type OfferStudioData } from "@/components/offer-studio";
 import { QuickCounterOffer, type QuickCounterData } from "@/components/quick-counter-offer";
 import { CapitalRelationshipOnlyNotice } from "@/components/capital-relationship-only-notice";
+import {
+  firstMarketflowMoney,
+  formatMarketflowMoney,
+  isPositiveMarketflowMoney,
+  normalizeMarketflowMoney,
+  readWholesaleFinancials,
+} from "@/components/marketflow-financial-truth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { MarketflowOffer, MarketflowNegotiation, NegotiationMessage } from "@shared/schema";
 import {
@@ -67,7 +74,7 @@ interface Offer {
   timestamp: Date;
   status: "pending" | "accepted" | "rejected" | "countered";
   terms: {
-    offerPrice: number;
+    offerPrice: number | null;
     earnestMoney: number;
     closeDate: string;
     inspectionPeriod: number;
@@ -87,7 +94,10 @@ function transformMarketflowOffer(offer: MarketflowOffer, currentUserId?: string
     timestamp: new Date(offer.createdAt!),
     status: (offer.status as Offer["status"]) || "pending",
     terms: {
-      offerPrice: (payload?.offerPrice as number) || (payload?.assignmentFee as number) || 0,
+      offerPrice: firstMarketflowMoney(
+        payload?.offerPrice,
+        payload?.assignmentFee,
+      ),
       earnestMoney: (payload?.earnestMoney as number) || 0,
       closeDate: (payload?.closeDate as string) || (payload?.closingDate as string) || "",
       inspectionPeriod: (payload?.inspectionPeriod as number) || 10,
@@ -247,13 +257,7 @@ function NegotiationRoom() {
     },
   });
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0
-    }).format(amount);
-  };
+  const formatCurrency = formatMarketflowMoney;
 
   const getStatusBadge = (status: Offer["status"]) => {
     switch (status) {
@@ -312,12 +316,14 @@ function NegotiationRoom() {
   };
 
   const openCounterOffer = (offer: Offer) => {
+    if (!isPositiveMarketflowMoney(offer.terms.offerPrice)) return;
     setOfferMode("counter");
     setCounterOfferData(offer.terms);
     setOfferDialogOpen(true);
   };
 
   const openQuickCounter = (offer: Offer) => {
+    if (!isPositiveMarketflowMoney(offer.terms.offerPrice)) return;
     setQuickCounterPrevious({
       offerPrice: offer.terms.offerPrice,
       earnestMoney: offer.terms.earnestMoney,
@@ -396,6 +402,16 @@ function NegotiationRoom() {
 
   const latestOffer = offers[offers.length - 1];
   const agreementReached = latestOffer?.status === "accepted";
+  const financials = deal
+    ? readWholesaleFinancials({
+        ...deal,
+        askingPrice: deal.askingPrice ?? deal.listPrice,
+      })
+    : null;
+  const hasRequiredDealFinancials =
+    lane === "LISTING"
+      ? isPositiveMarketflowMoney(financials?.price)
+      : financials?.hasRequiredInputs === true;
 
   if (lane === "CAPITAL") {
     return (
@@ -542,7 +558,9 @@ function NegotiationRoom() {
                                 </p>
                               )}
 
-                              {offer.status === "pending" && offer.sender !== "investor" && (
+                              {offer.status === "pending" &&
+                                offer.sender !== "investor" &&
+                                isPositiveMarketflowMoney(offer.terms.offerPrice) && (
                                 <div className="flex gap-2 mt-4">
                                   <Button 
                                     size="sm" 
@@ -580,7 +598,7 @@ function NegotiationRoom() {
                     </div>
                   </ScrollArea>
 
-                  {!agreementReached && (
+                  {!agreementReached && hasRequiredDealFinancials && (
                     <div className="pt-4 border-t">
                       <Button 
                         className="w-full" 
@@ -591,6 +609,16 @@ function NegotiationRoom() {
                         Submit New Offer
                       </Button>
                     </div>
+                  )}
+                  {!hasRequiredDealFinancials && (
+                    <p
+                      className="rounded-lg border border-dashed px-4 py-3 text-center text-sm text-muted-foreground"
+                      data-testid="state-negotiation-financials-incomplete"
+                    >
+                      {lane === "LISTING"
+                        ? "A list or asking price must be provided on the reviewed record before financial actions are available."
+                        : "Price, ARV, and repairs must be provided on the reviewed record before financial actions are available."}
+                    </p>
                   )}
                 </div>
               )}
@@ -661,19 +689,23 @@ function NegotiationRoom() {
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="p-4 rounded-lg border">
                       <Label className="text-xs text-muted-foreground">ASKING PRICE</Label>
-                      <p className="text-xl font-bold">{formatCurrency(deal.askingPrice || 0)}</p>
+                      <p className="text-xl font-bold" data-testid="text-terms-asking-price">{formatCurrency(normalizeMarketflowMoney(deal.askingPrice ?? deal.listPrice))}</p>
                     </div>
                     <div className="p-4 rounded-lg border">
                       <Label className="text-xs text-muted-foreground">CONTRACT PRICE</Label>
-                      <p className="text-xl font-bold">{formatCurrency(deal.contractPrice || 0)}</p>
+                      <p className="text-xl font-bold" data-testid="text-terms-contract-price">{formatCurrency(normalizeMarketflowMoney(deal.contractPrice))}</p>
                     </div>
                     <div className="p-4 rounded-lg border">
                       <Label className="text-xs text-muted-foreground">ASSIGNMENT FEE</Label>
-                      <p className="text-xl font-bold">{formatCurrency(deal.assignmentFee || 0)}</p>
+                      <p className="text-xl font-bold" data-testid="text-terms-assignment-fee">{formatCurrency(normalizeMarketflowMoney(deal.assignmentFee))}</p>
                     </div>
                     <div className="p-4 rounded-lg border">
                       <Label className="text-xs text-muted-foreground">ARV</Label>
-                      <p className="text-xl font-bold">{formatCurrency(deal.arv || 0)}</p>
+                      <p className="text-xl font-bold" data-testid="text-terms-arv">{formatCurrency(normalizeMarketflowMoney(deal.arv))}</p>
+                    </div>
+                    <div className="p-4 rounded-lg border">
+                      <Label className="text-xs text-muted-foreground">REPAIRS</Label>
+                      <p className="text-xl font-bold" data-testid="text-terms-repairs">{formatCurrency(financials?.repairs)}</p>
                     </div>
                   </div>
 
@@ -823,20 +855,22 @@ function NegotiationRoom() {
             </CardContent>
           </Card>
 
-          <PeggyNegotiationAdvisor 
-            dealInfo={{
-              propertyAddress: deal?.propertyAddress || "",
-              askingPrice: deal?.askingPrice || 0,
-              arv: deal?.arv,
-              lane,
-            }}
-            offers={offers}
-            agreementReached={agreementReached}
-          />
+          {hasRequiredDealFinancials && financials && (
+            <PeggyNegotiationAdvisor
+              dealInfo={{
+                propertyAddress: deal?.propertyAddress || "",
+                askingPrice: financials.price!,
+                arv: financials.arv ?? undefined,
+                lane,
+              }}
+              offers={offers}
+              agreementReached={agreementReached}
+            />
+          )}
         </div>
       </div>
 
-      {deal && (
+      {deal && hasRequiredDealFinancials && financials && (
         <OfferStudio
           open={offerDialogOpen}
           onOpenChange={setOfferDialogOpen}
@@ -844,14 +878,14 @@ function NegotiationRoom() {
           dealInfo={{
             id: dealId || "",
             propertyAddress: deal.propertyAddress || "",
-            askingPrice: deal.askingPrice || 0,
-            arv: deal.arv || undefined,
-            repairCost: (deal as any).repairCosts || (deal as any).repairCost || undefined,
+            askingPrice: financials.price!,
+            arv: financials.arv ?? undefined,
+            repairCost: financials.repairs ?? undefined,
             wholesalerName: `Wholesaler #${((deal as any).externalWholesalerId || deal.submittedBy)?.slice(-6) || "—"}`,
           }}
           previousOffer={counterOfferData ? {
             structureType: "cash",
-            offerPrice: counterOfferData.offerPrice,
+            offerPrice: counterOfferData.offerPrice ?? undefined,
             earnestMoney: counterOfferData.earnestMoney,
             closeDate: counterOfferData.closeDate,
             inspectionPeriod: counterOfferData.inspectionPeriod,
@@ -862,14 +896,14 @@ function NegotiationRoom() {
         />
       )}
 
-      {deal && quickCounterPrevious && (
+      {deal && hasRequiredDealFinancials && financials && quickCounterPrevious && (
         <QuickCounterOffer
           open={quickCounterOpen}
           onOpenChange={setQuickCounterOpen}
           previousOffer={quickCounterPrevious}
           dealInfo={{
             propertyAddress: deal.propertyAddress || "",
-            askingPrice: deal.askingPrice || 0,
+            askingPrice: financials.price!,
           }}
           onSubmit={handleQuickCounter}
         />

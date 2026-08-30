@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { existsSync } from "node:fs";
+import { resolve } from "node:path";
 import {
   isCrawlablePublicPath,
   ROBOTS_DISALLOW,
@@ -60,9 +62,31 @@ describe("public project SEO truth contract", () => {
     expect(ROBOTS_DISALLOW).toContain("/investments");
   });
 
+  it("keeps operator-prepared legal drafts out of crawl surfaces pending review", () => {
+    for (const path of ["/privacy", "/terms", "/disclosures"] as const) {
+      expect(SEO_ROUTES[path].noIndex, path).toBe(true);
+      expect(isCrawlablePublicPath(path), path).toBe(false);
+      expect(ROBOTS_DISALLOW, path).toContain(path);
+    }
+  });
+
   it("keeps every search description concise", () => {
     for (const [path, route] of Object.entries(SEO_ROUTES)) {
       expect(route.description.length, path).toBeLessThanOrEqual(155);
+    }
+  });
+
+  it("keeps every same-origin social image backed by a public asset", () => {
+    for (const [path, route] of Object.entries(SEO_ROUTES)) {
+      const imageUrl = new URL(route.image);
+      if (imageUrl.origin !== "https://pegasusdreamscapes.com") continue;
+
+      const publicAsset = resolve(
+        process.cwd(),
+        "client/public",
+        imageUrl.pathname.replace(/^\//, ""),
+      );
+      expect(existsSync(publicAsset), `${path}: ${imageUrl.pathname}`).toBe(true);
     }
   });
 });

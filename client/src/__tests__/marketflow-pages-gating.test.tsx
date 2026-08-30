@@ -821,6 +821,55 @@ describe("marketflow-deals page gating", () => {
     expect(screen.queryAllByTestId(/^quick-jv-/).length).toBe(0);
   });
 
+  it("fails an incomplete reviewed deal closed instead of inventing zero-value financials", async () => {
+    setAuthState("badgedInvestor");
+    queryBoundary.states["/api/wholesale-deals"] = {
+      data: [
+        {
+          id: "incomplete-9003",
+          propertyAddress: "9003 Incomplete Record Way",
+          city: "Oakland",
+          state: "CA",
+          propertyType: "Single Family",
+          canRequestJv: true,
+          negotiationAllowed: true,
+          status: "under_review",
+          photos: [],
+        },
+      ],
+    };
+    const { default: MarketflowDeals } = await import(
+      "@/pages/marketflow-deals"
+    );
+
+    renderWithProviders(<MarketflowDeals />);
+
+    expect(screen.getByTestId("text-deal-ask-incomplete-9003")).toHaveTextContent(
+      "Not provided",
+    );
+    expect(screen.getByTestId("text-deal-arv-incomplete-9003")).toHaveTextContent(
+      "Not provided",
+    );
+    expect(screen.getByTestId("text-deal-repairs-incomplete-9003")).toHaveTextContent(
+      "Not provided",
+    );
+    expect(
+      screen.getByTestId("state-deal-financials-incomplete-9003"),
+    ).toHaveTextContent(/price, ARV, and repairs/i);
+    expect(screen.queryByTestId("text-deal-profit-incomplete-9003")).toBeNull();
+    expect(screen.queryByTestId("text-deal-roi-incomplete-9003")).toBeNull();
+    expect(screen.queryByTestId("quick-calc-incomplete-9003")).toBeNull();
+    expect(screen.queryByTestId("quick-share-incomplete-9003")).toBeNull();
+    expect(screen.queryByTestId("quick-accept-incomplete-9003")).toBeNull();
+    expect(screen.queryByTestId("quick-jv-incomplete-9003")).toBeNull();
+    expect(screen.queryByTestId("button-accept-terms-incomplete-9003")).toBeNull();
+    expect(screen.queryByTestId("button-counter-terms-incomplete-9003")).toBeNull();
+    expect(
+      screen.queryByTestId("button-open-offer-studio-wholesale-incomplete-9003"),
+    ).toBeNull();
+    expect(screen.queryByTestId("badge-roi")).toBeNull();
+  });
+
   it("gives every icon-only swipe control an accessible name", async () => {
     setAuthState("badgedInvestor");
     queryBoundary.states["/api/capital-projects"] = {

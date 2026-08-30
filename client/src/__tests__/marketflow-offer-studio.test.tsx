@@ -170,6 +170,7 @@ function resetFetchState(opts: { seedNegotiation?: ServerNegotiation } = {}) {
       state: "AZ",
       askingPrice: 200000,
       arv: 300000,
+      estimatedRepairs: 50000,
       assignmentFee: 10000,
       submittedBy: COUNTERPARTY_ID,
     },
@@ -442,6 +443,62 @@ describe("MarketFlow Offer Studio", () => {
     },
     15_000,
   );
+
+  it("renders absent record financials as not provided instead of zero", async () => {
+    setAuthState("buyer");
+    fetchState.deal = {
+      id: 9001,
+      propertyAddress: "123 Missing Numbers St",
+      city: "Oakland",
+      state: "CA",
+      submittedBy: COUNTERPARTY_ID,
+    };
+
+    await renderOfferStudio();
+    await screen.findByTestId("page-offer-studio");
+
+    expect(screen.getByTestId("text-asking-price")).toHaveTextContent(
+      "Not provided",
+    );
+    expect(screen.getByTestId("text-context-asking-price")).toHaveTextContent(
+      "Not provided",
+    );
+    expect(screen.getByTestId("text-context-arv")).toHaveTextContent(
+      "Not provided",
+    );
+    expect(screen.getByTestId("text-context-repairs")).toHaveTextContent(
+      "Not provided",
+    );
+    expect(
+      screen.getByTestId("state-offer-studio-financials-incomplete"),
+    ).toHaveTextContent(/price, ARV, and repairs/i);
+    expect(screen.queryByTestId("input-offer-price")).toBeNull();
+    expect(screen.queryByTestId("button-send-offer")).toBeNull();
+  });
+
+  it("does not expose response actions for an incoming offer without a price", async () => {
+    setAuthState("buyer");
+    seedExistingNegotiation("u-buyer");
+    fetchState.offers.push({
+      id: 7199,
+      status: "pending",
+      createdBy: COUNTERPARTY_ID,
+      createdAt: new Date().toISOString(),
+      payload: {
+        earnestMoney: 5_000,
+        closeDate: dateFromToday(30),
+        inspectionPeriod: 10,
+        fundingType: "cash",
+      },
+    });
+
+    await renderOfferStudio();
+    const row = await screen.findByTestId("offer-row-7199");
+
+    expect(row).toHaveTextContent("Not provided");
+    expect(screen.queryByTestId("button-accept-7199")).toBeNull();
+    expect(screen.queryByTestId("button-reject-7199")).toBeNull();
+  });
 
   it("fails the CAPITAL lane closed to relationship information without loading offer data", async () => {
     setAuthState("buyer");

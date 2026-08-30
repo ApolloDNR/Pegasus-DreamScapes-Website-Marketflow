@@ -33,10 +33,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollReveal, StaggerChildren, StaggerItem, HoverLift } from "@/components/animations";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import type { CapitalProject } from "@shared/schema";
-import { DueDiligenceProgress } from "@/components/due-diligence-checklist";
-import { CommunicationSummary } from "@/components/communication-log";
-import { DocumentCount } from "@/components/document-attachments";
-import { InlineROIBadge } from "@/components/quick-calculator";
+import {
+  formatMarketflowMoney,
+  readWholesaleFinancials,
+} from "@/components/marketflow-financial-truth";
 import { SearchAutocomplete } from "@/components/search-autocomplete";
 import { BetaBanner } from "@/components/beta-banner";
 import { OpenOfferStudioButton } from "@/components/open-offer-studio-button";
@@ -908,6 +908,9 @@ function SwipeView({ deals, onSave, onAcceptTerms, onCounterTerms }: SwipeViewPr
   ]);
   
   const currentDeal = deals[currentIndex];
+  const currentFinancials = currentDeal
+    ? readWholesaleFinancials(currentDeal)
+    : null;
   const hasMore = currentIndex < deals.length - 1;
 
   useEffect(() => () => {
@@ -1164,31 +1167,37 @@ function SwipeView({ deals, onSave, onAcceptTerms, onCounterTerms }: SwipeViewPr
         >
           <Heart className="w-5 h-5" />
         </Button>
-        <Button 
-          aria-label="Accept terms"
-          size="lg" 
-          className="rounded-full h-12 w-12"
-          onClick={() => onAcceptTerms(currentDeal)}
-          disabled={isAdvancing}
-          data-testid="button-accept"
-        >
-          <CheckCircle2 className="w-5 h-5" />
-        </Button>
-        <Button 
-          aria-label="Counter offer"
-          size="lg" 
-          variant="secondary"
-          className="rounded-full h-12 w-12"
-          onClick={() => onCounterTerms(currentDeal)}
-          disabled={isAdvancing}
-          data-testid="button-counter"
-        >
-          <MessageSquare className="w-4 h-4" />
-        </Button>
+        {currentFinancials?.hasRequiredInputs && (
+          <>
+            <Button
+              aria-label="Accept terms"
+              size="lg"
+              className="rounded-full h-12 w-12"
+              onClick={() => onAcceptTerms(currentDeal)}
+              disabled={isAdvancing}
+              data-testid="button-accept"
+            >
+              <CheckCircle2 className="w-5 h-5" />
+            </Button>
+            <Button
+              aria-label="Counter offer"
+              size="lg"
+              variant="secondary"
+              className="rounded-full h-12 w-12"
+              onClick={() => onCounterTerms(currentDeal)}
+              disabled={isAdvancing}
+              data-testid="button-counter"
+            >
+              <MessageSquare className="w-4 h-4" />
+            </Button>
+          </>
+        )}
       </div>
 
       <p className="text-center text-xs text-muted-foreground mt-4">
-        Undo • Pass • Save • Accept Terms • Counter Offer
+        {currentFinancials?.hasRequiredInputs
+          ? "Undo • Pass • Save • Accept Terms • Counter Offer"
+          : "Undo • Pass • Save"}
       </p>
     </div>
   );
@@ -1209,11 +1218,7 @@ interface SwipeCardProps {
 function SwipeCard({ deal, likeOpacity, passOpacity, onView, onAcceptTerms, onCounterTerms, isAdvancing, isDragging, dragIntent }: SwipeCardProps) {
   const address = deal.propertyAddress || deal.address || 'Property Address';
   const cityState = [deal.city, deal.state].filter(Boolean).join(', ');
-  const askPrice = deal.askingPrice || deal.contractPrice || 0;
-  const arv = deal.arv || 0;
-  const repairs = deal.repairEstimate || deal.estimatedRepairs || 0;
-  const profit = arv - askPrice - repairs;
-  const roi = askPrice > 0 ? ((profit / askPrice) * 100).toFixed(1) : '0';
+  const financials = readWholesaleFinancials(deal);
   const matchScore = typeof deal.matchScore === "number" ? deal.matchScore : null;
 
   const cardBorderClass = dragIntent === "like" 
@@ -1279,29 +1284,33 @@ function SwipeCard({ deal, likeOpacity, passOpacity, onView, onAcceptTerms, onCo
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-muted/50 rounded-lg p-3 text-center">
             <p className="text-xs text-muted-foreground">Ask Price</p>
-            <p className="font-bold text-lg">${askPrice.toLocaleString()}</p>
+            <p className="font-bold text-lg">{formatMarketflowMoney(financials.price)}</p>
           </div>
           <div className="bg-muted/50 rounded-lg p-3 text-center">
             <p className="text-xs text-muted-foreground">ARV</p>
-            <p className="font-bold text-lg">${arv.toLocaleString()}</p>
+            <p className="font-bold text-lg">{formatMarketflowMoney(financials.arv)}</p>
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-2 text-center">
           <div>
             <p className="text-xs text-muted-foreground">Repairs</p>
-            <p className="font-semibold text-sm">${repairs.toLocaleString()}</p>
+            <p className="font-semibold text-sm">{formatMarketflowMoney(financials.repairs)}</p>
           </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Profit</p>
-            <p className={`font-semibold text-sm ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              ${profit.toLocaleString()}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">ROI</p>
-            <p className="font-semibold text-sm">{roi}%</p>
-          </div>
+          {financials.hasRequiredInputs && financials.profit !== null && financials.roi !== null && (
+            <>
+              <div>
+                <p className="text-xs text-muted-foreground">Est. Profit</p>
+                <p className={`font-semibold text-sm ${financials.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {formatMarketflowMoney(financials.profit)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Est. ROI</p>
+                <p className="font-semibold text-sm">{financials.roi.toFixed(1)}%</p>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="flex gap-2">
@@ -1310,24 +1319,28 @@ function SwipeCard({ deal, likeOpacity, passOpacity, onView, onAcceptTerms, onCo
             View Deal
           </Button>
         </div>
-        <div className="flex gap-2">
-          <Button className="flex-1" onClick={onAcceptTerms} disabled={isAdvancing} data-testid="button-accept-deal-swipe">
-            <CheckCircle2 className="w-4 h-4 mr-2" />
-            Accept Terms
-          </Button>
-          <Button variant="secondary" className="flex-1" onClick={onCounterTerms} disabled={isAdvancing} data-testid="button-counter-deal-swipe">
-            <MessageSquare className="w-4 h-4 mr-2" />
-            Counter Offer
-          </Button>
-        </div>
-        <OpenOfferStudioButton
-          dealId={deal.id}
-          lane="WHOLESALE"
-          variant="outline"
-          className="w-full"
-          stopPropagation
-          disabled={isAdvancing}
-        />
+        {financials.hasRequiredInputs && (
+          <>
+            <div className="flex gap-2">
+              <Button className="flex-1" onClick={onAcceptTerms} disabled={isAdvancing} data-testid="button-accept-deal-swipe">
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                Accept Terms
+              </Button>
+              <Button variant="secondary" className="flex-1" onClick={onCounterTerms} disabled={isAdvancing} data-testid="button-counter-deal-swipe">
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Counter Offer
+              </Button>
+            </div>
+            <OpenOfferStudioButton
+              dealId={deal.id}
+              lane="WHOLESALE"
+              variant="outline"
+              className="w-full"
+              stopPropagation
+              disabled={isAdvancing}
+            />
+          </>
+        )}
       </CardContent>
     </Card>
   );
@@ -1356,19 +1369,24 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
   
   const address = deal.propertyAddress || deal.address || 'Property Address';
   const cityState = [deal.city, deal.state].filter(Boolean).join(', ');
-  const askPrice = deal.askingPrice || deal.contractPrice || 0;
-  const arv = deal.arv || 0;
-  const repairs = deal.repairEstimate || deal.estimatedRepairs || 0;
-  const profit = arv - askPrice - repairs;
+  const financials = readWholesaleFinancials(deal);
   const matchScore = typeof deal.matchScore === "number" ? deal.matchScore : null;
-  const roi = askPrice > 0 ? ((profit / askPrice) * 100).toFixed(1) : "0";
 
   // Calculator values
-  const calcOffer = customOffer ? parseFloat(customOffer) : askPrice;
-  const calcRepairs = customRepairs ? parseFloat(customRepairs) : repairs;
-  const calcProfit = arv - calcOffer - calcRepairs;
-  const calcROI = calcOffer > 0 ? ((calcProfit / calcOffer) * 100).toFixed(1) : "0";
-  const cashOnCash = calcOffer > 0 ? ((calcProfit / (calcOffer * 0.25)) * 100).toFixed(1) : "0"; // 25% down
+  const calcOffer = customOffer ? parseFloat(customOffer) : financials.price;
+  const calcRepairs = customRepairs ? parseFloat(customRepairs) : financials.repairs;
+  const hasCalculatorInputs =
+    financials.arv !== null &&
+    calcOffer !== null &&
+    Number.isFinite(calcOffer) &&
+    calcOffer > 0 &&
+    calcRepairs !== null &&
+    Number.isFinite(calcRepairs) &&
+    calcRepairs >= 0;
+  const calcProfit = hasCalculatorInputs
+    ? financials.arv! - calcOffer! - calcRepairs!
+    : null;
+  const calcROI = calcProfit !== null ? (calcProfit / calcOffer!) * 100 : null;
 
   const handleShare = async (type: "copy" | "email") => {
     const dealUrl = `${window.location.origin}/marketflow/deals/${deal.id}`;
@@ -1377,7 +1395,8 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
       toast({ title: "Link copied!", description: "Deal link copied to clipboard" });
     } else {
       const subject = encodeURIComponent(`Check out this deal: ${address}`);
-      const body = encodeURIComponent(`I found this reviewed opportunity:\n\n${address}\n${cityState}\nAsking: $${askPrice.toLocaleString()}\nARV: $${arv.toLocaleString()}\nProfit: $${profit.toLocaleString()}\n\nView details: ${dealUrl}`);
+      if (!financials.hasRequiredInputs || financials.profit === null) return;
+      const body = encodeURIComponent(`I found this reviewed opportunity:\n\n${address}\n${cityState}\nAsking: ${formatMarketflowMoney(financials.price)}\nARV: ${formatMarketflowMoney(financials.arv)}\nEstimated profit: ${formatMarketflowMoney(financials.profit)}\n\nView details: ${dealUrl}`);
       window.open(`mailto:?subject=${subject}&body=${body}`);
     }
   };
@@ -1396,16 +1415,18 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
             <TooltipContent><p>{isSaved ? "Saved" : "Save Deal"}</p></TooltipContent>
           </Tooltip>
           
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={(e) => { e.stopPropagation(); setShowCalculator(!showCalculator); }} data-testid={`quick-calc-${deal.id}`} aria-label="Deal calculator">
-                <Calculator className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent><p>Deal Calculator</p></TooltipContent>
-          </Tooltip>
+          {financials.hasRequiredInputs && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={(e) => { e.stopPropagation(); setShowCalculator(!showCalculator); }} data-testid={`quick-calc-${deal.id}`} aria-label="Deal calculator">
+                  <Calculator className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent><p>Deal Calculator</p></TooltipContent>
+            </Tooltip>
+          )}
           
-          <Popover>
+          {financials.hasRequiredInputs && <Popover>
             <PopoverTrigger asChild>
               <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={(e) => e.stopPropagation()} data-testid={`quick-share-${deal.id}`} aria-label="Share deal">
                 <Share2 className="w-4 h-4" />
@@ -1423,7 +1444,7 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
                 </Button>
               </div>
             </PopoverContent>
-          </Popover>
+          </Popover>}
           
           {onToggleCompare && (
             <Tooltip>
@@ -1446,7 +1467,7 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
             </Tooltip>
           )}
           
-          {deal.canRequestJv === true && (
+          {financials.hasRequiredInputs && deal.canRequestJv === true && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={(e) => { e.stopPropagation(); onAction("jv_request"); }} data-testid={`quick-jv-${deal.id}`} aria-label="JV request">
@@ -1457,14 +1478,14 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
             </Tooltip>
           )}
           
-          <Tooltip>
+          {financials.hasRequiredInputs && <Tooltip>
             <TooltipTrigger asChild>
               <Button size="icon" variant="default" className="h-8 w-8 rounded-full" onClick={(e) => { e.stopPropagation(); onAcceptTerms(); }} data-testid={`quick-accept-${deal.id}`} aria-label="Quick offer">
                 <Zap className="w-4 h-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent><p>Quick Offer</p></TooltipContent>
-          </Tooltip>
+          </Tooltip>}
         </div>
       </div>
 
@@ -1548,7 +1569,7 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
 
         {/* Inline Calculator Widget */}
         <AnimatePresence>
-          {showCalculator && (
+          {showCalculator && financials.hasRequiredInputs && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
@@ -1570,7 +1591,7 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
                     <label className="text-[10px] text-muted-foreground">Your Offer</label>
                     <Input 
                       type="number" 
-                      placeholder={askPrice.toString()} 
+                      placeholder={financials.price?.toString()}
                       value={customOffer}
                       onChange={(e) => setCustomOffer(e.target.value)}
                       className="h-7 text-xs"
@@ -1581,7 +1602,7 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
                     <label className="text-[10px] text-muted-foreground">Est. Repairs</label>
                     <Input 
                       type="number" 
-                      placeholder={repairs.toString()} 
+                      placeholder={financials.repairs?.toString()}
                       value={customRepairs}
                       onChange={(e) => setCustomRepairs(e.target.value)}
                       className="h-7 text-xs"
@@ -1592,17 +1613,17 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
                 <div className="grid grid-cols-3 gap-1 text-center">
                   <div className="bg-background rounded p-1.5">
                     <p className="text-[9px] text-muted-foreground">Profit</p>
-                    <p className={`font-bold text-xs ${calcProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      ${(calcProfit / 1000).toFixed(0)}K
+                    <p className={`font-bold text-xs ${calcProfit !== null && calcProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {formatMarketflowMoney(calcProfit, { compact: true })}
                     </p>
                   </div>
                   <div className="bg-background rounded p-1.5">
                     <p className="text-[9px] text-muted-foreground">ROI</p>
-                    <p className="font-bold text-xs">{calcROI}%</p>
+                    <p className="font-bold text-xs">{calcROI !== null ? `${calcROI.toFixed(1)}%` : "Not provided"}</p>
                   </div>
                   <div className="bg-background rounded p-1.5">
-                    <p className="text-[9px] text-muted-foreground">CoC (25%)</p>
-                    <p className="font-bold text-xs text-primary">{cashOnCash}%</p>
+                    <p className="text-[9px] text-muted-foreground">Inputs</p>
+                    <p className="font-bold text-xs text-primary">Directional</p>
                   </div>
                 </div>
               </div>
@@ -1613,34 +1634,37 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
         <div className="grid grid-cols-3 gap-2 mb-3 text-center">
           <div className="bg-muted/50 rounded p-2">
             <p className="text-[10px] text-muted-foreground">Ask</p>
-            <p className="font-bold text-sm">${(askPrice / 1000).toFixed(0)}K</p>
+            <p className="font-bold text-sm" data-testid={`text-deal-ask-${deal.id}`}>{formatMarketflowMoney(financials.price, { compact: true })}</p>
           </div>
           <div className="bg-muted/50 rounded p-2">
             <p className="text-[10px] text-muted-foreground">ARV</p>
-            <p className="font-bold text-sm">${(arv / 1000).toFixed(0)}K</p>
+            <p className="font-bold text-sm" data-testid={`text-deal-arv-${deal.id}`}>{formatMarketflowMoney(financials.arv, { compact: true })}</p>
           </div>
           <div className="bg-muted/50 rounded p-2">
-            <p className="text-[10px] text-muted-foreground">Profit</p>
-            <p className={`font-bold text-sm ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              ${(profit / 1000).toFixed(0)}K
-            </p>
+            <p className="text-[10px] text-muted-foreground">Repairs</p>
+            <p className="font-bold text-sm" data-testid={`text-deal-repairs-${deal.id}`}>{formatMarketflowMoney(financials.repairs, { compact: true })}</p>
           </div>
         </div>
 
-        {/* Workflow Indicators Row */}
-        <div className="flex items-center justify-between gap-2 mb-3 py-2 px-1 bg-muted/30 rounded text-xs">
-          <DueDiligenceProgress dealId={deal.id} />
-          <DocumentCount dealId={deal.id} />
-          <CommunicationSummary dealId={deal.id} />
-          <InlineROIBadge deal={{
-            contractPrice: deal.contractPrice,
-            askingPrice: deal.askingPrice,
-            arv: deal.arv,
-            repairEstimate: deal.repairEstimate,
-            estimatedRepairs: deal.estimatedRepairs,
-            assignmentFee: deal.assignmentFee
-          }} />
-        </div>
+        {financials.hasRequiredInputs && financials.profit !== null && financials.roi !== null ? (
+          <div className="grid grid-cols-2 gap-2 mb-3 rounded bg-muted/30 px-2 py-2 text-center text-xs">
+            <div data-testid={`text-deal-profit-${deal.id}`}>
+              <span className="text-muted-foreground">Est. profit </span>
+              <span className="font-semibold">{formatMarketflowMoney(financials.profit, { compact: true })}</span>
+            </div>
+            <div data-testid={`text-deal-roi-${deal.id}`}>
+              <span className="text-muted-foreground">Est. ROI </span>
+              <span className="font-semibold">{financials.roi.toFixed(1)}%</span>
+            </div>
+          </div>
+        ) : (
+          <p
+            className="mb-3 rounded border border-dashed px-3 py-2 text-xs leading-relaxed text-muted-foreground"
+            data-testid={`state-deal-financials-${deal.id}`}
+          >
+            Price, ARV, and repairs must be provided before calculations, sharing, or financial actions are available.
+          </p>
+        )}
 
         <div className="flex gap-2 mb-2">
           <Button variant="outline" className="flex-1" onClick={onView} data-testid={`button-view-deal-${deal.id}`}>
@@ -1648,25 +1672,29 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
             View Deal
           </Button>
         </div>
-        <div className="flex gap-2">
-          <Button className="flex-1" onClick={onAcceptTerms} data-testid={`button-accept-terms-${deal.id}`}>
-            <CheckCircle2 className="w-4 h-4 mr-2" />
-            Accept Terms
-          </Button>
-          <Button variant="secondary" className="flex-1" onClick={onCounterTerms} data-testid={`button-counter-terms-${deal.id}`}>
-            <MessageSquare className="w-4 h-4 mr-2" />
-            Counter Offer
-          </Button>
-        </div>
-        <div className="mt-2">
-          <OpenOfferStudioButton
-            dealId={deal.id}
-            lane="WHOLESALE"
-            variant="outline"
-            className="w-full"
-            stopPropagation
-          />
-        </div>
+        {financials.hasRequiredInputs && (
+          <>
+            <div className="flex gap-2">
+              <Button className="flex-1" onClick={onAcceptTerms} data-testid={`button-accept-terms-${deal.id}`}>
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                Accept Terms
+              </Button>
+              <Button variant="secondary" className="flex-1" onClick={onCounterTerms} data-testid={`button-counter-terms-${deal.id}`}>
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Counter Offer
+              </Button>
+            </div>
+            <div className="mt-2">
+              <OpenOfferStudioButton
+                dealId={deal.id}
+                lane="WHOLESALE"
+                variant="outline"
+                className="w-full"
+                stopPropagation
+              />
+            </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );
