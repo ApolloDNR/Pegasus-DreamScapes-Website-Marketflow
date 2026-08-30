@@ -3,12 +3,10 @@ import { useSEO } from "@/hooks/use-seo";
 import { ScrollReveal } from "@/components/animations";
 import { Button } from "@/components/ui/button";
 import { BuyboxesSection } from "@/components/buyboxes-section";
-import { PUBLIC_BUYBOXES } from "@/config/buyboxes";
 import { ArrowRight, Lock } from "lucide-react";
+import { seoFor } from "@shared/seo-routes";
 
-const BUYBOX_PILOT_DESCRIPTION =
-  `${PUBLIC_BUYBOXES.length} public buybox profiles are available in MarketFlow's controlled pilot. ` +
-  "Each outlines a target geography, deal type, and review criteria. Bring a property or request a notification when a reviewed fit appears.";
+const BUYBOX_SEO = seoFor("/marketflow/buyboxes");
 
 // Website Structure v1 FINAL §7 — dedicated public /marketflow/buyboxes
 // surface. Pulled off the MarketFlow landing so the gated landing stays
@@ -17,8 +15,9 @@ const BUYBOX_PILOT_DESCRIPTION =
 export default function MarketflowBuyboxes() {
   useSEO({
     title: "Pegasus Buyboxes",
-    description: BUYBOX_PILOT_DESCRIPTION,
+    description: BUYBOX_SEO.description,
     image: "/og/marketflow.png",
+    noIndex: true,
   });
 
   return (
@@ -44,19 +43,19 @@ export default function MarketflowBuyboxes() {
               className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] leading-[1.0] mb-6"
               data-testid="text-buyboxes-headline"
             >
-              Pegasus Buyboxes.
+              Buyboxes are not publicly open.
             </h1>
             <p className="text-base sm:text-lg text-cream/85 leading-relaxed max-w-3xl mb-8">
-              {BUYBOX_PILOT_DESCRIPTION}
+              No public buybox profiles, live inventory, automated matching, or notification program is active today. You may register interest in the controlled MarketFlow pilot; approval and future contact are not promised.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Link href="/submit">
+              <Link href="/marketflow/access">
                 <Button
                   size="lg"
                   className="text-sm uppercase tracking-[0.15em] px-7 py-6 bg-[hsl(var(--copper))] hover:bg-[hsl(27_56%_44%)] text-white font-semibold"
-                  data-testid="button-buyboxes-submit"
+                  data-testid="button-buyboxes-access"
                 >
-                  Submit a Property <ArrowRight className="ml-2 w-4 h-4" />
+                  Request pilot access <ArrowRight className="ml-2 w-4 h-4" />
                 </Button>
               </Link>
               <Link href="/marketflow">

@@ -120,6 +120,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
     description:
       "No public Buybox profiles, live inventory, automated matching, or deal-notification subscription are active today.",
     image: `${SITE_URL}/og/marketflow.png`,
+    noIndex: true,
   },
   "/ecosystem": {
     title: tag("The Pegasus Ecosystem"),
