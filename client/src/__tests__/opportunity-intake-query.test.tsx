@@ -110,6 +110,10 @@ describe("Bring an Opportunity query contract", () => {
       notes: expect.stringContaining("Intake intent: blueprint"),
     }));
     expect(String(payload.notes)).toContain("Referral reference: apollo-partner");
+    expect(payload).not.toHaveProperty("utmSource");
+    expect(payload).not.toHaveProperty("utmMedium");
+    expect(payload).not.toHaveProperty("utmCampaign");
+    expect(payload).not.toHaveProperty("referrer");
   });
 
   it("prefills a Property Owners situation and preserves its source label", async () => {
@@ -210,7 +214,7 @@ describe("Bring an Opportunity query contract", () => {
       consentAccepted: true,
     }));
     expect(String(payload.notes)).toContain(
-      "Directional Strategy Lab brief (visitor-entered; requires Pegasus review):",
+      "Directional Strategy Lab brief (visitor-entered; automated and unverified):",
     );
     expect(String(payload.notes)).toContain("Asking price / basis: $600,000");
     expect(String(payload.notes)).toContain("Projected exit value: $900,000");
@@ -218,7 +222,7 @@ describe("Bring an Opportunity query contract", () => {
     expect(String(payload.notes)).not.toContain("Modeled path:");
     expect(String(payload.notes)).not.toContain("$44,475 modeled spread");
     expect(String(payload.notes)).toContain(
-      "Intake facts changed after the Strategy Lab read; Pegasus must rerun the path comparison.",
+      "Intake facts changed after the Strategy Lab read; rerun the automated path comparison with the updated inputs before relying on it.",
     );
   });
 

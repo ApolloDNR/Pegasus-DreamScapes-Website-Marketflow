@@ -53,6 +53,18 @@ const vendorFormSchema = z.object({
   references: z.string().optional(),
   portfolio: z.string().optional(),
   notes: z.string().optional(),
+  consentContact: z.boolean().refine((value) => value, {
+    message: "Please agree before submitting.",
+  }),
+  referenceAuthorization: z.boolean(),
+}).superRefine((data, ctx) => {
+  if (data.references?.trim() && !data.referenceAuthorization) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["referenceAuthorization"],
+      message: "Confirm you are authorized to share reference information.",
+    });
+  }
 });
 
 type VendorFormValues = z.infer<typeof vendorFormSchema>;
@@ -177,14 +189,14 @@ function CategoriesSection() {
         <ScrollReveal className="text-center max-w-2xl mx-auto mb-16">
           <div className="flex items-center justify-center gap-4 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
-            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Trades We Work With</p>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Profile Categories</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
-            Six lanes. Real standards.
+            Six possible vendor lanes.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed">
-            We keep a short list per trade. Every vendor is referenced, insured where required, and matched to projects we're actively running.
+            These categories describe profiles Pegasus may consider. They are not an approved roster, evidence of current project demand, or a promise of matching or work.
           </p>
         </ScrollReveal>
 
@@ -357,6 +369,8 @@ function VendorFormSection() {
       references: "",
       portfolio: "",
       notes: "",
+      consentContact: false,
+      referenceAuthorization: false,
     },
   });
 
@@ -366,7 +380,10 @@ function VendorFormSection() {
       const firstName = nameParts[0] || "";
       const lastName = nameParts.slice(1).join(" ") || "";
 
-      const payload: Partial<InsertLead> = {
+      const payload: Partial<InsertLead> & {
+        consentContact: boolean;
+        consentCcpaAcknowledged: boolean;
+      } = {
         leadType: "vendor",
         source: "vendor_network_page",
         firstName,
@@ -383,8 +400,11 @@ function VendorFormSection() {
           availability: data.availability,
           references: data.references,
           portfolio: data.portfolio,
+          referenceAuthorization: data.referenceAuthorization,
         },
         notes: data.notes,
+        consentContact: data.consentContact,
+        consentCcpaAcknowledged: data.consentContact,
       };
 
       return await apiRequest("POST", "/api/leads", payload);
@@ -524,7 +544,7 @@ function VendorFormSection() {
                     <FormLabel>References (optional)</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="2–3 recent client / GC references with phone or email."
+                        placeholder="Names and professional relationship. Add contact details only with permission."
                         className="min-h-24 resize-none"
                         {...field}
                         value={field.value ?? ""}
@@ -555,6 +575,51 @@ function VendorFormSection() {
                         data-testid="textarea-vendor-notes"
                       />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <FormField control={form.control} name="consentContact" render={({ field }) => (
+                  <FormItem className="rounded-md border border-border/60 bg-muted/20 p-4">
+                    <div className="flex items-start gap-3">
+                      <FormControl>
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={(event) => field.onChange(event.target.checked)}
+                          className="mt-1 h-4 w-4 shrink-0 accent-primary"
+                          data-testid="checkbox-vendor-consent"
+                        />
+                      </FormControl>
+                      <FormLabel className="text-sm font-normal leading-relaxed">
+                        I agree Pegasus Dreamscapes may contact me about this vendor application.
+                        Pegasus may use the submitted profile and share it with service providers
+                        that operate the site as described in the <a className="underline underline-offset-2" href="/privacy">Privacy Policy</a>.
+                        Submission does not promise review, approval, placement, work, or payment.
+                      </FormLabel>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <FormField control={form.control} name="referenceAuthorization" render={({ field }) => (
+                  <FormItem className="rounded-md border border-border/60 bg-muted/20 p-4">
+                    <div className="flex items-start gap-3">
+                      <FormControl>
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={(event) => field.onChange(event.target.checked)}
+                          className="mt-1 h-4 w-4 shrink-0 accent-primary"
+                          data-testid="checkbox-vendor-reference-authorization"
+                        />
+                      </FormControl>
+                      <FormLabel className="text-sm font-normal leading-relaxed">
+                        If I included another person's reference information, I confirm I am
+                        authorized to share it for this application and understand Pegasus may
+                        contact that person only if it considers the profile for a specific scope.
+                      </FormLabel>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )} />

@@ -3,8 +3,31 @@ import { useLocation } from "wouter";
 import { isPegasusUrl } from "@/pegasus/routes";
 import PublicApp from "@/PublicApp";
 import { normalizeSpaPath } from "@shared/spa-routes";
+import { useSEO } from "@/hooks/use-seo";
+import {
+  isPrivateNoindexSpaPath,
+  seoFor,
+  seoNameFor,
+} from "@shared/seo-routes";
 
 const LegacyApp = lazy(() => import("@/LegacyApp"));
+
+function RouteSeoDefaults({ location }: { location: string }) {
+  const pathname = normalizeSpaPath(location);
+  const privateRoute = isPrivateNoindexSpaPath(pathname);
+  const seo = seoFor(pathname);
+  useSEO({
+    title: privateRoute ? "Private workspace" : seoNameFor(pathname),
+    description: privateRoute
+      ? "Private Pegasus workspace. Access and content are not public."
+      : seo.description,
+    image: seo.image,
+    type: seo.type,
+    noIndex: privateRoute || seo.noIndex,
+    noCanonical: privateRoute,
+  });
+  return null;
+}
 
 function RootLoader() {
   return (
@@ -27,13 +50,18 @@ function RootLoader() {
 export default function App() {
   const [location] = useLocation();
 
+  const metadata = <RouteSeoDefaults location={location} />;
+
   if (isPegasusUrl(normalizeSpaPath(location))) {
-    return <PublicApp />;
+    return <>{metadata}<PublicApp /></>;
   }
 
   return (
-    <Suspense fallback={<RootLoader />}>
-      <LegacyApp />
-    </Suspense>
+    <>
+      {metadata}
+      <Suspense fallback={<RootLoader />}>
+        <LegacyApp />
+      </Suspense>
+    </>
   );
 }

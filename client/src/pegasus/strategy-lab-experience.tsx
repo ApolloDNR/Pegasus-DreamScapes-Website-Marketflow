@@ -73,14 +73,14 @@ const INITIAL: LabState = {
   loanLtv: '75',
   loanRate: '7.5',
   vacancy: '8',
-  objective: 'Understand the strongest executable path',
+  objective: 'Compare the strongest modeled path',
   timing: 'Flexible',
 };
 
 const STEPS: Array<{ key: LabStep; num: string; label: string; hint: string }> = [
   { key: 'property', num: '01', label: 'Property', hint: 'Situation and facts' },
   { key: 'basis', num: '02', label: 'Basis', hint: 'Economics and assumptions' },
-  { key: 'strategy', num: '03', label: 'Paths', hint: 'Nine executable routes' },
+  { key: 'strategy', num: '03', label: 'Paths', hint: 'Nine modeled routes' },
   { key: 'review', num: '04', label: 'Brief', hint: 'Decision record' },
 ];
 
@@ -89,7 +89,7 @@ const SITUATIONS = ['Value-add opportunity', 'Owner needs options', 'Inherited o
 const OCCUPANCIES = ['Vacant', 'Owner occupied', 'Tenant occupied', 'Unknown or needs review'];
 const CONDITIONS = ['Turnkey', 'Light updates', 'Moderate renovation', 'Heavy renovation', 'Full reconstruction'];
 const ROLES = ['Exploring a property', 'Property owner', 'Deal partner or wholesaler', 'Investor or buyer', 'Agent or advisor', 'Capital partner'];
-const OBJECTIVES = ['Understand the strongest executable path', 'Maximize net value', 'Prioritize certainty and timing', 'Preserve control or optionality', 'Find a capital or operating partner'];
+const OBJECTIVES = ['Compare the strongest modeled path', 'Explore net-value sensitivity', 'Prioritize certainty and timing', 'Preserve control or optionality', 'Explore capital or operating assumptions'];
 const TIMINGS = ['Flexible', 'Within 90 days', 'Within 30 days', 'Time-sensitive'];
 
 const CALCULATOR_TABS: readonly CalcTabKey[] = [
@@ -505,7 +505,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
         },
       },
     });
-    peggy?.setPendingPrompt(`Explain this Strategy Lab read for ${property.address || 'the property'}, including the leading path, sensitive assumptions, and what Pegasus would need to verify.`);
+    peggy?.setPendingPrompt(`Explain this Strategy Lab read for ${property.address || 'the property'}, including the leading modeled path, sensitive assumptions, and which visitor-entered facts require independent verification.`);
     openPeggy();
   };
 
@@ -559,7 +559,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
           <div className="px-lab-masthead-copy">
             <p className="px-kicker">Pegasus Strategy Lab · Private working desk</p>
             <h1>Turn one property into a decision you can defend.</h1>
-            <p>Build the facts once, compare nine executable paths through the Pegasus underwriting engine, and carry the same brief into Peggy or a written Property Read.</p>
+            <p>Build the facts once, compare nine paths with a visitor-controlled automated model, and carry the same unverified brief into Peggy or the opportunity intake.</p>
           </div>
           <div className="px-lab-masthead-entry">
             <span><ShieldCheck aria-hidden="true" /> Directional, not an offer</span>
@@ -592,7 +592,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
 
             {step === 'property' && (
               <div className="px-lab-step">
-                <StepHeading title="Start with the situation, not a score." copy="These facts shape the underwriting memo, risk register, and which paths remain credible. The address stays in this browser unless you choose to carry the brief forward." />
+                <StepHeading title="Start with the situation, not a score." copy="These visitor-entered facts shape the automated memo, risk register, and modeled paths. The address stays in this browser unless you choose to carry the brief forward." />
                 <div className="px-lab-form-grid">
                   <div className="px-lab-wide"><TextField label="Property address or city" value={state.address} onChange={(value) => set('address', value)} placeholder="East Bay property or city" /></div>
                   <SelectField label="Property type" value={state.propertyType} onChange={(value) => set('propertyType', value)} options={PROPERTY_TYPES} />
@@ -653,7 +653,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
 
             {step === 'strategy' && (
               <div className="px-lab-step">
-                <StepHeading title="Read the leading paths—and their weak points." copy="The engine ranks nine Pegasus paths from the same facts. No bare score is shown: the evidence, sensitivity, and missing inputs remain attached to each conclusion." />
+                <StepHeading title="Read the leading paths—and their weak points." copy="The automated model ranks nine educational paths from the same visitor-entered facts. No bare score is shown: the evidence, sensitivity, and missing inputs remain attached to each conclusion." />
                 <div className="px-lab-form-grid px-lab-objective">
                   <div className="px-lab-wide"><SelectField label="Decision lens" value={state.objective} onChange={(value) => set('objective', value)} options={OBJECTIVES} hint="Used to frame the brief; it does not alter the underwriting math." /></div>
                 </div>
@@ -738,7 +738,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
                   <>
                     <section className="px-lab-decision-record" aria-label="Decision brief">
                   <div>
-                    <span>Recommendation</span>
+                    <span>Leading modeled path</span>
                     <strong>{laneDisplayName(topLane)}</strong>
                     <small>{topLane?.verdictLabel ?? 'Needs more data'}</small>
                   </div>
@@ -750,12 +750,12 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
                   <div>
                     <span>Unresolved risk</span>
                     <strong>{openQuestions[0] ?? 'No core input gap identified'}</strong>
-                    <small>{openQuestions.length > 1 ? `${openQuestions.length - 1} additional questions remain` : 'Pegasus diligence still applies'}</small>
+                    <small>{openQuestions.length > 1 ? `${openQuestions.length - 1} additional questions remain` : 'Independent verification still applies'}</small>
                   </div>
                   <div>
                     <span>Next action</span>
                     <strong>{snapshot.memo.nextStep}</strong>
-                    <small>Pegasus review before execution</small>
+                    <small>Automated suggestion, not an instruction</small>
                   </div>
                 </section>
                 <details className="px-lab-method-note">
@@ -774,7 +774,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
                   </section>
                   <section>
                     <p className="px-lab-label">Open questions</p>
-                    {openQuestions.length ? <ul>{openQuestions.map((risk) => <li key={risk}><CircleAlert aria-hidden="true" />{risk}</li>)}</ul> : <p className="px-lab-complete"><Check aria-hidden="true" /> Core desk inputs are present. Pegasus diligence still applies.</p>}
+                    {openQuestions.length ? <ul>{openQuestions.map((risk) => <li key={risk}><CircleAlert aria-hidden="true" />{risk}</li>)}</ul> : <p className="px-lab-complete"><Check aria-hidden="true" /> Core desk inputs are present. Independent verification still applies.</p>}
                   </section>
                 </div>
                 {marketRent > 0 && (
@@ -795,7 +795,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
                   <button type="button" onClick={saveDraft}><Save aria-hidden="true" /> Save in this browser</button>
                   <button type="button" onClick={discussWithPeggy}><MessageCircle aria-hidden="true" /> Ask Peggy about this brief</button>
                   <button type="button" className="is-primary" onClick={carryToIntake}>
-                    Request a written Property Read <ArrowRight aria-hidden="true" />
+                    Carry to opportunity intake <ArrowRight aria-hidden="true" />
                   </button>
                 </div>
                   </>
@@ -831,7 +831,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
               <div><dt>Decision lens</dt><dd>{state.objective}</dd></div>
             </dl>
             <div className="px-lab-brief-rule" />
-            <p>One record follows the property from first read to Peggy and the intake desk. Pegasus still verifies market support, title, occupancy, condition, capital, and written terms.</p>
+            <p>This browser record can move from the automated model to Peggy and the intake desk. You remain responsible for independently verifying market support, title, occupancy, condition, capital, and written terms.</p>
             <button type="button" onClick={carryToIntake} disabled={!hasDecisionBasis}>Carry this brief into intake <ArrowRight aria-hidden="true" /></button>
           </aside>
         </div>
@@ -859,7 +859,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
       <section className="px-lab-boundary" data-testid="text-strategy-disclaimer">
         <Hammer aria-hidden="true" />
         <div><p className="px-kicker">The operating boundary</p><h2>The Lab organizes a decision. It does not replace diligence.</h2></div>
-        <p>Strategy Lab outputs are preliminary and directional. They are not legal, tax, lending, accounting, appraisal, engineering, securities, or construction advice. All outputs are subject to a written Pegasus read, market conditions, property condition, title, occupancy, and written agreements.</p>
+        <p>Strategy Lab outputs come from visitor-entered, unverified assumptions and an automated model. They are preliminary and directional, not legal, tax, lending, accounting, appraisal, engineering, securities, construction, or investment advice. Carrying a brief into intake does not guarantee review, response, routing, an offer, or a timeline.</p>
       </section>
     </div>
   );

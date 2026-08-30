@@ -22,6 +22,48 @@ const tag = (page: string) => `${page} · ${BRAND}`;
 export const SITE_URL = "https://pegasusdreamscapes.com";
 export const DEFAULT_OG_IMAGE = `${SITE_URL}/og/default.png`;
 
+const PRIVATE_NOINDEX_EXACT_PATHS = new Set([
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+  "/saved",
+  "/strategy-lab/library",
+  "/strategy-lab/submitted",
+  "/strategy-lab/blueprint-confirmed",
+  "/dashboard",
+  "/hq",
+  "/dealflow/hq",
+]);
+
+const PRIVATE_NOINDEX_PREFIXES: readonly RegExp[] = [
+  /^\/admin(?:\/|$)/,
+  /^\/snapshot(?:\/|$)/,
+  /^\/profile(?:\/|$)/,
+  /^\/offer-studio(?:\/|$)/,
+  /^\/dealflow\/project(?:\/|$)/,
+];
+
+const PUBLIC_MARKETFLOW_PATHS = new Set([
+  "/marketflow",
+  "/marketflow/access",
+  "/marketflow/buyboxes",
+]);
+
+/** Account, operator, token, and administrative surfaces are never canonical. */
+export function isPrivateNoindexSpaPath(path: string): boolean {
+  const raw = (path || "/").split(/[?#]/, 1)[0] || "/";
+  const withLeadingSlash = raw.startsWith("/") ? raw : `/${raw}`;
+  const pathname = withLeadingSlash === "/" ? "/" : withLeadingSlash.replace(/\/+$/, "");
+
+  if (PRIVATE_NOINDEX_EXACT_PATHS.has(pathname)) return true;
+  if (PRIVATE_NOINDEX_PREFIXES.some((pattern) => pattern.test(pathname))) return true;
+  if (pathname.startsWith("/marketflow/")) {
+    return !PUBLIC_MARKETFLOW_PATHS.has(pathname);
+  }
+  return false;
+}
+
 export const SEO_ROUTES: Record<string, SeoRoute> = {
   // Master Blueprint v5.1 — homepage promise + copy-deck meta (supersedes
   // issue #22 §12).

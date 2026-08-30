@@ -19,10 +19,10 @@ import { Peggy } from "@/pegasus/peggy";
 import { PEGGY_COMPLIANCE } from "@/pegasus/data";
 
 const STRATEGY_DISCLAIMER_PRIMARY =
-  "Strategy Lab outputs are preliminary and directional. They are not legal, tax, lending, accounting, appraisal, engineering, securities, or construction advice. All outputs are subject to a written Pegasus read, market conditions, property condition, title, occupancy, and written agreements.";
+  "Strategy Lab outputs come from visitor-entered, unverified assumptions and an automated model. They are preliminary and directional, not legal, tax, lending, accounting, appraisal, engineering, securities, construction, or investment advice. Carrying a brief into intake does not guarantee review, response, routing, an offer, or a timeline.";
 
 const STRATEGY_DISCLAIMER_SECONDARY =
-  "Carry is modeled as a flat annual rate on basis; it simplifies financing structure, draw timing, and contingencies, and excludes transfer taxes. Every real read is handled by Pegasus in writing.";
+  "Carry is modeled as a flat annual rate on basis; it simplifies financing structure, draw timing, and contingencies, and excludes transfer taxes. Independently verify every material input before acting.";
 
 const PEGGY_COMPLIANCE_TEXT =
   "Peggy is an AI intake assistant. She does not approve deals, make offers, or provide legal, tax, lending, or investment advice.";

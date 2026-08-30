@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { isPreviewHostname } from "@shared/preview-hosts";
+import { isPrivateNoindexSpaPath } from "@shared/seo-routes";
 
 interface SEOProps {
   title?: string;
@@ -22,7 +23,7 @@ const BRAND = "Pegasus Dreamscapes";
 // composed `page · brand` titles, not this locked base title).
 const BASE_TITLE = "Pegasus Dreamscapes — Complex Real Estate, Made Executable";
 const BASE_DESCRIPTION =
-  "A real estate operating company for complex opportunities in the East Bay. Bring a property, a deal, or a project and get a straight read on the path forward.";
+  "East Bay real estate education, one documented project record, and private property, relationship, and representation intake.";
 const SITE_URL = "https://pegasusdreamscapes.com";
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og/default.png`;
 
@@ -74,6 +75,7 @@ export function useSEO({
   noCanonical,
   noTagline,
 }: SEOProps = {}) {
+  const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
   useEffect(() => {
     // Per-page titles always drop the tagline to stay under the SERP
     // truncation limit. `noTagline` is accepted for backwards-compat with
@@ -86,6 +88,7 @@ export function useSEO({
     const ogImage = absoluteImage(image);
     const previewHost =
       typeof window !== "undefined" && isPreviewHostname(window.location.hostname);
+    const privateRoute = isPrivateNoindexSpaPath(pathname);
     const url =
       typeof window !== "undefined"
         ? previewHost
@@ -102,7 +105,7 @@ export function useSEO({
       "robots",
       previewHost
         ? "noindex, nofollow, noarchive, nosnippet"
-        : noIndex
+        : noIndex || privateRoute
           ? "noindex, nofollow"
           : "index, follow",
     );
@@ -121,7 +124,7 @@ export function useSEO({
     setMeta('meta[name="twitter:description"]', "name", "twitter:description", desc);
     setMeta('meta[name="twitter:image"]', "name", "twitter:image", ogImage);
 
-    if (previewHost || noCanonical) {
+    if (previewHost || noCanonical || privateRoute) {
       document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.remove();
     } else {
       setLink("canonical", url);
@@ -130,5 +133,5 @@ export function useSEO({
     return () => {
       document.title = BASE_TITLE;
     };
-  }, [title, description, type, image, noIndex, noCanonical, noTagline]);
+  }, [title, description, type, image, noIndex, noCanonical, noTagline, pathname]);
 }

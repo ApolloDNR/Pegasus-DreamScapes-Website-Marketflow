@@ -36,6 +36,7 @@ export const REQUIRED_CONTACT_CONSENT_LEAD_TYPES: ReadonlySet<string> = new Set(
   "blueprint_request",
   "seller",
   "marketflow_access",
+  "vendor",
 ]);
 
 const DEFAULT_STAFF_NOTIFICATION_EMAIL = "apollo@pegasusdreamscapes.com";
@@ -115,6 +116,9 @@ export function consentVersionForLead(leadType: unknown, source: unknown): strin
 
   if (normalizedSource === "marketflow_access_page" || normalizedType === "marketflow_access") {
     return "marketflow-access-contact-v1";
+  }
+  if (normalizedSource === "vendor_network_page" || normalizedType === "vendor") {
+    return "vendor-network-contact-v1";
   }
   if (normalizedSource === "sell_page" || normalizedType === "seller") {
     return "seller-strategy-contact-v1";

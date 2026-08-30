@@ -120,7 +120,7 @@ describe("Pegasus LeadForm explicit contact consent", () => {
     expect(consent).not.toBeChecked();
 
     const submit = screen.getByRole("button", {
-      name: /request my review/i,
+      name: /send property context/i,
     });
     fireEvent.submit(submit.closest("form")!);
 
@@ -139,7 +139,7 @@ describe("Pegasus LeadForm explicit contact consent", () => {
     now = 14_500;
 
     const submit = screen.getByRole("button", {
-      name: /request my review/i,
+      name: /send property context/i,
     });
     fireEvent.submit(submit.closest("form")!);
 

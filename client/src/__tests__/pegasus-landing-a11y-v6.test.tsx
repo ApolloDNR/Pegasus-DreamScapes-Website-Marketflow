@@ -181,21 +181,21 @@ const SIGNATURE_ROUTES: SignatureRoute[] = [
   },
   {
     path: "/property-owners",
-    pageHeading: /A difficult property does not always need a conventional solution/i,
+    pageHeading: /A complex property starts with accurate facts, not a promised outcome/i,
     groupName: "Common owner situations",
     initialChoice: "Significant repairs",
     nextChoice: "Inherited property",
     outputSelector: ".po-path",
-    nextOutput: /Probate timing, siblings, and an old house at once/i,
+    nextOutput: /Record the known ownership, probate or trust status, decision-makers, and timing/i,
   },
   {
     path: "/deal-partners",
-    pageHeading: /You found the opportunity\. We help make it executable/i,
+    pageHeading: /A credible deal submission makes the facts and the proposed role clear/i,
     groupName: "What the deal is missing",
     initialChoice: "Seller access or negotiation",
     nextChoice: "Underwriting",
     outputSelector: ".dp-answer",
-    nextOutput: /Our own numbers on the deal/i,
+    nextOutput: /Separate supported property facts from visitor-entered scope/i,
   },
 ];
 
@@ -447,7 +447,7 @@ describe("Pegasus Strategy Lab workspace accessibility", () => {
 
     const boundary = within(main).getByTestId("text-strategy-disclaimer");
     expect(boundary).toHaveTextContent(
-      "Strategy Lab outputs are preliminary and directional. They are not legal, tax, lending, accounting, appraisal, engineering, securities, or construction advice. All outputs are subject to a written Pegasus read, market conditions, property condition, title, occupancy, and written agreements.",
+      "Strategy Lab outputs come from visitor-entered, unverified assumptions and an automated model. They are preliminary and directional, not legal, tax, lending, accounting, appraisal, engineering, securities, construction, or investment advice. Carrying a brief into intake does not guarantee review, response, routing, an offer, or a timeline.",
     );
   });
 

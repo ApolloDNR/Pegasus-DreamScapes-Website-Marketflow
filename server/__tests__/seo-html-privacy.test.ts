@@ -93,7 +93,6 @@ describe("raw HTML private-route SEO boundary", () => {
     "/strategy-lab",
     "/marketflow",
     "/marketflow/access",
-    "/marketflow/buyboxes",
   ])("preserves canonical public SEO for %s", (pathname) => {
     const html = injectSeo(htmlShell, pathname);
 
@@ -103,5 +102,14 @@ describe("raw HTML private-route SEO boundary", () => {
       `<link rel="canonical" href="https://pegasusdreamscapes.com${pathname}" />`,
     );
     expect(html).toContain('type="application/ld+json"');
+  });
+
+  it("keeps the unpublished buybox surface out of the index", () => {
+    const html = injectSeo(htmlShell, "/marketflow/buyboxes");
+
+    expect(isPrivateNoindexSpaPath("/marketflow/buyboxes")).toBe(false);
+    expect(robotsContent(html)).toBe("noindex, nofollow");
+    expect(html).not.toContain('rel="canonical"');
+    expect(html).not.toContain('type="application/ld+json"');
   });
 });

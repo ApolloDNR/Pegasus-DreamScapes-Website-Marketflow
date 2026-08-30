@@ -57,9 +57,9 @@ const ROLE_OPTIONS = [
 export const CONTACT_FORM: FormCfg = {
   role: 'I have a property (Seller)',
   intent: 'property-review',
-  heading: <>Start a <span className="italic text-[var(--accent)]">Property Review.</span></>,
-  lead: 'Inherited, distressed, or simply complicated? Send the situation for a private review and a candid decision about whether Pegasus may be a fit.',
-  submit: 'Request My Review',
+  heading: <>Share a <span className="italic text-[var(--accent)]">property situation.</span></>,
+  lead: 'Inherited, distressed, or simply complicated? Record the situation for possible consideration. Submission does not guarantee review, response, routing, an offer, or a timeline.',
+  submit: 'Send property context',
   third: { label: 'Property address or area', placeholder: 'Street, city, or neighborhood', kind: 'context' },
   messageLabel: 'The situation',
   messagePlaceholder: 'Tell us what is going on. The more context, the better.',
@@ -69,7 +69,7 @@ export const DEVELOPMENT_FORM: FormCfg = {
   role: 'I have a property (Seller)',
   intent: 'development',
   heading: <>Start a <span className="italic text-[var(--accent-bright)]">build conversation.</span></>,
-  lead: 'A lot, a tired property, an ADU idea, or a ground-up vision? Tell us the scope. We underwrite before we build, and we will tell you straight whether it pencils.',
+  lead: 'A lot, a tired property, an ADU idea, or a ground-up vision? Share the known scope and constraints. Submission does not promise a feasibility opinion, project role, response, budget, or schedule.',
   submit: 'Send the build scope',
   third: { label: 'Property or lot address', placeholder: 'Street address', kind: 'property-address' },
   messageLabel: 'The build scope',
@@ -79,9 +79,9 @@ export const DEVELOPMENT_FORM: FormCfg = {
 export const STRATEGYLAB_FORM: FormCfg = {
   role: 'I have a property (Seller)',
   intent: 'strategy-snapshot',
-  heading: <>Get a <span className="italic text-[var(--accent-bright)]">Property Read.</span></>,
-  lead: 'Run the numbers above for an Instant Strategy Preview, then send the situation for review. The automated model is preliminary; any human follow-up is conditional on fit and capacity.',
-  submit: 'Request a Property Read',
+  heading: <>Carry an <span className="italic text-[var(--accent-bright)]">automated brief.</span></>,
+  lead: 'Run the model above, then choose whether to carry the visitor-entered brief into intake. Submission does not guarantee human review, response, routing, an offer, or a timeline.',
+  submit: 'Carry to opportunity intake',
   third: { label: 'Property address or area', placeholder: 'Street, city, or neighborhood', kind: 'context' },
   messageLabel: 'The situation',
   messagePlaceholder: 'Acquisition price, scope of work, and what you are weighing. The more context, the better.',
@@ -327,7 +327,9 @@ export function LeadForm({
         <span>
           I agree Pegasus Dreamscapes may contact me by email or phone about this submission.
           Pegasus uses this information to evaluate and route the request and may share it with
-          service providers or qualified professionals involved in that review. See the{' '}
+          service providers that operate the site. Pegasus will provide separate notice and ask
+          permission before sharing it with an independent professional unless disclosure is
+          legally required. See the{' '}
           <a className="underline underline-offset-2" href="/privacy">Privacy Policy</a> for
           retention, rights, and deletion requests. Submitting does not create an agency
           relationship, offer, or agreement.
@@ -1116,7 +1118,7 @@ export function StrategyCalculator({ go, model }: { go: Nav; model: StrategyMode
                   <div className="flex flex-col sm:flex-row flex-wrap gap-3">
                     <button type="button" onClick={() => go('submit')}
                       className="btn-solid-light px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
-                      Submit for a Property Read <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                      Carry to opportunity intake <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                     </button>
                     <SaveStrategyButton snapshot={model.snapshot}
                       title={`${tier.strategy} - ${tier.range}`} />
@@ -1129,10 +1131,10 @@ export function StrategyCalculator({ go, model }: { go: Nav; model: StrategyMode
         <div className="mt-10 max-w-2xl rounded-[3px] border border-[var(--line)] bg-[var(--bg-2)] p-6" data-testid="text-strategy-disclaimer">
           <div className="pg-label !text-[8px] !tracking-[0.18em] text-[var(--accent)] mb-3">Disclaimer</div>
           <p className="text-[0.85rem] leading-relaxed text-[var(--text-2)]">
-            Strategy Lab outputs are preliminary and directional. They are not legal, tax, lending, accounting, appraisal, engineering, securities, or construction advice. All outputs are subject to a written Pegasus read, market conditions, property condition, title, occupancy, and written agreements.
+            Strategy Lab outputs come from visitor-entered, unverified assumptions and an automated model. They are preliminary and directional, not legal, tax, lending, accounting, appraisal, engineering, securities, construction, or investment advice. Carrying a brief into intake does not guarantee review, response, routing, an offer, or a timeline.
           </p>
           <p className="mt-3 text-[0.78rem] leading-relaxed text-[var(--muted)]">
-            Carry is modeled as a flat annual rate on basis; it simplifies financing structure, draw timing, and contingencies, and excludes transfer taxes. Every real read is handled by Pegasus in writing.
+            Carry is modeled as a flat annual rate on basis; it simplifies financing structure, draw timing, and contingencies, and excludes transfer taxes. Independently verify every material input before acting.
           </p>
         </div>
       </div>
@@ -1157,14 +1159,14 @@ export function StrategyTierStrip() {
       cta: 'You are using it above', action: null as null | (() => void), emphasis: false,
     },
     {
-      key: 'snapshot', name: 'Property Read', price: 'Conditional / Written Read',
-      desc: 'Send the situation for a short written read when the facts, fit, and current capacity support one. Timing is not guaranteed.',
-      cta: 'Request a Property Read', action: () => goSubmit(), emphasis: true,
+      key: 'snapshot', name: 'Opportunity Intake', price: 'Optional submission',
+      desc: 'Carry the visitor-entered model into intake for possible consideration. No review, response, routing, offer, or timeline is promised.',
+      cta: 'Carry to intake', action: () => goSubmit(), emphasis: true,
     },
     {
-      key: 'blueprint', name: 'Deal Blueprint', price: 'By Review',
-      desc: 'A full tactical plan: underwriting, scope, exit options, and a sequenced path. Scoped after a Property Read, not bought off the shelf.',
-      cta: 'Request Blueprint Read', action: () => goSubmit('blueprint'), emphasis: false,
+      key: 'blueprint', name: 'Deal Blueprint request', price: 'Separately scoped if offered',
+      desc: 'Request possible separately scoped property work. Public intake does not promise acceptance, pricing, turnaround, or delivery.',
+      cta: 'Share a Blueprint request', action: () => goSubmit('blueprint'), emphasis: false,
     },
   ];
   return (
@@ -1172,7 +1174,7 @@ export function StrategyTierStrip() {
       <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
         <SectionHead eyebrow="Strategy Lab - Planning depth"
           title={<>Go as far as the deal deserves.</>}
-          copy="The cockpit starts with a directional read, then escalates only when the property earns more attention: written Property Read first, Blueprint Read only when the deal needs a full plan." />
+          copy="Start with the visitor-controlled model. If useful, carry the unverified brief into intake or request possible separately scoped work without assuming acceptance or delivery." />
         <div className="grid md:grid-cols-3 gap-5" data-testid="strategy-tier-strip">
           {tiers.map((t) => (
             <div key={t.key}

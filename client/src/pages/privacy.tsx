@@ -16,10 +16,12 @@ const SECTIONS = [
 
 export default function Privacy() {
   useSEO({
-    title: "Privacy Policy",
+    title: "Privacy Policy Draft",
     description:
-      "Privacy policy for Pegasus Dreamscapes Corp. What we collect, how we use it, and how to reach us.",
+      "Operator-prepared privacy notice for Pegasus Dreamscapes Corp., pending qualified legal review.",
     image: "/og/default.png",
+    noIndex: true,
+    noCanonical: true,
   });
 
   return (
@@ -44,6 +46,9 @@ export default function Privacy() {
           </h1>
           <p className="text-lg text-cream/85 leading-relaxed max-w-2xl">
             Pegasus Dreamscapes Corp. respects your privacy. This page explains what we collect when you use the site, why we collect it, and how to reach us if you want it changed or removed.
+          </p>
+          <p className="mt-6 inline-flex rounded-full border border-[#e3a463]/50 bg-black/20 px-4 py-2 text-xs font-supporting font-semibold uppercase tracking-[0.16em] text-[#f0c18f]">
+            Operator-prepared draft pending qualified legal review
           </p>
         </div>
       </section>
@@ -74,7 +79,7 @@ export default function Privacy() {
           <div className="grid lg:grid-cols-2 gap-x-12 gap-y-14">
             <LegalBlock id="scope" idx={0} icon={SECTIONS[0].icon} kicker={SECTIONS[0].kicker} title={SECTIONS[0].title}>
               <p>
-                This policy covers pegasusdreamscapes.com and the intake forms reachable from it (Strategy Review, Contact, MarketFlow Access, Vendor Network). It does not cover third-party sites you may reach through outbound links.
+                This operator-prepared draft covers pegasusdreamscapes.com, its public forms, account and sign-in screens, private MarketFlow pilot surfaces, Peggy, local Strategy Lab drafts, and share-link pages. It does not cover third-party sites you may reach through outbound links. Qualified privacy counsel has not yet approved this draft for production collection.
               </p>
             </LegalBlock>
 
@@ -86,13 +91,19 @@ export default function Privacy() {
                 When you chat with Peggy, we collect the conversation content you send and associate it with a server-created conversation record.
               </p>
               <p>
-                We do not ask for, store, or process financial account numbers, social security numbers, or sensitive personal categories through the public site.
+                If you create an account, the authentication provider receives your email and password and Pegasus receives an account identifier, account identity, declared role, and sign-in activity. Pegasus does not receive a readable copy of your password. Private MarketFlow product activity can include access requests, saved records, messages, and actions inside the controlled pilot.
+              </p>
+              <p>
+                A browser-only Strategy Lab draft stays in local browser storage unless you deliberately submit its facts through an intake. If a share control is available and you create a public share link, anyone with that bearer link may see the information rendered on that page until the link is removed or disabled.
+              </p>
+              <p>
+                Public forms are not intended for financial account numbers, social security numbers, government IDs, health information, or other sensitive personal categories. Do not submit those items through the public site.
               </p>
             </LegalBlock>
 
             <LegalBlock id="how-we-use-it" idx={2} icon={SECTIONS[2].icon} kicker={SECTIONS[2].kicker} title={SECTIONS[2].title}>
               <p>
-                We use what you submit to read your situation, route it to the right lane, and reply to you. We use aggregate page metrics to understand which content is useful and to keep the site running. That is the entire use.
+                We use what you submit to record and route a request and, if Pegasus chooses to respond, to contact you. Account data supports authentication and private product access. Product activity supports the feature you use, security, troubleshooting, and audit history. If you consent to analytics, bounded page and CTA events help us understand site use.
               </p>
               <p>
                 We do not use your information for advertising, profile-building, or resale.
@@ -101,7 +112,10 @@ export default function Privacy() {
 
             <LegalBlock id="sharing" idx={3} icon={SECTIONS[3].icon} kicker={SECTIONS[3].kicker} title={SECTIONS[3].title}>
               <p>
-                We share information only with the service providers that run the site (hosting, email delivery, analytics, and AI processing) under contract, and only as needed to deliver the service. When you use Peggy, we send Peggy conversation content to our configured AI processing provider so it can generate Peggy's reply. We share information with law enforcement only when legally required.
+                We disclose information to service providers that operate the site, including hosting, authentication, email delivery, consented analytics, storage, and AI processing, only as needed for their function. When you use Peggy, its conversation content is sent to the configured AI processing provider to generate a reply.
+              </p>
+              <p>
+                Pegasus will provide separate notice and permission before sharing submitted information with an independent professional, potential counterparty, or referral recipient unless disclosure is legally required. We may preserve or disclose records when reasonably necessary to comply with law, protect the service, or address fraud or security incidents.
               </p>
               <p>
                 We will never sell your personal information.
@@ -110,7 +124,7 @@ export default function Privacy() {
 
             <LegalBlock id="cookies" idx={4} icon={SECTIONS[4].icon} kicker={SECTIONS[4].kicker} title={SECTIONS[4].title}>
               <p>
-                Local browser storage remembers your light/dark theme and consent choices. Strategy Lab retains a random anonymous Strategy Lab session identifier in local browser storage so an anonymous snapshot can be attached to your account if you sign in, and uses session storage to count free runs only for the current browsing session. The identifier is randomly generated, not derived from your device or browser characteristics.
+                Local browser storage remembers your light/dark theme and consent choices. The current Strategy Lab stores one browser-only property and financial draft under this site's local storage. That draft is not an account library and is not submitted to Pegasus merely because you save it in the browser.
               </p>
               <p>
                 If you choose to save a Strategy Lab property and financial draft, its inputs are stored on your device in local browser storage. Your browser may keep that draft until you clear it or the browser removes site data; saving the local draft does not itself submit it to Pegasus.
@@ -119,7 +133,7 @@ export default function Privacy() {
                 Peggy's active server conversation ID and access credential stay only in page memory, not in local browser storage. Closing and reopening Peggy on the same loaded page may continue that conversation. Reloading or closing the page ends that browser view. If you explicitly choose Save chat, Pegasus writes a separate transcript copy to local browser storage so you can revisit that saved copy.
               </p>
               <p>
-                Sign-in services may use essential browser session data to keep you signed in. Analytics (Plausible) only loads after you accept analytics in the consent banner. We do not use browser fingerprinting, advertising trackers, cross-site identifiers, or third-party retargeting pixels.
+                Sign-in services may use essential browser session data to keep you signed in. Analytics (Plausible) and first-party CTA measurement only operate after you accept analytics in the consent banner. CTA measurement omits raw referrers and query strings. We do not intentionally use browser fingerprinting, advertising trackers, cross-site identifiers, or third-party retargeting pixels in the current build.
               </p>
             </LegalBlock>
 
@@ -128,13 +142,13 @@ export default function Privacy() {
                 You can ask us what we have about you, ask us to correct it, ask us to delete it, or opt out of any future contact. Residents of California, the EU, and other jurisdictions with stronger privacy laws keep every right those laws give you.
               </p>
               <p>
-                Email apollo@pegasusdreamscapes.com with the request. We will respond within 30 days.
+                Email apollo@pegasusdreamscapes.com with the request. Pegasus will verify the request and respond within the period required by applicable law; some records may need to be retained for security, fraud prevention, legal obligations, or an active dispute.
               </p>
             </LegalBlock>
 
             <LegalBlock id="security" idx={6} icon={SECTIONS[6].icon} kicker={SECTIONS[6].kicker} title={SECTIONS[6].title}>
               <p>
-                We use reasonable technical and organizational safeguards to protect what you submit. No internet system is perfectly secure. We retain submissions for as long as they are relevant to the work, then delete or anonymize them.
+                We use reasonable technical and organizational safeguards to protect what you submit. No internet system is perfectly secure. Account and product records are retained while needed to operate the account or feature; request and communication records are retained while relevant to the request and any legal obligations. Local browser drafts remain until you clear them or the browser removes site data. Backups and security logs may expire on a different schedule. Final production retention periods require qualified legal review.
               </p>
             </LegalBlock>
 

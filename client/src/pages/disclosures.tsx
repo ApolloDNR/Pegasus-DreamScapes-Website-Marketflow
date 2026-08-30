@@ -1,8 +1,16 @@
 import { useSEO } from "@/hooks/use-seo";
 import { ScrollReveal } from "@/components/animations";
-import { Shield, AlertCircle, BookOpen, MessageSquare, Home as HomeIcon, Mail } from "lucide-react";
+import {
+  Shield,
+  AlertCircle,
+  BookOpen,
+  MessageSquare,
+  Home as HomeIcon,
+  Mail,
+} from "lucide-react";
 
 const JUMP_NAV = [
+  { id: "disclosure-identity", label: "Identity & brokerage", icon: Shield },
   { id: "disclosure-securities", label: "Securities", icon: AlertCircle },
   { id: "disclosure-realestate", label: "Real estate", icon: HomeIcon },
   { id: "disclosure-education", label: "Education", icon: BookOpen },
@@ -76,6 +84,39 @@ export default function Disclosures() {
           <ScrollReveal>
             <DisclosureBlock
               idx={0}
+              icon={Shield}
+              kicker="Identity, license & brokerage"
+              title="Pegasus and licensed representation are separate."
+              testId="disclosure-identity"
+            >
+              <p>
+                Pegasus Dreamscapes Corp. is a real estate operating company, not a
+                real estate brokerage.
+              </p>
+              <p>
+                Paolo Ariel Duran Ramirez uses “Apollo” as a public-facing name. For
+                license verification, California DRE records list salesperson CA DRE
+                #02333658 under Duran Ramirez, Paolo Ariel. The responsible broker
+                listed in California DRE records is BMP Realty Inc DBA Keller Williams
+                Realty-East Bay, CA DRE #01277896. Verify current status, including
+                license and affiliation, with the California DRE before engagement.
+              </p>
+              <p>
+                Any licensed representation is separate from Pegasus and requires a
+                separate written brokerage agreement. Visiting, submitting, or using
+                this site does not create an agency relationship.
+              </p>
+              <p>
+                This page is an operator-prepared draft pending qualified legal and
+                broker review. It is not legal advice. Site-copy consistency date:
+                August 2026.
+              </p>
+            </DisclosureBlock>
+          </ScrollReveal>
+
+          <ScrollReveal>
+            <DisclosureBlock
+              idx={1}
               icon={AlertCircle}
               kicker="Not an offer of securities"
               title="This site is not an investment solicitation."
@@ -92,7 +133,7 @@ export default function Disclosures() {
 
           <ScrollReveal delay={0.1}>
             <DisclosureBlock
-              idx={1}
+              idx={2}
               icon={HomeIcon}
               kicker="Real estate transactions"
               title="We do not promise an offer on any property."
@@ -109,7 +150,7 @@ export default function Disclosures() {
 
           <ScrollReveal delay={0.1}>
             <DisclosureBlock
-              idx={2}
+              idx={3}
               icon={BookOpen}
               kicker="Strategy Lab and Educational Materials"
               title="Educational content. Not advice."
@@ -126,7 +167,7 @@ export default function Disclosures() {
 
           <ScrollReveal delay={0.1}>
             <DisclosureBlock
-              idx={3}
+              idx={4}
               icon={MessageSquare}
               kicker="Peggy Strategy Assistant"
               title="A guide. Not the decision-maker."
@@ -146,7 +187,7 @@ export default function Disclosures() {
 
           <ScrollReveal delay={0.1}>
             <DisclosureBlock
-              idx={4}
+              idx={5}
               icon={Shield}
               kicker="Planned Peggy phone controls"
               title="Phone and recording are not live."
@@ -180,7 +221,7 @@ export default function Disclosures() {
 
           <ScrollReveal delay={0.1}>
             <DisclosureBlock
-              idx={5}
+              idx={7}
               icon={Shield}
               kicker="Equal housing & fair dealing"
               title="We comply with federal and state fair-housing law."
@@ -206,7 +247,8 @@ export default function Disclosures() {
                     Reach the operator directly. <a href="mailto:apollo@pegasusdreamscapes.com" className="text-[#8a5122] dark:text-primary underline underline-offset-2">apollo@pegasusdreamscapes.com</a> · <a href="tel:+19257448525" className="text-[#8a5122] dark:text-primary underline underline-offset-2">925-744-8525</a>.
                   </p>
                   <p className="text-sm text-muted-foreground mt-3 italic">
-                    Last updated: May 2026
+                    Site-copy consistency date: August 2026 · Operator-prepared draft
+                    pending qualified legal and broker review
                   </p>
                 </div>
               </div>

@@ -90,26 +90,24 @@ export function trackEvent(name: string, props?: Record<string, unknown>): void 
 // a Property", "Start a Strategy Review", "Request Beta Access",
 // "Connect"). It does two things:
 //   1. Mirrors the click into Plausible (consent-gated, like trackEvent).
-//   2. Posts to /api/events for the first-party cta_events store the
-//      admin /admin/cta-events surface reads from. The POST is fire-and-
-//      forget with keepalive so it survives navigation, and is NOT gated
-//      on analytics consent — it is first-party operational telemetry
-//      (no cookies, no PII), the same shape as a server access log entry.
+//   2. Posts a bounded first-party event to /api/events only after Analytics
+//      consent. The POST is fire-and-forget with keepalive so it survives
+//      navigation. Raw referrers and query strings are deliberately omitted.
 export function trackCtaClick(
   source: string,
   label: string,
   href?: string,
 ): void {
   if (typeof window === "undefined") return;
-  // 1. Plausible mirror (consent-gated).
+  if (!readConsent().analytics) return;
+  // 1. Plausible mirror.
   trackEvent("cta_click", { source, label, href });
-  // 2. First-party event beacon.
+  // 2. First-party event beacon, using only the current path and bounded CTA
+  // labels already present on the page.
   try {
     const path =
       typeof window.location !== "undefined" ? window.location.pathname : "";
-    const referrer =
-      typeof document !== "undefined" ? document.referrer || "" : "";
-    const body = JSON.stringify({ source, label, href, path, referrer });
+    const body = JSON.stringify({ source, label, href, path });
     if (
       typeof navigator !== "undefined" &&
       typeof navigator.sendBeacon === "function"

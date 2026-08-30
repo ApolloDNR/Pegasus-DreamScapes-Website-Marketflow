@@ -6,7 +6,7 @@ const MAX_AGE_MS = 2 * 60 * 60 * 1_000;
 const MAX_FUTURE_SKEW_MS = 5 * 60 * 1_000;
 const MAX_MONEY = 10_000_000_000;
 const SUMMARY_LABEL =
-  "Directional Strategy Lab brief (visitor-entered; requires Pegasus review):";
+  "Directional Strategy Lab brief (visitor-entered; automated and unverified):";
 
 export type StrategyLabHandoffInput = {
   address?: string;

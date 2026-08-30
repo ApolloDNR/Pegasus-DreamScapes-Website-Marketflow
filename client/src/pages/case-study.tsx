@@ -3,24 +3,41 @@ import { Link } from "wouter";
 import {
   NELSON_COST_DISCLOSURE,
   NELSON_EXECUTION_DISCLOSURE,
+  NELSON_FACTS,
   NELSON_PUBLIC_DESCRIPTION,
 } from "@shared/nelson-facts";
 
 /**
  * Public Website v1 (issue #22) — Case Study.
- * PRD §7.12 + COPY_DECK §14: real proof. The Nelson Dr repositioning with
+ * PRD §7.12 + COPY_DECK §14: real proof. The Nelson Dr public record with
  * the locked, honest figures — no inflated profit claims, no fake scale,
  * and only the real project photos (before and after are both actual
  * photos of the property). The deeper photo essay lives at
  * /projects/nelson-dr; this page is the PRD's routed case-study summary.
  */
 
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(value);
+
 const FIGURES = [
-  { label: "Acquired", value: "$600,000" },
-  { label: "Renovation", value: "≈ $105,000" },
-  { label: "Basis before other costs", value: "≈ $705,000" },
-  { label: "Sold", value: "$840,000" },
-  { label: "Gross spread", value: "≈ $135,000" },
+  { label: "Acquired", value: formatCurrency(NELSON_FACTS.acquired) },
+  {
+    label: "Improvement budget",
+    value: `≈ ${formatCurrency(NELSON_FACTS.improvementBudget)}`,
+  },
+  {
+    label: "Basis before other costs",
+    value: `≈ ${formatCurrency(NELSON_FACTS.totalBasisBeforeOtherCosts)}`,
+  },
+  { label: "Sale", value: formatCurrency(NELSON_FACTS.salePrice) },
+  {
+    label: "Gross spread before other costs",
+    value: `≈ ${formatCurrency(NELSON_FACTS.grossSpreadBeforeOtherCosts)}`,
+  },
 ];
 
 const STORY: { heading: string; body: string }[] = [
@@ -53,17 +70,17 @@ export default function CaseStudyPage() {
       <section className="relative">
         <img
           src="/images/nelson/nelson-hero-1280.jpg"
-          alt="Nelson Dr — finished exterior after the Pegasus repositioning"
+          alt="Nelson Dr finished exterior shown in the public project record"
           className="h-[52vh] min-h-[380px] w-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-[#091421] via-[#091421]/55 to-[#091421]/35" />
         <div className="absolute inset-x-0 bottom-0 px-6 pb-12">
           <div className="mx-auto max-w-4xl text-center">
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#c8915b] mb-4">
-              Case study · Richmond / East Bay
+              Case study · {NELSON_FACTS.areaLabel} · settled {NELSON_FACTS.settled}
             </p>
             <h1 className="font-serif text-4xl sm:text-6xl leading-[1.05]">
-              Founder-led value-add repositioning.
+              A documented acquisition, improvement, and sale.
             </h1>
           </div>
         </div>
@@ -105,7 +122,7 @@ export default function CaseStudyPage() {
             <figure>
               <img
                 src="/images/nelson/nelson-before-kitchen-1280.jpg"
-                alt="Nelson Dr kitchen before renovation — dated cabinets and finishes"
+                alt="Nelson Dr kitchen before documented improvements"
                 loading="lazy"
                 className="aspect-[4/3] w-full rounded-lg object-cover"
               />
@@ -116,7 +133,7 @@ export default function CaseStudyPage() {
             <figure>
               <img
                 src="/images/nelson/nelson-kitchen-1280.jpg"
-                alt="Nelson Dr kitchen after renovation — rebuilt to neighborhood standard"
+                alt="Nelson Dr kitchen after documented improvements"
                 loading="lazy"
                 className="aspect-[4/3] w-full rounded-lg object-cover"
               />

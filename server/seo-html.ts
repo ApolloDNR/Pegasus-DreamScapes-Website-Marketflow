@@ -4,9 +4,16 @@
 // shipping index.html so social-card crawlers see per-route metadata
 // without executing client JS.
 
-import { DEFAULT_OG_IMAGE, seoFor, SITE_URL } from "../shared/seo-routes";
+import {
+  DEFAULT_OG_IMAGE,
+  isPrivateNoindexSpaPath,
+  seoFor,
+  SITE_URL,
+} from "../shared/seo-routes";
 import { normalizeSpaPath } from "../shared/spa-routes";
 import { jsonLdScript } from "../shared/structured-data";
+
+export { isPrivateNoindexSpaPath } from "../shared/seo-routes";
 
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
@@ -29,51 +36,6 @@ const NOT_FOUND_SEO = {
   type: "website" as const,
   noIndex: true,
 };
-
-const PRIVATE_NOINDEX_EXACT_PATHS = new Set([
-  "/login",
-  "/signup",
-  "/forgot-password",
-  "/reset-password",
-  "/saved",
-  "/strategy-lab/library",
-  "/strategy-lab/submitted",
-  "/strategy-lab/blueprint-confirmed",
-  "/dashboard",
-  "/hq",
-  "/dealflow/hq",
-]);
-
-const PRIVATE_NOINDEX_PREFIXES: readonly RegExp[] = [
-  /^\/admin(?:\/|$)/,
-  /^\/snapshot(?:\/|$)/,
-  /^\/profile(?:\/|$)/,
-  /^\/offer-studio(?:\/|$)/,
-  /^\/dealflow\/project(?:\/|$)/,
-];
-
-const PUBLIC_MARKETFLOW_PATHS = new Set([
-  "/marketflow",
-  "/marketflow/access",
-  "/marketflow/buyboxes",
-]);
-
-/**
- * Raw HTML for account, operator, token, and administrative surfaces must not
- * inherit the public-home canonical or structured data before React hydrates.
- */
-export function isPrivateNoindexSpaPath(path: string): boolean {
-  const pathname = normalizeSpaPath(path);
-
-  if (PRIVATE_NOINDEX_EXACT_PATHS.has(pathname)) return true;
-  if (PRIVATE_NOINDEX_PREFIXES.some((pattern) => pattern.test(pathname))) {
-    return true;
-  }
-  if (pathname.startsWith("/marketflow/")) {
-    return !PUBLIC_MARKETFLOW_PATHS.has(pathname);
-  }
-  return false;
-}
 
 export function injectSeo(
   html: string,

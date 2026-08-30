@@ -259,9 +259,6 @@ export default function SubmitPropertyPage() {
       intent,
       address: (p.get("address") ?? "").slice(0, 500),
       referralReference: (p.get("ref") ?? "").slice(0, 160),
-      utmSource: p.get("utm_source") ?? undefined,
-      utmMedium: p.get("utm_medium") ?? undefined,
-      utmCampaign: p.get("utm_campaign") ?? undefined,
       preVisitor: INTENT_TO_VISITOR[intent] ?? "",
       ownerSituation: ownerSituation.situation,
       ownerSituationLabel: ownerSituation.sourceLabel,
@@ -356,7 +353,7 @@ export default function SubmitPropertyPage() {
             topLaneVerdict: labFactsChanged ? undefined : strategyLabBrief.topLaneVerdict,
             primaryMetric: labFactsChanged ? undefined : strategyLabBrief.primaryMetric,
             memoNextStep: labFactsChanged
-              ? "Intake facts changed after the Strategy Lab read; Pegasus must rerun the path comparison."
+              ? "Intake facts changed after the Strategy Lab read; rerun the automated path comparison with the updated inputs before relying on it."
               : strategyLabBrief.memoNextStep,
           })
         : undefined;
@@ -397,10 +394,6 @@ export default function SubmitPropertyPage() {
           form.notes,
         ].filter(Boolean).join(" — ") || undefined,
         consentAccepted: form.consentAccepted,
-        utmSource: utm.utmSource,
-        utmMedium: utm.utmMedium,
-        utmCampaign: utm.utmCampaign,
-        referrer: document.referrer || undefined,
       });
       return res.json();
     },
