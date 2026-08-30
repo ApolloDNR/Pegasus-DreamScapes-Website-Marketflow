@@ -50,6 +50,14 @@ describe("isCrawlablePublicPath", () => {
     expect(sitemapPaths.has("/bring-an-opportunity")).toBe(true);
   });
 
+  it("advertises Contact as the sole canonical chooser and omits the Connect alias", () => {
+    const sitemapPaths = new Set(sitemapEntries().map((entry) => entry.path));
+
+    expect(SEO_ROUTES["/connect"]).toBeUndefined();
+    expect(sitemapPaths.has("/connect")).toBe(false);
+    expect(sitemapPaths.has("/contact")).toBe(true);
+  });
+
   it("excludes the remaining demoted bare route from the sitemap (it 302-redirects)", () => {
     const sitemapPaths = new Set(sitemapEntries().map((e) => e.path));
     // Website Spec v4 restored /marketflow to the live public surface, so it is

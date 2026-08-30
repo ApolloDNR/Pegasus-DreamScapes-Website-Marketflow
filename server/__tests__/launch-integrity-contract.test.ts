@@ -14,6 +14,14 @@ const propertyAnalysisRoutesSource = readFileSync(
   resolve(import.meta.dirname, "../propertyAnalysisRoutes.ts"),
   "utf8",
 );
+const wholesaleReviewRoutesSource = readFileSync(
+  resolve(import.meta.dirname, "../wholesale-review-routes.ts"),
+  "utf8",
+);
+const wholesaleSubmissionSource = readFileSync(
+  resolve(import.meta.dirname, "../../shared/marketflow-wholesale-submission.ts"),
+  "utf8",
+);
 
 const routeSlice = (start: string, end: string) => {
   const startIndex = routesSource.indexOf(start);
@@ -74,23 +82,13 @@ describe("launch integrity contract", () => {
 
     const updateRoute = routeSlice(
       'app.patch("/api/marketplace/jv-requests/:id"',
-      "// Investor Dashboard Stats",
+      "// Submit a buyer offer",
     );
     expect(updateRoute).toContain('jvRequest.status !== "pending"');
     expect(updateRoute).toContain("jvRequest.wholesalerId !== userId");
     expect(storageSource).toMatch(
       /updateJvRequestStatus[\s\S]*eq\(jvRequests\.id, id\)[\s\S]*eq\(jvRequests\.status, "pending"\)/,
     );
-  });
-
-  it("projects saved buyer items through public DTOs", () => {
-    const route = routeSlice(
-      'app.get("/api/marketplace/buyer/saved"',
-      "// Buyer Offers - get user's offers",
-    );
-    expect(route).toContain("getPublicMarketplaceItem(");
-    expect(route).not.toContain("storage.getRetailListing(");
-    expect(route).not.toContain("storage.getWholesaleDeal(");
   });
 
   it("reserves community moderation flags for admins", () => {
@@ -124,22 +122,36 @@ describe("launch integrity contract", () => {
   });
 
   it("forces Supabase-created marketplace records private and server-owned", () => {
-    const projectRoute = routeSlice(
-      "app.post('/api/supabase/capital-projects'",
-      "// Update capital project",
+    expect(routesSource).toContain(
+      "resolveSupabaseMarketplaceIdentity(request as any)",
     );
-    expect(projectRoute).toContain("resolveSupabaseMarketplaceIdentity(req)");
-    expect(projectRoute).toContain("is_public: false");
-    expect(projectRoute).toContain("external_owner_id:");
-    expect(projectRoute).not.toContain("...projectData");
-
-    const dealRoute = routeSlice(
-      "app.post('/api/supabase/wholesale-deals'",
-      "// Update wholesale deal",
+    expect(routesSource).toContain(
+      "normalizeSubmission: normalizeMarketflowWholesaleSubmission",
     );
-    expect(dealRoute).toContain("resolveSupabaseMarketplaceIdentity(req)");
-    expect(dealRoute).toContain("status: 'Under Review'");
-    expect(dealRoute).toContain("is_public: false");
-    expect(dealRoute).not.toContain("...dealData");
+    expect(wholesaleReviewRoutesSource).toContain(
+      "dependencies.normalizeSubmission(\n        request.body,\n        identity",
+    );
+    expect(wholesaleReviewRoutesSource).toContain(
+      "dependencies.createWholesaleDeal(normalized.data)",
+    );
+    expect(wholesaleReviewRoutesSource).toContain(
+      "normalizeCapitalProjectSubmission(\n        request.body,\n        identity",
+    );
+    expect(wholesaleReviewRoutesSource).toContain(
+      "dependencies.createCapitalProject(normalized.data)",
+    );
+    expect(wholesaleReviewRoutesSource).toContain(
+      'identity.kind === "external" ? identity.userId : null',
+    );
+    expect(wholesaleReviewRoutesSource).toContain('status: "Under Review"');
+    expect(wholesaleReviewRoutesSource).toContain("is_public: false");
+    expect(wholesaleReviewRoutesSource).not.toContain("...request.body");
+    expect(wholesaleSubmissionSource).toContain(
+      'status: "Under Review"',
+    );
+    expect(wholesaleSubmissionSource).toContain("is_public: false");
+    expect(wholesaleSubmissionSource).toContain(
+      'identity.kind === "external" ? identity.userId : null',
+    );
   });
 });

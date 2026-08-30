@@ -145,7 +145,7 @@ export function DevelopmentPage({ go }: { go: Nav }) {
           <p className="text-[var(--muted)] leading-relaxed text-lg">
             This page does not claim an in-house construction team or guaranteed capacity. A future project would require property-specific diligence, qualified providers, applicable licenses and permits, and a signed agreement defining scope, budget, schedule, changes, completion, and remedies.
           </p>
-          <button type="button" onClick={() => go('connect')} data-testid="button-development-connect"
+          <button type="button" onClick={() => go('contact')} data-testid="button-development-connect"
             className="btn-primary mt-9 px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
             Start a build conversation <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </button>

@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 
-import ConnectPage from "@/pages/connect";
+import { ConnectChooser } from "@/pages/connect";
 import SubmitPropertyPage from "@/pages/submit-property";
 import { CategoryPage } from "@/pegasus/category-page";
 import { CATEGORIES } from "@/pegasus/data";
@@ -61,7 +61,7 @@ describe("public business-lane boundaries", () => {
   });
 
   it("makes the Capital entry relationship-only and removes informal source-protection assurances", () => {
-    renderPublic(<ConnectPage />, "/connect");
+    renderPublic(<ConnectChooser />, "/contact");
 
     const capitalLane = screen.getByTestId("link-connect-capital");
     expect(capitalLane).toHaveAttribute("href", "/capital");

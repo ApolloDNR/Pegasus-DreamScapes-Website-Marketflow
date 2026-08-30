@@ -50,7 +50,7 @@ function sliceBetween(start: string, end: string): string {
 }
 
 describe("rendered visual-accessibility gate contract", () => {
-  it("keeps the 18-route release gate and expands full coverage from the sitemap", () => {
+  it("keeps the 17-route release gate and expands full coverage from the sitemap", () => {
     const routeBlock = sliceBetween(
       "const releaseRoutes = [",
       "];\n\nconst fullPublicRouteExtras",
@@ -71,7 +71,6 @@ describe("rendered visual-accessibility gate contract", () => {
       "/marketflow/deals",
       "/bring-an-opportunity",
       "/work-with-apollo",
-      "/connect",
       "/peggy",
       "/contact",
       "/privacy",
@@ -85,9 +84,9 @@ describe("rendered visual-accessibility gate contract", () => {
     expect(source).toContain("...fullPublicRouteExtras");
     expect(source).toContain("const publicRouteCoverage = process.env.A11Y_PUBLIC_ROUTE_COVERAGE === 'full'");
     expect(source).toContain("const routes = publicRouteCoverage === 'full' ? fullPublicRoutes : releaseRoutes;");
-    expect(source).toContain("releaseRoutes.length !== 18");
-    expect(source).toContain("fullPublicRoutes.length !== 46");
-    expect(source).toContain("publicRouteCoverage === 'full' ? 368 : 144");
+    expect(source).toContain("releaseRoutes.length !== 17");
+    expect(source).toContain("fullPublicRoutes.length !== 45");
+    expect(source).toContain("publicRouteCoverage === 'full' ? 360 : 136");
     expect(packageJson.scripts?.["check:a11y:full"]).toBe(
       "A11Y_PUBLIC_ROUTE_COVERAGE=full node scripts/check-visual-accessibility.mjs",
     );
@@ -117,6 +116,9 @@ describe("rendered visual-accessibility gate contract", () => {
       "/forgot-password",
       "/reset-password",
       "/saved",
+      "/privacy",
+      "/terms",
+      "/disclosures",
       "/snapshot/calc/rendered-qa-calculator",
       "/snapshot/property/rendered-qa-property",
       "/snapshot/rendered-qa-status",
@@ -151,8 +153,8 @@ describe("rendered visual-accessibility gate contract", () => {
     expect(source).not.toMatch(/viewports\[\d+\]/);
     expect(source).toContain("`${slug}-${viewportName}-${colorScheme}.png`");
     expect(source).not.toContain("colorScheme === 'dark'");
-    expect(source).toContain("PASS: 144 rendered route/viewport/theme checks");
-    expect(source).toContain("PASS: 368 rendered route/viewport/theme checks");
+    expect(source).toContain("PASS: 136 rendered route/viewport/theme checks");
+    expect(source).toContain("PASS: 360 rendered route/viewport/theme checks");
   });
 
   it("settles and inspects the complete rendered page before recording evidence", () => {
@@ -657,7 +659,7 @@ describe("rendered visual-accessibility gate contract", () => {
     expect(source).toContain("expectedScreenshotCount");
     expect(source).toContain("screenshotCount");
     expect(source).toContain("expectedRouteCheckCount + 39");
-    expect(source).toContain("full coverage expected exactly 407");
+    expect(source).toContain("full coverage expected exactly 399");
     expect(source.indexOf("const result = failures.length")).toBeLessThan(
       source.indexOf("rendered-qa-manifest.json"),
     );

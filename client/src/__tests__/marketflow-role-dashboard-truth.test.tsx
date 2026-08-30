@@ -105,7 +105,7 @@ afterEach(() => {
 describe("MarketFlow role dashboards fail closed and describe the controlled pilot truthfully", () => {
   it("does not turn wholesaler API failures into zero metrics or empty inboxes", () => {
     setAuthenticatedResult("/api/supabase/marketplace/wholesaler/stats", unavailable());
-    setAuthenticatedResult("/api/supabase/wholesale-deals/my", unavailable());
+    setAuthenticatedResult("/api/supabase/marketplace/wholesaler/deals", unavailable());
     setAuthenticatedResult("/api/marketplace/wholesaler/jv-requests", unavailable());
 
     renderAt("/marketflow/wholesaler", <MarketplaceWholesaler />);
@@ -126,7 +126,7 @@ describe("MarketFlow role dashboards fail closed and describe the controlled pil
       "/api/supabase/marketplace/wholesaler/stats",
       ready({ active: 1, pending: 0, sold: 0, totalVolume: 0 }),
     );
-    setAuthenticatedResult("/api/supabase/wholesale-deals/my", ready([]));
+    setAuthenticatedResult("/api/supabase/marketplace/wholesaler/deals", ready([]));
     setAuthenticatedResult(
       "/api/marketplace/wholesaler/jv-requests",
       ready([
@@ -166,7 +166,7 @@ describe("MarketFlow role dashboards fail closed and describe the controlled pil
       }),
     );
     setAuthenticatedResult(
-      "/api/supabase/capital-projects/my",
+      "/api/supabase/marketplace/dreamscaper/projects",
       ready([
         {
           id: 9,
@@ -191,7 +191,7 @@ describe("MarketFlow role dashboards fail closed and describe the controlled pil
 
   it("does not turn DreamScaper API failures into zero projects", () => {
     setAuthenticatedResult("/api/supabase/marketplace/dreamscaper/stats", unavailable());
-    setAuthenticatedResult("/api/supabase/capital-projects/my", unavailable());
+    setAuthenticatedResult("/api/supabase/marketplace/dreamscaper/projects", unavailable());
 
     renderAt("/marketflow/dreamscaper", <MarketplaceDreamscaper />);
 

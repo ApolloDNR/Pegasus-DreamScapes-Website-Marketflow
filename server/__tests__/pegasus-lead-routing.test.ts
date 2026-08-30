@@ -4,11 +4,14 @@ import {
   classifyPegasusLead,
   normalizePegasusLeadSubmission,
   pegasusLeadSuccessCopy,
+  projectPegasusLeadOperationalDetails,
 } from "@shared/lead-routing";
 
 describe("Pegasus reusable lead routing", () => {
   it.each([
     ["property-review", "I have a property (Seller)", "seller"],
+    ["property-review", "Deal finder / Wholesaler", "wholesaler"],
+    ["property-review", "Referral partner", "referral"],
     ["representation", "Buy a home (Buyer representation)", "buyer"],
     ["deal-finder", "Deal finder / Wholesaler", "wholesaler"],
     ["capital-partner", "Capital partner", "investor"],
@@ -64,6 +67,42 @@ describe("Pegasus reusable lead routing", () => {
     expect(normalized.leadType).toBe("seller");
     expect(normalized.address).toBe("123 Main St, Oakland, CA");
   });
+
+  it.each([
+    ["property-review", "I have a property (Seller)", "seller"],
+    ["representation", "Buy a home (Buyer representation)", "buyer"],
+    ["deal-finder", "Deal finder / Wholesaler", "wholesaler"],
+    ["capital-partner", "Capital partner", "investor"],
+    ["operator", "Operator / Vendor", "vendor"],
+    ["referral", "Referral partner", "referral"],
+    ["contact", "Something else", "contact"],
+  ] as const)(
+    "projects normalized %s submissions through one operational view",
+    (intent, role, expectedLane) => {
+      const normalized = normalizePegasusLeadSubmission({
+        leadType: "submit",
+        source: "form",
+        firstName: "Riley",
+        email: "riley@example.com",
+        leadData: {
+          intent,
+          role,
+          context: "  Submitted context  ",
+          contextKind: "context",
+          message: "  Submitted narrative  ",
+        },
+      });
+
+      expect(normalized.leadType).toBe(expectedLane);
+      expect(projectPegasusLeadOperationalDetails(normalized)).toEqual({
+        role,
+        intent,
+        context: "Submitted context",
+        contextKind: "context",
+        message: "Submitted narrative",
+      });
+    },
+  );
 
   it.each([
     "seller",

@@ -35,6 +35,27 @@ function requestRedirect(routePattern: string, originalUrl: string) {
 }
 
 describe("legacy SPA server redirects", () => {
+  it("preserves a calculator tab deep link at the canonical Strategy Lab desk", () => {
+    expect(
+      requestRedirect("/calculators", "/calculators?tab=roi"),
+    ).toEqual({
+      status: 301,
+      location: "/strategy-lab?tool=calculators&tab=roi",
+    });
+  });
+
+  it("canonicalizes Connect to Contact with a real 301 and preserves attribution", () => {
+    expect(
+      requestRedirect(
+        "/connect",
+        "/connect?utm_source=printed-card&intent=vendor",
+      ),
+    ).toEqual({
+      status: 301,
+      location: "/contact?utm_source=printed-card&intent=vendor",
+    });
+  });
+
   it("retires Investments with a real 301 while preserving attribution", () => {
     expect(
       requestRedirect(

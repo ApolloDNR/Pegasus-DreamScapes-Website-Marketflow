@@ -2386,17 +2386,23 @@ export type UserProfile = typeof userProfiles.$inferSelect;
 // ADMIN AUDIT LOG - Tracking all admin actions
 // ============================================
 
+export const REVIEW_AUDIT_ACTION_TYPES = [
+  "deal_approved",
+  "deal_rejected",
+  "deal_review_started",
+  "project_approved",
+  "project_rejected",
+  "project_review_started",
+] as const;
+
 export const AUDIT_ACTION_TYPES = [
   "user_created",
   "user_updated", 
   "user_deleted",
   "role_assigned",
   "role_removed",
-  "deal_approved",
-  "deal_rejected",
+  ...REVIEW_AUDIT_ACTION_TYPES,
   "deal_deleted",
-  "project_approved",
-  "project_rejected",
   "badge_awarded",
   "badge_revoked",
   "setting_changed",
@@ -2438,6 +2444,8 @@ export const adminAuditLog = pgTable("admin_audit_log", {
 export const insertAdminAuditLogSchema = createInsertSchema(adminAuditLog).omit({ 
   id: true, 
   createdAt: true 
+}).extend({
+  actionType: z.enum(AUDIT_ACTION_TYPES),
 });
 export type InsertAdminAuditLog = z.infer<typeof insertAdminAuditLogSchema>;
 export type AdminAuditLog = typeof adminAuditLog.$inferSelect;

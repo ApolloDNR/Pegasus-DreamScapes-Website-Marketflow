@@ -15,6 +15,11 @@ import { memoryLocation } from "wouter/memory-location";
 
 import MarketflowAccessPage from "@/pages/marketflow-access";
 import { CONTACT_FORM, LeadForm } from "@/pegasus/forms";
+import { CATEGORIES } from "@/pegasus/data";
+import {
+  normalizePegasusLeadSubmission,
+  projectPegasusLeadOperationalDetails,
+} from "@shared/lead-routing";
 
 const { apiRequestMock, toastMock } = vi.hoisted(() => ({
   apiRequestMock: vi.fn(),
@@ -212,6 +217,82 @@ describe("Pegasus LeadForm explicit contact consent", () => {
         lane: "buyer",
         context: "Oakland or Berkeley",
         contextKind: "context",
+      }),
+    );
+  });
+
+  it.each([
+    ["/buyers", CATEGORIES.buyers.form!, "buyer"],
+    ["/referral", CATEGORIES.referral.form!, "referral"],
+  ] as const)(
+    "keeps the mounted %s form context and message through server normalization",
+    async (_route, cfg, expectedLane) => {
+      let now = 60_000;
+      vi.spyOn(Date, "now").mockImplementation(() => now);
+      renderWithQueryClient(<LeadForm cfg={cfg} />);
+      fillPegasusLeadForm();
+
+      fireEvent.change(screen.getByLabelText(cfg.third!.label), {
+        target: { value: "Distinct submitted context" },
+      });
+      fireEvent.change(screen.getByLabelText(cfg.messageLabel), {
+        target: { value: "Distinct submitted narrative" },
+      });
+      fireEvent.click(screen.getByRole("checkbox"));
+      now = 64_500;
+      fireEvent.submit(
+        screen.getByRole("button", { name: cfg.submit }).closest("form")!,
+      );
+
+      await waitFor(() => expect(apiRequestMock).toHaveBeenCalledTimes(1));
+      const payload = apiRequestMock.mock.calls[0][2] as Record<string, unknown>;
+      const normalized = normalizePegasusLeadSubmission(payload);
+
+      expect(normalized.leadType).toBe(expectedLane);
+      expect(projectPegasusLeadOperationalDetails(normalized)).toEqual(
+        expect.objectContaining({
+          context: "Distinct submitted context",
+          contextKind: "context",
+          message: "Distinct submitted narrative",
+        }),
+      );
+    },
+  );
+
+  it("keeps a mounted Peggy wholesaler handoff in the canonical projection", async () => {
+    let now = 70_000;
+    vi.spyOn(Date, "now").mockImplementation(() => now);
+    renderWithQueryClient(
+      <LeadForm
+        cfg={CONTACT_FORM}
+        showRole
+        handoff={{
+          role: "Deal finder / Wholesaler",
+          third: "123 Main St, Oakland",
+          message: "Asking, repairs, and source relationship",
+          transcript: [
+            { role: "user", content: "I have an East Bay deal." },
+            { role: "assistant", content: "I can carry that context forward." },
+          ],
+        }}
+      />,
+    );
+    fillPegasusLeadForm();
+    fireEvent.click(screen.getByRole("checkbox"));
+    now = 74_500;
+    fireEvent.submit(screen.getByRole("button").closest("form")!);
+
+    await waitFor(() => expect(apiRequestMock).toHaveBeenCalledTimes(1));
+    const payload = apiRequestMock.mock.calls[0][2] as Record<string, unknown>;
+    const normalized = normalizePegasusLeadSubmission(payload);
+
+    expect(normalized.leadType).toBe("wholesaler");
+    expect(projectPegasusLeadOperationalDetails(normalized)).toEqual(
+      expect.objectContaining({
+        role: "Deal finder / Wholesaler",
+        context: "123 Main St, Oakland",
+        contextKind: "context",
+        message: "Asking, repairs, and source relationship",
       }),
     );
   });

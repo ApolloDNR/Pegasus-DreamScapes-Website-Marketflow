@@ -27,7 +27,7 @@ import { SEO_ROUTES, sitemapEntries } from "@shared/seo-routes";
 //       `focus-visible:outline-none` without supplying a replacement
 //       focus state.
 //
-//   (2) COMPONENT TAB ORDER — Navigation, Footer, and /connect render
+//   (2) COMPONENT TAB ORDER — Navigation, Footer, and the /contact chooser render
 //       their focusable elements in expected reading order; userEvent.tab()
 //       can actually walk through every navigation testid in DOM order.
 //
@@ -162,7 +162,7 @@ if (typeof window !== "undefined" && !(window as unknown as { scrollTo?: unknown
 
 import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
-import ConnectPage from "@/pages/connect";
+import { ConnectChooser } from "@/pages/connect";
 
 const FOCUSABLE_SELECTOR = [
   "a[href]",
@@ -314,7 +314,7 @@ const FOCUS_RING_SOURCES = [
   // Task #144: extend the "no focus-visible:outline-none without a
   // replacement" static guard to every v1 public page file, so a
   // regression on any page-level custom button / tab / accordion / form
-  // control fails CI the same way the navigation, footer, and /connect
+  // control fails CI the same way the navigation, footer, and Contact chooser
   // surfaces already do.
   "client/src/pages/home.tsx",
   "client/src/pages/about.tsx",
@@ -409,7 +409,6 @@ describe("Tab order matches reading order (Task #143)", () => {
       "link-footer-phone",
       "heading-footer-company",
       "link-footer-more-about",
-      "link-footer-more-connect",
       "link-footer-more-contact",
       "heading-footer-tools",
       "link-footer-deal-strategy",
@@ -430,8 +429,8 @@ describe("Tab order matches reading order (Task #143)", () => {
     ]);
   });
 
-  it("/connect: eight routing buttons appear in DOM order with visible focus treatment", () => {
-    const { container } = renderWithRouter(<ConnectPage />, "/connect");
+  it("/contact: eight routing buttons appear in DOM order with visible focus treatment", () => {
+    const { container } = renderWithRouter(<ConnectChooser />, "/contact");
     const connectLinks = Array.from(
       container.querySelectorAll<HTMLElement>("[data-testid^='link-connect-']"),
     ).filter((el) => {
@@ -519,7 +518,6 @@ import CapitalPage from "@/pages/capital";
 import ProjectsPage from "@/pages/projects";
 import NelsonDrPage from "@/pages/project-nelson-dr";
 import VendorNetworkPage from "@/pages/vendor-network";
-import ContactPage from "@/pages/contact";
 import DisclosuresPage from "@/pages/disclosures";
 import PrivacyPage from "@/pages/privacy";
 import TermsPage from "@/pages/terms";
@@ -537,7 +535,7 @@ import { PropertyOwnersPage } from "@/pegasus/property-owners";
 import { DealPartnersPage } from "@/pegasus/deal-partners";
 import { HowWeOperatePage } from "@/pegasus/how-we-operate";
 import { OurWorkPage } from "@/pegasus/our-work";
-import { EcosystemPage, PeggyPage, WorkWithApolloPage } from "@/pegasus/pages";
+import { ContactPage, EcosystemPage, PeggyPage, WorkWithApolloPage } from "@/pegasus/pages";
 // Task #145 — admin / HQ surfaces.
 import AdminCtaEventsPage from "@/pages/admin-cta-events";
 import AdminVendorsPage from "@/pages/admin-vendors";
@@ -621,6 +619,10 @@ function PeggyPublicPage() {
   return <PeggyPage go={publicNav} openPeggy={openPublicPeggy} />;
 }
 
+function ContactPublicPage() {
+  return <ContactPage />;
+}
+
 const PUBLIC_ROUTES: RouteSpec[] = [
   { path: "/", Page: HomePage },
   { path: "/property-owners", Page: PropertyOwnersPublicPage },
@@ -634,11 +636,10 @@ const PUBLIC_ROUTES: RouteSpec[] = [
   { path: "/development", Page: DevelopmentPage },
   { path: "/bring-an-opportunity", Page: SubmitPropertyPage },
   { path: "/capital", Page: CapitalPage },
-  { path: "/connect", Page: ConnectPage },
   { path: "/projects", Page: ProjectsPage },
   { path: "/projects/nelson-dr", Page: NelsonDrPage },
   { path: "/vendor-network", Page: VendorNetworkPage },
-  { path: "/contact", Page: ContactPage },
+  { path: "/contact", Page: ContactPublicPage },
   { path: "/disclosures", Page: DisclosuresPage },
   { path: "/privacy", Page: PrivacyPage },
   { path: "/terms", Page: TermsPage },

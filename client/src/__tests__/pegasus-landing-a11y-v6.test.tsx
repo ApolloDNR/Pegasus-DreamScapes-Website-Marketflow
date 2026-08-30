@@ -286,19 +286,20 @@ describe("Pegasus public-shell navigation accessibility", () => {
       name: /Bring an Opportunity/i,
     });
     const first = within(menu).getByRole("button", { name: "Close menu" });
-    const last = within(menu).getByRole("link", { name: /^Peggy/i });
     expect(within(menu).getByRole("heading", { name: "Core pages" })).toBeInTheDocument();
     expect(within(menu).getByRole("heading", { name: "Company & proof" })).toBeInTheDocument();
     expect(within(menu).getByRole("heading", { name: "Operating lanes" })).toBeInTheDocument();
     expect(within(menu).getByRole("heading", { name: "Network & resources" })).toBeInTheDocument();
     await waitFor(() => expect(initial).toHaveFocus());
 
-    last.focus();
+    first.focus();
+    await user.tab({ shift: true });
+    const last = document.activeElement;
+    expect(last).not.toBe(first);
+    expect(menu.contains(last)).toBe(true);
+
     await user.tab();
     expect(first).toHaveFocus();
-
-    await user.tab({ shift: true });
-    expect(last).toHaveFocus();
 
     await user.keyboard("{Escape}");
     await waitFor(() => {

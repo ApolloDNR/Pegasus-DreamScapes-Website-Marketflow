@@ -447,9 +447,9 @@ export interface IStorage {
 
   // Admin Audit Log
   createAuditLog(entry: InsertAdminAuditLog): Promise<AdminAuditLog>;
-  getAuditLogs(options?: { limit?: number; offset?: number; actionType?: string; adminUserId?: string }): Promise<AdminAuditLog[]>;
+  getAuditLogs(options?: { limit?: number; offset?: number; actionType?: string; actionTypes?: readonly string[]; adminUserId?: string }): Promise<AdminAuditLog[]>;
   getAuditLogById(id: number): Promise<AdminAuditLog | undefined>;
-  getAuditLogCount(options?: { actionType?: string; adminUserId?: string }): Promise<number>;
+  getAuditLogCount(options?: { actionType?: string; actionTypes?: readonly string[]; adminUserId?: string }): Promise<number>;
 
   // Deal Negotiations
   createDealNegotiation(negotiation: InsertDealNegotiation): Promise<DealNegotiation>;
@@ -2253,10 +2253,12 @@ export class DatabaseStorage implements IStorage {
     return created;
   }
 
-  async getAuditLogs(options?: { limit?: number; offset?: number; actionType?: string; adminUserId?: string }): Promise<AdminAuditLog[]> {
+  async getAuditLogs(options?: { limit?: number; offset?: number; actionType?: string; actionTypes?: readonly string[]; adminUserId?: string }): Promise<AdminAuditLog[]> {
     const conditions = [];
     if (options?.actionType) {
       conditions.push(eq(adminAuditLog.actionType, options.actionType));
+    } else if (options?.actionTypes?.length) {
+      conditions.push(inArray(adminAuditLog.actionType, [...options.actionTypes]));
     }
     if (options?.adminUserId) {
       conditions.push(eq(adminAuditLog.adminUserId, options.adminUserId));
@@ -2268,7 +2270,7 @@ export class DatabaseStorage implements IStorage {
     }
     
     return query
-      .orderBy(desc(adminAuditLog.createdAt))
+      .orderBy(desc(adminAuditLog.createdAt), desc(adminAuditLog.id))
       .limit(options?.limit || 100)
       .offset(options?.offset || 0);
   }
@@ -2278,10 +2280,12 @@ export class DatabaseStorage implements IStorage {
     return log;
   }
 
-  async getAuditLogCount(options?: { actionType?: string; adminUserId?: string }): Promise<number> {
+  async getAuditLogCount(options?: { actionType?: string; actionTypes?: readonly string[]; adminUserId?: string }): Promise<number> {
     const conditions = [];
     if (options?.actionType) {
       conditions.push(eq(adminAuditLog.actionType, options.actionType));
+    } else if (options?.actionTypes?.length) {
+      conditions.push(inArray(adminAuditLog.actionType, [...options.actionTypes]));
     }
     if (options?.adminUserId) {
       conditions.push(eq(adminAuditLog.adminUserId, options.adminUserId));

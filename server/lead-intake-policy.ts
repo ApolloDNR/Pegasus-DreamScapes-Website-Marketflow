@@ -6,6 +6,8 @@
  * a small audit record in `leadData`, and construct a bounded staff alert.
  */
 
+import { projectPegasusLeadOperationalDetails } from "@shared/lead-routing";
+
 export interface NormalizedLeadConsent {
   consentContact: boolean;
   consentCcpaAcknowledged: boolean;
@@ -202,18 +204,24 @@ export function buildGenericLeadNotificationData(
   const leadData = asRecord(row.leadData);
   const marketflow = asRecord(leadData.marketflow_access_request);
   const consentAudit = asRecord(leadData.consentAudit);
+  const reusableDetails = projectPegasusLeadOperationalDetails(row);
 
   const leadType = cleanString(row.leadType, 50) || "unknown";
   const firstName = cleanString(row.firstName, 255);
   const lastName = cleanString(row.lastName, 255);
   const fallbackName = cleanString(row.contactName, 255);
   const fullName = `${firstName} ${lastName}`.trim() || fallbackName || "Unknown";
-  const role = cleanString(marketflow.role ?? leadData.role ?? leadData.lane, 160);
+  const role =
+    cleanString(marketflow.role, 160) ||
+    reusableDetails.role ||
+    cleanString(leadData.role ?? leadData.lane, 160);
   const introducedBy = cleanString(marketflow.introducedBy ?? leadData.introducedBy);
-  const message = cleanString(
-    leadData.message ?? marketflow.notes ?? leadData.notes ?? row.notes,
+  const legacyNotes = cleanString(
+    reusableDetails.message
+      ? marketflow.notes ?? leadData.notes ?? row.notes
+      : leadData.message ?? marketflow.notes ?? leadData.notes ?? row.notes,
   );
-  const intent = cleanString(leadData.intent, 160);
+  const intent = cleanString(reusableDetails.intent || leadData.intent, 160);
   const label = notificationLabel(leadType);
 
   const subjectSuffix =
@@ -234,7 +242,9 @@ export function buildGenericLeadNotificationData(
   if (role) lines.push(`Role: ${role}`);
   if (intent) lines.push(`Intent: ${intent}`);
   if (introducedBy) lines.push(`Introduced by: ${introducedBy}`);
-  if (message) lines.push(`Notes: ${message}`);
+  if (reusableDetails.context) lines.push(`Context: ${reusableDetails.context}`);
+  if (reusableDetails.message) lines.push(`Message: ${reusableDetails.message}`);
+  if (legacyNotes) lines.push(`Notes: ${legacyNotes}`);
 
   lines.push(
     `Consent to contact: ${consentAudit.consentContact === true ? "Yes" : "No"}`,

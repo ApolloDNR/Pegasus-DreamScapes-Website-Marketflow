@@ -33,7 +33,28 @@ describe("MarketFlow admin truth contract", () => {
       expect(source).toContain(errorName);
     }
     expect(source).toContain("Admin data unavailable");
+    expect(source).toContain("isAuditLogsResponse");
     expect(source).not.toContain("const displayStats: AdminStats = stats ??");
+  });
+
+  it("describes only server-recorded wholesale and capital review events", () => {
+    expect(source).toContain(
+      'import { REVIEW_AUDIT_ACTION_TYPES } from "@shared/schema";',
+    );
+    expect(source).not.toContain("const REVIEW_AUDIT_ACTION_TYPES = [");
+    expect(source).toContain(
+      "Server-recorded wholesale and capital review events only.",
+    );
+    expect(source).not.toContain(
+      "Track all administrative actions on the platform",
+    );
+    expect(source).not.toContain(
+      "Admin actions will appear here once they occur.",
+    );
+    expect(source).toContain('"deal_review_started"');
+    expect(source).toContain('"project_review_started"');
+    expect(source).toContain("Deal Review Started");
+    expect(source).toContain("Project Review Started");
   });
 
   it("removes controls that point nowhere or cannot act on the record", () => {

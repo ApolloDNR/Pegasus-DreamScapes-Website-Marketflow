@@ -11,11 +11,14 @@ afterEach(() => {
 });
 
 describe("client 404 page", () => {
-  it("is noindex and links to the canonical opportunity route", async () => {
+  it("uses the memory-router missing path for noindex metadata when the browser location is still home", async () => {
+    window.history.replaceState({}, "", "/");
     document.head.innerHTML =
       '<meta name="robots" content="index, follow" />' +
       '<link rel="canonical" href="https://pegasusdreamscapes.com/" />';
     const memory = memoryLocation({ path: "/definitely-missing" });
+
+    expect(window.location.pathname).toBe("/");
 
     render(
       <Router hook={memory.hook}>

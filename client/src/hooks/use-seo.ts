@@ -1,6 +1,14 @@
 import { useEffect } from "react";
+import { useLocation } from "wouter";
 import { isPreviewHostname } from "@shared/preview-hosts";
-import { isPrivateNoindexSpaPath } from "@shared/seo-routes";
+import {
+  BRAND,
+  DEFAULT_OG_IMAGE,
+  isPrivateNoindexSpaPath,
+  SEO_ROUTES,
+  SITE_URL,
+} from "@shared/seo-routes";
+import { normalizeSpaPath } from "@shared/spa-routes";
 
 interface SEOProps {
   title?: string;
@@ -17,15 +25,11 @@ interface SEOProps {
 // Tagline is dropped from per-page titles so they stay under the
 // 60-character SERP truncation limit. The home (no `title` passed)
 // still renders the brand + tagline as the bare-document title.
-const BRAND = "Pegasus Dreamscapes";
 // Public Website v1 (issue #22) PRD §12 locks the homepage title verbatim.
 // It intentionally exceeds the per-page 60-char clamp (which only applies to
 // composed `page · brand` titles, not this locked base title).
-const BASE_TITLE = "Pegasus Dreamscapes — Complex Real Estate, Made Executable";
-const BASE_DESCRIPTION =
-  "East Bay real estate education, one documented project record, and private property, relationship, and representation intake.";
-const SITE_URL = "https://pegasusdreamscapes.com";
-const DEFAULT_OG_IMAGE = `${SITE_URL}/og/default.png`;
+const BASE_TITLE = SEO_ROUTES["/"].title;
+const BASE_DESCRIPTION = SEO_ROUTES["/"].description;
 
 const MAX_TITLE = 60;
 const MAX_DESC = 160;
@@ -75,7 +79,15 @@ export function useSEO({
   noCanonical,
   noTagline,
 }: SEOProps = {}) {
-  const pathname = typeof window !== "undefined" ? window.location.pathname : "/";
+  const [location] = useLocation();
+  const pathname = normalizeSpaPath(location);
+  // Exact registered routes are hydrated from the same shared record used by
+  // server/seo-html.ts. A mounted page may still call useSEO for historical
+  // reasons, but it cannot replace crawler-visible metadata with a divergent
+  // title, promise, image, crawl directive, or canonical after hydration.
+  // Pattern/detail routes are intentionally left caller-driven so a real
+  // project, article, or private record can supply data-specific metadata.
+  const registeredSeo = SEO_ROUTES[pathname];
   useEffect(() => {
     // Per-page titles always drop the tagline to stay under the SERP
     // truncation limit. `noTagline` is accepted for backwards-compat with
@@ -83,17 +95,27 @@ export function useSEO({
     void noTagline;
     // Per-page composed titles are clamped for SERP truncation; the locked
     // PRD base title passes through verbatim.
-    const fullTitle = title ? clamp(`${title} · ${BRAND}`, MAX_TITLE) : BASE_TITLE;
-    const desc = clamp(description || BASE_DESCRIPTION, MAX_DESC);
-    const ogImage = absoluteImage(image);
+    const fullTitle = registeredSeo
+      ? registeredSeo.title
+      : title
+        ? clamp(`${title} · ${BRAND}`, MAX_TITLE)
+        : BASE_TITLE;
+    const desc = registeredSeo?.description ?? clamp(description || BASE_DESCRIPTION, MAX_DESC);
+    const ogImage = absoluteImage(registeredSeo?.image ?? image);
+    const resolvedType = registeredSeo
+      ? registeredSeo.type ?? "website"
+      : type;
+    const resolvedNoIndex = registeredSeo
+      ? registeredSeo.noIndex === true
+      : noIndex === true;
     const previewHost =
       typeof window !== "undefined" && isPreviewHostname(window.location.hostname);
     const privateRoute = isPrivateNoindexSpaPath(pathname);
     const url =
       typeof window !== "undefined"
         ? previewHost
-          ? `${window.location.origin}${window.location.pathname}`
-          : `${SITE_URL}${window.location.pathname}`
+          ? `${window.location.origin}${pathname === "/" ? "/" : pathname}`
+          : `${SITE_URL}${pathname === "/" ? "" : pathname}`
         : SITE_URL;
 
     document.title = fullTitle;
@@ -105,14 +127,14 @@ export function useSEO({
       "robots",
       previewHost
         ? "noindex, nofollow, noarchive, nosnippet"
-        : noIndex || privateRoute
+        : resolvedNoIndex || privateRoute
           ? "noindex, nofollow"
           : "index, follow",
     );
 
     setMeta('meta[property="og:title"]', "property", "og:title", fullTitle);
     setMeta('meta[property="og:description"]', "property", "og:description", desc);
-    setMeta('meta[property="og:type"]', "property", "og:type", type);
+    setMeta('meta[property="og:type"]', "property", "og:type", resolvedType);
     setMeta('meta[property="og:url"]', "property", "og:url", url);
     setMeta('meta[property="og:image"]', "property", "og:image", ogImage);
     setMeta('meta[property="og:image:width"]', "property", "og:image:width", "1200");
@@ -124,7 +146,10 @@ export function useSEO({
     setMeta('meta[name="twitter:description"]', "name", "twitter:description", desc);
     setMeta('meta[name="twitter:image"]', "name", "twitter:image", ogImage);
 
-    if (previewHost || noCanonical || privateRoute) {
+    const suppressCanonical = registeredSeo
+      ? resolvedNoIndex
+      : noCanonical === true;
+    if (previewHost || suppressCanonical || privateRoute || resolvedNoIndex) {
       document.head.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.remove();
     } else {
       setLink("canonical", url);
@@ -133,5 +158,15 @@ export function useSEO({
     return () => {
       document.title = BASE_TITLE;
     };
-  }, [title, description, type, image, noIndex, noCanonical, noTagline, pathname]);
+  }, [
+    title,
+    description,
+    type,
+    image,
+    noIndex,
+    noCanonical,
+    noTagline,
+    pathname,
+    registeredSeo,
+  ]);
 }

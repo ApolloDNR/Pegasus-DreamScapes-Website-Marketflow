@@ -422,7 +422,12 @@ function VendorFormSection() {
   });
 
   return (
-    <section id="vendor-form" className="py-28 lg:py-36 bg-background scroll-mt-24">
+    <section
+      id="vendor-form"
+      aria-labelledby="vendor-form-title"
+      className="py-28 lg:py-36 bg-background scroll-mt-24"
+      data-testid="vendor-form"
+    >
       <div className="max-w-4xl mx-auto px-6 lg:px-12">
         <ScrollReveal className="text-center max-w-2xl mx-auto mb-12">
           <div className="flex items-center justify-center gap-4 mb-4">
@@ -430,11 +435,11 @@ function VendorFormSection() {
             <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Vendor Intake</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+          <h2 id="vendor-form-title" className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
             Apply to be considered.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed">
-            Share accurate credentials, references, and availability. Completeness helps preserve the record but does not create review or routing priority.
+            Vendor Network is the only formal application of record for operators and vendors. Share accurate credentials, references, and availability; completeness does not create review or routing priority.
           </p>
         </ScrollReveal>
 
@@ -639,7 +644,7 @@ function VendorFormSection() {
                 </Button>
 
                 <p className="pt-2 text-[11px] leading-relaxed text-muted-foreground/80 text-center">
-                  Vendor Network intake follows the v1.3.1 blueprint, section 14. This is not a hiring guarantee and not an offer of work.
+                  Submitting creates an application record only. It is not a hiring guarantee, approval, placement, or offer of work.
                 </p>
               </form>
             </Form>

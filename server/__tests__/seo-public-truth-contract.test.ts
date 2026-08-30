@@ -13,7 +13,7 @@ const relationshipRoutes = [
   "/deal-partners",
   "/referral",
   "/development",
-  "/connect",
+  "/contact",
 ] as const;
 
 describe("public project SEO truth contract", () => {
@@ -43,6 +43,7 @@ describe("public project SEO truth contract", () => {
   });
 
   it("describes Contact as a general routing surface rather than property intake", () => {
+    expect(SEO_ROUTES["/connect"]).toBeUndefined();
     expect(SEO_ROUTES["/contact"].description).toMatch(/general question|right public route/i);
     expect(SEO_ROUTES["/contact"].description).not.toMatch(/share a property/i);
   });

@@ -12,6 +12,10 @@ import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 
 import { WorkWithApolloPage } from "@/pegasus/pages";
+import {
+  normalizePegasusLeadSubmission,
+  projectPegasusLeadOperationalDetails,
+} from "@shared/lead-routing";
 
 const { apiRequestMock, trackEventMock } = vi.hoisted(() => ({
   apiRequestMock: vi.fn(),
@@ -113,6 +117,12 @@ describe("mounted Work With Apollo representation handoff", () => {
     expect(role).toHaveFocus();
 
     fillRequiredForm();
+    fireEvent.change(screen.getByLabelText("Property address or target area"), {
+      target: { value: "Oakland or Berkeley" },
+    });
+    fireEvent.change(screen.getByLabelText("What you are looking to do"), {
+      target: { value: "Buyer representation with a fall timeline" },
+    });
     submitRepresentationRequest();
 
     await waitFor(() => expect(apiRequestMock).toHaveBeenCalledTimes(1));
@@ -131,6 +141,14 @@ describe("mounted Work With Apollo representation handoff", () => {
           role: BUYER_ROLE,
           intent: "representation",
         }),
+      }),
+    );
+    const normalized = normalizePegasusLeadSubmission(payload);
+    expect(projectPegasusLeadOperationalDetails(normalized)).toEqual(
+      expect.objectContaining({
+        context: "Oakland or Berkeley",
+        contextKind: "context",
+        message: "Buyer representation with a fall timeline",
       }),
     );
   });

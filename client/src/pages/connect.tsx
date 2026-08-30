@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { useSEO } from "@/hooks/use-seo";
 import { trackCtaClick } from "@/lib/analytics";
 import { IMG } from "@/pegasus/primitives";
 import {
@@ -428,17 +427,6 @@ function StandardsBand() {
       </div>
     </section>
   );
-}
-
-export default function ConnectPage() {
-  useSEO({
-    title: "Connect",
-    description:
-      "Choose the right Pegasus Dreamscapes starting point: property intake, representation, buyer strategy, deal finder path, development, capital, vendor work, or a direct note.",
-    image: "/og/about.png",
-  });
-
-  return <ConnectChooser />;
 }
 
 export function ConnectChooser() {

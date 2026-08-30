@@ -1,5 +1,7 @@
 /** Legacy paths whose attribution/query context must survive migration. */
 export const QUERY_PRESERVING_INTAKE_PATHS: ReadonlySet<string> = new Set([
+  "/calculators",
+  "/connect",
   "/investments",
   "/submit",
   "/submit-property",
@@ -15,6 +17,8 @@ export const QUERY_PRESERVING_INTAKE_PATHS: ReadonlySet<string> = new Set([
 export const LEGACY_SPA_EXACT_REDIRECTS: ReadonlyArray<
   readonly [from: string, to: string]
 > = [
+  ["/calculators", "/strategy-lab?tool=calculators"],
+  ["/connect", "/contact"],
   ["/sell", "/property-owners"],
   ["/investments", "/capital"],
   ["/submit-deal", "/bring-an-opportunity?intent=deal-jv"],

@@ -1,6 +1,7 @@
 import React from 'react';
-import { BadgeCheck, ClipboardList, Hammer, Layers } from 'lucide-react';
-import type { Category, Nav } from './theme';
+import { Link } from 'wouter';
+import { ArrowRight, BadgeCheck, ClipboardList, Hammer, Layers } from 'lucide-react';
+import type { Category, CategoryTerminal, Nav } from './theme';
 import { IMG } from './primitives';
 import {
   DealFindersExtras,
@@ -119,6 +120,32 @@ function BuildProcessBlock() {
   );
 }
 
+function TerminalRouteCta({ terminal }: { terminal: CategoryTerminal }) {
+  return (
+    <section className="relative overflow-hidden bg-[var(--navy)] py-24 text-[var(--cream)] lg:py-28">
+      <div className="relative mx-auto grid max-w-[1100px] gap-10 px-6 lg:grid-cols-[1fr_auto] lg:items-end lg:px-12">
+        <div className="max-w-3xl">
+          <div className="pg-label mb-5 text-[var(--accent-bright)]">{terminal.eyebrow}</div>
+          <h2 className="font-serif-display text-4xl leading-[1.05] md:text-5xl [text-wrap:balance]">
+            {terminal.title}
+          </h2>
+          <p className="mt-6 max-w-2xl text-[0.98rem] leading-relaxed text-[rgba(245,230,211,0.78)]">
+            {terminal.copy}
+          </p>
+        </div>
+        <Link
+          href={terminal.href}
+          className="btn-solid-light inline-flex items-center justify-center gap-3 px-8 py-4 pg-label !text-[10px] group"
+          data-testid="link-category-formal-intake"
+        >
+          {terminal.label}
+          <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" aria-hidden="true" />
+        </Link>
+      </div>
+    </section>
+  );
+}
+
 export function CategoryPage({ cat, go, openPeggy }: { cat: Category; go: Nav; openPeggy: () => void }) {
   return (
     <>
@@ -136,7 +163,11 @@ export function CategoryPage({ cat, go, openPeggy }: { cat: Category; go: Nav; o
       {cat.rich.includes('process') && <BuildProcessBlock />}
       {cat.rich.includes('faq') && cat.faq && <FAQBlock items={cat.faq} eyebrow="Questions" title="What people ask us." allHref={cat.faqAnchor ? `/faq#${cat.faqAnchor}` : '/faq'} />}
       {cat.secondary && <NextStep go={go} label={cat.secondary.label} route={cat.secondary.route} />}
-      <LeadSection cfg={cat.form} eyebrow={cat.eyebrow} tone="navy" />
+      {cat.form ? (
+        <LeadSection cfg={cat.form} eyebrow={cat.eyebrow} tone="navy" />
+      ) : (
+        <TerminalRouteCta terminal={cat.terminal} />
+      )}
     </>
   );
 }

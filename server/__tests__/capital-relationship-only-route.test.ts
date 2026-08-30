@@ -38,26 +38,27 @@ describe("retired capital investment-interest endpoint", () => {
 
   it("does not let an admin status update open a project for capital activity", () => {
     const routesSource = readFileSync(
-      resolve(import.meta.dirname, "../routes.ts"),
+      resolve(import.meta.dirname, "../wholesale-review-routes.ts"),
       "utf8",
     );
-    const routeStart = routesSource.indexOf(
-      'app.patch("/api/marketplace/admin/projects/:id/status"',
-    );
+    const routeStart = routesSource.indexOf("const updateCapitalStatus");
     const routeSource = routesSource.slice(
       routeStart,
-      routesSource.indexOf("// ========================================", routeStart),
+      routesSource.indexOf("return {", routeStart),
     );
 
     expect(routeStart).toBeGreaterThan(-1);
     expect(routeSource).toMatch(
-      /if \(status === ["']funding["']\) \{\s*return sendCapitalRelationshipOnly\(res\);\s*\}/,
+      /if \(status === ["']funding["']\) \{\s*return sendCapitalRelationshipOnly\(response\);\s*\}/,
     );
     expect(routeSource).not.toContain(
       '["approved", "funding", "rejected", "under_review"]',
     );
     expect(routeSource).not.toContain("open for capital review");
     expect(routeSource).not.toContain("has been approved!");
-    expect(routeSource).toContain("does not publish an offering");
+    expect(routeSource).toContain(
+      "Administrative approval is not an offering or a publication action",
+    );
+    expect(routeSource).toContain("is_public: false");
   });
 });

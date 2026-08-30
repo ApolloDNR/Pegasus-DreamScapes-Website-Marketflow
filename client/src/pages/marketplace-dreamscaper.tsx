@@ -44,7 +44,7 @@ export default function MarketplaceDreamscaperPage() {
     isLoading: isProjectsLoading,
     isError: projectsError,
   } = useAuthenticatedQuery<CapitalProject[]>([
-    "/api/supabase/capital-projects/my",
+    "/api/supabase/marketplace/dreamscaper/projects",
   ]);
 
   const recentProjects = myProjects?.slice(0, 3) ?? [];

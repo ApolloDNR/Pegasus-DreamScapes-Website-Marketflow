@@ -8,7 +8,7 @@ import { ArrowRight, Building2, Network, Hammer, Briefcase, Sparkles } from "luc
 
 // /ecosystem is the footer-only Audience-B release valve: a single page with
 // four product cards, each carrying an honest status badge. Closes with one
-// CTA — "Send a note" → /connect.
+// CTA — "Send a note" → the canonical /contact chooser.
 const PRODUCTS: Array<{
   name: string;
   icon: typeof Building2;
@@ -155,7 +155,7 @@ export default function Ecosystem() {
             <p className="text-base text-cream/80 leading-relaxed max-w-xl mx-auto mb-9">
               The ecosystem is invite-led. If something here speaks to what you're building or how you'd want to participate, send a note and we'll start the conversation.
             </p>
-            <Link href="/connect">
+            <Link href="/contact">
               <Button
                 size="lg"
                 className="px-10 py-7 text-sm uppercase tracking-[0.15em] font-semibold bg-[hsl(var(--copper))] hover:bg-[hsl(27_56%_44%)] text-white"

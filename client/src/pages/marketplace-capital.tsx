@@ -32,10 +32,12 @@ import {
 import type { CapitalProject } from "@shared/schema";
 import {
   ArrowRight,
+  AlertCircle,
   Bookmark,
   Briefcase,
   Building2,
   MapPin,
+  RefreshCw,
   Search,
   Shield,
 } from "lucide-react";
@@ -56,11 +58,21 @@ function CapitalPage() {
   const [, setLocation] = useLocation();
   const { isItemSaved, toggleSaveItem, isSaving } = useSupabaseMarketplace();
 
-  const { data: projects, isLoading } = useQuery<CapitalProject[]>({
+  const {
+    data: projects,
+    isLoading,
+    isError,
+    isFetching,
+    refetch,
+  } = useQuery<CapitalProject[]>({
     queryKey: ["/api/supabase/capital-projects"],
   });
 
-  const filteredProjects = (projects ?? []).filter((project) => {
+  const hasVerifiedProjects = Array.isArray(projects);
+  const dataUnavailable = isError || (!isLoading && !hasVerifiedProjects);
+  const verifiedProjects = hasVerifiedProjects ? projects : [];
+
+  const filteredProjects = verifiedProjects.filter((project) => {
     const normalizedQuery = searchQuery.trim().toLowerCase();
     const matchesSearch =
       !normalizedQuery ||
@@ -146,6 +158,28 @@ function CapitalPage() {
 
       {isLoading ? (
         <ProjectGridSkeleton />
+      ) : dataUnavailable ? (
+        <Card className="border-destructive/40" role="alert" data-testid="state-capital-projects-unavailable">
+          <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
+              <AlertCircle className="h-8 w-8 text-destructive" aria-hidden="true" />
+            </div>
+            <h2 className="mb-2 text-lg font-semibold">Private project records unavailable</h2>
+            <p className="mb-5 max-w-lg leading-relaxed text-muted-foreground">
+              The private registry could not be loaded. No empty project list or record count is being inferred from that error.
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void refetch()}
+              disabled={isFetching}
+              data-testid="button-retry-capital-projects"
+            >
+              <RefreshCw className={`mr-2 h-4 w-4 ${isFetching ? "animate-spin" : ""}`} aria-hidden="true" />
+              {isFetching ? "Retrying…" : "Try again"}
+            </Button>
+          </CardContent>
+        </Card>
       ) : filteredProjects.length === 0 ? (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-16">
@@ -192,9 +226,11 @@ function CapitalPage() {
         </StaggerChildren>
       )}
 
-      <p className="mt-8 text-center text-sm text-muted-foreground">
-        Showing {filteredProjects.length} of {projects?.length ?? 0} private project records
-      </p>
+      {!isLoading && !dataUnavailable ? (
+        <p className="mt-8 text-center text-sm text-muted-foreground">
+          Showing {filteredProjects.length} of {verifiedProjects.length} private project records
+        </p>
+      ) : null}
     </div>
   );
 }

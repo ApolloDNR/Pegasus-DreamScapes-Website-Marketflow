@@ -1,7 +1,6 @@
 import { Link } from "wouter";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useSEO } from "@/hooks/use-seo";
 import { CardSurface } from "@/components/ui/card-primitives";
 import { ScrollReveal } from "@/components/animations";
 import { ContourLines } from "@/pegasus/primitives";
@@ -90,15 +89,6 @@ const DOCUMENTED = [
   "Approx. $840K sale",
   "$135K gross spread before other costs",
 ];
-
-const NELSON_JSONLD = {
-  "@context": "https://schema.org",
-  "@type": "CreativeWork",
-  name: "Nelson Dr — Value-Add Execution Case Study",
-  about: NELSON_PUBLIC_DESCRIPTION,
-  publisher: { "@type": "Organization", name: "Pegasus DreamScapes Corp." },
-  inLanguage: "en",
-};
 
 function Shot({
   src,
@@ -344,28 +334,6 @@ const AS_ACQUIRED = [
 ];
 
 export default function NelsonDrPage() {
-  useSEO({
-    title: "Nelson Dr — Value-Add Execution Case Study",
-    description:
-      NELSON_PUBLIC_DESCRIPTION,
-    image: "/og/nelson-dr.png",
-  });
-
-  useEffect(() => {
-    const id = "ld-nelson";
-    let s = document.head.querySelector<HTMLScriptElement>(`#${id}`);
-    if (!s) {
-      s = document.createElement("script");
-      s.id = id;
-      s.type = "application/ld+json";
-      document.head.appendChild(s);
-    }
-    s.text = JSON.stringify(NELSON_JSONLD);
-    return () => {
-      document.head.querySelector(`#${id}`)?.remove();
-    };
-  }, []);
-
   return (
     <div className="min-h-screen bg-background">
       {/* Hero */}

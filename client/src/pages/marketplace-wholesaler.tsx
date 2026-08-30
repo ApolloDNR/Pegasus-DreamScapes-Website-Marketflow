@@ -50,7 +50,7 @@ export default function MarketplaceWholesalerPage() {
     isLoading: isDealsLoading,
     isError: dealsError,
   } = useAuthenticatedQuery<WholesaleDeal[]>([
-    "/api/supabase/wholesale-deals/my",
+    "/api/supabase/marketplace/wholesaler/deals",
   ]);
 
   const {

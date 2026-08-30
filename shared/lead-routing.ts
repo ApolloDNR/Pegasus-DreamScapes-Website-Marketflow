@@ -16,6 +16,14 @@ type LeadRoutingInput = {
   role?: unknown;
 };
 
+export interface PegasusLeadOperationalDetails {
+  role: string;
+  intent: string;
+  context: string;
+  contextKind: PegasusLeadContextKind;
+  message: string;
+}
+
 const clean = (value: unknown, maxLength = 2_000) =>
   typeof value === "string" ? value.trim().slice(0, maxLength) : "";
 
@@ -25,6 +33,28 @@ export function classifyPegasusLead({
 }: LeadRoutingInput): PegasusLeadLane {
   const normalizedIntent = clean(intent, 100).toLowerCase();
   const normalizedRole = clean(role, 160).toLowerCase();
+  const roleLane: PegasusLeadLane | undefined =
+    /capital|investor|funding|lender/.test(normalizedRole)
+      ? "investor"
+      : /operator|vendor|contractor|builder/.test(normalizedRole)
+        ? "vendor"
+        : /referral|agent|advisor|broker/.test(normalizedRole)
+          ? "referral"
+          : /wholesale|deal finder|deal-finder/.test(normalizedRole)
+            ? "wholesaler"
+            : /buyer|homebuyer|buy a home/.test(normalizedRole)
+              ? "buyer"
+              : /seller|property owner|have a property/.test(normalizedRole)
+                ? "seller"
+                : undefined;
+
+  // CONTACT_FORM carries the property-review intent as its default, but its
+  // mounted role selector and Peggy handoff can explicitly select another
+  // lane. Honor that explicit non-seller choice instead of silently routing a
+  // wholesaler, referral, buyer, operator, or capital inquiry as a seller.
+  if (normalizedIntent === "property-review" && roleLane && roleLane !== "seller") {
+    return roleLane;
+  }
 
   if (["capital-partner", "capital-introduction", "investment", "capital", "funding"].includes(normalizedIntent)) {
     return "investor";
@@ -42,16 +72,48 @@ export function classifyPegasusLead({
     return /\bbuy|buyer/.test(normalizedRole) ? "buyer" : "seller";
   }
 
-  if (/capital|investor|funding|lender/.test(normalizedRole)) return "investor";
-  if (/operator|vendor|contractor|builder/.test(normalizedRole)) return "vendor";
-  if (/referral|agent|advisor|broker/.test(normalizedRole)) return "referral";
-  if (/wholesale|deal finder|deal-finder/.test(normalizedRole)) return "wholesaler";
-  if (/buyer|homebuyer|buy a home/.test(normalizedRole)) return "buyer";
-  if (/seller|property owner|have a property/.test(normalizedRole)) return "seller";
-  return "contact";
+  return roleLane ?? "contact";
 }
 
 const REUSABLE_LEAD_SOURCES = new Set(["form", "strategy-lab", "peggy"]);
+
+const asRecord = (value: unknown): Record<string, unknown> =>
+  value !== null && typeof value === "object" && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+
+/**
+ * One bounded operational view of the reusable public form contract. Storage
+ * keeps the original leadData object, while staff email and admin consumers
+ * use this projection instead of guessing at legacy lane-specific keys.
+ */
+export function projectPegasusLeadOperationalDetails(
+  value: unknown,
+): PegasusLeadOperationalDetails {
+  const row = asRecord(value);
+  const source = clean(row.source, 100);
+  if (!REUSABLE_LEAD_SOURCES.has(source)) {
+    return {
+      role: "",
+      intent: "",
+      context: "",
+      contextKind: "context",
+      message: "",
+    };
+  }
+
+  const leadData = asRecord(row.leadData);
+  return {
+    role: clean(leadData.role, 160),
+    intent: clean(leadData.intent, 160),
+    context: clean(leadData.context),
+    contextKind:
+      leadData.contextKind === "property-address"
+        ? "property-address"
+        : "context",
+    message: clean(leadData.message),
+  };
+}
 
 /**
  * Server-truth normalization for the reusable Pegasus lead form. The public

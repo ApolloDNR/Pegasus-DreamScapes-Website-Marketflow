@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { normalizePegasusLeadSubmission } from "@shared/lead-routing";
 import {
   buildGenericLeadNotificationData,
   consentVersionForLead,
@@ -223,6 +224,52 @@ describe("staff notification policy", () => {
     expect(notification.text).toContain("Privacy acknowledged: No");
     expect(notification.text).not.toContain("must not be copied");
     expect(notification.text).not.toContain("secretArbitraryField");
+  });
+
+  it.each([
+    ["deal-finder", "Deal finder / Wholesaler", "wholesaler"],
+    ["referral", "Referral partner", "referral"],
+    ["contact", "Something else", "contact"],
+  ] as const)(
+    "keeps reusable %s context and message distinct in the staff alert",
+    (intent, role, expectedLane) => {
+      const normalized = normalizePegasusLeadSubmission({
+        leadType: "submit",
+        source: "form",
+        firstName: "Taylor",
+        lastName: "Partner",
+        email: "taylor@example.com",
+        leadData: {
+          intent,
+          role,
+          context: "East Bay source context",
+          contextKind: "context",
+          message: "The full submitted narrative",
+        },
+      });
+
+      expect(normalized.leadType).toBe(expectedLane);
+      const notification = buildGenericLeadNotificationData({
+        ...normalized,
+        id: 77,
+      });
+
+      expect(notification.text).toContain("Context: East Bay source context");
+      expect(notification.text).toContain("Message: The full submitted narrative");
+    },
+  );
+
+  it("keeps the legacy generic-message fallback outside reusable forms", () => {
+    const notification = buildGenericLeadNotificationData({
+      id: 78,
+      leadType: "contact",
+      source: "contact_page",
+      firstName: "Morgan",
+      email: "morgan@example.com",
+      leadData: { message: "A legacy contact-page message" },
+    });
+
+    expect(notification.text).toContain("Notes: A legacy contact-page message");
   });
 
   it("strips line breaks from subject fields and bounds the subject", () => {

@@ -102,8 +102,8 @@ const LANES: [string, string[], string, string | null][] = [
   ],
   [
     "/operators",
-    ["Submit a vendor", "profile."],
-    "Contractors, trades, designers, architects, photographers, inspectors, lenders, escrow/title partners",
+    ["Know the standard", "before the scope."],
+    "Formal applications are accepted only through the Vendor Network.",
     null,
   ],
   [
@@ -141,8 +141,8 @@ describe("Lane pages PRD v1 contract (issue #22)", () => {
       expect(nav.textContent, `missing primary nav item: ${label}`).toContain(label);
     }
     expect(nav.textContent).toContain("Bring an Opportunity");
-    expect(nav.textContent).not.toContain("MarketFlow");
-    expect(nav.textContent).not.toContain("Strategy Lab");
+    expect(nav.querySelector('a[href="/marketflow"]')).toBeNull();
+    expect(nav.querySelector('a[href="/strategy-lab"]')).toBeNull();
     expect(container.querySelector("main")?.textContent).toContain("Open Strategy Lab");
     expect(container.querySelector('footer a[href="/marketflow"]')).toHaveTextContent("MarketFlow");
   });

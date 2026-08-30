@@ -111,6 +111,22 @@ function escapeHtml(s: string): string {
     .replace(/"/g, "&quot;");
 }
 
+interface ReusableLeadEmailDetails {
+  context?: string;
+  message?: string;
+}
+
+function reusableLeadEmailRows(details: ReusableLeadEmailDetails): string {
+  return [
+    details.context
+      ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Submitted Context</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(details.context)}</td></tr>`
+      : "",
+    details.message
+      ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Submitted Message</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(details.message)}</td></tr>`
+      : "",
+  ].join("");
+}
+
 export async function sendPeggyHumanRequired(args: {
   conversation: { id: number; sessionId: string; createdAt?: Date | null; intake?: any; humanRequiredReason?: string | null };
   transcript: Array<{ role: string; content: string; createdAt?: Date | null }>;
@@ -228,7 +244,7 @@ export async function sendSellerLeadNotification(lead: {
   condition: string;
   timeline: string;
   notes?: string;
-}): Promise<EmailResult> {
+} & ReusableLeadEmailDetails): Promise<EmailResult> {
   const staffEmail = process.env.STAFF_NOTIFICATION_EMAIL || "leads@pegasusdreamscapes.com";
   
   const html = `
@@ -241,6 +257,7 @@ export async function sendSellerLeadNotification(lead: {
       <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Property Type</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.propertyType)}</td></tr>
       <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Condition</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.condition)}</td></tr>
       <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Timeline</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.timeline)}</td></tr>
+      ${reusableLeadEmailRows(lead)}
       ${lead.notes ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Notes</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.notes)}</td></tr>` : ''}
     </table>
     <p style="margin-top: 20px; color: #666;">This lead was submitted through the Pegasus DreamScapes website.</p>
@@ -292,7 +309,7 @@ export async function sendInvestorLeadNotification(lead: {
   investmentRange: string;
   strategy: string;
   notes?: string;
-}): Promise<EmailResult> {
+} & ReusableLeadEmailDetails): Promise<EmailResult> {
   const staffEmail = process.env.STAFF_NOTIFICATION_EMAIL || "investors@pegasusdreamscapes.com";
   
   const html = `
@@ -303,6 +320,7 @@ export async function sendInvestorLeadNotification(lead: {
       <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Phone</strong></td><td style="padding: 8px; border: 1px solid #ddd;"><a href="tel:${escapeHtml(lead.phone)}">${escapeHtml(lead.phone)}</a></td></tr>
       <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Investment Range</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.investmentRange)}</td></tr>
       <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Strategy</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.strategy)}</td></tr>
+      ${reusableLeadEmailRows(lead)}
       ${lead.notes ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Notes</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.notes)}</td></tr>` : ''}
     </table>
     <p style="margin-top: 20px; color: #666;">This lead was submitted through the Pegasus DreamScapes website.</p>
@@ -323,7 +341,7 @@ export async function sendBuyerLeadNotification(lead: {
   priceRange: string;
   locations?: string[];
   notes?: string;
-}): Promise<EmailResult> {
+} & ReusableLeadEmailDetails): Promise<EmailResult> {
   const staffEmail = process.env.STAFF_NOTIFICATION_EMAIL || "buyers@pegasusdreamscapes.com";
   
   const html = `
@@ -335,6 +353,7 @@ export async function sendBuyerLeadNotification(lead: {
       <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Buyer Type</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.buyerType)}</td></tr>
       <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Price Range</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.priceRange)}</td></tr>
       ${lead.locations ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Target Locations</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.locations.map(escapeHtml).join(", ")}</td></tr>` : ''}
+      ${reusableLeadEmailRows(lead)}
       ${lead.notes ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Notes</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.notes)}</td></tr>` : ''}
     </table>
     <p style="margin-top: 20px; color: #666;">This lead was submitted through the Pegasus DreamScapes website.</p>
@@ -356,7 +375,7 @@ export async function sendVendorLeadNotification(lead: {
   license?: string;
   serviceArea?: string;
   notes?: string;
-}): Promise<EmailResult> {
+} & ReusableLeadEmailDetails): Promise<EmailResult> {
   const staffEmail = process.env.STAFF_NOTIFICATION_EMAIL || "apollo@pegasusdreamscapes.com";
 
   const html = `
@@ -369,6 +388,7 @@ export async function sendVendorLeadNotification(lead: {
       ${lead.trade ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Trade</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.trade)}</td></tr>` : ''}
       ${lead.license ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>License</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.license)}</td></tr>` : ''}
       ${lead.serviceArea ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Service Area</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.serviceArea)}</td></tr>` : ''}
+      ${reusableLeadEmailRows(lead)}
       ${lead.notes ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Notes</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.notes)}</td></tr>` : ''}
     </table>
     <p style="margin-top: 20px;">

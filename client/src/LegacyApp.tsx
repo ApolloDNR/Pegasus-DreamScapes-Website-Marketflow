@@ -109,7 +109,6 @@ const SubmitPropertyPage = lazy(() => import("@/pages/submit-property"));
 const PegasusStandardPage = lazy(() => import("@/pages/pegasus-standard"));
 const DepartmentsPage = lazy(() => import("@/pages/departments"));
 const CaseStudyPage = lazy(() => import("@/pages/case-study"));
-const ConnectPage = lazy(() => import("@/pages/connect"));
 const NelsonDrPage = lazy(() => import("@/pages/project-nelson-dr"));
 const MarketflowAccess = lazy(() => import("@/pages/marketflow-access"));
 const MarketflowBuyboxes = lazy(() => import("@/pages/marketflow-buyboxes"));
@@ -155,14 +154,13 @@ export const legacyRedirects: [string, string][] = [
   ...LEGACY_SPA_PREFIX_REDIRECTS.map(
     ([prefix, to]) => [`${prefix}/*`, to] as [string, string],
   ),
-  // Public library retirement and calculator query behavior intentionally
-  // remain specialized rather than becoming permanent shared 301 aliases.
+  // Public library retirement remains specialized. The calculator alias is
+  // shared with the server so its deep-link query behavior cannot drift.
   ["/library", "/strategy-lab"],
   ["/library/:slug", "/strategy-lab"],
   ["/resources", "/strategy-lab"],
   ["/education", "/strategy-lab"],
   ["/strategy-library", "/strategy-lab"],
-  ["/calculators", "/strategy-lab?tool=calculators"],
 ];
 
 export function Router() {
@@ -186,7 +184,6 @@ export function Router() {
       <Route path="/pegasus-standard" component={PegasusStandardPage} />
       <Route path="/departments" component={DepartmentsPage} />
       <Route path="/case-study" component={CaseStudyPage} />
-      <Route path="/connect" component={ConnectPage} />
       <Route path="/projects" component={Projects} />
       <Route path="/projects/nelson-dr" component={NelsonDrPage} />
       {/* Website Spec v4 — /strategy-lab is a live prototype shell page again

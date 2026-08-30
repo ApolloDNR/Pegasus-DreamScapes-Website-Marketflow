@@ -48,6 +48,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { useUpload } from "@/hooks/use-upload";
+import { REVIEW_AUDIT_ACTION_TYPES } from "@shared/schema";
 
 interface AdminStats {
   totalSellerLeads: number;
@@ -84,19 +85,16 @@ interface Lead {
   createdAt: string;
 }
 
+type ReviewAuditActionType = (typeof REVIEW_AUDIT_ACTION_TYPES)[number];
+
 interface AuditLogEntry {
   id: number;
-  adminUserId: string;
   adminEmail: string | null;
   adminName: string | null;
-  actionType: string;
+  actionType: ReviewAuditActionType;
   resourceType: string | null;
   resourceId: string | null;
   description: string;
-  previousValue: string | null;
-  newValue: string | null;
-  ipAddress: string | null;
-  userAgent: string | null;
   createdAt: string;
 }
 
@@ -107,7 +105,74 @@ interface AuditLogsResponse {
   offset: number;
 }
 
-function AdminDataUnavailable({ scope }: { scope: string }) {
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  value !== null && typeof value === "object" && !Array.isArray(value);
+
+const isNullableString = (value: unknown): value is string | null =>
+  value === null || typeof value === "string";
+
+const isNonNegativeInteger = (value: unknown): value is number =>
+  typeof value === "number" && Number.isInteger(value) && value >= 0;
+
+function isAuditLogEntry(value: unknown): value is AuditLogEntry {
+  if (!isRecord(value)) return false;
+
+  return (
+    isNonNegativeInteger(value.id) &&
+    value.id > 0 &&
+    isNullableString(value.adminEmail) &&
+    isNullableString(value.adminName) &&
+    typeof value.actionType === "string" &&
+    REVIEW_AUDIT_ACTION_TYPES.includes(
+      value.actionType as ReviewAuditActionType,
+    ) &&
+    isNullableString(value.resourceType) &&
+    isNullableString(value.resourceId) &&
+    typeof value.description === "string" &&
+    value.description.trim().length > 0 &&
+    typeof value.createdAt === "string" &&
+    Number.isFinite(Date.parse(value.createdAt))
+  );
+}
+
+function isAuditLogsResponse(value: unknown): value is AuditLogsResponse {
+  if (!isRecord(value) || !Array.isArray(value.logs)) return false;
+  if (
+    !isNonNegativeInteger(value.total) ||
+    !isNonNegativeInteger(value.limit) ||
+    value.limit === 0 ||
+    !isNonNegativeInteger(value.offset)
+  ) {
+    return false;
+  }
+
+  return (
+    value.logs.length <= value.limit &&
+    value.logs.length <= value.total &&
+    value.logs.every(isAuditLogEntry)
+  );
+}
+
+async function readAuditRecorded(response: Response): Promise<boolean | null> {
+  try {
+    const body: unknown = await response.json();
+    return isRecord(body) && typeof body.auditRecorded === "boolean"
+      ? body.auditRecorded
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function AdminDataUnavailable({
+  scope,
+  onRetry,
+  isRetrying = false,
+}: {
+  scope: string;
+  onRetry?: () => void;
+  isRetrying?: boolean;
+}) {
   return (
     <div className="rounded-lg border border-dashed p-5 text-center" role="status">
       <AlertCircle className="mx-auto mb-3 h-7 w-7 text-amber-600" aria-hidden="true" />
@@ -115,6 +180,21 @@ function AdminDataUnavailable({ scope }: { scope: string }) {
       <p className="mt-1 text-sm text-muted-foreground">
         {scope} could not be loaded. Refresh or try again later; no zero or empty state is being inferred.
       </p>
+      {onRetry ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="mt-4"
+          onClick={onRetry}
+          disabled={isRetrying}
+        >
+          {isRetrying ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : null}
+          {isRetrying ? "Retrying…" : `Retry ${scope.toLowerCase()}`}
+        </Button>
+      ) : null}
     </div>
   );
 }
@@ -146,27 +226,50 @@ export default function MarketplaceAdminPage() {
     ? "/api/audit-logs?limit=50" 
     : `/api/audit-logs?limit=50&actionType=${auditLogFilter}`;
   
-  const { data: auditLogsData, isLoading: auditLogsLoading, isError: auditLogsError } = useQuery<AuditLogsResponse>({
+  const {
+    data: auditLogsResponse,
+    isLoading: auditLogsLoading,
+    isError: auditLogsError,
+    isFetching: auditLogsFetching,
+    refetch: refetchAuditLogs,
+  } = useQuery<unknown>({
     queryKey: [auditLogQueryKey],
   });
+  const auditLogsData = isAuditLogsResponse(auditLogsResponse)
+    ? auditLogsResponse
+    : null;
 
   const approveMutation = useMutation({
     mutationFn: async ({ itemType, itemId, approved }: { itemType: string; itemId: number; approved: boolean }) => {
       const endpoint = itemType === "wholesale_deal" 
         ? `/api/marketplace/admin/deals/${itemId}/status`
         : `/api/marketplace/admin/projects/${itemId}/status`;
-      return apiRequest("PATCH", endpoint, {
-        status: approved ? "listed" : "rejected",
+      const response = await apiRequest("PATCH", endpoint, {
+        status: approved
+          ? itemType === "wholesale_deal"
+            ? "listed"
+            : "approved"
+          : "rejected",
         rejectionReason: approved ? undefined : rejectionReason,
       });
+      return { auditRecorded: await readAuditRecorded(response) };
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (result, variables) => {
       toast({
         title: variables.approved ? "Approved" : "Rejected",
         description: `Item has been ${variables.approved ? "approved and listed" : "rejected"}.`,
       });
+      if (result.auditRecorded === false) {
+        toast({
+          title: "Status changed; audit event not recorded",
+          description:
+            "The review decision was saved, but the server did not confirm its audit event. Treat the audit history as incomplete until verified.",
+          variant: "destructive",
+        });
+      }
       queryClient.invalidateQueries({ queryKey: ["/api/marketplace/admin/pending"] });
       queryClient.invalidateQueries({ queryKey: ["/api/marketplace/admin/stats"] });
+      queryClient.invalidateQueries({ queryKey: [auditLogQueryKey] });
       setReviewDialogOpen(false);
       setSelectedItem(null);
       setRejectionReason("");
@@ -575,43 +678,52 @@ export default function MarketplaceAdminPage() {
                     <div>
                       <CardTitle className="flex items-center gap-2">
                         <History className="h-5 w-5" />
-                        Admin Activity Log
+                        Review Audit Log
                       </CardTitle>
-                      <CardDescription>Track all administrative actions on the platform</CardDescription>
+                      <CardDescription>
+                        Server-recorded wholesale and capital review events only.
+                      </CardDescription>
                     </div>
                     <Select value={auditLogFilter} onValueChange={setAuditLogFilter}>
                       <SelectTrigger className="w-[180px]" data-testid="select-audit-filter">
                         <SelectValue placeholder="Filter by action" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Actions</SelectItem>
-                        <SelectItem value="user_created">User Created</SelectItem>
-                        <SelectItem value="user_updated">User Updated</SelectItem>
-                        <SelectItem value="role_assigned">Role Assigned</SelectItem>
+                        <SelectItem value="all">All Review Events</SelectItem>
                         <SelectItem value="deal_approved">Deal Approved</SelectItem>
                         <SelectItem value="deal_rejected">Deal Rejected</SelectItem>
+                        <SelectItem value="deal_review_started">Deal Review Started</SelectItem>
                         <SelectItem value="project_approved">Project Approved</SelectItem>
-                        <SelectItem value="badge_awarded">Badge Awarded</SelectItem>
-                        <SelectItem value="setting_changed">Setting Changed</SelectItem>
+                        <SelectItem value="project_rejected">Project Rejected</SelectItem>
+                        <SelectItem value="project_review_started">Project Review Started</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </CardHeader>
                 <CardContent>
                   {auditLogsLoading ? (
-                    <div className="space-y-3">
+                    <div className="space-y-3" role="status" aria-live="polite">
+                      <p className="text-sm text-muted-foreground">
+                        Loading server-recorded review events…
+                      </p>
                       {[1, 2, 3, 4, 5].map((i) => (
                         <Skeleton key={i} className="h-16 w-full" />
                       ))}
                     </div>
-                  ) : auditLogsError ? (
-                    <AdminDataUnavailable scope="Audit log" />
-                  ) : !auditLogsData?.logs?.length ? (
+                  ) : auditLogsError || !auditLogsData ? (
+                    <AdminDataUnavailable
+                      scope="Audit log"
+                      onRetry={() => {
+                        void refetchAuditLogs();
+                      }}
+                      isRetrying={auditLogsFetching}
+                    />
+                  ) : auditLogsData.logs.length === 0 ? (
                     <div className="text-center py-8">
                       <History className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="font-medium mb-2">No Activity Yet</h3>
+                      <h3 className="font-medium mb-2">No recorded review events</h3>
                       <p className="text-sm text-muted-foreground">
-                        Admin actions will appear here once they occur.
+                        The server returned a verified empty review history for this filter.
                       </p>
                     </div>
                   ) : (
@@ -628,7 +740,7 @@ export default function MarketplaceAdminPage() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <p className="font-medium">{log.adminName || log.adminEmail || "Admin"}</p>
+                                <p className="font-medium">{log.adminName || log.adminEmail || "Staff reviewer"}</p>
                                 <Badge variant="outline" className="text-xs">
                                   {log.actionType.replace(/_/g, " ")}
                                 </Badge>
@@ -648,9 +760,9 @@ export default function MarketplaceAdminPage() {
                       </div>
                     </ScrollArea>
                   )}
-                  {auditLogsData && auditLogsData.total > 50 && (
+                  {auditLogsData && auditLogsData.total > auditLogsData.logs.length && (
                     <p className="text-center text-sm text-muted-foreground mt-4">
-                      Showing 50 of {auditLogsData.total} entries
+                      Showing {auditLogsData.logs.length} of {auditLogsData.total} recorded review events
                     </p>
                   )}
                 </CardContent>

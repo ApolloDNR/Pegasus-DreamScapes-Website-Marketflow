@@ -50,7 +50,6 @@ const COLUMNS: { heading: string; links: FooterLink[] }[] = [
     heading: "Company",
     links: [
       navMore("/about"),
-      navMore("/connect"),
       navMore("/contact"),
       navMore("/faq"),
       navMore("/peggy"),

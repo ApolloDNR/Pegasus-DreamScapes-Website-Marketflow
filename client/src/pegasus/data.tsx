@@ -35,7 +35,6 @@ const PREMIUM_MORE_NAV: PremiumNavigationGroup[] = [
       { label: 'Development', route: 'development', note: 'A framework for scope, budget, diligence, and delivery terms.' },
       { label: 'Capital Partners', route: 'capital', note: 'Private, project-specific relationships.' },
       { label: 'Buyers', route: 'buyers', note: 'Representation, diligence, and reviewed opportunity paths.' },
-      { label: 'MarketFlow', route: 'marketflow', note: 'The controlled opportunity workspace and current access boundaries.' },
     ],
   },
   {
@@ -44,7 +43,6 @@ const PREMIUM_MORE_NAV: PremiumNavigationGroup[] = [
       { label: 'Operators & Vendors', route: 'operators', note: 'Submit a profile for possible future-scope consideration.' },
       { label: 'Referral Partners', route: 'referral', note: 'Careful handoffs and written terms where lawful.' },
       { label: 'Pegasus Ecosystem', route: 'ecosystem', note: 'HQ, Peggy, Strategy Lab, MarketFlow, and the operating layers.' },
-      { label: 'Strategy Lab', route: 'strategylab', note: 'Model visitor-entered assumptions with directional tools.' },
     ],
   },
 ];
@@ -816,16 +814,15 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
   /* ---------------------------------------------------------- */
   operators: {
     eyebrow: 'Who We Serve / Operators & Vendors',
-    // COPY_DECK §9 locked hero (issue #22)
-    title: <>Submit a vendor<br />profile.</>,
+    title: <>Know the standard<br />before the scope.</>,
     image: 'pegasus-craft-blueprint.webp',
     layout: 'ledger',
     pointsLabel: 'How we work',
-    lead: 'Contractors, trades, designers, architects, photographers, inspectors, lenders, escrow/title partners, and other operators may submit a vendor profile for possible future consideration.',
+    lead: 'An audience and standards guide for contractors, trades, designers, architects, photographers, inspectors, lenders, escrow/title partners, and other operators. Formal applications are accepted only through the Vendor Network.',
     points: [
       { t: 'Scope, if offered', d: 'A future project agreement should define deliverables, exclusions, and change control.' },
       { t: 'Payment terms, if offered', d: 'A future agreement should define invoices, draws, retainage, disputes, and remedies.' },
-      { t: 'No volume promise', d: 'Application does not promise approval, placement, a project, repeat work, or revenue.' },
+      { t: 'No volume promise', d: 'A Vendor Network application does not promise approval, placement, a project, repeat work, or revenue.' },
       { t: 'Completion criteria', d: 'A future agreement should define inspection, acceptance, handoff, and closeout.' },
     ],
     rich: ['process', 'faq'],
@@ -845,15 +842,12 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
       { q: 'How do you scope work?', a: 'If a future opportunity is offered, the applicable agreement should define scope, price, schedule, changes, and completion.' },
       { q: 'How do payments work?', a: 'No payment or project is promised by applying. Any later agreement should define invoice, draw, retainage, dispute, and remedy terms.' },
     ],
-    form: {
-      role: 'Operator',
-      intent: 'operator',
-      heading: <>Tell us what you do</>,
-      lead: 'Share your trade, service area, credentials, and capacity. Application does not promise review, approval, work, or follow-up.',
-      submit: 'Submit Operator Profile',
-      third: { label: 'Trade / service & area', placeholder: 'Licensed GC, East Bay' },
-      messageLabel: 'About your work',
-      messagePlaceholder: 'Capacity, specialties, licenses...',
+    terminal: {
+      eyebrow: 'Formal operator intake',
+      title: <>One application.<br />One source of truth.</>,
+      copy: 'Vendor Network is the only formal application of record for operators and vendors. Submit credentials, service area, capacity, insurance, and references there for possible project-by-project consideration. No review, approval, placement, work, or volume is promised.',
+      href: '/vendor-network#vendor-form',
+      label: 'Apply through Vendor Network',
     },
   },
 

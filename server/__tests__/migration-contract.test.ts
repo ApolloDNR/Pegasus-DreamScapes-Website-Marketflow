@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import {
+  REQUIRED_ADMIN_AUDIT_LOG_COLUMNS,
   REQUIRED_HQ_OUTBOX_COLUMNS,
   REQUIRED_OPPORTUNITY_COLUMNS,
 } from "../readiness";
@@ -41,6 +42,18 @@ describe("launch database migration artifacts", () => {
     expect(sql).toContain('"consent_copy_version" varchar(80)');
     expect(sql).toContain('"IDX_opportunities_created_at"');
     for (const column of REQUIRED_OPPORTUNITY_COLUMNS) {
+      expect(sql).toContain(`"${column}"`);
+    }
+  });
+
+  it("defines the durable administrative review audit table", () => {
+    const sql = migration("0006_admin_audit_log.sql");
+
+    expect(sql).toContain('CREATE TABLE IF NOT EXISTS "admin_audit_log"');
+    expect(sql).toContain('"admin_user_id" varchar(255) NOT NULL');
+    expect(sql).toContain('"action_type" varchar(100) NOT NULL');
+    expect(sql).toContain('"IDX_admin_audit_log_created_at"');
+    for (const column of REQUIRED_ADMIN_AUDIT_LOG_COLUMNS) {
       expect(sql).toContain(`"${column}"`);
     }
   });

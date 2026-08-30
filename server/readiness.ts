@@ -4,8 +4,10 @@ import { hasRequiredHqEndpointConfiguration } from "./integrations/hq-config";
 export interface ReadinessProbeResult {
   opportunities: string | null;
   hqOutbox: string | null;
+  adminAuditLog: string | null;
   opportunityColumns: string[];
   hqOutboxColumns: string[];
+  adminAuditLogColumns: string[];
 }
 
 export interface ReadinessDependencies {
@@ -67,6 +69,22 @@ export const REQUIRED_HQ_OUTBOX_COLUMNS = [
   "updated_at",
 ] as const;
 
+export const REQUIRED_ADMIN_AUDIT_LOG_COLUMNS = [
+  "id",
+  "admin_user_id",
+  "admin_email",
+  "admin_name",
+  "action_type",
+  "resource_type",
+  "resource_id",
+  "description",
+  "previous_value",
+  "new_value",
+  "ip_address",
+  "user_agent",
+  "created_at",
+] as const;
+
 function isProductionEnvironment(
   environment: Record<string, string | undefined> = process.env,
 ): boolean {
@@ -94,6 +112,7 @@ async function probeLaunchSchema(): Promise<ReadinessProbeResult> {
     SELECT
       to_regclass('public.opportunities')::text AS opportunities,
       to_regclass('public.hq_outbox')::text AS hq_outbox,
+      to_regclass('public.admin_audit_log')::text AS admin_audit_log,
       ARRAY(
         SELECT column_name::text
         FROM information_schema.columns
@@ -107,7 +126,14 @@ async function probeLaunchSchema(): Promise<ReadinessProbeResult> {
         WHERE table_schema = 'public'
           AND table_name = 'hq_outbox'
         ORDER BY column_name
-      ) AS hq_outbox_columns
+      ) AS hq_outbox_columns,
+      ARRAY(
+        SELECT column_name::text
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'admin_audit_log'
+        ORDER BY column_name
+      ) AS admin_audit_log_columns
   `);
   const rows = Array.isArray(result)
     ? result
@@ -116,19 +142,25 @@ async function probeLaunchSchema(): Promise<ReadinessProbeResult> {
     | {
         opportunities?: string | null;
         hq_outbox?: string | null;
+        admin_audit_log?: string | null;
         opportunity_columns?: string[];
         hq_outbox_columns?: string[];
+        admin_audit_log_columns?: string[];
       }
     | undefined;
 
   return {
     opportunities: row?.opportunities ?? null,
     hqOutbox: row?.hq_outbox ?? null,
+    adminAuditLog: row?.admin_audit_log ?? null,
     opportunityColumns: Array.isArray(row?.opportunity_columns)
       ? row.opportunity_columns
       : [],
     hqOutboxColumns: Array.isArray(row?.hq_outbox_columns)
       ? row.hq_outbox_columns
+      : [],
+    adminAuditLogColumns: Array.isArray(row?.admin_audit_log_columns)
+      ? row.admin_audit_log_columns
       : [],
   };
 }
@@ -149,14 +181,19 @@ export async function checkReadiness(
     const result = await (dependencies.probe ?? probeLaunchSchema)();
     const opportunityColumns = new Set(result.opportunityColumns);
     const hqOutboxColumns = new Set(result.hqOutboxColumns);
+    const adminAuditLogColumns = new Set(result.adminAuditLogColumns);
     return Boolean(
       result.opportunities &&
       result.hqOutbox &&
+      result.adminAuditLog &&
       REQUIRED_OPPORTUNITY_COLUMNS.every((column) =>
         opportunityColumns.has(column)
       ) &&
       REQUIRED_HQ_OUTBOX_COLUMNS.every((column) =>
         hqOutboxColumns.has(column)
+      ) &&
+      REQUIRED_ADMIN_AUDIT_LOG_COLUMNS.every((column) =>
+        adminAuditLogColumns.has(column)
       ),
     );
   } catch {

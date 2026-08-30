@@ -1,6 +1,6 @@
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import VendorNetwork from "@/pages/vendor-network";
@@ -60,6 +60,17 @@ function fillRequiredFields() {
 }
 
 describe("Vendor Network consent contract", () => {
+  it("owns the only formal operator application at the stable vendor-form anchor", () => {
+    const { container } = renderPage();
+    const formalIntake = container.querySelector<HTMLElement>("#vendor-form");
+
+    expect(formalIntake).not.toBeNull();
+    expect(formalIntake).toHaveTextContent(/only formal application of record/i);
+    expect(
+      within(formalIntake as HTMLElement).getByRole("button", { name: /submit application/i }),
+    ).toBeInTheDocument();
+  });
+
   it("requires contact/privacy agreement before creating a vendor lead", async () => {
     renderPage();
     fillRequiredFields();

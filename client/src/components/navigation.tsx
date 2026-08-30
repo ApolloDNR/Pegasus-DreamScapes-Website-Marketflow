@@ -82,10 +82,6 @@ const MORE_META: Record<string, { icon: LucideIcon; tagline: string }> = {
     icon: ClipboardCheck,
     tagline: "Conversations, not pitches. Written agreement on every deal.",
   },
-  "/connect": {
-    icon: Layers,
-    tagline: "Six routes to Apollo. Pick the lane that fits.",
-  },
   "/disclosures": {
     icon: BookOpen,
     tagline: "DRE, KW East Bay, and securities-safe disclosures.",
@@ -646,18 +642,16 @@ export function Navigation() {
                     {NAV_ITEMS.map((item) => (
                       <li key={item.label}>{renderNavLink(item, true)}</li>
                     ))}
-                    {/* Empire Doctrine v1.0.2 Part C.7 — Connect is
-                        un-buried on mobile: surfaced in the primary list
-                        in addition to its persistent placement in the
-                        More accordion (mobile/footer parity). */}
+                    {/* Keep the canonical Contact chooser easy to reach on
+                        mobile in addition to its More-menu placement. */}
                     <li>
                       <Link
-                        href="/connect"
+                        href="/contact"
                         onClick={() => setMobileOpen(false)}
                         className="block py-3 text-base font-medium text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))] transition-colors"
-                        data-testid="link-nav-connect"
+                        data-testid="link-nav-contact"
                       >
-                        Connect
+                        Contact
                       </Link>
                     </li>
                   </ul>

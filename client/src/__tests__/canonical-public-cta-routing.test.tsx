@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 
-import ConnectPage from "@/pages/connect";
+import { ConnectChooser } from "@/pages/connect";
 import NelsonDrPage from "@/pages/project-nelson-dr";
 import ProjectsPage from "@/pages/projects";
 
@@ -62,8 +62,8 @@ function linkForTestId(testId: string): HTMLAnchorElement {
 afterEach(() => cleanup());
 
 describe("mounted public CTAs use the canonical opportunity route", () => {
-  it("routes both Connect property entry points directly to the canonical intake", () => {
-    renderPage("/connect", <ConnectPage />);
+  it("routes both Contact chooser property entry points directly to the canonical intake", () => {
+    renderPage("/contact", <ConnectChooser />);
 
     expect(linkForTestId("link-connect-submit")).toHaveAttribute(
       "href",

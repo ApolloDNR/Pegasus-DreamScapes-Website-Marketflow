@@ -10,6 +10,9 @@ const opportunityColumns = readinessModule
 const hqOutboxColumns = readinessModule
   ? [...readinessModule.REQUIRED_HQ_OUTBOX_COLUMNS]
   : [];
+const adminAuditLogColumns = readinessModule
+  ? [...readinessModule.REQUIRED_ADMIN_AUDIT_LOG_COLUMNS]
+  : [];
 
 let server: Server | undefined;
 
@@ -25,8 +28,10 @@ async function startReadinessServer(dependencies: {
   probe: () => Promise<{
     opportunities: string | null;
     hqOutbox: string | null;
+    adminAuditLog: string | null;
     opportunityColumns: string[];
     hqOutboxColumns: string[];
+    adminAuditLogColumns: string[];
   }>;
   hasRequiredHqEndpoint: () => boolean;
   hasRequiredEmail?: () => boolean;
@@ -67,8 +72,10 @@ describe("GET /api/ready", () => {
       probe: async () => ({
         opportunities: "opportunities",
         hqOutbox: "hq_outbox",
+        adminAuditLog: "admin_audit_log",
         opportunityColumns,
         hqOutboxColumns,
+        adminAuditLogColumns,
       }),
       hasRequiredHqEndpoint: () => true,
       hasRequiredEmail: () => true,
@@ -85,8 +92,10 @@ describe("GET /api/ready", () => {
       probe: async () => ({
         opportunities: "opportunities",
         hqOutbox: null,
+        adminAuditLog: "admin_audit_log",
         opportunityColumns,
         hqOutboxColumns: [],
+        adminAuditLogColumns,
       }),
       hasRequiredHqEndpoint: () => true,
       hasRequiredEmail: () => true,
@@ -118,8 +127,10 @@ describe("GET /api/ready", () => {
       probe: async () => ({
         opportunities: "opportunities",
         hqOutbox: "hq_outbox",
+        adminAuditLog: "admin_audit_log",
         opportunityColumns,
         hqOutboxColumns,
+        adminAuditLogColumns,
       }),
       hasRequiredHqEndpoint: () => false,
       hasRequiredEmail: () => true,
@@ -136,10 +147,12 @@ describe("GET /api/ready", () => {
       probe: async () => ({
         opportunities: "opportunities",
         hqOutbox: "hq_outbox",
+        adminAuditLog: "admin_audit_log",
         opportunityColumns: opportunityColumns.filter(
           (column) => column !== "referrer",
         ),
         hqOutboxColumns,
+        adminAuditLogColumns,
       }),
       hasRequiredHqEndpoint: () => true,
       hasRequiredEmail: () => true,
@@ -156,8 +169,10 @@ describe("GET /api/ready", () => {
       probe: async () => ({
         opportunities: "opportunities",
         hqOutbox: "hq_outbox",
+        adminAuditLog: "admin_audit_log",
         opportunityColumns,
         hqOutboxColumns,
+        adminAuditLogColumns,
       }),
       hasRequiredHqEndpoint: () => true,
       hasRequiredEmail: () => false,

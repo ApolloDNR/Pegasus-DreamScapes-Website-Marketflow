@@ -24,7 +24,6 @@ const releaseRoutes = [
   '/marketflow/deals',
   '/bring-an-opportunity',
   '/work-with-apollo',
-  '/connect',
   '/peggy',
   '/contact',
   '/privacy',
@@ -45,6 +44,9 @@ const fullPublicRouteExtras = [
   '/forgot-password',
   '/reset-password',
   '/saved',
+  '/privacy',
+  '/terms',
+  '/disclosures',
   '/snapshot/calc/rendered-qa-calculator',
   '/snapshot/property/rendered-qa-property',
   '/snapshot/rendered-qa-status',
@@ -1973,17 +1975,17 @@ if (process.env.GITHUB_ACTIONS === 'true') {
   }
 }
 
-if (releaseRoutes.length !== 18) {
+if (releaseRoutes.length !== 17) {
   invariantFailures.push(
-    `Rendered release route inventory contains ${releaseRoutes.length} routes; expected exactly 18`,
+    `Rendered release route inventory contains ${releaseRoutes.length} routes; expected exactly 17`,
   );
 }
-if (fullPublicRoutes.length !== 46) {
+if (fullPublicRoutes.length !== 45) {
   invariantFailures.push(
-    `Rendered full public route inventory contains ${fullPublicRoutes.length} routes; expected exactly 46`,
+    `Rendered full public route inventory contains ${fullPublicRoutes.length} routes; expected exactly 45`,
   );
 }
-const requiredRouteCheckCount = publicRouteCoverage === 'full' ? 368 : 144;
+const requiredRouteCheckCount = publicRouteCoverage === 'full' ? 360 : 136;
 if (!interactionsOnly && expectedRouteCheckCount !== requiredRouteCheckCount) {
   invariantFailures.push(
     `Rendered ${publicRouteCoverage} matrix produced ${expectedRouteCheckCount} checks; expected exactly ${requiredRouteCheckCount}`,
@@ -2000,10 +2002,10 @@ const expectedScreenshotCount = screenshotDir
 if (
   screenshotDir
   && publicRouteCoverage === 'full'
-  && expectedScreenshotCount !== 407
+  && expectedScreenshotCount !== 399
 ) {
   invariantFailures.push(
-    `Rendered QA full coverage expected exactly 407 screenshots; computed ${expectedScreenshotCount}`,
+    `Rendered QA full coverage expected exactly 399 screenshots; computed ${expectedScreenshotCount}`,
   );
 }
 if (screenshotDir && screenshotCount !== expectedScreenshotCount) {
@@ -2061,8 +2063,8 @@ if (result === 'failed') {
 }
 
 if (!interactionsOnly && publicRouteCoverage === 'full') {
-  console.log('[a11y] PASS: 368 rendered route/viewport/theme checks');
+  console.log('[a11y] PASS: 360 rendered route/viewport/theme checks');
 } else if (!interactionsOnly) {
-  console.log('[a11y] PASS: 144 rendered route/viewport/theme checks');
+  console.log('[a11y] PASS: 136 rendered route/viewport/theme checks');
 }
 console.log('[interaction] PASS: 17 rendered launch journeys');

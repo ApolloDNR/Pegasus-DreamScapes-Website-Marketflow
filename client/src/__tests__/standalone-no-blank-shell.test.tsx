@@ -12,7 +12,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // The prototype net (pegasus-no-blank-shell.test.tsx) only covers URLs the
 // Pegasus prototype shell owns (PEGASUS_URLS). But App.tsx also mounts many
 // app-level pages directly on the wouter <Switch> — e.g. /submit,
-// /projects/nelson-dr, /library, /vendor-network, /connect, /disclosures,
+// /projects/nelson-dr, /library, /vendor-network, /disclosures,
 // /privacy, /terms, /faq, /marketflow/access. None of those are covered by
 // the prototype net, so a future refactor could leave one rendering an empty
 // or crashing page with NO test failure.
@@ -127,7 +127,6 @@ const STANDALONE_URLS: string[] = [
   "/pegasus-standard",
   "/departments",
   "/case-study",
-  "/connect",
   "/projects",
   "/projects/nelson-dr",
   "/vendor-network",

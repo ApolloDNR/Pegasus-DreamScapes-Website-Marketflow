@@ -1,6 +1,6 @@
 import React from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Router } from "wouter";
@@ -86,28 +86,33 @@ describe("launch-gap public action truth", () => {
     expect(screen.getByText("You're in.")).toBeInTheDocument();
   });
 
-  it("keeps footer and operator intake copy conditional", () => {
-    renderWithProviders(
-      <>
-        <Footer />
-        <CategoryPage
-          cat={CATEGORIES.operators}
-          go={vi.fn()}
-          openPeggy={vi.fn()}
-        />
-      </>,
-    );
+  it("keeps footer receipt copy conditional", () => {
+    renderWithProviders(<Footer />);
 
     expect(
       screen.getByText("Submission receipt does not promise review, follow-up, or response timing."),
     ).toBeInTheDocument();
-    expect(
-      screen.getByText("Submission may be considered for fit; review, follow-up, and timing are not guaranteed."),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Submit Operator Profile" }),
-    ).toBeInTheDocument();
     expect(screen.queryByText(/within 48 hours/i)).not.toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Join the Network" })).not.toBeInTheDocument();
+  });
+
+  it("keeps Operators as a standards explainer and routes to the sole formal intake", () => {
+    const { container } = renderWithProviders(
+      <CategoryPage
+        cat={CATEGORIES.operators}
+        go={vi.fn()}
+        openPeggy={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByText(/Vendor Network is the only formal application of record/i),
+    ).toBeInTheDocument();
+    expect(container.querySelector("form")).toBeNull();
+    expect(screen.queryByRole("button", { name: /submit operator profile/i })).not.toBeInTheDocument();
+
+    const formalIntake = screen.getByRole("link", { name: /apply through vendor network/i });
+    expect(formalIntake).toHaveAttribute("href", "/vendor-network#vendor-form");
+    fireEvent.click(formalIntake);
+    expect(apiRequestMock).not.toHaveBeenCalled();
   });
 });

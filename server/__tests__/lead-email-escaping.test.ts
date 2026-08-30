@@ -34,6 +34,8 @@ describe("lead notification email safety", () => {
       propertyType: attack,
       condition: attack,
       timeline: attack,
+      context: "Seller submitted context",
+      message: "Seller submitted narrative",
       notes: attack,
     });
     await email.sendDealSubmissionNotification({
@@ -50,6 +52,8 @@ describe("lead notification email safety", () => {
       phone: attack,
       investmentRange: attack,
       strategy: attack,
+      context: "Investor submitted context",
+      message: "Investor submitted narrative",
       notes: attack,
     });
     await email.sendBuyerLeadNotification({
@@ -59,6 +63,8 @@ describe("lead notification email safety", () => {
       buyerType: attack,
       priceRange: attack,
       locations: [attack],
+      context: "Buyer submitted context",
+      message: "Buyer submitted narrative",
       notes: attack,
     });
     await email.sendVendorLeadNotification({
@@ -69,6 +75,8 @@ describe("lead notification email safety", () => {
       trade: attack,
       license: attack,
       serviceArea: attack,
+      context: "Vendor submitted context",
+      message: "Vendor submitted narrative",
       notes: attack,
     });
 
@@ -80,6 +88,20 @@ describe("lead notification email safety", () => {
       expect(html).not.toContain("onerror=\"alert(1)\"");
       expect(html).toContain("&lt;img");
       expect(html).toContain("&quot;alert(1)&quot;");
+    }
+
+    const expectedReusableDetails = [
+      ["Seller submitted context", "Seller submitted narrative"],
+      ["Investor submitted context", "Investor submitted narrative"],
+      ["Buyer submitted context", "Buyer submitted narrative"],
+      ["Vendor submitted context", "Vendor submitted narrative"],
+    ];
+    for (const [deliveryIndex, [context, message]] of expectedReusableDetails.entries()) {
+      const html = deliveries[deliveryIndex === 0 ? 0 : deliveryIndex + 1].content?.[0]?.value;
+      expect(html).toContain(`<strong>Submitted Context</strong>`);
+      expect(html).toContain(context);
+      expect(html).toContain(`<strong>Submitted Message</strong>`);
+      expect(html).toContain(message);
     }
   });
 });

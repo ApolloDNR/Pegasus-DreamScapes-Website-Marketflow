@@ -96,7 +96,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/operators": {
     title: tag("Operators & Vendors"),
     description:
-      "GCs, subcontractors, agents, and title professionals can apply for project-by-project consideration. No volume or assignment is promised.",
+      "Review project-control standards for operators and vendors. Apply only through Vendor Network; approval, placement, work, and volume are not promised.",
     image: `${SITE_URL}/og/operators.png`,
   },
   "/referral": {
@@ -121,9 +121,10 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
     image: `${SITE_URL}/og/deal-strategy.png`,
   },
   "/our-work": {
-    title: tag("Our Work — Nelson Drive"),
+    // Visual proof surface: paired before, construction, and finished images.
+    title: tag("Our Work — Transformation Gallery"),
     description:
-      "Nelson Drive public record: acquired about $600K, renovated for $105K, sold for $840K. Limited figures only; not net profit or return.",
+      "Nelson Drive transformation gallery: paired before, construction, and finished photos alongside a bounded project-level financial record.",
     image: `${SITE_URL}/og/nelson-dr.png`,
   },
   "/investments": {
@@ -204,17 +205,12 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
     image: `${SITE_URL}/og/projects.png`,
   },
   "/projects/nelson-dr": {
-    title: tag("Nelson Dr Case Study"),
+    // Canonical long-form record and sole Nelson Article structured-data owner.
+    title: tag("Nelson Drive — Full Project Record"),
     description:
-      "Nelson Drive public record: acquired about $600K, renovated for $105K, sold for $840K. Limited cost-and-sale figures, not net profit or return.",
+      "Full Nelson Drive project record: photo essay, execution timeline, and documented acquisition, improvement-budget, and sale figures with stated limits.",
     image: `${SITE_URL}/og/nelson-dr.png`,
     type: "article",
-  },
-  "/connect": {
-    title: tag("Connect"),
-    description:
-      "Choose the relevant public intake for a property, project, representation, capital, vendor, or general question. No response or route is promised.",
-    image: `${SITE_URL}/og/connect.png`,
   },
   "/contact": {
     title: tag("Contact"),
@@ -236,11 +232,11 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
     image: DEFAULT_OG_IMAGE,
   },
   "/case-study": {
-    title: tag("Case Study"),
+    // Concise financial summary; the full evidence record remains the project URL.
+    title: tag("Nelson Drive — Financial Summary"),
     description:
-      "Documented East Bay case study: acquired $600K, renovation $105K, acquisition-plus-renovation subtotal $705K, sold $840K. Not net profit or return.",
+      "Concise Nelson Drive financial summary: about $600K acquired, $105K improvement budget, $705K subtotal, and $840K sale; not net profit or return.",
     image: `${SITE_URL}/og/nelson-dr.png`,
-    type: "article",
   },
   "/pegasus-standard": {
     title: tag("The Pegasus Standard"),

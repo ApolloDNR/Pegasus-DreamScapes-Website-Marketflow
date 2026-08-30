@@ -24,23 +24,25 @@ type HandoffAction =
 const HANDOFF_RE = /\[\[HANDOFF\]\]([\s\S]*?)\[\[\/HANDOFF\]\]/;
 
 function SaveChatButton({ turns }: { turns: ChatTurn[] }) {
-  const [saved, setSaved] = useState(false);
+  const [saveState, setSaveState] = useState<'idle' | 'saved' | 'error'>('idle');
 
   const firstUser = turns.find((t) => t.role === 'user')?.content ?? '';
   const title = firstUser ? firstUser.slice(0, 80) : 'Peggy conversation';
 
   const onClick = () => {
-    if (saved) return;
-    addChat(title, turns);
-    setSaved(true);
+    if (saveState === 'saved') return;
+    const result = addChat(title, turns);
+    setSaveState(result.ok ? 'saved' : 'error');
   };
 
   return (
-    <button type="button" onClick={onClick} disabled={saved}
-      aria-label="Save this conversation"
+    <button type="button" onClick={onClick} disabled={saveState === 'saved'}
+      aria-label={saveState === 'error' ? 'Retry saving this conversation' : 'Save this conversation'}
       className="ml-auto inline-flex items-center gap-1.5 pg-label !text-[8px] !tracking-[0.16em] text-[var(--cream)]/70 hover:text-[var(--cream)] transition-colors disabled:opacity-70">
-      {saved ? (
+      {saveState === 'saved' ? (
         <><BookmarkCheck className="w-3.5 h-3.5" strokeWidth={1.8} /> Saved</>
+      ) : saveState === 'error' ? (
+        <><Bookmark className="w-3.5 h-3.5" strokeWidth={1.8} /> <span role="status">Save failed — retry</span></>
       ) : (
         <><Bookmark className="w-3.5 h-3.5" strokeWidth={1.8} /> Save chat</>
       )}

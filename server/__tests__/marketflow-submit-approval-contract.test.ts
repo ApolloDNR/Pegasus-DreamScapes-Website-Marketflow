@@ -6,6 +6,10 @@ const source = fs.readFileSync(
   path.join(process.cwd(), "server/routes.ts"),
   "utf8",
 );
+const wholesaleReviewSource = fs.readFileSync(
+  path.join(process.cwd(), "server/wholesale-review-routes.ts"),
+  "utf8",
+);
 
 function declarationFor(route: string): string {
   const start = source.indexOf(`app.post(${JSON.stringify(route)}`);
@@ -25,6 +29,24 @@ describe("MarketFlow submission approval boundary", () => {
   ])(
     "requires verified hybrid identity and governed MarketFlow access before POST %s",
     (route) => {
+      if (route === "/api/supabase/wholesale-deals") {
+        const mountedRoute = wholesaleReviewSource.slice(
+          wholesaleReviewSource.indexOf(
+            'app.post(\n    "/api/supabase/wholesale-deals"',
+          ),
+          wholesaleReviewSource.indexOf(
+            'app.get(\n    "/api/marketplace/admin/pending"',
+          ),
+        );
+        expect(mountedRoute).toContain("middleware.authenticate");
+        expect(mountedRoute).toContain("middleware.requireInventoryAccess");
+        expect(source).toContain("authenticate: isHybridAuthenticated");
+        expect(source).toContain(
+          "requireInventoryAccess: requireMarketflowInventoryAccess",
+        );
+        return;
+      }
+
       const declaration = declarationFor(route);
 
       expect(declaration).toContain("isHybridAuthenticated");
