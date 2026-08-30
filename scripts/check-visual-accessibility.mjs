@@ -5,18 +5,19 @@ import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
+import { sitemapEntries } from '../shared/seo-routes.ts';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const buildRoot = path.join(projectRoot, 'dist/public');
 const axeSource = await readFile(path.join(projectRoot, 'node_modules/axe-core/axe.min.js'), 'utf8');
 
-const routes = [
+const releaseRoutes = [
   '/',
   '/property-owners',
   '/deal-partners',
   '/how-we-operate',
   '/development',
-  '/investments',
+  '/capital',
   '/strategy-lab',
   '/marketflow',
   '/marketflow/deals',
@@ -31,6 +32,33 @@ const routes = [
   '/__launch-404-check',
 ];
 
+const fullPublicRouteExtras = [
+  '/marketflow/buyboxes',
+  '/marketflow/deals',
+  '/strategy-lab/library',
+  '/strategy-lab/submitted',
+  '/strategy-lab/blueprint-confirmed',
+  '/strategy-lab?tool=calculators',
+  '/login',
+  '/signup',
+  '/forgot-password',
+  '/reset-password',
+  '/saved',
+  '/snapshot/calc/rendered-qa-calculator',
+  '/snapshot/property/rendered-qa-property',
+  '/snapshot/rendered-qa-status',
+  '/__launch-404-check',
+];
+
+const fullPublicRoutes = [...new Set([
+  ...sitemapEntries().map(({ path: route }) => route),
+  ...fullPublicRouteExtras,
+])];
+const publicRouteCoverage = process.env.A11Y_PUBLIC_ROUTE_COVERAGE === 'full'
+  ? 'full'
+  : 'release';
+const routes = publicRouteCoverage === 'full' ? fullPublicRoutes : releaseRoutes;
+
 const viewports = [
   ['desktop-1440', { width: 1440, height: 940 }],
   ['tablet-1024', { width: 1024, height: 900 }],
@@ -44,6 +72,28 @@ const previewStubValue = 'backend-unavailable';
 const qaResponseHeader = 'x-pegasus-qa-response';
 const qaFailureMarker = 'marker-503';
 const previewStubApiPaths = new Set(['/api/auth/user']);
+const previewStubTokenApiPrefixes = [
+  '/api/property-analyses/by-token/',
+  '/api/shared-analyses/',
+];
+const renderedQaPropertyToken = 'rendered-qa-property';
+const renderedQaCalculatorToken = 'rendered-qa-calculator';
+const publicAnalysisOutputContext = {
+  source: 'user_entered_inputs_and_automated_model',
+  verifiedByPegasus: false,
+  label: 'Generated from user-entered, unverified inputs and automated model assumptions.',
+  disclaimer: 'This shared output does not represent a Pegasus review or recommendation, offer, valuation, appraisal, financing commitment, or guarantee.',
+};
+
+function isAllowedPreviewStubApiPath(pathname) {
+  if (previewStubApiPaths.has(pathname)) return true;
+  return previewStubTokenApiPrefixes.some((prefix) => {
+    if (!pathname.startsWith(prefix)) return false;
+    const token = pathname.slice(prefix.length);
+    return token.length > 0 && !token.includes('/');
+  });
+}
+
 const interactionsOnly = process.env.A11Y_INTERACTIONS_ONLY === '1';
 const expectedRouteCheckCount = interactionsOnly
   ? 0
@@ -139,6 +189,88 @@ function json(response, status, body, headers = {}) {
   response.end(JSON.stringify(body));
 }
 
+const renderedQaPropertySnapshot = {
+  id: 84,
+  visibility: 'full',
+  address: '200 Model Avenue',
+  city: 'Oakland',
+  state: 'CA',
+  zip: '94601',
+  propertyInput: {
+    address: '200 Model Avenue',
+    city: 'Oakland',
+    state: 'CA',
+    zip: '94601',
+    askingPrice: 500000,
+    arvEstimate: 700000,
+    rehabBudget: 90000,
+    marketRent: 3200,
+    beds: 3,
+    baths: 2,
+    sqft: 1400,
+  },
+  snapshot: {
+    engineVersion: 'rendered-qa-v1',
+    topLane: 'flip',
+    lanes: [{
+      lane: 'flip',
+      laneLabel: 'Fix and Flip',
+      headline: 'The automated model identifies a possible value-add path from the entered assumptions.',
+      verdict: 'possible',
+      verdictLabel: 'Possible fit',
+      economics: {
+        primaryMetric: 'Modeled gross spread',
+        primaryValue: '$110K',
+      },
+    }],
+    totalCashIn: 215000,
+    risks: [{
+      category: 'valuation',
+      severity: 'watch',
+      title: 'Entered ARV requires independent verification',
+      detail: 'The model uses a visitor-entered after-repair value and does not independently verify comparable sales.',
+    }],
+    capitalStack: [{
+      source: 'down_payment',
+      label: 'Modeled cash contribution',
+      amount: 125000,
+      note: 'Illustrative assumption only',
+    }],
+    memo: {
+      paragraph: 'This automated summary reflects the supplied property facts and assumptions. It has not been reviewed or verified by Pegasus.',
+      nextStep: 'Independently verify the property facts, scope, valuation, and financing assumptions.',
+    },
+  },
+  createdAt: '2026-01-01T00:00:00.000Z',
+  outputContext: publicAnalysisOutputContext,
+};
+
+const renderedQaCalculatorAnalysis = {
+  id: 85,
+  name: 'Rendered QA ROI model',
+  calculatorType: 'roi',
+  propertyAddress: '200 Model Avenue, Oakland, CA',
+  inputs: {
+    purchasePrice: 500000,
+    rehabBudget: 90000,
+    projectedSalePrice: 700000,
+  },
+  results: {
+    modeledGrossSpread: 110000,
+    modeledReturnOnCost: 18.64,
+  },
+  primaryMetric: 'Modeled gross spread',
+  primaryValue: '$110,000',
+  secondaryMetric: 'Modeled return on cost',
+  secondaryValue: '18.64%',
+  scenarioLabel: 'User-entered base case',
+  notes: 'User-entered note: figures are unverified and provided only for deterministic rendered QA.',
+  sharedAt: '2026-01-01T00:00:00.000Z',
+  createdAt: '2026-01-01T00:00:00.000Z',
+  viewCount: 0,
+  outputContext: publicAnalysisOutputContext,
+};
+
 const server = createServer(async (request, response) => {
   const pathname = decodeURIComponent(new URL(request.url || '/', 'http://127.0.0.1').pathname);
 
@@ -148,6 +280,35 @@ const server = createServer(async (request, response) => {
   }
   if (pathname === '/api/config/supabase') {
     json(response, 200, {});
+    return;
+  }
+  if (pathname === '/api/projects') {
+    json(response, 200, []);
+    return;
+  }
+  if (pathname === '/api/projects/nelson-dr') {
+    json(response, 200, {
+      id: 1,
+      slug: 'nelson-dr',
+      createdAt: '2025-09-23T00:00:00.000Z',
+    });
+    return;
+  }
+  if (pathname === `/api/property-analyses/by-token/${renderedQaPropertyToken}`) {
+    json(response, 200, renderedQaPropertySnapshot);
+    return;
+  }
+  if (pathname === `/api/property-analyses/by-token/${renderedQaCalculatorToken}`) {
+    json(
+      response,
+      404,
+      { message: 'No property snapshot exists for this calculator token' },
+      { [previewStubHeader]: previewStubValue },
+    );
+    return;
+  }
+  if (pathname === `/api/shared-analyses/${renderedQaCalculatorToken}`) {
+    json(response, 200, renderedQaCalculatorAnalysis);
     return;
   }
   if (pathname.startsWith('/api/')) {
@@ -363,7 +524,7 @@ function monitorPageHealth(page) {
   page.on('response', (response) => {
     if (response.status() < 400 || !isSameOriginAssetOrApi(response.request())) return;
     const url = new URL(response.url());
-    const isAllowedPreviewStub = previewStubApiPaths.has(url.pathname)
+    const isAllowedPreviewStub = isAllowedPreviewStubApiPath(url.pathname)
       && response.status() === 404
       && response.headers()[previewStubHeader] === previewStubValue;
     const isAllowedQaFailure = response.status() === 503
@@ -1694,9 +1855,20 @@ if (process.env.GITHUB_ACTIONS === 'true') {
   }
 }
 
-if (!interactionsOnly && expectedRouteCheckCount !== 144) {
+if (releaseRoutes.length !== 18) {
   invariantFailures.push(
-    `Rendered release matrix produced ${expectedRouteCheckCount} checks; expected exactly 144`,
+    `Rendered release route inventory contains ${releaseRoutes.length} routes; expected exactly 18`,
+  );
+}
+if (fullPublicRoutes.length !== 46) {
+  invariantFailures.push(
+    `Rendered full public route inventory contains ${fullPublicRoutes.length} routes; expected exactly 46`,
+  );
+}
+const requiredRouteCheckCount = publicRouteCoverage === 'full' ? 368 : 144;
+if (!interactionsOnly && expectedRouteCheckCount !== requiredRouteCheckCount) {
+  invariantFailures.push(
+    `Rendered ${publicRouteCoverage} matrix produced ${expectedRouteCheckCount} checks; expected exactly ${requiredRouteCheckCount}`,
   );
 }
 if (interactionJourneyCount !== 17) {
@@ -1707,6 +1879,15 @@ if (interactionJourneyCount !== 17) {
 const expectedScreenshotCount = screenshotDir
   ? expectedRouteCheckCount + 39
   : null;
+if (
+  screenshotDir
+  && publicRouteCoverage === 'full'
+  && expectedScreenshotCount !== 407
+) {
+  invariantFailures.push(
+    `Rendered QA full coverage expected exactly 407 screenshots; computed ${expectedScreenshotCount}`,
+  );
+}
 if (screenshotDir && screenshotCount !== expectedScreenshotCount) {
   invariantFailures.push(
     `Rendered QA wrote ${screenshotCount} screenshots; expected ${expectedScreenshotCount}`,
@@ -1730,6 +1911,7 @@ if (screenshotDir) {
       prHeadSha,
       prMergeSha,
       githubEvent: process.env.RENDERED_QA_GITHUB_EVENT || null,
+      publicRouteCoverage,
       routeCheckCount: expectedRouteCheckCount,
       routeFailureCount: failures.length,
       routes,
@@ -1760,7 +1942,9 @@ if (result === 'failed') {
   process.exit(1);
 }
 
-if (!interactionsOnly) {
+if (!interactionsOnly && publicRouteCoverage === 'full') {
+  console.log('[a11y] PASS: 368 rendered route/viewport/theme checks');
+} else if (!interactionsOnly) {
   console.log('[a11y] PASS: 144 rendered route/viewport/theme checks');
 }
 console.log('[interaction] PASS: 17 rendered launch journeys');

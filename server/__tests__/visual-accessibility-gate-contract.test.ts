@@ -23,6 +23,9 @@ const marketflowDealsSource = readFileSync(
   resolve(import.meta.dirname, "../../client/src/pages/marketflow-deals.tsx"),
   "utf8",
 );
+const packageJson = JSON.parse(
+  readFileSync(resolve(import.meta.dirname, "../../package.json"), "utf8"),
+) as { scripts?: Record<string, string> };
 function collectCssFiles(directory: string): string[] {
   return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
     const entryPath = resolve(directory, entry.name);
@@ -46,8 +49,11 @@ function sliceBetween(start: string, end: string): string {
 }
 
 describe("rendered visual-accessibility gate contract", () => {
-  it("keeps the public route matrix while expanding deterministic interaction journeys", () => {
-    const routeBlock = sliceBetween("const routes = [", "];\n\nconst viewports");
+  it("keeps the 18-route release gate and expands full coverage from the sitemap", () => {
+    const routeBlock = sliceBetween(
+      "const releaseRoutes = [",
+      "];\n\nconst fullPublicRouteExtras",
+    );
     const routeLiterals = [...routeBlock.matchAll(/'\/(?:[^']*)'/g)].map(
       ([route]) => route.slice(1, -1),
     );
@@ -58,7 +64,7 @@ describe("rendered visual-accessibility gate contract", () => {
       "/deal-partners",
       "/how-we-operate",
       "/development",
-      "/investments",
+      "/capital",
       "/strategy-lab",
       "/marketflow",
       "/marketflow/deals",
@@ -72,12 +78,68 @@ describe("rendered visual-accessibility gate contract", () => {
       "/disclosures",
       "/__launch-404-check",
     ]);
+    expect(source).toContain("import { sitemapEntries } from '../shared/seo-routes.ts';");
+    expect(source).toContain("const fullPublicRoutes = [...new Set([");
+    expect(source).toContain("...sitemapEntries().map(({ path: route }) => route)");
+    expect(source).toContain("...fullPublicRouteExtras");
+    expect(source).toContain("const publicRouteCoverage = process.env.A11Y_PUBLIC_ROUTE_COVERAGE === 'full'");
+    expect(source).toContain("const routes = publicRouteCoverage === 'full' ? fullPublicRoutes : releaseRoutes;");
+    expect(source).toContain("releaseRoutes.length !== 18");
+    expect(source).toContain("fullPublicRoutes.length !== 46");
+    expect(source).toContain("publicRouteCoverage === 'full' ? 368 : 144");
+    expect(packageJson.scripts?.["check:a11y:full"]).toBe(
+      "A11Y_PUBLIC_ROUTE_COVERAGE=full node scripts/check-visual-accessibility.mjs",
+    );
     expect(source).toContain("interactionJourneyCount !== 17");
     expect(source).toContain("PASS: 17 rendered launch journeys");
     expect(source).toContain("routes.length * viewports.length * colorSchemes.length");
   });
 
-  it("locks the 144-check responsive evidence matrix to named release viewports", () => {
+  it("covers every required non-sitemap public, auth, snapshot, and recovery route", () => {
+    const routeBlock = sliceBetween(
+      "const fullPublicRouteExtras = [",
+      "];\n\nconst fullPublicRoutes",
+    );
+    const routeLiterals = [...routeBlock.matchAll(/'\/(?:[^']*)'/g)].map(
+      ([route]) => route.slice(1, -1),
+    );
+
+    expect(routeLiterals).toEqual([
+      "/marketflow/buyboxes",
+      "/marketflow/deals",
+      "/strategy-lab/library",
+      "/strategy-lab/submitted",
+      "/strategy-lab/blueprint-confirmed",
+      "/strategy-lab?tool=calculators",
+      "/login",
+      "/signup",
+      "/forgot-password",
+      "/reset-password",
+      "/saved",
+      "/snapshot/calc/rendered-qa-calculator",
+      "/snapshot/property/rendered-qa-property",
+      "/snapshot/rendered-qa-status",
+      "/__launch-404-check",
+    ]);
+  });
+
+  it("serves deterministic public-project and truthful snapshot fixtures", () => {
+    expect(source).toContain("const renderedQaPropertyToken = 'rendered-qa-property';");
+    expect(source).toContain("const renderedQaCalculatorToken = 'rendered-qa-calculator';");
+    expect(source).toContain("const publicAnalysisOutputContext = {");
+    expect(source).toContain("source: 'user_entered_inputs_and_automated_model'");
+    expect(source).toContain("verifiedByPegasus: false");
+    expect(source).toContain("pathname === '/api/projects'");
+    expect(source).toContain("json(response, 200, []);");
+    expect(source).toContain("pathname === `/api/property-analyses/by-token/${renderedQaPropertyToken}`");
+    expect(source).toContain("pathname === `/api/shared-analyses/${renderedQaCalculatorToken}`");
+    expect(source).toContain("pathname === `/api/property-analyses/by-token/${renderedQaCalculatorToken}`");
+    expect(source).toContain("isAllowedPreviewStubApiPath(url.pathname)");
+    expect(source).toContain("'/api/property-analyses/by-token/'");
+    expect(source).toContain("'/api/shared-analyses/'");
+  });
+
+  it("locks the responsive evidence matrices to named release viewports", () => {
     const viewportBlock = sliceBetween("const viewports = [", "];\n\nconst colorSchemes");
 
     expect(viewportBlock).toContain("'desktop-1440', { width: 1440, height: 940 }");
@@ -89,6 +151,7 @@ describe("rendered visual-accessibility gate contract", () => {
     expect(source).toContain("`${slug}-${viewportName}-${colorScheme}.png`");
     expect(source).not.toContain("colorScheme === 'dark'");
     expect(source).toContain("PASS: 144 rendered route/viewport/theme checks");
+    expect(source).toContain("PASS: 368 rendered route/viewport/theme checks");
   });
 
   it("settles and inspects the complete rendered page before recording evidence", () => {
@@ -523,6 +586,7 @@ describe("rendered visual-accessibility gate contract", () => {
     expect(source).toContain("const result = failures.length");
     expect(source).toContain("result,");
     expect(source).toContain("routeCheckCount: expectedRouteCheckCount");
+    expect(source).toContain("publicRouteCoverage,");
     expect(source).toContain("routeFailureCount: failures.length");
     expect(source).toContain("interactionJourneyCount");
     expect(source).toContain("interactionFailureCount: interactionFailures.length");
@@ -531,6 +595,7 @@ describe("rendered visual-accessibility gate contract", () => {
     expect(source).toContain("expectedScreenshotCount");
     expect(source).toContain("screenshotCount");
     expect(source).toContain("expectedRouteCheckCount + 39");
+    expect(source).toContain("full coverage expected exactly 407");
     expect(source.indexOf("const result = failures.length")).toBeLessThan(
       source.indexOf("rendered-qa-manifest.json"),
     );

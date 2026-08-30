@@ -8,6 +8,7 @@
     "build": "tsx script/build.ts && npm run check:bundle",
     "check:bundle": "node scripts/check-client-bundle-budget.mjs",
     "check:a11y": "node scripts/check-visual-accessibility.mjs",
+    "check:a11y:full": "A11Y_PUBLIC_ROUTE_COVERAGE=full node scripts/check-visual-accessibility.mjs",
     "start": "NODE_ENV=production node dist/index.cjs",
     "check": "tsc",
     "smoke:launch": "node scripts/launch-intake-smoke.mjs",
