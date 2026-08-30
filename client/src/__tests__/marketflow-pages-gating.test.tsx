@@ -587,6 +587,21 @@ describe("marketflow-submit page gating", () => {
     expect(screen.getByTestId("wholesale-deal-form-stub")).toBeInTheDocument();
   });
 
+  it("keeps capital projects relationship-only instead of exposing a broken raise form", async () => {
+    setAuthState("wholesaler");
+    const { default: MarketflowSubmit } = await import(
+      "@/pages/marketflow-submit"
+    );
+
+    renderWithProviders(<MarketflowSubmit />);
+    activateControl("tab-submit-capital");
+
+    expect(await screen.findByTestId("capital-relationship-hold")).toHaveTextContent(
+      "not accepting capital raise submissions",
+    );
+    expect(screen.queryByTestId("capital-raise-form-stub")).toBeNull();
+  });
+
   it("admins (without wholesaler/dreamscaper role) hit the role-locked screen", async () => {
     // Admin is not a wholesaler or dreamscaper, so canSubmit is false.
     // This locks down the "admin can quietly submit" regression path.

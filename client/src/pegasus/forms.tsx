@@ -8,6 +8,10 @@ import { usd0, SectionHead, ContourLines, BrandMark, IMG } from './primitives';
 import { addStrategy, type StrategyPreview } from './savedStore';
 import { tierRangeFor, NOT_A_VALUATION_DISCLOSURE } from '@/lib/strategy-tier-ranges';
 import { trackEvent } from '@/lib/analytics';
+import {
+  classifyPegasusLead,
+  pegasusLeadSuccessCopy,
+} from '@shared/lead-routing';
 
 // Public Website v1 (issue #22) PRD §13 conversion events. Each lane form
 // fires its named PRD event on successful submission, keyed by the form's
@@ -54,9 +58,9 @@ export const CONTACT_FORM: FormCfg = {
   role: 'I have a property (Seller)',
   intent: 'property-review',
   heading: <>Start a <span className="italic text-[var(--accent)]">Property Review.</span></>,
-  lead: 'Inherited, distressed, or simply complicated? Send it over. We read every submission and return a clear, written path forward within 48 hours.',
+  lead: 'Inherited, distressed, or simply complicated? Send the situation for a private review and a candid decision about whether Pegasus may be a fit.',
   submit: 'Request My Review',
-  third: { label: 'Property address or area', placeholder: 'Street, city, or neighborhood' },
+  third: { label: 'Property address or area', placeholder: 'Street, city, or neighborhood', kind: 'context' },
   messageLabel: 'The situation',
   messagePlaceholder: 'Tell us what is going on. The more context, the better.',
 };
@@ -67,7 +71,7 @@ export const DEVELOPMENT_FORM: FormCfg = {
   heading: <>Start a <span className="italic text-[var(--accent-bright)]">build conversation.</span></>,
   lead: 'A lot, a tired property, an ADU idea, or a ground-up vision? Tell us the scope. We underwrite before we build, and we will tell you straight whether it pencils.',
   submit: 'Send the build scope',
-  third: { label: 'Property or lot address', placeholder: 'Street, city, or neighborhood' },
+  third: { label: 'Property or lot address', placeholder: 'Street address', kind: 'property-address' },
   messageLabel: 'The build scope',
   messagePlaceholder: 'What you want to build and where: lot details, condition, and any constraints you know about.',
 };
@@ -76,9 +80,9 @@ export const STRATEGYLAB_FORM: FormCfg = {
   role: 'I have a property (Seller)',
   intent: 'strategy-snapshot',
   heading: <>Get a <span className="italic text-[var(--accent-bright)]">Property Read.</span></>,
-  lead: 'Run the numbers above for an Instant Strategy Preview, then send the situation for a written Property Read: a short, candid read returned within 48 hours.',
+  lead: 'Run the numbers above for an Instant Strategy Preview, then send the situation for review. The automated model is preliminary; any human follow-up is conditional on fit and capacity.',
   submit: 'Request a Property Read',
-  third: { label: 'Property address or area', placeholder: 'Street, city, or neighborhood' },
+  third: { label: 'Property address or area', placeholder: 'Street, city, or neighborhood', kind: 'context' },
   messageLabel: 'The situation',
   messagePlaceholder: 'Acquisition price, scope of work, and what you are weighing. The more context, the better.',
 };
@@ -93,7 +97,7 @@ export const APOLLO_FORM: FormCfg = {
   heading: <>Work with <span className="italic text-[var(--accent)]">Apollo.</span></>,
   lead: 'Tell us whether you are looking to sell or buy. Apollo represents clients as a licensed agent through Keller Williams Realty East Bay, and will follow up to discuss representation. Submitting this is not a listing or buyer agreement.',
   submit: 'Request representation',
-  third: { label: 'Property address or target area', placeholder: 'Street, city, or neighborhood' },
+  third: { label: 'Property address or target area', placeholder: 'Street, city, or neighborhood', kind: 'context' },
   messageLabel: 'What you are looking to do',
   messagePlaceholder: 'Selling a home, buying in a certain area, timeline, and anything else we should know.',
 };
@@ -104,7 +108,7 @@ export const INVESTMENTS_FORM: FormCfg = {
   heading: <>Explore an <span className="italic text-[var(--accent-bright)]">investment.</span></>,
   lead: 'Tell us how you think about deploying capital, or send a property you want underwritten. We bring specific projects on defined terms: never a pooled fund, never a promised return.',
   submit: 'Start the Conversation',
-  third: { label: 'Capital range or property', placeholder: 'Optional' },
+  third: { label: 'Capital range or property context', placeholder: 'Optional', kind: 'context' },
   messageLabel: 'What you are exploring',
   messagePlaceholder: 'Project types, risk tolerance, timeline, or a specific deal...',
 };
@@ -174,6 +178,7 @@ export function LeadForm({
     const [firstName, ...rest] = fullName.split(/\s+/);
     const lastName = rest.join(' ');
     const elapsed = Date.now() - startedAt.current;
+    const lane = classifyPegasusLead({ intent: cfg.intent, role: form.role });
     createLead.mutate(
       {
         leadType: 'submit',
@@ -187,9 +192,11 @@ export function LeadForm({
         hp_company: hpCompany,
         ts_elapsed_ms: elapsed,
         leadData: {
-          lane: form.role,
+          lane,
+          role: form.role,
           intent: cfg.intent,
-          area: form.third.trim() || undefined,
+          context: form.third.trim() || undefined,
+          contextKind: cfg.third?.kind ?? 'context',
           message: form.message.trim() || undefined,
           consentContact: form.consentContact,
           hp_company: hpCompany,
@@ -208,6 +215,9 @@ export function LeadForm({
   };
 
   if (submitted) {
+    const success = pegasusLeadSuccessCopy(
+      classifyPegasusLead({ intent: cfg.intent, role: form.role }),
+    );
     return (
       <div
         ref={successRef}
@@ -221,8 +231,8 @@ export function LeadForm({
           <BrandMark boxClassName="w-11 h-11" />
           <span className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[var(--accent)] text-white flex items-center justify-center ring-2 ring-[var(--bg)]"><Check className="w-4 h-4" /></span>
         </div>
-        <h3 className="font-serif-display text-3xl text-[var(--text)] mb-3">Received. Thank you.</h3>
-        <p className="text-[var(--muted)] max-w-sm mx-auto leading-relaxed">Pegasus reads your submission and returns a plain-language path forward. We respond within 48 hours.</p>
+        <h3 className="font-serif-display text-3xl text-[var(--text)] mb-3">{success.heading}</h3>
+        <p className="text-[var(--muted)] max-w-sm mx-auto leading-relaxed">{success.body}</p>
       </div>
     );
   }
@@ -362,7 +372,7 @@ export function LeadSection({
             <div className="flex items-center gap-3"><MapPin className={`w-4 h-4 ${ic}`} /> East Bay · California</div>
           </div>
           <p className={`mt-7 text-[0.82rem] !tracking-normal normal-case ${navy ? 'text-[var(--cream)]/55' : 'text-[var(--muted)]'}`}>
-            We read every submission and respond within 48 hours.
+            Submissions are reviewed for fit; follow-up is not guaranteed.
           </p>
         </div>
         <div className="lg:col-span-7 reveal delay-100">

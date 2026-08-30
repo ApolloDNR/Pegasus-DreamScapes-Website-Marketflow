@@ -8,7 +8,6 @@ import { useDemoMode } from "@/contexts/demo-mode-context";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { useSEO } from "@/hooks/use-seo";
 import { WholesaleDealForm } from "@/components/wholesale-deal-form";
-import { CapitalRaiseForm } from "@/components/capital-raise-form";
 import { ListingForm } from "@/components/listing-form";
 import { Link } from "wouter";
 import {
@@ -233,7 +232,7 @@ function AuthenticatedSubmitPage({ isPegasus, isPreviewMode = false }: { isPegas
         <p className="text-muted-foreground">
           {isPreviewMode 
             ? "Explore our deal submission process. Sign up to submit your own deals."
-            : "Submit your deal for review. Approved deals will be listed in MarketFlow for investors to discover."}
+            : "Submit a private record for review. Only a separately approved opportunity may later be made available to eligible MarketFlow participants."}
         </p>
       </div>
 
@@ -265,14 +264,30 @@ function AuthenticatedSubmitPage({ isPegasus, isPreviewMode = false }: { isPegas
         </TabsContent>
 
         <TabsContent value="capital">
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            <div className="xl:col-span-2">
-              <CapitalRaiseForm onSuccess={() => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }} />
-            </div>
-            <CapitalRaiseSidebar isPegasus={isPegasus} />
-          </div>
+          <Card data-testid="capital-relationship-hold">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <PiggyBank className="w-5 h-5 text-primary" />
+                Capital relationships begin privately
+              </CardTitle>
+              <CardDescription>
+                MarketFlow is not accepting capital raise submissions through this form.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
+                Pegasus does not publish user-created investment offerings or fundraising
+                terms here. A capital conversation can begin only as a relationship inquiry;
+                any project, diligence, eligibility, and written terms are handled separately.
+              </p>
+              <Link href="/capital">
+                <Button variant="outline" data-testid="button-capital-relationship-info">
+                  Review the capital relationship process
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="listing">

@@ -62,7 +62,11 @@ export type FormCfg = {
   heading: React.ReactNode;
   lead: string;
   submit: string;
-  third: { label: string; placeholder: string } | null;
+  third: {
+    label: string;
+    placeholder: string;
+    kind?: 'context' | 'property-address';
+  } | null;
   messageLabel: string;
   messagePlaceholder: string;
   roleOptions?: string[];

@@ -164,7 +164,8 @@ describe("Pegasus LeadForm explicit contact consent", () => {
         hp_company: "",
         ts_elapsed_ms: 4_500,
         leadData: expect.objectContaining({
-          lane: CONTACT_FORM.role,
+          lane: "seller",
+          role: CONTACT_FORM.role,
           intent: CONTACT_FORM.intent,
           consentContact: true,
           hp_company: "",
@@ -175,6 +176,44 @@ describe("Pegasus LeadForm explicit contact consent", () => {
     expect(
       container.querySelector<HTMLInputElement>('input[name="hp_company"]'),
     ).toHaveValue("");
+  });
+
+  it("routes buyer context as a buyer inquiry without treating the target area as an address", async () => {
+    let now = 20_000;
+    vi.spyOn(Date, "now").mockImplementation(() => now);
+    renderWithQueryClient(
+      <LeadForm
+        cfg={{
+          ...CONTACT_FORM,
+          role: "Buy a home (Buyer representation)",
+          intent: "representation",
+          third: {
+            label: "Target area",
+            placeholder: "City or neighborhood",
+            kind: "context",
+          },
+        }}
+      />,
+    );
+    fillPegasusLeadForm();
+    fireEvent.change(screen.getByLabelText("Target area"), {
+      target: { value: "Oakland or Berkeley" },
+    });
+    fireEvent.click(screen.getByRole("checkbox"));
+    now = 24_500;
+    fireEvent.submit(screen.getByRole("button").closest("form")!);
+
+    await waitFor(() => expect(apiRequestMock).toHaveBeenCalledTimes(1));
+    const payload = apiRequestMock.mock.calls[0][2] as Record<string, any>;
+    expect(payload.leadType).toBe("submit");
+    expect(payload).not.toHaveProperty("address");
+    expect(payload.leadData).toEqual(
+      expect.objectContaining({
+        lane: "buyer",
+        context: "Oakland or Berkeley",
+        contextKind: "context",
+      }),
+    );
   });
 });
 

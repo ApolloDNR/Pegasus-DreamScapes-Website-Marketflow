@@ -96,6 +96,8 @@ const LEAD_TYPE_TO_REASON: Record<string, string> = {
   peggy_notify: "peggy_inbound",
   investor: "capital_inquiry",
   buyer: "buyer_inquiry",
+  wholesaler: "wholesale_opportunity",
+  referral: "referral_partner",
   contact: "general_inquiry",
   marketflow_access: "marketflow_access_request",
 };

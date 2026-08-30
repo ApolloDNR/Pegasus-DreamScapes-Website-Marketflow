@@ -28,7 +28,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/": {
     title: "Pegasus Dreamscapes — Complex Real Estate, Made Executable",
     description:
-      "A real estate operating company for complex opportunities in the East Bay. Bring a property, a deal, or a project and get a straight read on the path forward.",
+      "An East Bay real estate operating company. Share a property, deal, or project for possible review; no response, route, or transaction is promised.",
     image: `${SITE_URL}/og/home.png`,
   },
 
@@ -36,94 +36,95 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/property-owners": {
     title: tag("Property Owners"),
     description:
-      "For owners with a complex or stuck property — inherited, distressed, occupied, or stalled. Get a clear written read and a real route forward.",
+      "Private intake for owners with a complex property situation. Submission may be considered, but no written review, response, route, or offer is promised.",
     image: `${SITE_URL}/og/sellers.png`,
   },
   "/buyers": {
     title: tag("Buyers"),
     description:
-      "Buy a finished home or buy into a deal with an investor's read — underwritten on real numbers before you commit. East Bay and beyond.",
+      "Request buyer-list consideration for future, project-specific review. No current public inventory, allocation, or investment opportunity is offered.",
     image: `${SITE_URL}/og/buyers.png`,
   },
   "/deal-partners": {
     title: tag("Deal Partners"),
     description:
-      "Bring a deal to Pegasus once and get a straight answer, written terms, and one buyer who actually closes. No mass blasts, no run-around.",
+      "Share a deal or proposed structure for possible private review. No response, buyer, written terms, distribution, funding, or closing is promised.",
     image: `${SITE_URL}/og/dealfinders.png`,
   },
   "/operators": {
     title: tag("Operators & Vendors"),
     description:
-      "GCs, subcontractors, agents, and title — join the Pegasus build bench and get matched to projects that fit your trade and your capacity.",
+      "GCs, subcontractors, agents, and title professionals can apply for project-by-project consideration. No volume or assignment is promised.",
     image: `${SITE_URL}/og/operators.png`,
   },
   "/referral": {
     title: tag("Referral Partners"),
     description:
-      "Send one name. We handle the relationship and put any referral fee in writing before anything moves. A clean, accountable handoff.",
+      "Introduce a contact with permission for possible review. No follow-up, referral relationship, fee, representation, or transaction is promised.",
     image: `${SITE_URL}/og/referral.png`,
   },
 
   // ---- Capital partners ----
   "/capital": {
-    title: tag("Capital Partners"),
+    title: tag("Capital Relationship Review"),
     description:
-      "Back specific real estate projects on defined terms, not blind pools. See how capital partners engage with us, with the risk laid out plainly.",
+      "Private relationship intake only. No current project, security, allocation, return, or right to receive future opportunities is offered here.",
     image: `${SITE_URL}/og/capital.png`,
   },
   // ---- What We Do ----
   "/how-we-operate": {
     title: tag("How We Operate"),
     description:
-      "How a property becomes a plan: we read the situation and the numbers once, then map the route — sell, reposition, build, or partner.",
+      "A public framework for considering property facts, economics, and possible paths. It does not promise review, advice, a route, or execution.",
     image: `${SITE_URL}/og/deal-strategy.png`,
   },
   "/our-work": {
     title: tag("Our Work — Nelson Drive"),
     description:
-      "A tired 3/2 ranch in El Sobrante, taken down to the studs and coordinated into a 4/3 — acquired $600K, renovated for $105K, sold $840K.",
+      "Nelson Drive public record: acquired about $600K, renovated for $105K, sold for $840K. Limited figures only; not net profit or return.",
     image: `${SITE_URL}/og/case-study.png`,
   },
   "/investments": {
-    title: tag("Investments"),
+    title: tag("Capital Relationship Review"),
     description:
-      "We acquire distressed, dated, and overlooked property, reposition it with discipline, and exit on a plan written before we close.",
+      "This retired route does not describe a current investment opportunity. Use the private relationship intake for a general introduction.",
     image: `${SITE_URL}/og/investments.png`,
+    noIndex: true,
   },
   "/development": {
     title: tag("Development"),
     description:
-      "Pegasus scopes renovations and ground-up builds to a real budget and draw schedule, then coordinates the right licensed project team.",
+      "A public overview of development questions Pegasus may consider. No scope, budget, schedule, licensed team, permit, or project delivery is promised.",
     image: `${SITE_URL}/og/development.png`,
   },
   "/strategy-lab": {
     title: tag("Strategy Lab"),
     description:
-      "Model a deal yourself in minutes. The Strategy Lab returns strategy-tier ranges, likely lanes, and the risks — directional, not a CMA or appraisal.",
+      "Use entered assumptions to model strategy-tier ranges, likely lanes, and risks. Results are directional only, not a CMA, appraisal, or advice.",
     image: `${SITE_URL}/og/strategy-lab.png`,
   },
   "/marketflow": {
     title: tag("MarketFlow"),
     description:
-      "MarketFlow is Pegasus's private opportunity-distribution network in a controlled pilot. Access is reviewed by a person, and no live deal inventory is published publicly.",
+      "MarketFlow is a controlled pilot for private routing. No public inventory, matching, approved membership, access, or investment offering is published.",
     image: `${SITE_URL}/og/marketflow.png`,
   },
   "/marketflow/access": {
     title: tag("Request MarketFlow Access"),
     description:
-      "Request access to MarketFlow, the private deal network for Pegasus Dreamscapes. Membership is reviewed by a person, not opened to everyone.",
+      "Register interest in the controlled MarketFlow pilot. Approval, access, inventory, matching, and invitations are not promised.",
     image: `${SITE_URL}/og/marketflow.png`,
   },
   "/marketflow/buyboxes": {
     title: tag("Pegasus Buyboxes"),
     description:
-      "3 public buybox profiles are available in MarketFlow's controlled pilot. Each outlines target geography, deal type, and review criteria.",
+      "No public Buybox profiles, live inventory, automated matching, or deal-notification subscription are active today.",
     image: `${SITE_URL}/og/marketflow.png`,
   },
   "/ecosystem": {
     title: tag("The Pegasus Ecosystem"),
     description:
-      "The full Pegasus operating system: HQ, PeggyAI, Strategy Lab, MarketFlow, CapStack, and BuildForge, one underwriting standard across every part.",
+      "An honest status map of Pegasus tools and concepts: public, private pilot, internal, or in development. Availability varies by surface.",
     image: `${SITE_URL}/og/ecosystem.png`,
   },
 
@@ -131,70 +132,70 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/work-with-apollo": {
     title: tag("Represent With Apollo"),
     description:
-      "Licensed representation with Apollo Duran through Keller Williams East Bay — list, buy, or work through a complex situation. DRE #02333658.",
+      "Ask about possible representation with Apollo Duran. Verify the site-listed Keller Williams East Bay affiliation and DRE #02333658 before engagement.",
     image: `${SITE_URL}/og/work-with-apollo.png`,
   },
   "/peggy": {
     title: tag("Peggy"),
     description:
-      "Describe your deal in plain language. Peggy is an intake assistant — she frames your options and routes you to the next step. No offers, no advice.",
+      "Describe a situation in plain language. Peggy can help structure an intake, but does not promise review, routing, offers, valuation, or advice.",
     image: `${SITE_URL}/og/peggy.png`,
   },
   "/saved": {
     title: tag("Saved"),
     description:
-      "Your saved Pegasus planning items. This personal workspace is not included in public search results.",
+      "Saved transcript copies stored only in this browser. They are not synced to an account or another device and cannot resume a server conversation.",
     image: DEFAULT_OG_IMAGE,
     noIndex: true,
   },
   "/about": {
     title: tag("About"),
     description:
-      "Who Apollo Duran is and the discipline behind Pegasus: read the situation, underwrite real numbers, write the exit first, deliver a finished product.",
+      "Background on Apollo Duran and the operating principles presented by Pegasus. This page does not promise review, services, execution, or results.",
     image: `${SITE_URL}/og/about.png`,
   },
   "/projects": {
     title: tag("Projects"),
     description:
-      "Selected case studies from the Pegasus Dreamscapes portfolio: real before and after, with the numbers and the process behind each one.",
+      "Nelson Drive is the currently published project case study. Its record states the available figures and the limits of the public evidence.",
     image: `${SITE_URL}/og/projects.png`,
   },
   "/projects/nelson-dr": {
     title: tag("Nelson Dr Case Study"),
     description:
-      "How Pegasus read a Richmond / El Sobrante property, scoped the renovation to budget, and delivered it move-in ready. Real before and after.",
+      "Nelson Drive public record: acquired about $600K, renovated for $105K, sold for $840K. Limited cost-and-sale figures, not net profit or return.",
     image: `${SITE_URL}/og/nelson-dr.png`,
     type: "article",
   },
   "/connect": {
     title: tag("Connect"),
     description:
-      "Apollo's direct routing: property, build, sell, capital, vendor, or just a conversation. Reach Pegasus Dreamscapes in the East Bay.",
+      "Choose the relevant public intake for a property, project, representation, capital, vendor, or general question. No response or route is promised.",
     image: `${SITE_URL}/og/connect.png`,
   },
   "/contact": {
     title: tag("Contact"),
     description:
-      "Tell us about the property or situation and get a clear, written read from Pegasus. Reach the founder-led East Bay operating company directly.",
+      "Share a property or situation for possible review. Receipt does not promise review, follow-up, a response time, an offer, or another outcome.",
     image: `${SITE_URL}/og/contact.png`,
   },
   // ---- Public Website v1 (issue #22) pages ----
   "/bring-an-opportunity": {
     title: tag("Bring an Opportunity"),
     description:
-      "Bring the property, the contract, the project, or the plan. Pegasus reads the situation, runs the numbers, and routes the right path. No pressure.",
+      "Submit a property, contract, project, or plan for possible private review. Receipt does not promise review, response, an offer, or a particular route.",
     image: `${SITE_URL}/og/submit.png`,
   },
   "/departments": {
     title: tag("Departments"),
     description:
-      "Four departments, one operating system: Acquisitions, Development, Dispositions, and Asset Management. Every opportunity moves through the lanes it needs.",
+      "Four operating functions used to organize a possible property review. They are accountability lanes, not a claim of four separately staffed service teams.",
     image: DEFAULT_OG_IMAGE,
   },
   "/case-study": {
     title: tag("Case Study"),
     description:
-      "Founder-led value-add repositioning in the East Bay: acquired $600K, renovated ≈$105K, sold $840K to an owner-occupant. Real project, real photos.",
+      "Documented East Bay case study: acquired $600K, renovation $105K, acquisition-plus-renovation subtotal $705K, sold $840K. Not net profit or return.",
     image: `${SITE_URL}/og/nelson-dr.png`,
     type: "article",
   },
@@ -207,7 +208,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/deal-blueprint": {
     title: tag("Deal Blueprint"),
     description:
-      "Request a Pegasus Deal Blueprint — a deeper, by-review underwrite of one property: the path, the spread, and the risk, written out in full.",
+      "Request review for a possible, separately scoped property memo. No purchase, acceptance, fee, turnaround, or delivery is promised by the public intake.",
     image: DEFAULT_OG_IMAGE,
   },
 
@@ -215,13 +216,13 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/vendor-network": {
     title: tag("Vendor Network"),
     description:
-      "Apply to the private Pegasus Dreamscapes vendor network: vetted contractors, lenders, agents, and operators routed to active deal flow.",
+      "Apply for project-by-project consideration as a contractor, agent, lender, or operator. Acceptance and work volume are not promised.",
     image: `${SITE_URL}/og/vendor-network.png`,
   },
   "/disclosures": {
     title: tag("Disclosures"),
     description:
-      "Disclosures for Pegasus Dreamscapes Corp. DRE #02333658, Keller Williams East Bay. Each office is independently owned and operated.",
+      "Operating-company and brokerage-role disclosures, including site-listed Keller Williams East Bay and DRE details that visitors should verify.",
     image: `${SITE_URL}/og/disclosures.png`,
   },
   "/privacy": {
@@ -240,7 +241,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/faq": {
     title: tag("FAQ"),
     description:
-      "Straight answers on submitting a property, working with Pegasus Dreamscapes, the MarketFlow network, and Buyboxes — fees, timing, and how reviews work.",
+      "Straight answers on property intake, Apollo's brokerage role, browser-only saves, and the public boundaries for MarketFlow and buy boxes.",
     image: DEFAULT_OG_IMAGE,
   },
 };
@@ -276,10 +277,13 @@ const SITEMAP_EXCLUDE_RE: RegExp[] = [
   /^\/dashboard(\/|$)/,
   /^\/login(\/|$)/,
   /^\/signup(\/|$)/,
+  /^\/forgot-password(\/|$)/,
+  /^\/reset-password(\/|$)/,
   /^\/offer-studio(\/|$)/,
   /^\/profile\//,
   /^\/snapshot(\/|$)/,
   /^\/saved$/,
+  /^\/investments$/,
   /^\/submit$/,
   /^\/marketflow\/(admin|dashboard|messages|submit|negotiate)(\/|$)/,
   // Buyboxes are soft-launched (config publicReady: false). The page stays
@@ -299,10 +303,13 @@ export const ROBOTS_DISALLOW: string[] = [
   "/dashboard",
   "/login",
   "/signup",
+  "/forgot-password",
+  "/reset-password",
   "/offer-studio",
   "/profile/",
   "/snapshot/",
   "/saved",
+  "/investments",
   "/library",
   "/marketflow/admin",
   "/marketflow/dashboard",
@@ -325,7 +332,6 @@ const SITEMAP_HINTS: Record<string, { priority: string; changefreq: string }> = 
   "/deal-partners": { priority: "0.8", changefreq: "monthly" },
   "/projects": { priority: "0.9", changefreq: "weekly" },
   "/development": { priority: "0.8", changefreq: "monthly" },
-  "/investments": { priority: "0.8", changefreq: "monthly" },
   "/about": { priority: "0.8", changefreq: "monthly" },
   "/projects/nelson-dr": { priority: "0.7", changefreq: "monthly" },
 };
