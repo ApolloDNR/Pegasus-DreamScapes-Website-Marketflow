@@ -85,6 +85,36 @@ describe("global light-theme contrast tokens", () => {
     expect(contrast(ink, rgbFromHex("#fcf9f1"))).toBeGreaterThanOrEqual(4.5);
   });
 
+  it("restores the bright copper role for lead headings on permanent navy sections", () => {
+    const lightTheme = pegasusCss.match(/\.pg-root\s*\{([\s\S]*?)\n\}/)?.[1] ?? "";
+    const brightHex = lightTheme.match(/--accent-bright:\s*(#[0-9a-f]{6})/i)?.[1] ?? "";
+    const navyHex = lightTheme.match(/--navy:\s*(#[0-9a-f]{6})/i)?.[1] ?? "";
+
+    expect(pegasusCss).toMatch(
+      /\.pg-root:not\(\[data-theme='dark'\]\) \.pg-lead-heading--navy \.text-\\\[var\\\(--accent\\\)\\\]\s*\{\s*color:\s*var\(--accent-bright\)/,
+    );
+    expect(source("pegasus/forms.tsx")).toContain("pg-lead-heading--navy");
+    expect(contrast(rgbFromHex(brightHex), rgbFromHex(navyHex))).toBeGreaterThanOrEqual(4.5);
+  });
+
+  it("keeps small snapshot and navigation accents on contrast-safe semantic surfaces", () => {
+    const root = indexCss.match(/:root\s*\{([\s\S]*?)\n\}/)?.[1] ?? "";
+    const navyToken = root.match(/--navy:\s*(\d+)\s+(\d+)%\s+(\d+)%/) ?? [];
+    const copperToken = root.match(/--copper:\s*(\d+)\s+(\d+)%\s+(\d+)%/) ?? [];
+    const paperToken = root.match(/--background:\s*(\d+)\s+(\d+)%\s+(\d+)%/) ?? [];
+    const ink = rgbFromHsl(Number(navyToken[1]), Number(navyToken[2]), Number(navyToken[3]));
+    const copper = rgbFromHsl(Number(copperToken[1]), Number(copperToken[2]), Number(copperToken[3]));
+    const paper = rgbFromHsl(Number(paperToken[1]), Number(paperToken[2]), Number(paperToken[3]));
+
+    expect(source("pages/snapshot-calc.tsx")).toContain(
+      'border border-primary/25 bg-card text-card-foreground p-5',
+    );
+    expect(source("components/navigation.tsx")).toContain(
+      'bg-[hsl(var(--bronze)/0.15)] text-[hsl(var(--ink))]',
+    );
+    expect(contrast(ink, mix(copper, paper, 0.15))).toBeGreaterThanOrEqual(4.5);
+  });
+
   it("uses the bright semantic copper only when copy sits on a dark section", () => {
     const root = indexCss.match(/:root\s*\{([\s\S]*?)\n\}/)?.[1] ?? "";
     const token = root.match(/--warm-glow:\s*(\d+)\s+(\d+)%\s+(\d+)%/) ?? [];

@@ -552,17 +552,68 @@ describe("rendered visual-accessibility gate contract", () => {
     expect(interaction).toContain("button-sidebar-toggle");
   });
 
-  it("validates the canonical general-contact action instead of promising a review", () => {
+  it("keeps the calm desktop spine visible while exercising its canonical More directory", () => {
     const interaction = sliceBetween(
-      "await runInteraction('contact form validation'",
-      "await runInteraction('cookie preference choice'",
+      "await runInteraction('desktop navigation spine'",
+      "await runInteraction('mobile navigation destination'",
+    );
+
+    for (const [label, href] of [
+      ["How We Operate", "/how-we-operate"],
+      ["Property Owners", "/property-owners"],
+      ["Deal Partners", "/deal-partners"],
+      ["Our Work", "/our-work"],
+      ["About", "/about"],
+    ]) {
+      expect(interaction).toContain(`['${label}', '${href}']`);
+    }
+    expect(interaction).toContain("getByRole('button', { name: 'More', exact: true })");
+    expect(interaction).toContain("#desktop-more-navigation");
+    expect(interaction).toContain("page.keyboard.press('Enter')");
+    expect(interaction).toContain("page.keyboard.press('Escape')");
+    for (const [label, href] of [
+      ["Work With Apollo", "/work-with-apollo"],
+      ["Pegasus Standard", "/pegasus-standard"],
+      ["Contact", "/contact"],
+      ["Peggy", "/peggy"],
+      ["Development", "/development"],
+      ["Capital Partners", "/capital"],
+      ["Buyers", "/buyers"],
+      ["Operators & Vendors", "/operators"],
+      ["Referral Partners", "/referral"],
+      ["Pegasus Ecosystem", "/ecosystem"],
+    ]) {
+      expect(interaction).toContain(`['${label}', '${href}']`);
+    }
+    expect(interaction).not.toContain("count() === 0");
+  });
+
+  it("follows the approved MarketFlow pilot-access control without restoring a review promise", () => {
+    const interaction = sliceBetween(
+      "await runInteraction('MarketFlow public boundaries and reviewed access path'",
+      "await runInteraction('MarketFlow approved inventory state matrix and JV contract'",
     );
 
     expect(interaction).toContain(
-      "getByRole('button', { name: 'Send Message', exact: true })",
+      "getByRole('button', { name: /Request pilot access/ })",
     );
-    expect(interaction).not.toContain("Request My Review");
-    expect(interaction).toContain("form input:invalid");
+    expect(interaction).toContain("waitForURL(/\\/marketflow\\/access$/)");
+    expect(interaction).not.toContain("Request reviewed access");
+  });
+
+  it("validates the canonical contact chooser instead of a retired general form", () => {
+    const interaction = sliceBetween(
+      "await runInteraction('contact chooser routing'",
+      "await runInteraction('cookie preference choice'",
+    );
+
+    expect(interaction).toContain("button-connect-lane-deal-finder");
+    expect(interaction).toContain("link-connect-active-deal-finder");
+    expect(interaction).toContain("'/deal-partners'");
+    expect(interaction).toContain("link-connect-not-sure");
+    expect(interaction).toContain("mailto:apollo@pegasusdreamscapes.com");
+    expect(interaction).not.toContain("Send Message");
+    expect(interaction).not.toContain("form input:invalid");
   });
 
   it("renders approved MarketFlow loading/error/retry/empty/data and owner-safe JV evidence", () => {

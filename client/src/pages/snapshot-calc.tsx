@@ -292,7 +292,7 @@ export default function SnapshotCalc() {
       </section>
 
       <section className="max-w-4xl mx-auto px-6 pt-8" aria-label="Snapshot source and verification status">
-        <div className="border border-primary/25 bg-secondary/30 p-5" data-testid="snapshot-output-context">
+        <div className="border border-primary/25 bg-card text-card-foreground p-5" data-testid="snapshot-output-context">
           <p className="text-[10px] uppercase tracking-[0.24em] text-primary font-supporting font-semibold">
             Automated output · not independently verified
           </p>

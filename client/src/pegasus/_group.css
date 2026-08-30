@@ -49,6 +49,13 @@
   color: var(--accent-ink);
 }
 
+/* Lead headings can sit on a permanent navy section while the surrounding
+   Pegasus page remains in light mode. Keep their copper phrase tied to the
+   dark-surface accent instead of the light-paper ink override above. */
+.pg-root:not([data-theme='dark']) .pg-lead-heading--navy .text-\[var\(--accent\)\] {
+  color: var(--accent-bright);
+}
+
 .pg-root[data-theme='dark'] {
   /* ---- Deep night: a darker, more cinematic navy ---- */
   --bg: #091421;

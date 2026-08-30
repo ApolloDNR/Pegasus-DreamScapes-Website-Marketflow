@@ -379,7 +379,7 @@ export function LeadSection({
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-12 lg:gap-20 items-start">
         <div className="lg:col-span-5 reveal">
           <div className={`pg-label mb-5 ${ic}`}>{eyebrow}</div>
-          <Heading className="font-serif-display font-light text-4xl sm:text-5xl md:text-6xl leading-[1.04] sm:leading-[1.0] tracking-normal mb-7"
+          <Heading className={`font-serif-display font-light text-4xl sm:text-5xl md:text-6xl leading-[1.04] sm:leading-[1.0] tracking-normal mb-7 ${navy ? 'pg-lead-heading--navy' : ''}`}
             style={{
               color: navy ? 'var(--cream)' : 'var(--text)',
               ['--accent' as string]: navy ? 'var(--accent-bright)' : 'var(--accent-ink)',

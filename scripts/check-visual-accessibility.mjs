@@ -1252,7 +1252,39 @@ try {
       assert(await link.count() === 1, `Desktop navigation did not expose exactly one ${label} link`);
       assert(await link.getAttribute('href') === href, `${label} did not resolve to ${href}`);
     }
-    assert(await navigation.getByRole('button', { name: /^More/ }).count() === 0, 'Desktop navigation regressed to a More directory');
+
+    const more = navigation.getByRole('button', { name: 'More', exact: true });
+    assert(await more.count() === 1, 'Desktop navigation did not expose exactly one More disclosure');
+    assert(await more.getAttribute('aria-expanded') === 'false', 'Desktop More disclosure initialized open');
+    assert(await more.getAttribute('aria-controls') === 'desktop-more-navigation', 'Desktop More disclosure lost its directory relationship');
+    const directory = page.locator('#desktop-more-navigation');
+    await more.focus();
+    await page.keyboard.press('Enter');
+    await directory.waitFor({ state: 'visible' });
+    assert(await more.getAttribute('aria-expanded') === 'true', 'Desktop More disclosure did not open from the keyboard');
+    assert(await directory.getAttribute('aria-hidden') === 'false', 'Desktop More directory remained hidden from assistive technology');
+    const secondary = [
+      ['Work With Apollo', '/work-with-apollo'],
+      ['Pegasus Standard', '/pegasus-standard'],
+      ['Contact', '/contact'],
+      ['Peggy', '/peggy'],
+      ['Development', '/development'],
+      ['Capital Partners', '/capital'],
+      ['Buyers', '/buyers'],
+      ['Operators & Vendors', '/operators'],
+      ['Referral Partners', '/referral'],
+      ['Pegasus Ecosystem', '/ecosystem'],
+    ];
+    for (const [label, href] of secondary) {
+      const link = directory.getByRole('link', { name: new RegExp(`^${label}`) });
+      assert(await link.count() === 1, `Desktop More directory did not expose exactly one ${label} link`);
+      assert(await link.getAttribute('href') === href, `${label} did not resolve to ${href}`);
+    }
+
+    await page.keyboard.press('Escape');
+    await directory.waitFor({ state: 'hidden' });
+    assert(await more.getAttribute('aria-expanded') === 'false', 'Desktop More disclosure did not close with Escape');
+    assert(await more.evaluate((element) => element === document.activeElement), 'Desktop More disclosure did not restore focus after Escape');
   });
 
   await runInteraction('mobile navigation destination', { viewport: getViewport('mobile-390'), seedConsent: false }, async (page) => {
@@ -1639,7 +1671,7 @@ try {
     assert(await page.getByTestId('button-sidebar-toggle').count() === 0, 'Operator sidebar chrome rendered anonymously');
 
     await openPage(page, '/marketflow');
-    await page.getByRole('button', { name: /Request reviewed access/ }).click();
+    await page.getByRole('button', { name: /Request pilot access/ }).click();
     await page.waitForURL(/\/marketflow\/access$/);
     await page.locator('h1').first().waitFor({ state: 'attached' });
   });
@@ -1883,10 +1915,20 @@ try {
     await page.waitForURL(/\/bring-an-opportunity$/);
   });
 
-  await runInteraction('contact form validation', {}, async (page) => {
+  await runInteraction('contact chooser routing', {}, async (page) => {
     await openPage(page, '/contact');
-    await page.getByRole('button', { name: 'Send Message', exact: true }).click();
-    assert(await page.locator('form input:invalid').count() >= 3, 'Empty contact form did not expose required invalid fields');
+    await page.getByRole('heading', { name: /The right door, before the wrong conversation/i }).waitFor({ state: 'visible' });
+    await page.getByTestId('button-connect-lane-deal-finder').click();
+    const activeLane = page.getByTestId('connect-active-lane');
+    assert(await activeLane.getByText('I have a deal or lead', { exact: true }).count() === 1, 'Contact chooser did not activate the deal-finder lane');
+    assert(
+      await page.getByTestId('link-connect-active-deal-finder').getAttribute('href') === '/deal-partners',
+      'Contact chooser active lane did not preserve the canonical deal-partner route',
+    );
+    assert(
+      await page.getByTestId('link-connect-not-sure').getAttribute('href') === 'mailto:apollo@pegasusdreamscapes.com',
+      'Contact chooser lost the direct plain-note fallback',
+    );
   });
 
   await runInteraction('cookie preference choice', { seedConsent: false }, async (page) => {

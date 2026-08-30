@@ -436,7 +436,13 @@ export function Navigation() {
                   aria-current={active ? "page" : undefined}
                 >
                   MarketFlow
-                  <span className="px-1.5 py-0.5 text-[9px] font-semibold tracking-wider bg-[hsl(var(--bronze)/0.15)] text-[hsl(var(--bronze))] rounded">
+                  <span
+                    className={`px-1.5 py-0.5 text-[9px] font-semibold tracking-wider rounded ${
+                      onLightSurface
+                        ? "bg-[hsl(var(--bronze)/0.15)] text-[hsl(var(--ink))]"
+                        : "bg-white/10 text-white"
+                    }`}
+                  >
                     BETA
                   </span>
                   {active && (
