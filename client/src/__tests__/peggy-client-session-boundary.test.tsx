@@ -486,6 +486,32 @@ async function sendAccessSurfaceMessage(message: string, reply: string) {
   await waitFor(() => expect(screen.getByText(reply)).toBeVisible());
 }
 describe("PeggyDock focused control boundary", () => {
+  it("discloses storage and AI-provider processing beside the authenticated send control", async () => {
+    fakeContext({ isOpen: true });
+    fetchMock.mockImplementation((input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url === "/api/peggy/suggestions") {
+        return Promise.resolve(jsonResponse({ suggestions: [] }));
+      }
+      if (url === "/api/peggy/conversations") {
+        return Promise.resolve(jsonResponse({ id: 12, accessToken: "v1.disclosure" }));
+      }
+      throw new Error(`Unexpected URL ${url}`);
+    });
+
+    renderWithClient(fakePeggyTree(<PeggyDock />));
+    await waitFor(() => expect(callsFor("/api/peggy/conversations")).toHaveLength(1));
+    fireEvent.click(screen.getByTestId("button-peggy-dock"));
+
+    expect(
+      await screen.findByText(/your message is stored and processed by an ai service/i),
+    ).toBeVisible();
+    expect(screen.getByRole("link", { name: /privacy policy/i })).toHaveAttribute(
+      "href",
+      "/privacy",
+    );
+  });
+
   it("serializes double New, blocks same-stack old-token chat, then scopes chat to token two", async () => {
     const replacement = deferred<Response>();
     const chat = deferred<Response>();

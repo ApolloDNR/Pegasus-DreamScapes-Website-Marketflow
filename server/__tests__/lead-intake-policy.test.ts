@@ -60,7 +60,7 @@ describe("normalizeLeadConsent", () => {
 });
 
 describe("required lead consent policy", () => {
-  it.each(["submit", "blueprint_request", "seller", "marketflow_access", "vendor"])(
+  it.each(["submit", "blueprint_request", "seller", "marketflow_access", "vendor", "newsletter"])(
     "requires explicit contact consent for %s",
     (leadType) => {
       expect(requiresExplicitContactConsent(leadType)).toBe(true);
@@ -109,6 +109,9 @@ describe("consent audit", () => {
     );
     expect(consentVersionForLead("vendor", "vendor_network_page")).toBe(
       "vendor-network-contact-v1",
+    );
+    expect(consentVersionForLead("newsletter", "footer_newsletter")).toBe(
+      "newsletter-email-v1",
     );
   });
 

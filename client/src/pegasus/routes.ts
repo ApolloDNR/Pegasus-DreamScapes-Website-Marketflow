@@ -178,6 +178,8 @@ const PRODUCT_SHELL_PREFIXES = [
   '/marketflow/properties/',
   '/marketflow/negotiate/',
   '/marketflow/offer-studio/',
+  '/profile/',
+  '/offer-studio/',
 ];
 
 /** Routes whose page-level product layout owns its own chrome and main. */

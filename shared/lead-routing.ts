@@ -106,31 +106,31 @@ export function normalizePegasusLeadSubmission(
 const SUCCESS_COPY: Record<PegasusLeadLane, { heading: string; body: string }> = {
   seller: {
     heading: "Property details received.",
-    body: "Your submission is recorded for review. If the situation appears to fit a Pegasus path, the appropriate next step can be discussed directly.",
+    body: "Your submission is recorded for possible consideration. Review and follow-up are not promised. If Pegasus elects to continue, a possible next step can be discussed directly.",
   },
   buyer: {
     heading: "Buyer request received.",
-    body: "Your goals are recorded for review. If representation or another relevant path appears appropriate, a next conversation can be arranged.",
+    body: "Your goals are recorded for possible consideration. Review and follow-up are not promised. If Pegasus elects to continue, a relevant path can be discussed directly.",
   },
   wholesaler: {
     heading: "Opportunity routing request received.",
-    body: "The information is recorded for review. Submission does not approve, publish, market, or distribute a deal.",
+    body: "The information is recorded for possible consideration. Review is not promised, and submission does not approve, publish, market, or distribute a deal.",
   },
   investor: {
     heading: "Relationship inquiry received.",
-    body: "This records an interest in a private relationship conversation. It is not an offer, solicitation, commitment, or promise of returns.",
+    body: "This records an interest for possible consideration in a private relationship conversation. Review is not promised, and this is not an offer, solicitation, commitment, or promise of returns.",
   },
   vendor: {
     heading: "Vendor inquiry received.",
-    body: "The information is recorded for review. Submission does not create approval, placement, project volume, or a service agreement.",
+    body: "The information is recorded for possible consideration. Review is not promised, and submission does not create approval, placement, project volume, or a service agreement.",
   },
   referral: {
     heading: "Referral inquiry received.",
-    body: "The introduction context is recorded for review. Any role, fee, or referral relationship must be agreed separately in writing.",
+    body: "The introduction context is recorded for possible consideration. Review is not promised, and any role, fee, or referral relationship must be agreed separately in writing.",
   },
   contact: {
     heading: "Message received.",
-    body: "Your message is recorded for review. If a direct follow-up is appropriate, Pegasus can continue the conversation using the contact details you provided.",
+    body: "Your message is recorded for possible consideration. Review and follow-up are not promised. If Pegasus elects to continue, it may use the contact details you provided.",
   },
 };
 

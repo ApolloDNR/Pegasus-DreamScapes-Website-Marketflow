@@ -128,6 +128,18 @@ describe("Peggy — handoff action buttons", () => {
     vi.unstubAllGlobals();
   });
 
+  it("discloses storage and AI-provider processing beside the public send control", () => {
+    renderPeggy();
+
+    expect(
+      screen.getByText(/your message is stored and processed by an ai service/i),
+    ).toBeVisible();
+    expect(screen.getByRole("link", { name: /privacy policy/i })).toHaveAttribute(
+      "href",
+      "/privacy",
+    );
+  });
+
   it("renders the Strategy Lab CTA only after streaming, then routes to the lab", async () => {
     const chat = deferred<Response>();
     const fetchMock = vi.fn((url: RequestInfo | URL) => {

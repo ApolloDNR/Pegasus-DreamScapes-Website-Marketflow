@@ -63,6 +63,8 @@ describe("private MarketFlow deals shell", () => {
     "/marketflow/properties/property-42",
     "/marketflow/offer-studio/deal-42",
     "/dealflow/project/project-42",
+    "/profile/member-42",
+    "/offer-studio/capital/deal-42",
   ])("uses product-owned chrome for the mounted operator route %s", (location) => {
     expect(
       classifyShellMode({

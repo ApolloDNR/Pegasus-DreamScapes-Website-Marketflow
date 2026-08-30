@@ -920,7 +920,11 @@ export function PeggyDock() {
                 </form>
                 
                 <p className="text-[10px] text-muted-foreground/80 text-center mt-3 font-supporting tracking-wide">
-                  Peggy uses AI for intake. Strategy reads, not legal or financial advice.
+                  By sending, your message is stored and processed by an AI service to generate Peggy&apos;s response. See{" "}
+                  <a className="underline underline-offset-2 hover:text-foreground" href="/privacy">Privacy Policy</a>.
+                </p>
+                <p className="text-[10px] text-muted-foreground/80 text-center mt-1 font-supporting tracking-wide">
+                  Peggy provides intake support, not legal or financial advice.
                 </p>
               </div>
             </Card>

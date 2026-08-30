@@ -350,6 +350,10 @@ export function Peggy({
             {streaming ? <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2} /> : <Send className="w-4 h-4" strokeWidth={1.7} />}
           </button>
         </form>
+        <p className="pg-label !text-[8px] !tracking-[0.12em] normal-case text-[var(--cream)]/45 px-5 pt-2 text-center">
+          By sending, your message is stored and processed by an AI service to generate Peggy&apos;s response. See{" "}
+          <a className="underline underline-offset-2 hover:text-[var(--cream)]" href="/privacy">Privacy Policy</a>.
+        </p>
         <div className="px-5 pt-1 pb-2">
           <div className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--cream)]/40 mb-2">Or go straight to</div>
           <div className="flex flex-wrap gap-2">

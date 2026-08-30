@@ -108,10 +108,10 @@ describe("Bring an Opportunity interaction states", () => {
     fillRequiredContact();
 
     const liveRegion = screen.getByTestId("intake-live-status");
-    fireEvent.click(screen.getByRole("button", { name: "Submit for Review" }));
+    fireEvent.click(screen.getByRole("button", { name: "Record Opportunity" }));
 
     const pending = await screen.findByRole("button", {
-      name: "Sending for Review…",
+      name: "Recording…",
     });
     expect(pending).toBeDisabled();
     expect(pending).toHaveAttribute("aria-busy", "true");
@@ -128,7 +128,9 @@ describe("Bring an Opportunity interaction states", () => {
     expect(screen.getByLabelText("Best time to contact")).toBeDisabled();
     expect(screen.getByLabelText("Anything else we should know?")).toBeDisabled();
     expect(screen.getByRole("checkbox")).toBeDisabled();
-    expect(liveRegion).toHaveTextContent("Sending your opportunity for review");
+    expect(liveRegion).toHaveTextContent(
+      "Recording your opportunity for possible consideration",
+    );
 
     request.resolve({ json: async () => ({ id: "opportunity-42" }) });
 
@@ -149,7 +151,7 @@ describe("Bring an Opportunity interaction states", () => {
     fillRequiredContact();
 
     const liveRegion = screen.getByTestId("intake-live-status");
-    fireEvent.click(screen.getByRole("button", { name: "Submit for Review" }));
+    fireEvent.click(screen.getByRole("button", { name: "Record Opportunity" }));
 
     const failure = await screen.findByRole("alert");
     expect(failure).toHaveTextContent("We could not record your submission");

@@ -78,5 +78,7 @@ describe("Pegasus reusable lead routing", () => {
     expect(copy.heading.length).toBeGreaterThan(0);
     expect(copy.body.length).toBeGreaterThan(0);
     expect(copy.body).not.toMatch(/within\s+\d|guaranteed|approved|now listed|will contact/i);
+    expect(copy.body).not.toMatch(/recorded for review|records? .* for review/i);
+    expect(copy.body).toMatch(/possible consideration|review .* not promised|not .* promise .* review/i);
   });
 });

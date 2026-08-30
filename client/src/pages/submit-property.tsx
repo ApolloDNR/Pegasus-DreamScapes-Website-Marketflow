@@ -428,7 +428,7 @@ export default function SubmitPropertyPage() {
 
   const beginSubmission = () => {
     setRetrying(false);
-    setAnnouncement("Sending your opportunity for review.");
+    setAnnouncement("Recording your opportunity for possible consideration.");
     submit.mutate();
   };
 
@@ -519,8 +519,8 @@ export default function SubmitPropertyPage() {
             Bring the property, the contract, the project, or the plan.
           </h1>
           <p className="mt-4 max-w-2xl text-[16px] leading-relaxed text-[#454b55] dark:text-[#cfc5b4]">
-            We begin by determining what is missing and whether Pegasus is the right participant.
-            Share what you know; partial information is fine.
+            This intake records what you know for possible consideration. Partial information is fine;
+            review and response are not promised.
           </p>
         </div>
 
@@ -809,7 +809,7 @@ export default function SubmitPropertyPage() {
               aria-describedby={step === 4 ? "sp-contact-requirements sp-contact-validation" : undefined}
               className="inline-flex items-center gap-2 border border-[#9c5a24] bg-[#9c5a24] px-8 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-[#8b5a36] disabled:cursor-not-allowed disabled:opacity-45">
               {submit.isPending ? <Loader2 className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" /> : null}
-              {submit.isPending ? "Sending for Review…" : step < 4 ? "Continue" : "Submit for Review"}
+              {submit.isPending ? "Recording…" : step < 4 ? "Continue" : "Record Opportunity"}
               {step < 4 && !submit.isPending && <ArrowRight className="h-4 w-4" aria-hidden="true" />}
             </button>
           </div>
