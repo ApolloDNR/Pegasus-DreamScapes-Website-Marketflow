@@ -73,6 +73,9 @@ describe("account and MarketFlow access truth", () => {
   it("describes login as general preview-account access only", () => {
     renderAt("/login", <LoginPage />);
 
+    expect(
+      screen.getByRole("heading", { level: 1, name: "Welcome Back" }),
+    ).toBeInTheDocument();
     expect(screen.getByText(/general Pegasus preview account/i)).toBeInTheDocument();
     expect(screen.getByText(/MarketFlow is invitation-led and requires separate approval/i)).toBeInTheDocument();
     expect(screen.getByTestId("link-signup")).toHaveTextContent("Create a preview account");

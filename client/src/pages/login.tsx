@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Mail, Lock, ArrowRight, Eye } from "lucide-react";
 
@@ -89,9 +89,12 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 px-4 pt-24 pb-12">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-2 text-center">
-          <CardTitle className="text-3xl font-serif" data-testid="text-login-title">
+          <h1
+            className="text-3xl font-serif font-semibold tracking-tight"
+            data-testid="text-login-title"
+          >
             Welcome Back
-          </CardTitle>
+          </h1>
           <CardDescription>
             Sign in to your general Pegasus preview account.
           </CardDescription>
