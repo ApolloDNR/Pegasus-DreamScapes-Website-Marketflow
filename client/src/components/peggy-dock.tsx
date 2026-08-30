@@ -919,7 +919,10 @@ export function PeggyDock() {
                   </Button>
                 </form>
                 
-                <p className="text-[10px] text-muted-foreground/80 text-center mt-3 font-supporting tracking-wide">
+                <p
+                  className="text-[11px] leading-relaxed text-foreground/80 text-center mt-3 font-supporting"
+                  data-testid="peggy-dock-send-disclosure"
+                >
                   By sending, your message is stored and processed by an AI service to generate Peggy&apos;s response. See{" "}
                   <a className="underline underline-offset-2 hover:text-foreground" href="/privacy">Privacy Policy</a>.
                 </p>

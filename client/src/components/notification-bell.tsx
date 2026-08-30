@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNotificationContext } from "@/contexts/notification-context";
 import { 
   Bell, 
@@ -27,10 +27,11 @@ import {
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatDistanceToNow } from "date-fns";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { apiRequest, AUTHENTICATED_QUERY_META } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import type { Notification } from "@shared/schema";
 import { isKnownSpaPath } from "@shared/spa-routes";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 
 const typeIcons: Record<string, any> = {
   info: Info,
@@ -121,33 +122,44 @@ export function NotificationBell() {
   const [activeTab, setActiveTab] = useState("all");
   const [, setLocation] = useLocation();
   const { isConnected } = useNotificationContext();
+  const { user } = useSupabaseAuth();
+  const client = useQueryClient();
+  const subjectId = user?.id ?? null;
 
-  const { data: notifications = [], isLoading } = useQuery<Notification[]>({
-    queryKey: ["/api/notifications"],
+  const { data: notifications = [], isLoading, isError: notificationsError } = useQuery<Notification[]>({
+    queryKey: ["/api/notifications", subjectId],
+    queryFn: async () => (await apiRequest("GET", "/api/notifications")).json(),
+    enabled: Boolean(subjectId),
+    meta: AUTHENTICATED_QUERY_META,
   });
 
-  const { data: unreadCount } = useQuery<{ count: number }>({
-    queryKey: ["/api/notifications/unread-count"],
+  const { data: unreadCount, isError: unreadError } = useQuery<{ count: number }>({
+    queryKey: ["/api/notifications/unread-count", subjectId],
+    queryFn: async () => (await apiRequest("GET", "/api/notifications/unread-count")).json(),
+    enabled: Boolean(subjectId),
     refetchInterval: isConnected ? 60000 : 15000,
+    meta: AUTHENTICATED_QUERY_META,
   });
 
   const markReadMutation = useMutation({
     mutationFn: async (id: number) => {
+      if (!subjectId) throw new Error("Authentication required");
       await apiRequest("PATCH", `/api/notifications/${id}/read`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
+      client.invalidateQueries({ queryKey: ["/api/notifications", subjectId], exact: true });
+      client.invalidateQueries({ queryKey: ["/api/notifications/unread-count", subjectId], exact: true });
     },
   });
 
   const markAllReadMutation = useMutation({
     mutationFn: async () => {
+      if (!subjectId) throw new Error("Authentication required");
       await apiRequest("POST", "/api/notifications/mark-all-read");
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
+      client.invalidateQueries({ queryKey: ["/api/notifications", subjectId], exact: true });
+      client.invalidateQueries({ queryKey: ["/api/notifications/unread-count", subjectId], exact: true });
     },
   });
 
@@ -191,6 +203,8 @@ export function NotificationBell() {
           size="icon" 
           className="relative"
           data-testid="button-notification-bell"
+          aria-label="Open notification center"
+          disabled={!subjectId}
         >
           <Bell className="h-5 w-5" />
           {count > 0 && (
@@ -212,7 +226,11 @@ export function NotificationBell() {
               <div>
                 <h4 className="font-semibold text-sm">Notification Center</h4>
                 <p className="text-xs text-muted-foreground">
-                  {count > 0 ? `${count} unread` : "All caught up!"}
+                  {notificationsError || unreadError
+                    ? "Unavailable"
+                    : count > 0
+                      ? `${count} unread`
+                      : "All caught up!"}
                 </p>
               </div>
             </div>
@@ -257,7 +275,13 @@ export function NotificationBell() {
         </div>
         
         <ScrollArea className="h-80">
-            {isLoading ? (
+            {notificationsError || unreadError ? (
+              <div className="flex flex-col items-center justify-center h-40 px-5 text-center" role="status">
+                <Bell className="h-6 w-6 mb-2 text-muted-foreground" />
+                <p className="text-sm font-medium">Notifications unavailable</p>
+                <p className="mt-1 text-xs text-muted-foreground">Your private notifications could not be loaded.</p>
+              </div>
+            ) : isLoading ? (
               <div className="flex items-center justify-center h-20">
                 <div className="animate-spin h-5 w-5 border-2 border-primary border-t-transparent rounded-full" />
               </div>

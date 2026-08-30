@@ -25,7 +25,6 @@ import {
   Sparkles,
   LogIn,
   MessageSquare,
-  Bell,
   LogOut,
   Shield,
   ArrowRight,
@@ -47,6 +46,7 @@ import {
 import { hasGovernedMarketflowAccess } from "@/lib/marketflow-access";
 import { trackCtaClick } from "@/lib/analytics";
 import { CommandPalette } from "./command-palette";
+import { NotificationDropdown } from "./notification-dropdown";
 import {
   NAV_PRIMARY,
   NAV_MORE,
@@ -112,33 +112,6 @@ function isItemActive(item: NavItem, location: string): boolean {
   const prefix = item.matchPrefix ?? item.href;
   if (prefix === "/") return location === "/";
   return location === prefix || location.startsWith(prefix + "/");
-}
-
-function NotificationBell({ onLightSurface }: { onLightSurface: boolean }) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          className={`relative p-2 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2 ${
-            onLightSurface
-              ? "text-[hsl(var(--muted-text))] hover:text-[hsl(var(--ink))] hover:bg-[hsl(var(--ink)/0.04)]"
-              : "text-white/80 hover:text-white hover:bg-white/10"
-          }`}
-          data-testid="button-notifications"
-          aria-label="Open notifications"
-        >
-          <Bell className="w-5 h-5" />
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-72">
-        <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem className="text-sm text-muted-foreground cursor-default">
-          You're all caught up.
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
 }
 
 function UserMenu({
@@ -595,7 +568,13 @@ export function Navigation() {
             {isAuthenticated ? (
               <>
                 {hasMarketflowAccess ? (
-                  <NotificationBell onLightSurface={onLightSurface} />
+                  <NotificationDropdown
+                    triggerClassName={
+                      onLightSurface
+                        ? "text-[hsl(var(--muted-text))] hover:text-[hsl(var(--ink))] hover:bg-[hsl(var(--ink)/0.04)]"
+                        : "text-white/80 hover:text-white hover:bg-white/10"
+                    }
+                  />
                 ) : null}
                 <UserMenu
                   profile={profile}

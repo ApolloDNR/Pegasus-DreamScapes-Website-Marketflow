@@ -7,7 +7,7 @@ import userEvent from "@testing-library/user-event";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { sitemapEntries } from "@shared/seo-routes";
+import { SEO_ROUTES, sitemapEntries } from "@shared/seo-routes";
 
 // Empire Doctrine v1.0.1 — Keyboard accessibility regression net (Task #143).
 //
@@ -656,11 +656,26 @@ const PUBLIC_ROUTES: RouteSpec[] = [
 ];
 
 describe("public keyboard route inventory", () => {
-  it("covers every sitemap route exactly once", () => {
-    const coveredPaths = PUBLIC_ROUTES.map(({ path: routePath }) => routePath).sort();
+  it("covers every sitemap route exactly once and retains noindex legal-page coverage", () => {
+    const coveredPaths = PUBLIC_ROUTES.map(({ path: routePath }) => routePath);
     const sitemapPaths = sitemapEntries().map(({ path: routePath }) => routePath).sort();
+    const coverageCount = new Map<string, number>();
+    for (const routePath of coveredPaths) {
+      coverageCount.set(routePath, (coverageCount.get(routePath) ?? 0) + 1);
+    }
 
-    expect(coveredPaths).toEqual(sitemapPaths);
+    expect(
+      sitemapPaths.filter((routePath) => coverageCount.get(routePath) !== 1),
+    ).toEqual([]);
+
+    const noindexCoverage = coveredPaths
+      .filter((routePath) => !sitemapPaths.includes(routePath))
+      .sort();
+    expect(noindexCoverage).toEqual(["/disclosures", "/privacy", "/terms"]);
+    for (const routePath of noindexCoverage) {
+      expect(SEO_ROUTES[routePath]?.noIndex, routePath).toBe(true);
+      expect(coverageCount.get(routePath), routePath).toBe(1);
+    }
   });
 });
 

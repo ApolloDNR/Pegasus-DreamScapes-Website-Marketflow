@@ -350,7 +350,10 @@ export function Peggy({
             {streaming ? <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2} /> : <Send className="w-4 h-4" strokeWidth={1.7} />}
           </button>
         </form>
-        <p className="pg-label !text-[8px] !tracking-[0.12em] normal-case text-[var(--cream)]/45 px-5 pt-2 text-center">
+        <p
+          className="text-[11px] leading-relaxed normal-case text-[var(--cream)]/80 px-5 pt-2 text-center"
+          data-testid="peggy-send-disclosure"
+        >
           By sending, your message is stored and processed by an AI service to generate Peggy&apos;s response. See{" "}
           <a className="underline underline-offset-2 hover:text-[var(--cream)]" href="/privacy">Privacy Policy</a>.
         </p>

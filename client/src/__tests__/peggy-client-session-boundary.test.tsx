@@ -510,6 +510,10 @@ describe("PeggyDock focused control boundary", () => {
       "href",
       "/privacy",
     );
+    expect(screen.getByTestId("peggy-dock-send-disclosure")).toHaveClass(
+      "text-[11px]",
+      "text-foreground/80",
+    );
   });
 
   it("serializes double New, blocks same-stack old-token chat, then scopes chat to token two", async () => {

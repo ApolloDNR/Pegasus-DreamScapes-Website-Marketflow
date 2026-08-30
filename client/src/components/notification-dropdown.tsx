@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -11,21 +11,20 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { 
   Bell, 
-  Check, 
   CheckCheck, 
   DollarSign, 
   MessageSquare, 
   Briefcase, 
   Building2,
-  User,
   Megaphone,
   Sparkles
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, AUTHENTICATED_QUERY_META } from "@/lib/queryClient";
 import type { Notification } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
 import { isKnownSpaPath } from "@shared/spa-routes";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 
 function getNotificationIcon(type: string) {
   switch (type) {
@@ -67,33 +66,48 @@ function getNotificationIconColor(type: string) {
   }
 }
 
-export function NotificationDropdown() {
+export function NotificationDropdown({ triggerClassName }: { triggerClassName?: string } = {}) {
   const [isOpen, setIsOpen] = useState(false);
+  const { user } = useSupabaseAuth();
+  const client = useQueryClient();
+  const subjectId = user?.id ?? null;
 
-  const { data: notifications = [], isLoading } = useQuery<Notification[]>({
-    queryKey: ["/api/notifications"],
+  const { data: notifications = [], isLoading, isError: notificationsError } = useQuery<Notification[]>({
+    queryKey: ["/api/notifications", subjectId],
+    queryFn: async () => (await apiRequest("GET", "/api/notifications")).json(),
+    enabled: Boolean(subjectId),
     refetchInterval: 30000,
+    meta: AUTHENTICATED_QUERY_META,
   });
 
-  const { data: unreadData } = useQuery<{ count: number }>({
-    queryKey: ["/api/notifications/unread-count"],
+  const { data: unreadData, isError: unreadError } = useQuery<{ count: number }>({
+    queryKey: ["/api/notifications/unread-count", subjectId],
+    queryFn: async () => (await apiRequest("GET", "/api/notifications/unread-count")).json(),
+    enabled: Boolean(subjectId),
     refetchInterval: 30000,
+    meta: AUTHENTICATED_QUERY_META,
   });
   const unreadCount = unreadData?.count || 0;
 
   const markReadMutation = useMutation({
-    mutationFn: (id: number) => apiRequest("PATCH", `/api/notifications/${id}/read`),
+    mutationFn: (id: number) => {
+      if (!subjectId) throw new Error("Authentication required");
+      return apiRequest("PATCH", `/api/notifications/${id}/read`);
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
+      client.invalidateQueries({ queryKey: ["/api/notifications", subjectId], exact: true });
+      client.invalidateQueries({ queryKey: ["/api/notifications/unread-count", subjectId], exact: true });
     },
   });
 
   const markAllReadMutation = useMutation({
-    mutationFn: () => apiRequest("POST", "/api/notifications/mark-all-read"),
+    mutationFn: () => {
+      if (!subjectId) throw new Error("Authentication required");
+      return apiRequest("POST", "/api/notifications/mark-all-read");
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/notifications/unread-count"] });
+      client.invalidateQueries({ queryKey: ["/api/notifications", subjectId], exact: true });
+      client.invalidateQueries({ queryKey: ["/api/notifications/unread-count", subjectId], exact: true });
     },
   });
 
@@ -105,7 +119,7 @@ export function NotificationDropdown() {
   };
 
   const recentNotifications = notifications.slice(0, 8);
-  const hasUnread = unreadCount > 0;
+  const hasUnread = !notificationsError && !unreadError && unreadCount > 0;
 
   return (
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
@@ -113,8 +127,10 @@ export function NotificationDropdown() {
         <Button 
           variant="ghost" 
           size="icon" 
-          className="relative"
+          className={cn("relative", triggerClassName)}
           data-testid="button-notifications"
+          aria-label="Open notifications"
+          disabled={!subjectId}
         >
           <Bell className="h-5 w-5" />
           {hasUnread && (
@@ -153,7 +169,13 @@ export function NotificationDropdown() {
         </div>
 
         <ScrollArea className="h-[300px]">
-          {isLoading ? (
+          {notificationsError || unreadError ? (
+            <div className="flex flex-col items-center justify-center py-8 text-center" role="status">
+              <Bell className="h-8 w-8 mb-2 text-muted-foreground" />
+              <p className="text-sm font-medium">Notifications unavailable</p>
+              <p className="mt-1 px-4 text-xs text-muted-foreground">Your private notifications could not be loaded.</p>
+            </div>
+          ) : isLoading ? (
             <div className="flex items-center justify-center py-8">
               <div className="animate-spin h-6 w-6 border-2 border-primary border-t-transparent rounded-full" />
             </div>

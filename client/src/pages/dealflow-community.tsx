@@ -1,5 +1,5 @@
-import { useMemo, useState, useRef } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { useSEO } from "@/hooks/use-seo";
@@ -11,7 +11,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -26,10 +25,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { 
   MessageSquare, 
-  Users,
   Plus,
   Send,
-  Clock,
   Loader2,
   Search,
   Heart,
@@ -37,23 +34,18 @@ import {
   Share2,
   Bookmark,
   MoreHorizontal,
-  Image as ImageIcon,
   Building2,
   TrendingUp,
   Sparkles,
-  Globe,
   Hash,
-  X,
   ChevronRight,
   Flame,
   Star,
-  ThumbsUp,
   Eye,
-  Reply,
   Link as LinkIcon
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, AUTHENTICATED_QUERY_META } from "@/lib/queryClient";
 import { Link } from "wouter";
 import { formatDistanceToNow } from "date-fns";
 
@@ -109,60 +101,78 @@ export default function DealflowCommunity() {
     noIndex: true,
   });
   const { user, profile } = useSupabaseAuth();
+  const client = useQueryClient();
+  const subjectId = user?.id ?? null;
   const { toast } = useToast();
-  const [activeTab, setActiveTab] = useState("feed");
   const [selectedPost, setSelectedPost] = useState<CommunityPost | null>(null);
   const [composeOpen, setComposeOpen] = useState(false);
   const [composeContent, setComposeContent] = useState("");
-  const [composeImages, setComposeImages] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [replyContent, setReplyContent] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch categories
-  const { data: categoriesData = [] } = useQuery<CommunityCategory[]>({
-    queryKey: ["/api/community/categories"],
+  const { data: categoriesData = [], isError: categoriesError } = useQuery<CommunityCategory[]>({
+    queryKey: ["/api/community/categories", subjectId],
+    queryFn: async () => (await apiRequest("GET", "/api/community/categories")).json(),
+    enabled: Boolean(subjectId),
+    meta: AUTHENTICATED_QUERY_META,
   });
   const categories = Array.isArray(categoriesData) ? categoriesData : [];
 
   // Fetch social feed
-  const { data: feedData = [], isLoading: loadingFeed, refetch: refetchFeed } = useQuery<CommunityPost[]>({
-    queryKey: ["/api/community/feed"],
+  const { data: feedData = [], isLoading: loadingFeed, isError: feedError } = useQuery<CommunityPost[]>({
+    queryKey: ["/api/community/feed", subjectId],
+    queryFn: async () => (await apiRequest("GET", "/api/community/feed")).json(),
+    enabled: Boolean(subjectId),
+    meta: AUTHENTICATED_QUERY_META,
   });
   const feedPosts = Array.isArray(feedData) ? feedData : [];
 
   // Fetch category-specific posts
-  const { data: categoryPostsData = [] } = useQuery<CommunityPost[]>({
-    queryKey: ["/api/community/posts", selectedCategory],
-    enabled: selectedCategory !== null,
+  const { data: categoryPostsData = [], isLoading: loadingCategory, isError: categoryError } = useQuery<CommunityPost[]>({
+    queryKey: ["/api/community/posts", subjectId, selectedCategory],
+    queryFn: async () => (
+      await apiRequest("GET", `/api/community/posts?categoryId=${selectedCategory}`)
+    ).json(),
+    enabled: Boolean(subjectId) && selectedCategory !== null,
+    meta: AUTHENTICATED_QUERY_META,
   });
   const categoryPosts = Array.isArray(categoryPostsData) ? categoryPostsData : [];
 
   // Fetch replies for selected post
-  const { data: repliesData = [], refetch: refetchReplies } = useQuery<CommunityReply[]>({
-    queryKey: ["/api/community/posts", selectedPost?.id, "replies"],
-    enabled: selectedPost !== null,
+  const { data: repliesData = [], isError: repliesError } = useQuery<CommunityReply[]>({
+    queryKey: ["/api/community/posts", subjectId, selectedPost?.id, "replies"],
+    queryFn: async () => (
+      await apiRequest("GET", `/api/community/posts/${selectedPost?.id}/replies`)
+    ).json(),
+    enabled: Boolean(subjectId) && selectedPost !== null,
+    meta: AUTHENTICATED_QUERY_META,
   });
   const replies = Array.isArray(repliesData) ? repliesData : [];
 
   // Create post mutation
   const createPostMutation = useMutation({
     mutationFn: async () => {
+      const categoryId = selectedCategory ?? categories[0]?.id;
+      if (!subjectId || !categoryId) throw new Error("A signed-in member and category are required");
       const res = await apiRequest("POST", "/api/community/posts", {
-        categoryId: categories[0]?.id || 1,
+        categoryId,
         content: composeContent,
-        postType: composeImages.length > 0 ? "image" : "text",
-        images: composeImages,
       });
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/community/feed"] });
+      client.invalidateQueries({ queryKey: ["/api/community/feed", subjectId], exact: true });
+      if (selectedCategory !== null) {
+        client.invalidateQueries({
+          queryKey: ["/api/community/posts", subjectId, selectedCategory],
+          exact: true,
+        });
+      }
       toast({ title: "Posted!", description: "Your post is now live." });
       setComposeOpen(false);
       setComposeContent("");
-      setComposeImages([]);
     },
     onError: () => {
       toast({ title: "Error", description: "Failed to create post", variant: "destructive" });
@@ -172,22 +182,30 @@ export default function DealflowCommunity() {
   // Like post mutation
   const likeMutation = useMutation({
     mutationFn: async (postId: number) => {
+      if (!subjectId) throw new Error("Authentication required");
       const res = await apiRequest("POST", `/api/community/posts/${postId}/like`);
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/community/feed"] });
-      refetchFeed();
+      client.invalidateQueries({ queryKey: ["/api/community/feed", subjectId], exact: true });
+      if (selectedCategory !== null) {
+        client.invalidateQueries({ queryKey: ["/api/community/posts", subjectId, selectedCategory], exact: true });
+      }
     },
   });
 
   // Bookmark mutation
   const bookmarkMutation = useMutation({
     mutationFn: async (postId: number) => {
+      if (!subjectId) throw new Error("Authentication required");
       const res = await apiRequest("POST", `/api/community/posts/${postId}/bookmark`);
       return res.json();
     },
     onSuccess: (data) => {
+      client.invalidateQueries({ queryKey: ["/api/community/feed", subjectId], exact: true });
+      if (selectedCategory !== null) {
+        client.invalidateQueries({ queryKey: ["/api/community/posts", subjectId, selectedCategory], exact: true });
+      }
       toast({
         title: data.bookmarked ? "Saved!" : "Removed",
         description: data.bookmarked ? "Added to your bookmarks" : "Removed from bookmarks",
@@ -198,15 +216,18 @@ export default function DealflowCommunity() {
   // Reply mutation
   const replyMutation = useMutation({
     mutationFn: async () => {
-      if (!selectedPost) return;
+      if (!subjectId || !selectedPost) throw new Error("Authentication required");
       const res = await apiRequest("POST", `/api/community/posts/${selectedPost.id}/replies`, {
         content: replyContent,
       });
       return res.json();
     },
     onSuccess: () => {
-      refetchReplies();
-      refetchFeed();
+      client.invalidateQueries({
+        queryKey: ["/api/community/posts", subjectId, selectedPost?.id, "replies"],
+        exact: true,
+      });
+      client.invalidateQueries({ queryKey: ["/api/community/feed", subjectId], exact: true });
       setReplyContent("");
       toast({ title: "Reply posted!" });
     },
@@ -217,7 +238,7 @@ export default function DealflowCommunity() {
 
   const displayPosts = useMemo(
     () =>
-      (activeTab === "feed" ? feedPosts : categoryPosts).map((post) => ({
+      (selectedCategory === null ? feedPosts : categoryPosts).map((post) => ({
         ...post,
         authorName: post.authorName || "Member",
         authorRole: post.authorRole || "MarketFlow member",
@@ -227,7 +248,7 @@ export default function DealflowCommunity() {
         viewCount: post.viewCount || 0,
         shareCount: post.shareCount || 0,
       })),
-    [activeTab, feedPosts, categoryPosts],
+    [selectedCategory, feedPosts, categoryPosts],
   );
 
   // Filter posts by search
@@ -266,7 +287,7 @@ export default function DealflowCommunity() {
   }, [displayPosts]);
 
   const handleShare = (post: CommunityPost) => {
-    navigator.clipboard.writeText(`${window.location.origin}/dealflow/community?post=${post.id}`);
+    navigator.clipboard.writeText(`${window.location.origin}/marketflow/community?post=${post.id}`);
     toast({ title: "Link copied!", description: "Share this post with others" });
   };
 
@@ -282,7 +303,7 @@ export default function DealflowCommunity() {
   };
 
   const getCategoryName = (categoryId: number) => {
-    return categories.find(c => c.id === categoryId)?.name || "General";
+    return categories.find(c => c.id === categoryId)?.name || "Uncategorized";
   };
 
   const formatTime = (dateString: string) => {
@@ -293,9 +314,32 @@ export default function DealflowCommunity() {
     }
   };
 
+  const canCompose = Boolean(subjectId && (selectedCategory ?? categories[0]?.id));
+  const communityError = categoriesError || feedError || (selectedCategory !== null && categoryError);
+
+  if (!subjectId || communityError) {
+    return (
+      <MarketplaceLayout>
+        <div className="mx-auto max-w-3xl py-12">
+          <Card role="status">
+            <CardContent className="py-12 text-center">
+              <MessageSquare className="mx-auto mb-3 h-10 w-10 text-muted-foreground" />
+              <h1 className="text-xl font-semibold">Community unavailable</h1>
+              <p className="mx-auto mt-2 max-w-lg text-sm text-muted-foreground">
+                {!subjectId
+                  ? "Sign in with an approved MarketFlow identity to load this private community."
+                  : "The private community could not be loaded. No empty feed is being inferred from that error."}
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </MarketplaceLayout>
+    );
+  }
+
   // Post Card Component
   const PostCard = ({ post }: { post: CommunityPost }) => (
-    <Card className="hover:bg-secondary/30 transition-colors cursor-pointer" data-testid={`post-${post.id}`}>
+    <Card className="hover:bg-secondary/30 transition-colors" data-testid={`post-${post.id}`}>
       <CardContent className="p-4">
         <div className="flex gap-3">
           <Avatar className="w-12 h-12">
@@ -352,7 +396,7 @@ export default function DealflowCommunity() {
             {post.tags && post.tags.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
                 {post.tags.map((tag, i) => (
-                  <span key={i} className="text-xs text-primary hover:underline cursor-pointer">
+                  <span key={i} className="text-xs text-primary">
                     #{tag}
                   </span>
                 ))}
@@ -389,7 +433,7 @@ export default function DealflowCommunity() {
                       <p className="font-medium text-sm">Linked opportunity</p>
                       <p className="text-xs text-muted-foreground">Click to view project details</p>
                       <Badge className="mt-1 bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-400 text-xs">
-                        Under review
+                        Linked record
                       </Badge>
                     </div>
                     <ChevronRight className="w-5 h-5 text-muted-foreground" />
@@ -504,61 +548,23 @@ export default function DealflowCommunity() {
                       {profile?.display_name?.[0] || user?.email?.[0]?.toUpperCase() || "U"}
                     </AvatarFallback>
                   </Avatar>
-                  <div 
-                    className="flex-1 bg-secondary/50 rounded-full px-4 py-2.5 cursor-pointer hover:bg-secondary transition-colors"
+                  <button
+                    type="button"
+                    className="flex-1 rounded-full bg-secondary/50 px-4 py-2.5 text-left transition-colors enabled:hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-60"
                     onClick={() => setComposeOpen(true)}
+                    disabled={!canCompose}
                     data-testid="compose-trigger"
                   >
                     <span className="text-muted-foreground text-sm">Share a deal, ask a question, or post an update...</span>
-                  </div>
+                  </button>
                 </div>
-                <Separator className="my-3" />
-                <div className="flex justify-between">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="text-muted-foreground gap-2"
-                    onClick={() => setComposeOpen(true)}
-                  >
-                    <ImageIcon className="w-4 h-4 text-green-500" />
-                    Photo
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="text-muted-foreground gap-2"
-                    onClick={() => setComposeOpen(true)}
-                  >
-                    <Building2 className="w-4 h-4 text-blue-500" />
-                    Project
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="text-muted-foreground gap-2"
-                    onClick={() => setComposeOpen(true)}
-                  >
-                    <TrendingUp className="w-4 h-4 text-amber-500" />
-                    Deal
-                  </Button>
-                </div>
+                {!canCompose && (
+                  <p className="mt-3 text-xs text-muted-foreground" role="status">
+                    Posting is unavailable because no community category is configured.
+                  </p>
+                )}
               </CardContent>
             </Card>
-
-            {/* Feed Tabs */}
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <TabsList className="w-full grid grid-cols-3">
-                <TabsTrigger value="feed" className="gap-2" data-testid="tab-feed">
-                  <Globe className="w-4 h-4" /> For You
-                </TabsTrigger>
-                <TabsTrigger value="following" className="gap-2" data-testid="tab-following">
-                  <Users className="w-4 h-4" /> Following
-                </TabsTrigger>
-                <TabsTrigger value="trending" className="gap-2" data-testid="tab-trending">
-                  <Flame className="w-4 h-4" /> Trending
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
 
             {/* Category Filter */}
             <ScrollArea className="w-full">
@@ -586,7 +592,7 @@ export default function DealflowCommunity() {
             </ScrollArea>
 
             {/* Posts Feed */}
-            {loadingFeed ? (
+            {loadingFeed || loadingCategory ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
               </div>
@@ -596,7 +602,7 @@ export default function DealflowCommunity() {
                   <MessageSquare className="w-12 h-12 mx-auto mb-4 text-muted-foreground opacity-50" />
                   <h3 className="font-semibold mb-2">No posts yet</h3>
                   <p className="text-sm text-muted-foreground mb-4">Be the first to start the conversation!</p>
-                  <Button onClick={() => setComposeOpen(true)}>
+                  <Button onClick={() => setComposeOpen(true)} disabled={!canCompose}>
                     <Plus className="w-4 h-4 mr-2" /> Create Post
                   </Button>
                 </CardContent>
@@ -669,7 +675,7 @@ export default function DealflowCommunity() {
                     {featuredMembers.map((member, i) => (
                       <div
                         key={i}
-                        className="flex items-center gap-3 hover:bg-secondary/50 p-2 -mx-2 rounded-lg cursor-pointer transition-colors"
+                        className="flex items-center gap-3 p-2 -mx-2 rounded-lg"
                       >
                         <Avatar className="w-10 h-10">
                           <AvatarFallback className="bg-primary/10 text-primary font-semibold">
@@ -686,9 +692,6 @@ export default function DealflowCommunity() {
                       </div>
                     ))}
                   </div>
-                  <Button variant="outline" className="w-full mt-4" size="sm">
-                    View All Members
-                  </Button>
                 </CardContent>
               </Card>
             )}
@@ -745,62 +748,12 @@ export default function DealflowCommunity() {
               data-testid="compose-content"
             />
 
-            {composeImages.length > 0 && (
-              <div className="grid grid-cols-2 gap-2">
-                {composeImages.map((img, i) => (
-                  <div key={i} className="relative aspect-video bg-secondary rounded-lg overflow-hidden">
-                    <img src={img} alt="" className="w-full h-full object-cover" />
-                    <Button
-                      variant="secondary"
-                      size="icon"
-                      className="absolute top-1 right-1 w-6 h-6"
-                      onClick={() => setComposeImages(imgs => imgs.filter((_, j) => j !== i))}
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
-
             <Separator />
 
-            <div className="flex items-center justify-between">
-              <div className="flex gap-1">
-                <input 
-                  type="file" 
-                  ref={fileInputRef} 
-                  className="hidden" 
-                  accept="image/*"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      const reader = new FileReader();
-                      reader.onload = () => {
-                        setComposeImages([...composeImages, reader.result as string]);
-                      };
-                      reader.readAsDataURL(file);
-                    }
-                  }}
-                />
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  <ImageIcon className="w-5 h-5 text-green-500" />
-                </Button>
-                <Button variant="ghost" size="icon">
-                  <Building2 className="w-5 h-5 text-blue-500" />
-                </Button>
-                <Button variant="ghost" size="icon">
-                  <Hash className="w-5 h-5 text-primary" />
-                </Button>
-              </div>
-              
+            <div className="flex items-center justify-end">
               <Button 
                 onClick={() => createPostMutation.mutate()}
-                disabled={!composeContent.trim() || createPostMutation.isPending}
+                disabled={!canCompose || !composeContent.trim() || createPostMutation.isPending}
                 data-testid="submit-post"
               >
                 {createPostMutation.isPending ? (
@@ -909,7 +862,11 @@ export default function DealflowCommunity() {
 
               {/* Replies */}
               <div className="py-4 space-y-4">
-                {replies.length === 0 ? (
+                {repliesError ? (
+                  <p className="text-center text-sm py-4" role="status">
+                    Replies unavailable
+                  </p>
+                ) : replies.length === 0 ? (
                   <p className="text-center text-muted-foreground text-sm py-4">
                     No replies yet. Be the first to comment!
                   </p>
@@ -929,14 +886,6 @@ export default function DealflowCommunity() {
                           </span>
                         </div>
                         <p className="text-sm">{reply.content}</p>
-                        <div className="flex items-center gap-3 mt-2">
-                          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-muted-foreground">
-                            <ThumbsUp className="w-3 h-3 mr-1" /> Like
-                          </Button>
-                          <Button variant="ghost" size="sm" className="h-6 px-2 text-xs text-muted-foreground">
-                            <Reply className="w-3 h-3 mr-1" /> Reply
-                          </Button>
-                        </div>
                       </div>
                     </div>
                   ))

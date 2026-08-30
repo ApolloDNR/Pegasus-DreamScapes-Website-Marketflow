@@ -138,6 +138,10 @@ describe("Peggy — handoff action buttons", () => {
       "href",
       "/privacy",
     );
+    expect(screen.getByTestId("peggy-send-disclosure")).toHaveClass(
+      "text-[11px]",
+      "text-[var(--cream)]/80",
+    );
   });
 
   it("renders the Strategy Lab CTA only after streaming, then routes to the lab", async () => {
