@@ -383,7 +383,7 @@ describe("Pegasus v6 Landing-shell choice controls", () => {
     await user.click(buyer);
     expect(source).toHaveAttribute("aria-pressed", "false");
     expect(buyer).toHaveAttribute("aria-pressed", "true");
-    expect(within(main).getByText(/See only what fits your mandate/i)).toBeInTheDocument();
+    expect(within(main).getByText(/Define the buyer mandate/i)).toBeInTheDocument();
   });
 
   for (const route of SIGNATURE_ROUTES) {

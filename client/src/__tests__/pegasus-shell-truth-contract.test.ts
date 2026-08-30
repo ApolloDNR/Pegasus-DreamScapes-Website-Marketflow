@@ -11,6 +11,8 @@ const SHELL_FILES = [
   "client/src/pegasus/footer.tsx",
   "client/src/pegasus/peggy.tsx",
   "client/src/pegasus/how-we-operate.tsx",
+  "client/src/pegasus/category-page.tsx",
+  "client/src/pegasus/marketflow-experience.tsx",
 ] as const;
 
 const read = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8");
@@ -25,7 +27,7 @@ describe("mounted Pegasus public truth contract", () => {
     expect(landing).toContain("module.WorkWithApolloPage");
     expect(landing).toContain("<Footer go={go}");
     expect(landing).toContain("import('./how-we-operate')");
-    expect(SHELL_FILES).toHaveLength(8);
+    expect(SHELL_FILES).toHaveLength(10);
   });
 
   it("does not restore retired staffing, workflow, timing, or transaction promises", () => {
@@ -54,6 +56,15 @@ describe("mounted Pegasus public truth contract", () => {
       /we run the execution/i,
       /we route it and say so/i,
       /We will show you the sequence/i,
+      /Every project opens with/i,
+      /The right bench/i,
+      /every job is held to/i,
+      /handed over complete, on a real timeline/i,
+      /A person checks fit/i,
+      /Approved buyers are considered/i,
+      /Approved contractors.*are considered/i,
+      /Pegasus reviews fit and decides/i,
+      /Request reviewed access/i,
     ];
 
     for (const claim of retiredClaims) expect(shellSource).not.toMatch(claim);

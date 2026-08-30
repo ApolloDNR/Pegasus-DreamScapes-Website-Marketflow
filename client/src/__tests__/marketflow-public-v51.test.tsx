@@ -42,7 +42,7 @@ describe("mounted MarketFlow public shell", () => {
     expect(screen.getByText(/no securities are offered/i)).toBeInTheDocument();
 
     const anatomy = screen.getByRole("list", {
-      name: "Fields in a reviewed MarketFlow record",
+      name: "Fields in a possible authorized MarketFlow record",
     });
     for (const label of [
       "Property context",
@@ -64,9 +64,9 @@ describe("mounted MarketFlow public shell", () => {
 
   it.each([
     ["Deal source", "source", "Bring a real opportunity once."],
-    ["Buyer", "buyer", "See only what fits your mandate."],
-    ["Capital", "capital", "Review projects, not promises."],
-    ["Operator", "operator", "Enter where execution needs you."],
+    ["Buyer", "buyer", "Define the buyer mandate."],
+    ["Capital", "capital", "State a mandate, not a promise."],
+    ["Operator", "operator", "State the specialty and capacity."],
   ])("routes the %s relationship to its exact reviewed-access handoff", async (label, role, title) => {
     const user = userEvent.setup({ delay: null });
     const { history } = renderMarketFlow();
@@ -87,7 +87,7 @@ describe("mounted MarketFlow public shell", () => {
     const user = userEvent.setup({ delay: null });
     const { history, go } = renderMarketFlow();
 
-    await user.click(screen.getByRole("button", { name: "Request reviewed access" }));
+    await user.click(screen.getByRole("button", { name: "Request pilot access" }));
     expect(history.at(-1)).toBe("/marketflow/access");
 
     await user.click(screen.getByRole("button", { name: "Read public criteria" }));

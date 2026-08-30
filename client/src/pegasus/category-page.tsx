@@ -105,16 +105,16 @@ function WhatYouGet({ cat }: { cat: Category }) {
 }
 
 const BUILD_PROCESS = [
-  { n: '01', icon: ClipboardList, t: 'Scope & budget', d: 'Every project opens with a real budget and a draw schedule, agreed before the first hammer swings.' },
-  { n: '02', icon: Layers, t: 'The right bench', d: 'Licensed GCs and subcontractors are matched to the job and scaled to the project, never limited to one crew.' },
-  { n: '03', icon: Hammer, t: 'Build to standard', d: 'A written finish spec and punch list every job is held to, from a cosmetic refresh to a ground-up build.' },
-  { n: '04', icon: BadgeCheck, t: 'Deliver, finished', d: 'Walked and handed over complete, on a real timeline, not left half-open.' },
+  { n: '01', icon: ClipboardList, t: 'Scope & budget', d: 'A future project agreement should define scope, exclusions, budget, draws, schedule assumptions, and change control before work.' },
+  { n: '02', icon: Layers, t: 'Qualified providers', d: 'Required licenses, insurance, references, roles, and current capacity should be verified for the specific property and scope.' },
+  { n: '03', icon: Hammer, t: 'Completion standard', d: 'Finish specifications, inspections, acceptance criteria, and punch-list responsibility belong in the project documents.' },
+  { n: '04', icon: BadgeCheck, t: 'Handoff terms', d: 'Any agreement should state the handoff record, warranties if any, unresolved items, payment conditions, and remedies.' },
 ];
 
 function BuildProcessBlock() {
   return (
-    <ProcessSteps eyebrow="How we build" title="Scope to finished product."
-      copy="Every job is scoped before it starts, built to a written finish spec, and walked before we hand it over."
+    <ProcessSteps eyebrow="Project-control framework" title="Define the work before it starts."
+      copy="These are example controls, not a claim of current staff, contractors, capacity, service, schedule, or delivery. Any work requires property-specific diligence and a signed agreement."
       steps={BUILD_PROCESS} />
   );
 }
