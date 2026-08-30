@@ -127,7 +127,8 @@ describe("mounted Work With Apollo representation handoff", () => {
         leadType: "submit",
         consentContact: true,
         leadData: expect.objectContaining({
-          lane: BUYER_ROLE,
+          lane: "buyer",
+          role: BUYER_ROLE,
           intent: "representation",
         }),
       }),
@@ -183,7 +184,7 @@ describe("mounted Work With Apollo representation handoff", () => {
       "No agency relationship is created without a written agreement.",
     );
     expect(container).toHaveTextContent(
-      "This page is not a listing or buyer-representation agreement.",
+      "This page is not an agency agreement.",
     );
   });
 
@@ -222,13 +223,13 @@ describe("mounted Work With Apollo representation handoff", () => {
     await waitFor(() => expect(json).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(trackEventMock).toHaveBeenCalledTimes(1));
     const successHeading = await screen.findByRole("heading", {
-      name: "Received. Thank you.",
+      name: "Property details received.",
     });
     const success = successHeading.parentElement!;
     expect(success).toHaveAttribute("role", "status");
     expect(success).toHaveAttribute("aria-live", "polite");
     await waitFor(() => expect(success).toHaveFocus());
-    expect(success).toHaveTextContent("Received. Thank you.");
+    expect(success).toHaveTextContent("Property details received.");
   });
 
   it("uses one portrait-backed page identity without the duplicate blueprint hero or contour art", () => {

@@ -46,21 +46,21 @@ function visibleText(ui: React.ReactElement, path: string): string {
 }
 
 describe("public Peggy capability truth", () => {
-  it("accurately describes browser storage without fingerprinting claims", () => {
+  it("describes the mounted browser-only draft and Peggy session boundaries", () => {
     const privacyText = visibleText(<Privacy />, "/privacy");
     const disclosuresText = visibleText(<Disclosures />, "/disclosures");
 
     expect(privacyText).toMatch(/local browser storage/i);
-    expect(privacyText).toMatch(/session storage/i);
-    expect(privacyText).toMatch(/current browsing session/i);
-    expect(privacyText).toMatch(/random anonymous Strategy Lab session identifier/i);
-    expect(privacyText).toMatch(/not derived from.*browser.*characteristics/i);
+    expect(privacyText).toMatch(/browser-only Strategy Lab draft/i);
+    expect(privacyText).toMatch(/not an account library/i);
     expect(privacyText).toMatch(
-      /send Peggy conversation content to our configured AI processing provider so it can generate Peggy(?:'s|’s) reply/i,
+      /conversation content is sent to the configured AI processing provider to generate a reply/i,
     );
     expect(privacyText).toMatch(/choose to save.*property and financial.*draft/i);
     expect(privacyText).toMatch(/stored on your device.*local browser storage/i);
     expect(privacyText).toMatch(/does not itself submit.*Pegasus/i);
+    expect(privacyText).not.toMatch(/session storage/i);
+    expect(privacyText).not.toMatch(/random anonymous Strategy Lab session identifier/i);
     expect(privacyText).not.toMatch(/one session cookie/i);
     expect(privacyText).not.toMatch(/one preference cookie/i);
     const memory = memoryLocation({ path: "/privacy" });
@@ -121,7 +121,7 @@ describe("public Peggy capability truth", () => {
     expect(text).not.toMatch(/the first turn of every call .* includes/i);
   });
 
-  it("distinguishes Peggy's live web training surface from planned voice", () => {
+  it("distinguishes Peggy's current website surface from planned voice", () => {
     const ecosystemText = visibleText(<Ecosystem />, "/ecosystem");
     const peggyText = visibleText(
       <PeggyPage go={() => undefined} openPeggy={() => undefined} />,
@@ -130,7 +130,8 @@ describe("public Peggy capability truth", () => {
 
     expect(ecosystemText).toMatch(/available on the website in private training/i);
     expect(ecosystemText).toMatch(/phone and voice remain in development/i);
-    expect(peggyText).toMatch(/web intake is in active training/i);
+    expect(peggyText).toMatch(/current experience is website intake only/i);
+    expect(peggyText).toMatch(/Web early access · voice in development/i);
     expect(peggyText).toMatch(/phone and voice remain in development/i);
   });
 
@@ -170,8 +171,9 @@ describe("public Peggy capability truth", () => {
     );
 
     expect(peggyText).toMatch(/Not the decision-maker/i);
-    expect(peggyText).toMatch(/cannot give legal, tax, or investment advice/i);
-    expect(peggyText).toMatch(/cannot quote a specific offer/i);
+    expect(peggyText).toMatch(
+      /Peggy cannot promise human review or routing, give legal, tax, or investment advice, quote a specific offer, or bind Pegasus/i,
+    );
     expect(peggyText).toMatch(
       /hard refusal categories.*price quotes, valuations, fitness claims/i,
     );

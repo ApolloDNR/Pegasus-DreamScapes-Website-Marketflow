@@ -73,7 +73,7 @@ describe("owner update route governance contract", () => {
   it("validates the Supabase-named numeric capital alias before mutation", () => {
     const route = sourceSlice(
       "app.patch('/api/supabase/capital-projects/:id'",
-      "// --- Capital Commitments (Supabase) ---",
+      "app.post('/api/supabase/capital-commitments'",
     );
 
     expectStrictNumericId(route, "projectId");

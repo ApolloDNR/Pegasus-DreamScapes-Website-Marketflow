@@ -184,33 +184,20 @@ describe("legacy private route contract", () => {
     }
   });
 
-  it("keeps replayable legacy investment-offer mutations disabled", () => {
-    for (const [start, end] of [
-      [
-        "app.post('/api/investment-offers/:offerId/accept'",
-        "app.post('/api/investment-offers/:offerId/decline'",
-      ],
-      [
-        "app.post('/api/investment-offers/:offerId/decline'",
-        "// Seller Lead Routes",
-      ],
-      [
-        'app.post("/api/investment-offers"',
-        "// Respond to investment offer",
-      ],
-      [
-        'app.post("/api/hq/investment-offers/:id/respond"',
-        "// Committed Investments Routes",
-      ],
+  it("keeps replayable legacy investment-offer mutations relationship-only", () => {
+    for (const route of [
+      "/api/investment-offers/:offerId/accept",
+      "/api/investment-offers/:offerId/decline",
+      "/api/investment-offers",
+      "/api/hq/investment-offers/:id/respond",
     ]) {
-      const route = routesSource.slice(
-        routesSource.indexOf(start),
-        routesSource.indexOf(end, routesSource.indexOf(start)),
+      const escapedRoute = route.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      expect(routesSource).toMatch(
+        new RegExp(
+          `app\\.post\\(\\s*["']${escapedRoute}["']\\s*,\\s*rejectCapitalInvestmentInterest\\s*\\)`,
+          "s",
+        ),
       );
-      expect(route).toContain("res.status(501)");
-      expect(route).not.toContain("createCommittedInvestment(");
-      expect(route).not.toContain("updateInvestmentOfferStatus(");
-      expect(route).not.toContain("respondToInvestmentOffer(");
     }
   });
 
