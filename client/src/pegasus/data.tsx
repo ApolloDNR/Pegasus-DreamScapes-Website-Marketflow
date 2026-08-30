@@ -23,19 +23,19 @@ const PREMIUM_MORE_NAV: PremiumNavigationGroup[] = [
   {
     label: 'Company & proof',
     items: [
-      { label: 'Our Work', route: 'ourwork', note: 'Nelson Drive, documented from basis to exit.' },
-      { label: 'About', route: 'about', note: 'Founder, discipline, and current operating model.' },
       { label: 'Work With Apollo', route: 'apollo', note: 'Ask about current licensed-representation availability.' },
       { label: 'Pegasus Standard', url: '/pegasus-standard', note: 'The long-term development direction, clearly labeled.' },
+      { label: 'Contact', route: 'contact', note: 'Start with a general question or ask for the right public route.' },
+      { label: 'Peggy', route: 'peggy', note: 'AI-supported orientation and intake—not licensed advice.' },
     ],
   },
   {
     label: 'Operating lanes',
     items: [
-      { label: 'Investments', route: 'investments', note: 'How Pegasus reads and participates in acquisitions.' },
       { label: 'Development', route: 'development', note: 'A framework for scope, budget, diligence, and delivery terms.' },
       { label: 'Capital Partners', route: 'capital', note: 'Private, project-specific relationships.' },
       { label: 'Buyers', route: 'buyers', note: 'Representation, diligence, and reviewed opportunity paths.' },
+      { label: 'MarketFlow', route: 'marketflow', note: 'The controlled opportunity workspace and current access boundaries.' },
     ],
   },
   {
@@ -44,7 +44,7 @@ const PREMIUM_MORE_NAV: PremiumNavigationGroup[] = [
       { label: 'Operators & Vendors', route: 'operators', note: 'Submit a profile for possible future-scope consideration.' },
       { label: 'Referral Partners', route: 'referral', note: 'Careful handoffs and written terms where lawful.' },
       { label: 'Pegasus Ecosystem', route: 'ecosystem', note: 'HQ, Peggy, Strategy Lab, MarketFlow, and the operating layers.' },
-      { label: 'Peggy', route: 'peggy', note: 'The AI concierge for orientation and intake—not licensed advice.' },
+      { label: 'Strategy Lab', route: 'strategylab', note: 'Model visitor-entered assumptions with directional tools.' },
     ],
   },
 ];

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { ArrowRight, ConciergeBell, Menu, Phone, X } from 'lucide-react';
+import { ArrowRight, ChevronDown, ConciergeBell, Menu, Phone, X } from 'lucide-react';
 import type { Route, Nav, Theme, NavLink } from './theme';
 import { ThemeToggle, BrandMark } from './primitives';
 import { PREMIUM_NAVIGATION } from './data';
@@ -11,15 +11,19 @@ type PremiumItem = NavLink & { note?: string; badge?: string };
 export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy }:
   { go: Nav; route: Route; theme: Theme; toggleTheme: () => void; scrolled: boolean; openPeggy?: () => void }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [desktopMoreOpen, setDesktopMoreOpen] = useState(false);
   const [location] = useLocation();
   const toggleLock = useRef(0);
   const navRef = useRef<HTMLElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const desktopMoreRef = useRef<HTMLDivElement>(null);
+  const desktopMoreButtonRef = useRef<HTMLButtonElement>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
 
   const closeNavigation = () => {
     setMenuOpen(false);
+    setDesktopMoreOpen(false);
   };
   const itemUrl = (item: PremiumItem) => item.url ?? (item.route ? urlFor(item.route) : '');
   const isActive = (item: PremiumItem) => {
@@ -41,7 +45,29 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
 
   useEffect(() => {
     setMenuOpen(false);
+    setDesktopMoreOpen(false);
   }, [route, location]);
+
+  useEffect(() => {
+    if (!desktopMoreOpen) return;
+    const onPointerDown = (event: MouseEvent) => {
+      if (!desktopMoreRef.current?.contains(event.target as Node)) {
+        setDesktopMoreOpen(false);
+      }
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      setDesktopMoreOpen(false);
+      desktopMoreButtonRef.current?.focus();
+    };
+    document.addEventListener('mousedown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }, [desktopMoreOpen]);
 
   useEffect(() => {
     if (!menuOpen) {
@@ -79,6 +105,9 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
   const overHero = !scrolled && !menuOpen;
   const text = overHero ? 'text-[var(--cream)]' : 'text-[var(--text)]';
   const activeTone = overHero ? 'text-[var(--accent-bright)]' : 'text-[var(--accent-ink)]';
+  const desktopMoreActive = PREMIUM_NAVIGATION.more.some((group) =>
+    group.items.some(isActive),
+  );
 
   return (
     <>
@@ -100,6 +129,62 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
                 {item.label}{item.badge && <span className="px-nav-badge">{item.badge}</span>}
               </Link>
             ))}
+            <div ref={desktopMoreRef} className="nav-group">
+              <button
+                ref={desktopMoreButtonRef}
+                type="button"
+                aria-expanded={desktopMoreOpen}
+                aria-controls="desktop-more-navigation"
+                onClick={() => setDesktopMoreOpen((open) => !open)}
+                onKeyDown={(event) => {
+                  if (event.key !== 'ArrowDown') return;
+                  event.preventDefault();
+                  setDesktopMoreOpen(true);
+                  window.requestAnimationFrame(() => {
+                    desktopMoreRef.current?.querySelector<HTMLAnchorElement>('a[href]')?.focus();
+                  });
+                }}
+                className={`pg-navlink inline-flex min-h-11 shrink-0 items-center gap-1 whitespace-nowrap px-1.5 transition-opacity hover:opacity-100 ${desktopMoreActive ? `opacity-100 ${activeTone}` : 'opacity-80'}`}
+                data-testid="button-pegasus-nav-more"
+              >
+                More
+                <ChevronDown
+                  aria-hidden="true"
+                  className={`h-3.5 w-3.5 transition-transform ${desktopMoreOpen ? 'rotate-180' : ''}`}
+                />
+              </button>
+              <div
+                id="desktop-more-navigation"
+                className={`nav-dropdown nav-dropdown-mega ${desktopMoreOpen ? 'is-open' : ''}`}
+                aria-hidden={!desktopMoreOpen}
+                {...(!desktopMoreOpen ? { inert: '' } : {})}
+              >
+                <div className="nav-dropdown-grid">
+                  {PREMIUM_NAVIGATION.more.map((group) => (
+                    <section key={group.label} aria-labelledby={`desktop-nav-${group.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}>
+                      <h2
+                        id={`desktop-nav-${group.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
+                        className="nav-dropdown-head"
+                      >
+                        {group.label}
+                      </h2>
+                      {group.items.map((item) => (
+                        <Link
+                          key={item.label}
+                          href={itemUrl(item)}
+                          onClick={closeNavigation}
+                          aria-current={isActive(item) ? 'page' : undefined}
+                          className={`nav-dropdown-item ${isActive(item) ? 'is-active' : ''}`}
+                        >
+                          <span className="nav-dd-title">{item.label}</span>
+                          {item.note && <span className="nav-dd-desc">{item.note}</span>}
+                        </Link>
+                      ))}
+                    </section>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="flex items-center gap-3 lg:gap-4">

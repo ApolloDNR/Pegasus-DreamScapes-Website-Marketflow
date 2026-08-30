@@ -297,7 +297,7 @@ function HowItWorks() {
                   data-testid={`blueprint-step-${i}`}
                 >
                   <div className="flex items-baseline justify-between mb-6">
-                    <span className="font-serif text-3xl text-primary/30 group-hover:text-primary/60 transition-colors">
+                    <span className="font-serif text-3xl text-primary transition-colors">
                       0{i + 1}
                     </span>
                     <s.icon className="w-5 h-5 text-primary/55 group-hover:text-primary transition-colors" />

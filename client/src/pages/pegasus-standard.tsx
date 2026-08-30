@@ -364,12 +364,12 @@ export default function PegasusStandardPage() {
             management as possible accountability lanes. It is a framework, not a claim of
             separately staffed departments, current inventory, or service availability.
           </p>
-          <p className="mt-8 text-[13px] uppercase tracking-[0.18em] text-[#e8ded0]/45">
+          <p className="mt-8 text-[13px] uppercase tracking-[0.18em] text-[#e8ded0]/65">
             Future vision — not current inventory, not an active development
           </p>
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
             <a href="/bring-an-opportunity"
-              className="inline-flex items-center gap-2 rounded-md bg-[#b47645] px-8 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-white hover:bg-[#8b5a36] transition-colors">
+              className="inline-flex items-center gap-2 rounded-md bg-[#9c5a24] px-8 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-white hover:bg-[#8b5a36] transition-colors">
               Submit a Property <ArrowRight className="h-4 w-4" />
             </a>
             <a href="/marketflow"

@@ -52,7 +52,7 @@ export default function MarketflowBuyboxes() {
               <Link href="/marketflow/access">
                 <Button
                   size="lg"
-                  className="text-sm uppercase tracking-[0.15em] px-7 py-6 bg-[hsl(var(--copper))] hover:bg-[hsl(27_56%_44%)] text-white font-semibold"
+                  className="text-sm uppercase tracking-[0.15em] px-7 py-6 bg-[hsl(var(--copper))] hover:bg-[hsl(27_56%_66%)] text-[hsl(var(--cream-foreground))] font-semibold"
                   data-testid="button-buyboxes-access"
                 >
                   Request pilot access <ArrowRight className="ml-2 w-4 h-4" />

@@ -88,7 +88,7 @@ export default function DepartmentsPage() {
             separate staffing or service on every submission. Any review, project work, or licensed
             representation depends on fit, diligence, capacity, and a separate written agreement.
           </p>
-          <p className="mt-8 text-[12px] uppercase tracking-[0.2em] text-[#e8ded0]/50">
+          <p className="mt-8 text-[12px] uppercase tracking-[0.2em] text-[#e8ded0]/65">
             Acquisitions <span className="text-[#b47645]">→</span> Development{" "}
             <span className="text-[#b47645]">→</span> Dispositions{" "}
             <span className="text-[#b47645]">→</span> Asset Management
@@ -110,14 +110,14 @@ export default function DepartmentsPage() {
               <h2 className="font-serif text-3xl sm:text-4xl">{d.name}</h2>
               <p className="mt-4 text-[16px] leading-relaxed text-[#e8ded0]/80">{d.role}</p>
               <p className="mt-6 text-[13px] leading-relaxed text-[#e8ded0]/55">
-                <span className="font-semibold uppercase tracking-[0.14em] text-[#c8915b]/80 text-[11px]">
+                <span className="font-semibold uppercase tracking-[0.14em] text-[#c8915b] text-[11px]">
                   Example route:{" "}
                 </span>
                 {d.example}
               </p>
             </div>
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#e8ded0]/45 mb-4">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#e8ded0]/65 mb-4">
                 Handles
               </p>
               <ul className="grid gap-2.5 sm:grid-cols-2">
@@ -148,7 +148,7 @@ export default function DepartmentsPage() {
           <div className="mt-9">
             <a
               href="/bring-an-opportunity"
-              className="inline-flex items-center gap-2 rounded-md bg-[#b47645] px-8 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-white hover:bg-[#8b5a36] transition-colors"
+              className="inline-flex items-center gap-2 rounded-md bg-[#9c5a24] px-8 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-white hover:bg-[#8b5a36] transition-colors"
             >
               Submit a Property <ArrowRight className="h-4 w-4" />
             </a>

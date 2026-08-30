@@ -574,7 +574,7 @@ export function LaneCardsBlock({ go }: { go: Nav }) {
 export function ThreePillarsBlock({ go }: { go: Nav }) {
   return (
     <section className="relative py-24 lg:py-32 overflow-hidden">
-      <div aria-hidden="true" className="section-numeral absolute top-0 right-4 lg:right-12 text-[var(--line-soft)]">FIRM</div>
+      <div aria-hidden="true" className="section-numeral absolute top-0 right-4 lg:right-12 text-[var(--decorative-ink)]">FIRM</div>
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
         <SectionHead eyebrow="Operating model" title="Possible acquisition, development, and supporting tools."
           copy="The lanes describe a framework. Current inventory, staff, service availability, project work, and transactions are not implied." />
@@ -904,7 +904,7 @@ export function MarketFlowBlock({ go, dark = false, enter }: { go: Nav; dark?: b
           {MARKETFLOW.map((m, i) => (
             <div key={m.key} className={`reveal flex flex-col h-full pt-8 border-t ${dark ? 'border-[rgba(239,231,218,0.22)]' : 'border-[var(--line)]'}`} style={{ animationDelay: `${i * 90}ms` }}>
               <div className="mb-6">
-                <span className={`font-serif-display text-5xl leading-none ${dark ? 'text-[var(--cream)]/22' : 'text-[var(--line)]'}`}>0{i + 1}</span>
+                <span className="font-serif-display text-5xl leading-none text-[var(--decorative-ink)]">0{i + 1}</span>
               </div>
               <div className={`pg-label !text-[9px] mb-3 ${dark ? 'text-[var(--accent-bright)]' : 'text-[var(--accent)]'}`}>{m.tag}</div>
               <h3 className={`font-serif-display text-2xl mb-4 leading-tight ${dark ? 'text-[var(--cream)]' : 'text-[var(--text)]'}`}>{m.name}</h3>

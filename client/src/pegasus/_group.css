@@ -303,6 +303,27 @@
   pointer-events: auto;
   transform: translateX(-50%) translateY(0) scale(1);
 }
+.nav-dropdown-mega {
+  left: auto;
+  right: 0;
+  width: min(860px, calc(100vw - 48px));
+  transform: translateY(-10px) scale(0.98);
+  transform-origin: top right;
+  padding: 18px;
+}
+.nav-dropdown-mega.is-open {
+  transform: translateY(0) scale(1);
+}
+.nav-dropdown-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.nav-dropdown-grid section { min-width: 0; }
+.nav-dropdown-mega .nav-dropdown-head { padding: 0 10px 10px; }
+.nav-dropdown-mega .nav-dropdown-item { padding: 11px 34px 11px 11px; }
+.nav-dropdown-mega .nav-dropdown-item .nav-dd-title { font-size: 1.05rem; }
+.nav-dropdown-mega .nav-dropdown-item .nav-dd-desc { font-size: 0.7rem; }
 /* hover bridge so the menu doesn't close in the gap */
 .nav-dropdown::before {
   content: '';

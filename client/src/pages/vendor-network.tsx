@@ -333,7 +333,7 @@ function HowToJoinSection() {
               className="relative p-8 bg-background border-border/40"
               data-testid={`vendor-step-${i}`}
             >
-              <p className="font-serif text-6xl text-primary/15 absolute top-4 right-6 leading-none">{s.step}</p>
+              <p className="font-serif text-6xl text-primary absolute top-4 right-6 leading-none">{s.step}</p>
               <s.icon className="w-7 h-7 text-primary mb-5" />
               <h3 className="font-serif text-xl font-semibold mb-3 tracking-tight">{s.title}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>

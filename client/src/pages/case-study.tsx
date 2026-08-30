@@ -106,7 +106,7 @@ export default function CaseStudyPage() {
               </div>
             ))}
           </dl>
-          <p className="mt-5 text-[12px] uppercase tracking-[0.18em] text-[#e8ded0]/45">
+          <p className="mt-5 text-[12px] uppercase tracking-[0.18em] text-[#e8ded0]/65">
             One completed project · approximate project-level figures · stated cost limits
           </p>
         </div>
@@ -126,7 +126,7 @@ export default function CaseStudyPage() {
                 loading="lazy"
                 className="aspect-[4/3] w-full rounded-lg object-cover"
               />
-              <figcaption className="mt-3 text-[12px] uppercase tracking-[0.18em] text-[#e8ded0]/50">
+              <figcaption className="mt-3 text-[12px] uppercase tracking-[0.18em] text-[#e8ded0]/65">
                 Before
               </figcaption>
             </figure>
@@ -174,7 +174,7 @@ export default function CaseStudyPage() {
           <div className="mt-9">
             <a
               href="/bring-an-opportunity"
-              className="inline-flex items-center gap-2 rounded-md bg-[#b47645] px-8 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-white hover:bg-[#8b5a36] transition-colors"
+              className="inline-flex items-center gap-2 rounded-md bg-[#9c5a24] px-8 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-white hover:bg-[#8b5a36] transition-colors"
             >
             Share a Property for Consideration <ArrowRight className="h-4 w-4" />
             </a>
