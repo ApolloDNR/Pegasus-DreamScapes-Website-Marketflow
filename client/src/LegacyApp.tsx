@@ -247,10 +247,6 @@ export function Router() {
        * redirect. Intake routes through /bring-an-opportunity?intent=blueprint,
        * which preserves Blueprint-specific HQ triage. */}
       <Route path="/deal-blueprint" component={DealBlueprint} />
-      {/* Legacy /dashboard route. Kept as a redirect because the auth-aware
-       * destination lives at /marketflow/dashboard; the role router there
-       * forwards staff vs. operator vs. investor to the right surface. */}
-      <Route path="/dashboard">{() => <Redirect to="/marketflow/dashboard" />}</Route>
       <Route path="/dealflow/project/:id">{() => <AuthGuard><DealflowProject /></AuthGuard>}</Route>
 
       {/* Legacy route redirects to MarketFlow - consolidated for maintainability */}
@@ -277,7 +273,7 @@ export function Router() {
       <Route path="/marketflow/buyer/saved">{() => <AuthGuard><MarketplaceBuyer /></AuthGuard>}</Route>
       <Route path="/marketflow/buyer/offers">{() => <AuthGuard><MarketplaceBuyer /></AuthGuard>}</Route>
       <Route path="/marketflow/buyer">{() => <AuthGuard><MarketplaceBuyer /></AuthGuard>}</Route>
-      <Route path="/marketflow/admin/:rest*">{() => <AuthGuard><MarketplaceAdmin /></AuthGuard>}</Route>
+      <Route path="/marketflow/admin/*">{() => <AuthGuard><MarketplaceAdmin /></AuthGuard>}</Route>
       <Route path="/marketflow/admin">{() => <AuthGuard><MarketplaceAdmin /></AuthGuard>}</Route>
       <Route path="/marketflow/discover">{() => <GuestEntry role="investor" to="/marketflow/deals" />}</Route>
       <Route path="/marketflow/calculators">{() => <AuthGuard><MarketplaceCalculators /></AuthGuard>}</Route>
@@ -295,9 +291,9 @@ export function Router() {
       <Route path="/marketflow/deals/:id">{() => <AuthGuard><MarketplaceDealDetail /></AuthGuard>}</Route>
       <Route path="/marketflow/capital">{() => <AuthGuard><MarketplaceCapital /></AuthGuard>}</Route>
       <Route path="/marketflow/capital/:id">{() => <AuthGuard><MarketplaceCapitalDetail /></AuthGuard>}</Route>
-      <Route path="/marketflow/listings/:id">{() => <AuthGuard><MarketplacePropertyDetail inventorySource="legacy" /></AuthGuard>}</Route>
-      <Route path="/marketflow/properties">{() => <AuthGuard><MarketplaceProperties /></AuthGuard>}</Route>
-      <Route path="/marketflow/properties/:id">{() => <AuthGuard><MarketplacePropertyDetail /></AuthGuard>}</Route>
+      <Route path="/marketflow/listings/:id">{() => <AuthGuard><MarketplaceLayout><MarketplacePropertyDetail inventorySource="legacy" /></MarketplaceLayout></AuthGuard>}</Route>
+      <Route path="/marketflow/properties">{() => <AuthGuard><MarketplaceLayout><MarketplaceProperties /></MarketplaceLayout></AuthGuard>}</Route>
+      <Route path="/marketflow/properties/:id">{() => <AuthGuard><MarketplaceLayout><MarketplacePropertyDetail /></MarketplaceLayout></AuthGuard>}</Route>
       <Route path="/marketflow/submit">{() => <AuthGuard><MarketflowSubmit /></AuthGuard>}</Route>
       <Route path="/marketflow/deals/:id/negotiate">{() => <AuthGuard><MarketflowNegotiate /></AuthGuard>}</Route>
       <Route path="/marketflow/negotiate/:lane/:id">{() => <AuthGuard><MarketflowNegotiate /></AuthGuard>}</Route>
@@ -336,10 +332,51 @@ function PageRouteTransition() {
   );
 }
 
-// The Pegasus prototype shell (PegasusSite) is fully self-contained: it
-// renders its own nav, footer, and Peggy dock scoped under `.pg-root`.
-// On those URLs we suppress the legacy global chrome so the page is not
-// double-framed; every other (functional) surface keeps the global chrome.
+export function ShellFrame({
+  shellMode,
+  location,
+  children,
+}: {
+  shellMode: ShellMode;
+  location: string;
+  children: ReactNode;
+}) {
+  const pegasus = shellMode === "pegasus";
+  const standalone = shellMode === "standalone";
+  const product = shellMode === "product";
+  const legacy = shellMode === "legacy";
+
+  return (
+    <div className="min-h-screen flex flex-col bg-background text-foreground">
+      <a href="#main-content" className="skip-to-content">Skip to main content</a>
+      {legacy && <Navigation />}
+      {pegasus ? (
+        // PegasusSite owns its semantic content landmark. Wrapping it in a
+        // second <main> would create an invalid nested landmark.
+        <div className="flex-1">{children}</div>
+      ) : product ? (
+        // Product pages own their header/sidebar and sole <main>. This neutral
+        // skip target prevents global/product chrome and landmarks nesting.
+        <div id="main-content" className="flex-1" tabIndex={-1}>{children}</div>
+      ) : standalone ? (
+        <PegasusStandaloneShell solidNav={isSolidNavUrl(location)}>
+          <main id="main-content" className="flex-1" tabIndex={-1}>
+            {children}
+          </main>
+        </PegasusStandaloneShell>
+      ) : (
+        <main id="main-content" className="flex-1" tabIndex={-1}>
+          {children}
+        </main>
+      )}
+      {legacy && <Footer />}
+    </div>
+  );
+}
+
+// The Pegasus prototype shell and product layouts are self-contained. Their
+// routes suppress the global legacy frame so each page has one chrome owner
+// and one semantic main landmark.
 function AppShell() {
   const [location] = useLocation();
   const {
@@ -349,14 +386,14 @@ function AppShell() {
     userRole,
     isAdmin,
   } = useSupabaseAuth();
-  // Three chrome modes:
+  // Four chrome modes:
   //  - pegasus:    the prototype shell (<PegasusSite>) renders its own
   //                nav/footer/Peggy, so no global chrome at all.
   //  - standalone: a non-prototype public page that should still wear the
   //                pegasus NavBar/Footer chrome (via PegasusStandaloneShell)
   //                so the public site is visually seamless.
-  //  - legacy:     everything else (admin, auth, marketflow internals) keeps
-  //                the legacy global Navigation/Footer/Peggy dock.
+  //  - product:    MarketFlow/Dealflow pages own their product chrome/main.
+  //  - legacy:     remaining auth/admin surfaces keep the global frame.
   const shellMode = classifyShellMode({
     location,
     isAuthenticated,
@@ -365,8 +402,6 @@ function AppShell() {
     isStaff: isAdmin,
     roles: [profile?.primary_role, userRole],
   });
-  const pegasus = shellMode === "pegasus";
-  const standalone = shellMode === "standalone";
   const legacy = shellMode === "legacy";
   return (
     <>
@@ -374,29 +409,9 @@ function AppShell() {
       <AnalyticsBoot />
       <AdminBar />
       <AnonymousClaimWatcher />
-      <div className="min-h-screen flex flex-col bg-background text-foreground">
-        <a href="#main-content" className="skip-to-content">Skip to main content</a>
-        {legacy && <Navigation />}
-        {pegasus ? (
-          // PegasusSite owns the semantic content landmark because its fixed
-          // NavBar must precede the skip-link target in DOM order. Wrapping the
-          // site in another <main> here would create an invalid nested main.
-          <div className="flex-1">
-            <PageRouteTransition />
-          </div>
-        ) : standalone ? (
-          <PegasusStandaloneShell solidNav={isSolidNavUrl(location)}>
-            <main id="main-content" className="flex-1" tabIndex={-1}>
-              <PageRouteTransition />
-            </main>
-          </PegasusStandaloneShell>
-        ) : (
-          <main id="main-content" className="flex-1" tabIndex={-1}>
-            <PageRouteTransition />
-          </main>
-        )}
-        {legacy && <Footer />}
-      </div>
+      <ShellFrame shellMode={shellMode} location={location}>
+        <PageRouteTransition />
+      </ShellFrame>
       {legacy && <AuthGatedPeggyDock />}
       <CookieConsent />
       <Toaster />

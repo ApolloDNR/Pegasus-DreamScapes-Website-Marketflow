@@ -2,6 +2,7 @@ import { lazy, Suspense } from "react";
 import { useLocation } from "wouter";
 import { isPegasusUrl } from "@/pegasus/routes";
 import PublicApp from "@/PublicApp";
+import { normalizeSpaPath } from "@shared/spa-routes";
 
 const LegacyApp = lazy(() => import("@/LegacyApp"));
 
@@ -26,7 +27,7 @@ function RootLoader() {
 export default function App() {
   const [location] = useLocation();
 
-  if (isPegasusUrl(location)) {
+  if (isPegasusUrl(normalizeSpaPath(location))) {
     return <PublicApp />;
   }
 

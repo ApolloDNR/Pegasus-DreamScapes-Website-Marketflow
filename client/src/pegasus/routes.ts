@@ -1,5 +1,5 @@
 import type { Route } from './theme';
-import { isKnownSpaPath } from '@shared/spa-routes';
+import { isKnownSpaPath, normalizeSpaPath } from '@shared/spa-routes';
 
 // Maps the prototype's internal route keys to real wouter URLs and back.
 // Master Blueprint v5.1 (§6) renames the public spine: the owner lane is
@@ -17,7 +17,7 @@ export const ROUTE_TO_URL: Record<Route, string> = {
   referral: '/referral',
   dealstrategy: '/how-we-operate',
   ourwork: '/our-work',
-  investments: '/investments',
+  investments: '/capital',
   development: '/development',
   strategylab: '/strategy-lab',
   marketflow: '/marketflow',
@@ -42,7 +42,10 @@ export const LEGACY_URL_ALIASES: Record<string, Route> = {
 
 export const URL_TO_ROUTE: Record<string, Route> = Object.entries(ROUTE_TO_URL).reduce(
   (acc, [route, url]) => {
-    acc[url] = route as Route;
+    // Multiple internal route keys may intentionally converge on one public
+    // URL. Keep the first canonical owner rather than letting a retired key
+    // replace it during reduction.
+    if (!acc[url]) acc[url] = route as Route;
     return acc;
   },
   { ...LEGACY_URL_ALIASES } as Record<string, Route>,
@@ -55,7 +58,7 @@ export const URL_TO_ROUTE: Record<string, Route> = Object.entries(ROUTE_TO_URL).
 // out of the shell, so this list is intentionally empty. It stays an exported
 // constant so the redirect-reversal guard test and the PEGASUS_URLS filter
 // below keep a single source of truth.
-export const REDIRECTED_URLS: string[] = [];
+export const REDIRECTED_URLS: string[] = ['/investments'];
 
 // Every URL the prototype public shell owns. The canonical intake and `/connect` are
 // deliberately excluded: they render canonical app-level pages (SubmitPage /
@@ -63,20 +66,22 @@ export const REDIRECTED_URLS: string[] = [];
 // painting a blank Pegasus shell. `go('submit')` / `go('connect')` still
 // resolve via ROUTE_TO_URL. REDIRECTED_URLS are excluded so App.tsx's
 // redirects take effect (see above).
-export const PEGASUS_URLS: string[] = Object.values(ROUTE_TO_URL).filter(
-  (u) => u !== '/bring-an-opportunity' && u !== '/connect' && !REDIRECTED_URLS.includes(u),
-);
+export const PEGASUS_URLS: string[] = Array.from(new Set(
+  Object.values(ROUTE_TO_URL).filter(
+    (u) => u !== '/bring-an-opportunity' && u !== '/connect' && !REDIRECTED_URLS.includes(u),
+  ),
+));
 
 export function urlFor(route: Route): string {
   return ROUTE_TO_URL[route] ?? '/';
 }
 
 export function routeForUrl(path: string): Route {
-  return URL_TO_ROUTE[path] ?? 'home';
+  return URL_TO_ROUTE[normalizeSpaPath(path)] ?? 'home';
 }
 
 export function isPegasusUrl(path: string): boolean {
-  return PEGASUS_URLS.includes(path);
+  return PEGASUS_URLS.includes(normalizeSpaPath(path));
 }
 
 // Public surfaces the prototype shell does NOT own, but which should still wear
@@ -129,21 +134,58 @@ const STANDALONE_CHROME_PREFIX: string[] = [
   ...STANDALONE_SOLID_PREFIX,
 ];
 
-function cleanPath(path: string): string {
-  return path.split('?')[0].split('#')[0];
-}
-
 export function isStandaloneChromeUrl(path: string): boolean {
-  const p = cleanPath(path);
+  const p = normalizeSpaPath(path);
   if (STANDALONE_DARK_HERO.includes(p)) return true;
   if (STANDALONE_SOLID_NAV.includes(p)) return true;
   return STANDALONE_CHROME_PREFIX.some((prefix) => p.startsWith(prefix));
 }
 
 export function isSolidNavUrl(path: string): boolean {
-  const p = cleanPath(path);
+  const p = normalizeSpaPath(path);
   if (STANDALONE_SOLID_NAV.includes(p)) return true;
   return STANDALONE_SOLID_PREFIX.some((prefix) => p.startsWith(prefix));
+}
+
+const PRODUCT_SHELL_EXACT_PATHS = new Set([
+  '/marketflow/wholesaler',
+  '/marketflow/dreamscaper',
+  '/marketflow/investor',
+  '/marketflow/buyer',
+  '/marketflow/buyer/saved',
+  '/marketflow/buyer/offers',
+  '/marketflow/admin',
+  '/marketflow/discover',
+  '/marketflow/calculators',
+  '/marketflow/resources',
+  '/marketflow/community',
+  '/marketflow/messages',
+  '/marketflow/deals',
+  '/marketflow/capital',
+  '/marketflow/properties',
+  '/marketflow/submit',
+  '/marketflow/dashboard',
+  '/marketflow/my-deals',
+  '/marketflow/analytics',
+  '/marketflow/my-analytics',
+]);
+
+const PRODUCT_SHELL_PREFIXES = [
+  '/dealflow/project/',
+  '/marketflow/admin/',
+  '/marketflow/deals/',
+  '/marketflow/capital/',
+  '/marketflow/listings/',
+  '/marketflow/properties/',
+  '/marketflow/negotiate/',
+  '/marketflow/offer-studio/',
+];
+
+/** Routes whose page-level product layout owns its own chrome and main. */
+export function isProductShellUrl(path: string): boolean {
+  const pathname = normalizeSpaPath(path);
+  return PRODUCT_SHELL_EXACT_PATHS.has(pathname) ||
+    PRODUCT_SHELL_PREFIXES.some((prefix) => pathname.startsWith(prefix));
 }
 
 // The exact/pattern registry is shared with the production HTML fallback, so

@@ -44,7 +44,7 @@ describe("private MarketFlow deals shell", () => {
       label: "administrative identity",
       identity: { isStaff: true, roles: ["investor"] },
     },
-  ])("uses legacy operator chrome for an approved $label", ({ identity }) => {
+  ])("uses the self-owned product shell for an approved $label", ({ identity }) => {
     expect(
       classifyShellMode({
         location: "/marketflow/deals",
@@ -52,18 +52,26 @@ describe("private MarketFlow deals shell", () => {
         isGuestMode: false,
         ...identity,
       }),
-    ).toBe("legacy");
+    ).toBe("product");
   });
 
-  it("does not change unrelated authenticated operator routes", () => {
+  it.each([
+    "/marketflow/submit",
+    "/marketflow/dashboard",
+    "/marketflow/deals/deal-42",
+    "/marketflow/listings/listing-42",
+    "/marketflow/properties/property-42",
+    "/marketflow/offer-studio/deal-42",
+    "/dealflow/project/project-42",
+  ])("uses product-owned chrome for the mounted operator route %s", (location) => {
     expect(
       classifyShellMode({
-        location: "/marketflow/submit",
+        location,
         isAuthenticated: true,
         isGuestMode: false,
         roles: ["wholesaler"],
       }),
-    ).toBe("legacy");
+    ).toBe("product");
   });
 
   it.each([
@@ -87,6 +95,20 @@ describe("private MarketFlow deals shell", () => {
         isGuestMode: false,
         isPegasusBadged: true,
       }),
-    ).toBe("legacy");
+    ).toBe("product");
+  });
+
+  it.each([
+    "/marketflow",
+    "/marketflow/access",
+    "/marketflow/buyboxes",
+  ])("preserves the public shell contract for %s", (location) => {
+    expect(
+      classifyShellMode({
+        location,
+        isAuthenticated: false,
+        isGuestMode: false,
+      }),
+    ).not.toBe("product");
   });
 });

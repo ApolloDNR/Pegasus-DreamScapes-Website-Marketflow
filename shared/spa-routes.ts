@@ -14,7 +14,6 @@ export const SPA_EXACT_PATHS = new Set<string>([
   "/referral",
   "/how-we-operate",
   "/our-work",
-  "/investments",
   "/development",
   "/strategy-lab",
   "/marketflow",
@@ -30,6 +29,8 @@ export const SPA_EXACT_PATHS = new Set<string>([
   // Standalone public, auth, and internal surfaces.
   "/login",
   "/signup",
+  "/forgot-password",
+  "/reset-password",
   "/pegasus-standard",
   "/departments",
   "/case-study",
@@ -79,6 +80,7 @@ export const SPA_EXACT_PATHS = new Set<string>([
 
   // Browser-side legacy redirects retained by App.tsx.
   "/sell",
+  "/investments",
   "/submit-deal",
   "/submit-property",
   "/submit",
@@ -133,12 +135,12 @@ export const SPA_PATTERN_PATHS: readonly RegExp[] = [
   /^\/marketflow\/admin(?:\/[^/]+)+$/,
   /^\/marketflow\/deals\/[^/]+$/,
   /^\/marketflow\/deals\/[^/]+\/negotiate$/,
+  /^\/marketflow\/listings\/[^/]+$/,
   /^\/marketflow\/capital\/[^/]+$/,
   /^\/marketflow\/properties\/[^/]+$/,
   /^\/marketflow\/negotiate\/[^/]+\/[^/]+$/,
   /^\/marketflow\/offer-studio\/[^/]+$/,
-  /^\/marketplace\/(?:wholesaler|dreamscaper|investor|buyer|admin)(?:\/[^/]+)+$/,
-  /^\/marketplace\/(?:deals|capital|properties)\/[^/]+$/,
+  /^\/marketplace\/(?:wholesaler|dreamscaper|investor|buyer|admin|deals|capital|properties)(?:\/[^/]+)+$/,
 ];
 
 export function normalizeSpaPath(path: string): string {

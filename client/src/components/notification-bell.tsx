@@ -28,8 +28,9 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { formatDistanceToNow } from "date-fns";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { Link, useLocation } from "wouter";
+import { useLocation } from "wouter";
 import type { Notification } from "@shared/schema";
+import { isKnownSpaPath } from "@shared/spa-routes";
 
 const typeIcons: Record<string, any> = {
   info: Info,
@@ -104,7 +105,7 @@ function NotificationItem({
             <Clock className="w-3 h-3" />
             {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
           </span>
-          {notification.link && (
+          {notification.link && isKnownSpaPath(notification.link) && (
             <span className="text-[10px] text-primary flex items-center gap-0.5">
               View <ArrowRight className="w-3 h-3" />
             </span>
@@ -154,7 +155,7 @@ export function NotificationBell() {
     if (!notification.isRead) {
       markReadMutation.mutate(notification.id);
     }
-    if (notification.link) {
+    if (notification.link && isKnownSpaPath(notification.link)) {
       setOpen(false);
       setLocation(notification.link);
     }
@@ -283,14 +284,6 @@ export function NotificationBell() {
             )}
           </ScrollArea>
         
-        <div className="border-t p-2">
-          <Link href="/dealflow/notifications" onClick={() => setOpen(false)}>
-            <Button variant="ghost" size="sm" className="w-full text-xs justify-center" data-testid="button-view-all-notifications">
-              View All Notifications
-              <ArrowRight className="w-3 h-3 ml-1" />
-            </Button>
-          </Link>
-        </div>
       </PopoverContent>
     </Popover>
   );

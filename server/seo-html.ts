@@ -5,6 +5,7 @@
 // without executing client JS.
 
 import { DEFAULT_OG_IMAGE, seoFor, SITE_URL } from "../shared/seo-routes";
+import { normalizeSpaPath } from "../shared/spa-routes";
 import { jsonLdScript } from "../shared/structured-data";
 
 const esc = (s: string) =>
@@ -29,13 +30,61 @@ const NOT_FOUND_SEO = {
   noIndex: true,
 };
 
+const PRIVATE_NOINDEX_EXACT_PATHS = new Set([
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+  "/saved",
+  "/strategy-lab/library",
+  "/strategy-lab/submitted",
+  "/strategy-lab/blueprint-confirmed",
+  "/dashboard",
+  "/hq",
+  "/dealflow/hq",
+]);
+
+const PRIVATE_NOINDEX_PREFIXES: readonly RegExp[] = [
+  /^\/admin(?:\/|$)/,
+  /^\/snapshot(?:\/|$)/,
+  /^\/profile(?:\/|$)/,
+  /^\/offer-studio(?:\/|$)/,
+  /^\/dealflow\/project(?:\/|$)/,
+];
+
+const PUBLIC_MARKETFLOW_PATHS = new Set([
+  "/marketflow",
+  "/marketflow/access",
+  "/marketflow/buyboxes",
+]);
+
+/**
+ * Raw HTML for account, operator, token, and administrative surfaces must not
+ * inherit the public-home canonical or structured data before React hydrates.
+ */
+export function isPrivateNoindexSpaPath(path: string): boolean {
+  const pathname = normalizeSpaPath(path);
+
+  if (PRIVATE_NOINDEX_EXACT_PATHS.has(pathname)) return true;
+  if (PRIVATE_NOINDEX_PREFIXES.some((pattern) => pattern.test(pathname))) {
+    return true;
+  }
+  if (pathname.startsWith("/marketflow/")) {
+    return !PUBLIC_MARKETFLOW_PATHS.has(pathname);
+  }
+  return false;
+}
+
 export function injectSeo(
   html: string,
   pathname: string,
   { notFound = false }: InjectSeoOptions = {},
 ): string {
-  const m = notFound ? NOT_FOUND_SEO : seoFor(pathname);
-  const url = `${SITE_URL}${pathname === "/" ? "" : pathname}`;
+  const normalizedPathname = normalizeSpaPath(pathname);
+  const m = notFound ? NOT_FOUND_SEO : seoFor(normalizedPathname);
+  const suppressIndexing =
+    notFound || m.noIndex === true || isPrivateNoindexSpaPath(normalizedPathname);
+  const url = `${SITE_URL}${normalizedPathname === "/" ? "" : normalizedPathname}`;
   const title = esc(m.title);
   const description = esc(m.description);
   const image = esc(m.image);
@@ -44,7 +93,7 @@ export function injectSeo(
   let out = html;
   // Keep the static shell route-neutral. The real server can identify the
   // document route, so only its homepage response receives the early LCP hint.
-  if (pathname === "/") {
+  if (normalizedPathname === "/") {
     out = out.replace(
       HOMEPAGE_HERO_PRELOAD_MARKER,
       `${HOMEPAGE_HERO_PRELOAD_MARKER}\n    ${HOMEPAGE_HERO_PRELOAD_TAG}`,
@@ -54,7 +103,7 @@ export function injectSeo(
   }
   out = out.replace(/<title>[\s\S]*?<\/title>/i, `<title>${title}</title>`);
   out = replaceMeta(out, 'name="description"', description);
-  if (notFound || m.noIndex) {
+  if (suppressIndexing) {
     out = replaceMeta(out, 'name="robots"', "noindex, nofollow");
   }
   out = replaceMeta(out, 'property="og:title"', title);
@@ -65,16 +114,29 @@ export function injectSeo(
   out = replaceMeta(out, 'name="twitter:title"', title);
   out = replaceMeta(out, 'name="twitter:description"', description);
   out = replaceMeta(out, 'name="twitter:image"', image);
-  if (notFound) {
-    out = out.replace(/\s*<link rel="canonical"[^>]*>/i, "");
+  if (suppressIndexing) {
+    out = removeCanonical(out);
   } else {
     out = out.replace(
       /<link rel="canonical"[^>]*>/i,
       `<link rel="canonical" href="${esc(url)}" />`,
     );
   }
-  out = injectJsonLd(out, pathname);
+  out = suppressIndexing
+    ? removeJsonLd(out)
+    : injectJsonLd(out, normalizedPathname);
   return out;
+}
+
+function removeCanonical(html: string): string {
+  return html.replace(/\s*<link\b[^>]*\brel=["']canonical["'][^>]*>/gi, "");
+}
+
+function removeJsonLd(html: string): string {
+  return html.replace(
+    /\s*<script\b[^>]*\btype=["']application\/ld\+json["'][^>]*>[\s\S]*?<\/script>\s*/gi,
+    "\n",
+  );
 }
 
 function injectJsonLd(html: string, pathname: string): string {

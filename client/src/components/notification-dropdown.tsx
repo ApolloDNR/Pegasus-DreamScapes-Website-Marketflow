@@ -8,7 +8,6 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { 
   Bell, 
@@ -26,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { Notification } from "@shared/schema";
 import { formatDistanceToNow } from "date-fns";
+import { isKnownSpaPath } from "@shared/spa-routes";
 
 function getNotificationIcon(type: string) {
   switch (type) {
@@ -175,22 +175,6 @@ export function NotificationDropdown() {
           )}
         </ScrollArea>
 
-        {notifications.length > 8 && (
-          <>
-            <DropdownMenuSeparator />
-            <div className="p-2">
-              <Link href="/marketflow/notifications" onClick={() => setIsOpen(false)}>
-                <Button 
-                  variant="ghost" 
-                  className="w-full justify-center h-8 text-xs"
-                  data-testid="button-view-all-notifications"
-                >
-                  View all notifications
-                </Button>
-              </Link>
-            </div>
-          </>
-        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -242,7 +226,7 @@ function NotificationItem({
     </div>
   );
 
-  if (notification.link) {
+  if (notification.link && isKnownSpaPath(notification.link)) {
     return <Link href={notification.link}>{content}</Link>;
   }
 

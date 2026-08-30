@@ -27,7 +27,6 @@ import {
   Store, 
   Users, 
   MessageSquare, 
-  Settings, 
   LogOut,
   ChevronDown,
   Loader2,
@@ -171,7 +170,7 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
   
   const toolItems = [
     { path: "/strategy-lab", label: "Strategy Lab", icon: BarChart3 },
-    { path: "/resources", label: "Resources", icon: Building2 },
+    { path: "/marketflow/resources", label: "Resources", icon: Building2 },
     { path: "#peggy", label: "Peggy", icon: Sparkles, isPeggy: true },
   ];
 
@@ -427,12 +426,6 @@ export function DealflowLayout({ children }: DealflowLayoutProps) {
                   </div>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/dealflow/settings" className="cursor-pointer gap-2">
-                    <Settings className="w-4 h-4" />
-                    Settings
-                  </Link>
-                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/" className="cursor-pointer gap-2">
                     <Home className="w-4 h-4" />

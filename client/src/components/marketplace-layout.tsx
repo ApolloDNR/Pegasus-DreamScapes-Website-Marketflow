@@ -29,7 +29,6 @@ import {
   Crown,
   Home,
   LogOut,
-  Settings,
   Sparkles,
   User,
 } from "lucide-react";
@@ -216,19 +215,17 @@ export function MarketplaceLayout({ children }: MarketplaceLayoutProps) {
                     side="top"
                     className="w-[--radix-dropdown-menu-trigger-width]"
                   >
-                    <DropdownMenuItem asChild>
-                      <Link href={`/profile/${user?.id}`}>
-                        <User className="mr-2 h-4 w-4" />
-                        View Profile
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/marketflow/settings">
-                        <Settings className="mr-2 h-4 w-4" />
-                        Settings
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
+                    {user?.id && (
+                      <>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/profile/${user.id}`}>
+                            <User className="mr-2 h-4 w-4" />
+                            View Profile
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
                     <DropdownMenuItem onClick={handleSignOut}>
                       <LogOut className="mr-2 h-4 w-4" />
                       Sign Out

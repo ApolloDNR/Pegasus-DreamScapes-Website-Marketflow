@@ -58,6 +58,7 @@ const DEMOTED_URLS: string[] = ["/library"];
 
 // Renamed surfaces: each legacy URL 301s forward to its live v5.1 canonical.
 const RENAMED_LEGACY: Array<[string, string]> = [
+  ["/investments", "/capital"],
   ["/deal-architecture", "/how-we-operate"],
   ["/sellers", "/property-owners"],
   ["/dealfinders", "/deal-partners"],
@@ -96,8 +97,8 @@ const REDIRECT_MAP: Map<string, string> = (() => {
 })();
 
 describe("v4 re-skin: the v3 lean cut is fully reversed", () => {
-  it("demotes nothing out of the prototype shell anymore", () => {
-    expect(REDIRECTED_URLS).toEqual([]);
+  it("retires only the Investments solicitation from the prototype shell", () => {
+    expect(REDIRECTED_URLS).toEqual(["/investments"]);
   });
 });
 

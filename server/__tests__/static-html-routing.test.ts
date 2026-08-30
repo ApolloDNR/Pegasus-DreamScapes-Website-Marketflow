@@ -149,11 +149,32 @@ describe("production SPA HTML routing", () => {
     "/projects/a-real-project",
     "/marketflow/access",
     "/marketflow/deals/42",
+    "/marketflow/listings/42",
   ])("keeps the real route %s at HTTP 200", (pathname) => {
     const response = requestHtml(pathname);
 
     expect(response.status).toBe(200);
     expect(response.contentType).toBe("html");
+  });
+
+  it.each([
+    "/login",
+    "/saved",
+    "/strategy-lab/library",
+    "/admin/hq-outbox",
+    "/snapshot/property/token-42",
+    "/profile/user-42",
+    "/marketflow/deals/deal-42",
+    "/marketflow/dashboard",
+  ])("serves private route %s as noindex HTML without canonical schema", (pathname) => {
+    const response = requestHtml(pathname);
+
+    expect(response.status).toBe(200);
+    expect(response.body).toContain(
+      '<meta name="robots" content="noindex, nofollow" />',
+    );
+    expect(response.body).not.toContain('<link rel="canonical"');
+    expect(response.body).not.toContain('type="application/ld+json"');
   });
 
   it.each([
@@ -170,5 +191,6 @@ describe("production SPA HTML routing", () => {
       '<meta name="robots" content="noindex, nofollow" />',
     );
     expect(response.body).not.toContain('<link rel="canonical"');
+    expect(response.body).not.toContain('type="application/ld+json"');
   });
 });

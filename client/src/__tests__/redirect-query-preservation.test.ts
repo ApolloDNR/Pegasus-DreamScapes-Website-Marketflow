@@ -34,10 +34,20 @@ describe("legacy intake query preservation", () => {
 
   it("covers every retired intake alias that must preserve context", () => {
     expect([...QUERY_PRESERVING_INTAKE_PATHS].sort()).toEqual([
+      "/investments",
       "/submit",
       "/submit-deal",
       "/submit-property",
       "/wholesale",
     ]);
+  });
+
+  it("preserves attribution when the public investments solicitation retires to Capital", () => {
+    expect(
+      appendRedirectSearch(
+        "/capital",
+        "?utm_source=printed-card&relationship=development",
+      ),
+    ).toBe("/capital?utm_source=printed-card&relationship=development");
   });
 });

@@ -1,6 +1,7 @@
 import {
   isNotFoundUrl,
   isPegasusUrl,
+  isProductShellUrl,
   isStandaloneChromeUrl,
 } from "@/pegasus/routes";
 import {
@@ -9,7 +10,7 @@ import {
 } from "@shared/marketflow-inventory-access";
 import { normalizeSpaPath } from "@shared/spa-routes";
 
-export type ShellMode = "pegasus" | "standalone" | "legacy";
+export type ShellMode = "pegasus" | "standalone" | "product" | "legacy";
 
 export function classifyShellMode({
   location,
@@ -31,12 +32,13 @@ export function classifyShellMode({
       isStaff,
       roles,
     })
-      ? "legacy"
+      ? "product"
       : "standalone";
   }
-  if (isPegasusUrl(location)) return "pegasus";
-  if (isStandaloneChromeUrl(location) || isNotFoundUrl(location)) {
+  if (isPegasusUrl(pathname)) return "pegasus";
+  if (isStandaloneChromeUrl(pathname) || isNotFoundUrl(pathname)) {
     return "standalone";
   }
+  if (isProductShellUrl(pathname)) return "product";
   return "legacy";
 }
