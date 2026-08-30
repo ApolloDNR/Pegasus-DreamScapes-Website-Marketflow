@@ -50,6 +50,7 @@ jobs:
         run: npm ci
 
       - name: Install matching Chromium
+        if: github.event_name != 'pull_request' && github.ref != 'refs/heads/codex/launch-recovery-v2'
         run: npx playwright-core install --with-deps chromium
 
       - name: Audit production dependencies
@@ -65,6 +66,7 @@ jobs:
         run: npm run build
 
       - name: Run rendered accessibility gate
+        if: github.event_name != 'pull_request' && github.ref != 'refs/heads/codex/launch-recovery-v2'
         run: npm run check:a11y
         env:
           A11Y_SCREENSHOT_DIR: artifacts/rendered-qa
@@ -75,6 +77,69 @@ jobs:
 
       - name: Run test suite
         run: npm test
+
+      - name: Upload rendered QA evidence
+        if: always() && github.event_name != 'pull_request' && github.ref != 'refs/heads/codex/launch-recovery-v2'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.provenance.outputs.artifact_name }}
+          path: artifacts/rendered-qa
+          retention-days: 14
+          if-no-files-found: error
+
+  rendered-qa-full:
+    name: exhaustive rendered public-route QA
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/codex/launch-recovery-v2'
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      TESTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || '' }}
+      PR_MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha || '' }}
+    steps:
+      - name: Check out exact source head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TESTED_SOURCE_SHA }}
+
+      - name: Verify exact-head provenance
+        id: provenance
+        shell: bash
+        run: |
+          actual_sha="$(git rev-parse HEAD)"
+          test "$actual_sha" = "$TESTED_SOURCE_SHA"
+          echo "tested_sha=$actual_sha" >> "$GITHUB_OUTPUT"
+          echo "artifact_name=pegasus-rendered-qa-$actual_sha" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.2'
+          cache: 'npm'
+
+      - name: Pin npm for reproducible CI
+        run: npm install --global npm@10.9.2
+
+      - name: Verify portable package lock registry URLs
+        run: node scripts/check-package-lock-registry.mjs
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install matching Chromium
+        run: npx playwright-core install --with-deps chromium
+
+      - name: Run production build
+        run: npm run build
+
+      - name: Run exhaustive rendered accessibility gate
+        run: npm run check:a11y:full
+        env:
+          A11Y_SCREENSHOT_DIR: artifacts/rendered-qa
+          RENDERED_QA_TESTED_SHA: ${{ steps.provenance.outputs.tested_sha }}
+          RENDERED_QA_PR_HEAD_SHA: ${{ env.PR_HEAD_SHA }}
+          RENDERED_QA_PR_MERGE_SHA: ${{ env.PR_MERGE_SHA }}
+          RENDERED_QA_GITHUB_EVENT: ${{ github.event_name }}
 
       - name: Upload rendered QA evidence
         if: always()

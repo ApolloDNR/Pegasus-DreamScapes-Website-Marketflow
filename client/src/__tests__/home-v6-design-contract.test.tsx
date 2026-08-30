@@ -33,13 +33,13 @@ describe("Pegasus mounted v5.1 homepage design contract", () => {
     expect(
       within(arrival!).getByRole("heading", { level: 1 }).textContent?.replace(/\s+/g, " ").trim(),
     ).toBe(
-      "Complex real estate, made executable.",
+      "Complex real estate, structured clearly.",
     );
     expect(
       Array.from(arrival!.querySelectorAll(".hv-eyebrow-row .hv-eyebrow > span"), (item) =>
         item.textContent?.replace(/\s+/g, " ").trim(),
       ),
-    ).toEqual(["Real estate operating company", "Contra Costa & Alameda"]);
+    ).toEqual(["Real estate strategy company", "Contra Costa & Alameda"]);
     expect(
       Array.from(arrival!.querySelectorAll(".hv-cta-row > a, .hv-cta-row > button"), (item) =>
         item.textContent?.replace(/\s+/g, " ").trim(),
@@ -116,14 +116,14 @@ describe("Pegasus mounted v5.1 homepage design contract", () => {
 
     const copy = proof!.textContent?.replace(/\s+/g, " ") ?? "";
     for (const fact of [
-      "Bought a 3/2. Sold a 4/3.",
+      "Documented basis. Documented sale.",
       "$600,000",
       "$105,000",
-      "~$705,000",
+      "$705,000",
       "$840,000",
-      "~$95K",
-      "Approximately $135K above all-in cost",
+      "$135K gross spread",
       "not net profit",
+      "does not identify every contractor",
     ]) {
       expect(copy).toContain(fact);
     }
@@ -160,7 +160,7 @@ describe("Pegasus mounted v5.1 homepage design contract", () => {
       "Buyer",
       "Capital",
       "Development",
-      "Local execution",
+      "Local context",
       "Disposition",
       "Asset operations",
     ];
@@ -168,7 +168,7 @@ describe("Pegasus mounted v5.1 homepage design contract", () => {
     expect(toggles).toHaveLength(8);
     fireEvent.click(toggles[1]);
     expect(toggles[1]).toHaveAttribute("aria-pressed", "true");
-    expect(within(plan!).getByText(/We run the numbers ourselves/i)).toBeInTheDocument();
+    expect(within(plan!).getByText(/Organize supplied assumptions/i)).toBeInTheDocument();
     expect(plan!.textContent).toContain("A route is not a commitment to participate in any deal.");
   });
 
@@ -195,11 +195,11 @@ describe("Pegasus mounted v5.1 homepage design contract", () => {
 
     const founderCopy = founder!.textContent?.replace(/\s+/g, " ") ?? "";
     expect(founderCopy).toContain("Founder, Pegasus DreamScapes");
-    expect(founderCopy).toContain("Keller Williams East Bay");
+    expect(founderCopy).toContain("Duran Ramirez, Paolo Ariel");
+    expect(founderCopy).toContain("BMP Realty Inc DBA Keller Williams Realty-East Bay");
     expect(founderCopy).toContain("CA DRE #02333658");
-    expect(founderCopy).toContain("On Nelson Drive");
-    expect(founderCopy).toContain("sourced the deal");
-    expect(founderCopy).toContain("carried it to sale");
+    expect(founderCopy).toContain("public Nelson record does not identify who provided brokerage representation");
+    expect(founderCopy).not.toContain("sourced the deal");
     expect(within(founder!).getByRole("img")).toHaveAttribute("loading", "lazy");
 
     expect(within(final!).getByRole("heading", { level: 2 })).toHaveTextContent(

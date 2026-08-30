@@ -35,13 +35,13 @@ const BOUNDARIES = [
   },
   {
     label: 'Licensed representation',
-    title: 'Apollo through Keller Williams East Bay',
-    copy: 'When buyer or seller representation is the appropriate lane, it is provided separately by Paolo “Apollo” Duran through Keller Williams Realty East Bay, CA DRE #02333658. No agency relationship is created without a written agreement.',
+    title: 'Separate, verified, and written',
+    copy: 'This site uses Paolo “Apollo” Duran as a public-facing name. CA DRE #02333658 is listed under Duran Ramirez, Paolo Ariel, with responsible broker BMP Realty Inc DBA Keller Williams Realty-East Bay. Verify current status. Representation may be available only through a separate written brokerage agreement.',
   },
   {
     label: 'Project delivery',
-    title: 'Qualified professionals, engaged by project',
-    copy: 'Construction and other specialized services are performed by appropriately licensed professionals under the agreements applicable to each project.',
+    title: 'Roles established project by project',
+    copy: 'If construction or another specialized service is engaged, provider qualifications, licensing, scope, capacity, and responsibility must be established in separate project agreements. This page does not imply a standing team.',
   },
 ] as const;
 
@@ -55,7 +55,7 @@ export function AboutPageV6({ go }: { go: Nav }) {
             <div className="ab6-kicker ab6-kicker-on-dark">About Pegasus Dreamscapes</div>
             <h1>A single, accountable point of view.</h1>
             <p className="ab6-arrival-lead">
-              Pegasus is a founder-led real estate operating company built for consequential property decisions—bringing the read, the plan, and the right path forward into one line of sight.
+              Pegasus is a founder-led real estate strategy company for consequential property decisions—organizing assumptions, roles, constraints, and possible paths in one line of sight.
             </p>
             <div className="ab6-actions">
               <a className="ab6-button ab6-button-light" href="/bring-an-opportunity">
@@ -75,7 +75,7 @@ export function AboutPageV6({ go }: { go: Nav }) {
             <div className="ab6-arrival-meta">
               <span>Founder-led</span>
               <span>East Bay, California</span>
-              <span>Reviewed deal by deal</span>
+              <span>Possible consideration · case by case</span>
             </div>
           </aside>
         </div>
@@ -129,23 +129,23 @@ export function AboutPageV6({ go }: { go: Nav }) {
             <div className="ab6-kicker">The founder</div>
             <h2 id="ab6-founder-title">The work stays personal by design.</h2>
             <p className="ab6-founder-deck">
-              Apollo founded Pegasus to give complicated real estate opportunities a more coherent read—one grounded in basis, scope, timing, and the finished outcome.
+              Apollo founded Pegasus to publish a disciplined way to frame complicated real estate opportunities—one grounded in basis, scope, timing, and the intended outcome.
             </p>
             <div className="ab6-founder-body">
               <p>
-                He leads strategy and underwriting on each opportunity. The company is intentionally founder-led, with qualified professionals brought into the work when their expertise and licensing are required.
+                He sets the company&apos;s published strategy framework. Whether he or Pegasus participates in a specific opportunity is determined case by case and requires the applicable written agreement.
               </p>
               <p>
-                When agency representation is the right lane, Apollo provides those services separately through Keller Williams Realty East Bay. The role may change by opportunity; the standard of candor does not.
+                Licensed representation may be available separately. The public-facing name used here is not itself the license record: CA DRE #02333658 is listed under Duran Ramirez, Paolo Ariel, with responsible broker BMP Realty Inc DBA Keller Williams Realty-East Bay.
               </p>
             </div>
             <div className="ab6-founder-credential">
-              <span>Licensed California real estate salesperson</span>
-              <strong>CA DRE #02333658</strong>
+              <span>License record: Duran Ramirez, Paolo Ariel</span>
+              <strong>CA DRE #02333658 · verify current status</strong>
             </div>
             <div className="ab6-actions">
               <button type="button" className="ab6-button ab6-button-navy" onClick={() => go('apollo')}>
-                Represent With Apollo <ArrowRight aria-hidden="true" />
+                Ask About Representation <ArrowRight aria-hidden="true" />
               </button>
               <button type="button" className="ab6-text-link" onClick={() => go('ourwork')}>
                 View the work <ArrowRight aria-hidden="true" />
@@ -175,7 +175,7 @@ export function AboutPageV6({ go }: { go: Nav }) {
             ))}
           </div>
           <p className="ab6-disclosure">
-            Each Keller Williams office is independently owned and operated. Strategy reviews are preliminary and are not legal, tax, lending, appraisal, financial, or investment advice.
+            Pegasus is not a real estate brokerage. No agency relationship is created without a separate written brokerage agreement. Strategy tools and intake materials are educational and are not legal, tax, lending, appraisal, financial, or investment advice.
           </p>
         </div>
       </section>
@@ -188,7 +188,7 @@ export function AboutPageV6({ go }: { go: Nav }) {
           </div>
           <div className="ab6-next-copy reveal delay-100">
             <p>
-              A property, a deal, or an unanswered question. Pegasus will begin with a plain read and tell you which lane—if any—fits.
+              Bring a property, a deal, or an unanswered question to the appropriate request path. Submission does not promise review, advice, a response, or participation.
             </p>
             <div className="ab6-actions">
               <a className="ab6-button ab6-button-navy" href="/bring-an-opportunity">

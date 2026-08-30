@@ -10,10 +10,10 @@ import {
 import { peggyFetchWithSingleRefresh } from '@/lib/peggy-access';
 
 const GREETING =
-  "I’m Peggy, Pegasus’s AI concierge. Tell me what you’re bringing, a property, a deal, a project, or a plan, in your own words. I’ll help organize it and route it to the appropriate Pegasus review path.";
+  "I’m Peggy, Pegasus’s AI intake assistant. Describe the property, deal, project, or plan in your own words. I can explain relevant public paths and help create an intake record, but I cannot promise human review, routing, advice, or a response.";
 
 const FALLBACK =
-  "I can’t reach my brain at the moment. You can still get a fast read from a person: start a Review and someone writes back within 48 hours, or open the Strategy Lab to model the numbers yourself.";
+  "I can’t reach the chat service right now. You can still share the context for possible consideration or open Strategy Lab to model your own assumptions. Human review, follow-up, and response timing are not promised.";
 
 type ChatMessage = { role: 'user' | 'assistant'; content: string };
 
@@ -292,7 +292,7 @@ export function Peggy({
           )}
           {lastAction?.action === 'review' && !streaming && (
             <button type="button" className="peggy-action" onClick={() => goReview(lastAction, messages)}>
-              Start my Review <ArrowRight className="w-3.5 h-3.5" strokeWidth={1.8} />
+              Share for Consideration <ArrowRight className="w-3.5 h-3.5" strokeWidth={1.8} />
             </button>
           )}
 
@@ -329,7 +329,7 @@ export function Peggy({
           {errored && (
             <div className="flex flex-wrap gap-2 mt-1">
               <button type="button" className="peggy-action" onClick={() => goReview(null, messages)}>
-                Start a Review <ArrowRight className="w-3.5 h-3.5" strokeWidth={1.8} />
+                Share for Consideration <ArrowRight className="w-3.5 h-3.5" strokeWidth={1.8} />
               </button>
               <button type="button" className="peggy-action is-ghost" onClick={() => { toStrategyLab(); setOpen(false); }}>
                 Open Strategy Lab
@@ -353,7 +353,7 @@ export function Peggy({
             <button type="button" data-testid="peggy-route-submit" className="peggy-chip !py-1.5 !px-3"
               onClick={() => { toSubmit(); setOpen(false); }}>Submit a Property</button>
             <button type="button" data-testid="peggy-route-apollo" className="peggy-chip !py-1.5 !px-3"
-              onClick={() => { go('apollo'); setOpen(false); }}>Represent With Apollo</button>
+              onClick={() => { go('apollo'); setOpen(false); }}>Ask About Representation</button>
             <button type="button" data-testid="peggy-route-marketflow" className="peggy-chip !py-1.5 !px-3"
               onClick={() => { go('marketflow'); setOpen(false); }}>MarketFlow</button>
           </div>

@@ -177,7 +177,7 @@ const SIGNATURE_ROUTES: SignatureRoute[] = [
     initialChoice: "Originate",
     nextChoice: "Structure",
     outputSelector: ".hwo-stage",
-    nextOutput: /Set the role, the strategy, and the terms/i,
+    nextOutput: /Compare possible roles, strategies, and required terms/i,
   },
   {
     path: "/property-owners",
@@ -204,7 +204,7 @@ describe("Pegasus public-shell navigation accessibility", () => {
     const { container } = renderLanding("/");
 
     await screen.findByRole("heading", {
-      name: /Complex real estate, made executable/i,
+      name: /Complex real estate, structured clearly/i,
     });
 
     const nav = container.querySelector("nav");

@@ -1,6 +1,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import { relative, resolve } from "node:path";
 import postcss from "postcss";
+import { parse } from "yaml";
 import { describe, expect, it } from "vitest";
 
 const source = readFileSync(
@@ -282,6 +283,46 @@ describe("rendered visual-accessibility gate contract", () => {
     expect(interactionRunner).toContain("page.unrouteAll({ behavior: 'wait' })");
   });
 
+  it("bounds every Playwright close and force-stops a browser server after transport failure", () => {
+    expect(source).toContain(
+      "import { closeWithinDeadline } from './rendered-qa-liveness.mjs';",
+    );
+    expect(source).toContain("const browserServers = new Map();");
+    expect(source).toContain("await chromium.launchServer({");
+    expect(source).toContain("await chromium.connect(browserServer.wsEndpoint())");
+    expect(source).toContain("async function closeQaPage(page, label)");
+    expect(source).toContain("async function closeQaContext(context, label)");
+    expect(source).toContain("async function closeQaBrowser(browser, label)");
+    expect(source).toContain("async function forceStopBrowserServer(browserServer, label)");
+    expect(source).toContain("browserServer.process()");
+    expect(source).toContain("childProcess.kill('SIGKILL')");
+    expect(source).toContain("childProcess.unref()");
+
+    const interactionRunner = sliceBetween(
+      "async function runInteraction",
+      "async function openPage",
+    );
+    expect(interactionRunner).toContain("await closeQaPage(page, `interaction ${name} page`)");
+    expect(interactionRunner).toContain("await closeQaContext(context, `interaction ${name} context`)");
+    expect(interactionRunner).toContain("await closeQaBrowser(browser, `interaction ${name} browser`)");
+
+    const routeEvidence = sliceBetween(
+      "for (const colorScheme of interactionsOnly ? [] : colorSchemes)",
+      "await runInteraction('desktop navigation spine'",
+    );
+    expect(routeEvidence).toContain("await closeQaPage(");
+    expect(routeEvidence).toContain("await closeQaContext(");
+    expect(routeEvidence).toContain("await closeQaBrowser(");
+
+    const finalCleanup = sliceBetween(
+      "} finally {\n  const residualBrowserCleanup",
+      "const testedSourceSha",
+    );
+    expect(finalCleanup).toContain("closeQaBrowser(browser, 'residual browser cleanup')");
+    expect(finalCleanup).toContain("residualCleanupFailures");
+    expect(source).not.toMatch(/await\s+(?:page|context|browser)\.close\(/);
+  });
+
   it("never re-enables CSS motion after reduced motion is requested", () => {
     const nonZeroTime = (value: string) => value
       .split(",")
@@ -452,8 +493,29 @@ describe("rendered visual-accessibility gate contract", () => {
     expect(workflow).toContain("if-no-files-found: error");
     expect(workflow).toContain("A11Y_SCREENSHOT_DIR:");
     expect(workflow).toContain("RENDERED_QA_TESTED_SHA:");
-    expect(workflow.match(/node-version: '22\.23\.2'/g)).toHaveLength(2);
-    expect(workflow.match(/npm@10\.9\.2/g)).toHaveLength(2);
+    expect(workflow.match(/node-version: '22\.23\.2'/g)).toHaveLength(3);
+    expect(workflow.match(/npm@10\.9\.2/g)).toHaveLength(3);
+    const workflowConfig = parse(workflow) as {
+      jobs: Record<string, {
+        if?: string;
+        "timeout-minutes"?: number;
+        steps?: Array<{ name?: string; if?: string; run?: string }>;
+      }>;
+    };
+    const fullQaJob = workflowConfig.jobs["rendered-qa-full"];
+    expect(fullQaJob).toBeDefined();
+    expect(fullQaJob.if).toBe(
+      "github.event_name == 'pull_request' || github.ref == 'refs/heads/codex/launch-recovery-v2'",
+    );
+    expect(fullQaJob["timeout-minutes"]).toBe(60);
+    expect(
+      fullQaJob.steps?.find(({ name }) => name === "Run exhaustive rendered accessibility gate")?.run,
+    ).toBe("npm run check:a11y:full");
+    expect(
+      workflowConfig.jobs.test.steps?.find(({ name }) => name === "Run rendered accessibility gate")?.if,
+    ).toBe(
+      "github.event_name != 'pull_request' && github.ref != 'refs/heads/codex/launch-recovery-v2'",
+    );
     expect(workflow).toContain("merge-compatibility:");
     expect(workflow).toContain("refs/pull/${{ github.event.pull_request.number }}/merge");
     expect(workflow).toContain("fetch-depth: 2");

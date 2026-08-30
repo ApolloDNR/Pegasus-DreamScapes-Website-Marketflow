@@ -25,7 +25,7 @@ const PREMIUM_MORE_NAV: PremiumNavigationGroup[] = [
     items: [
       { label: 'Our Work', route: 'ourwork', note: 'Nelson Drive, documented from basis to exit.' },
       { label: 'About', route: 'about', note: 'Founder, discipline, and current operating model.' },
-      { label: 'Work With Apollo', route: 'apollo', note: 'Licensed representation through Keller Williams East Bay.' },
+      { label: 'Work With Apollo', route: 'apollo', note: 'Ask about current licensed-representation availability.' },
       { label: 'Pegasus Standard', url: '/pegasus-standard', note: 'The long-term development direction, clearly labeled.' },
     ],
   },
@@ -33,7 +33,7 @@ const PREMIUM_MORE_NAV: PremiumNavigationGroup[] = [
     label: 'Operating lanes',
     items: [
       { label: 'Investments', route: 'investments', note: 'How Pegasus reads and participates in acquisitions.' },
-      { label: 'Development', route: 'development', note: 'Scope, build teams, budget, and delivery.' },
+      { label: 'Development', route: 'development', note: 'A framework for scope, budget, diligence, and delivery terms.' },
       { label: 'Capital Partners', route: 'capital', note: 'Private, project-specific relationships.' },
       { label: 'Buyers', route: 'buyers', note: 'Representation, diligence, and reviewed opportunity paths.' },
     ],
@@ -41,7 +41,7 @@ const PREMIUM_MORE_NAV: PremiumNavigationGroup[] = [
   {
     label: 'Network & resources',
     items: [
-      { label: 'Operators & Vendors', route: 'operators', note: 'The project-specific execution bench.' },
+      { label: 'Operators & Vendors', route: 'operators', note: 'Submit a profile for possible future-scope consideration.' },
       { label: 'Referral Partners', route: 'referral', note: 'Careful handoffs and written terms where lawful.' },
       { label: 'Pegasus Ecosystem', route: 'ecosystem', note: 'HQ, Peggy, Strategy Lab, MarketFlow, and the operating layers.' },
       { label: 'Peggy', route: 'peggy', note: 'The AI concierge for orientation and intake—not licensed advice.' },
@@ -66,9 +66,9 @@ export const NAV_LINKS: NavLink[] = [
    CREDIBILITY STATS
    ================================================================ */
 export const STATS: { value: React.ReactNode; label: string; sub: string }[] = [
-  { value: 'Deal by deal', label: 'How every property is read', sub: 'Underwritten on real numbers, not hope' },
-  { value: '4 lanes', label: 'How Pegasus participates', sub: 'List, buy, partner, or route' },
-  { value: '48 hours', label: 'First strategy read', sub: 'From intake to a written path' },
+  { value: 'One record', label: 'Structured opportunity intake', sub: 'Receipt does not promise a review or response' },
+  { value: '4 examples', label: 'Possible participation lanes', sub: 'Each depends on fit and written terms' },
+  { value: 'Self-serve', label: 'Strategy Lab modeling', sub: 'Educational outputs based on your inputs' },
   { value: 'East Bay', label: 'Where we focus', sub: 'Contra Costa & Alameda County' },
 ];
 
@@ -89,7 +89,7 @@ export const DOORS3: {
     key: 'review',
     kicker: 'Start with a written read',
     title: 'Request a Property Review',
-    desc: 'Tell us about the property or the situation. We read it and come back with a clear, written path forward.',
+    desc: 'Tell us about the property or situation for possible consideration. No review, written read, or response time is promised.',
     best: 'Best when you have a specific property, a deadline, or a decision to make.',
     cta: 'Request a Property Review',
     action: 'contact',
@@ -99,7 +99,7 @@ export const DOORS3: {
     key: 'lab',
     kicker: 'Run the numbers yourself',
     title: 'Open the Strategy Lab',
-    desc: 'Model a deal in minutes. See the all-in, the spread, and the recommended lane before you ever talk to anyone.',
+    desc: 'Model assumptions privately and explore illustrative costs, spread, and possible lanes. Outputs are educational, not recommendations.',
     best: 'Best when you want to run the numbers privately and move at your own pace.',
     cta: 'Open Strategy Lab',
     action: 'strategylab',
@@ -109,7 +109,7 @@ export const DOORS3: {
     key: 'peggy',
     kicker: 'Ask in plain language',
     title: 'Talk to Peggy',
-    desc: 'Describe the deal in your own words. Peggy asks the right questions, frames the options, and routes you to the right lane.',
+    desc: 'Describe the situation in your own words. Peggy can explain public options and help create an intake record, but cannot promise routing.',
     best: 'Best when you are not sure where you fit yet.',
     cta: 'Talk to Peggy',
     action: 'peggy',
@@ -124,42 +124,42 @@ export const PILLARS3: Pillar[] = [
   {
     eyebrow: 'Pillar 01',
     tag: 'Investments',
-    title: <>We acquire and<br />reposition real assets</>,
-    lead: 'We find distressed, dated, and overlooked property, underwrite it on real numbers, and buy at a basis that holds. Then we reposition it and sell or hold on a plan set before we close.',
+    title: <>How a possible acquisition<br />is evaluated</>,
+    lead: 'This lane describes how a possible acquisition may be evaluated: basis, condition, improvement scope, risk, and exit. It is not a claim of current inventory or a promise to buy.',
     points: [
-      'Sourcing, negotiation, and deal structure handled by one team',
-      'Underwriting on real numbers, not hope',
-      'Capital partners on clearly defined terms',
+      'Property facts, access, and control established first',
+      'Basis, scope, carry, exit, and downside modeled together',
+      'Any capital or transaction terms documented separately',
     ],
     img: 'pegasus-before.png',
-    imgAlt: 'A dated, overlooked East Bay property before Pegasus acquired and repositioned it',
+    imgAlt: 'A dated East Bay property illustrating a possible value-add starting point',
     route: 'investments',
-    cta: 'See how we invest',
+    cta: 'Explore the acquisition framework',
   },
   {
     eyebrow: 'Pillar 02',
     tag: 'Development',
-    title: <>We build the<br />finished product</>,
-    lead: 'The people Apollo builds with came up in the trades: former general contractors, project managers, and crews who have run real jobsites. Every renovation and ground-up build is scoped to a real budget and draw schedule, executed alongside licensed GCs and subcontractors, and finished on schedule with the punch list closed.',
+    title: <>Project controls<br />before the build</>,
+    lead: 'This lane describes a possible project framework: documented scope, budget, schedule, qualified contractors, permits, change control, and completion criteria. Actual services and providers require project-specific diligence and agreements.',
     points: [
-      'Renovation and ground-up development',
-      'Led by experienced GCs and project managers, built with licensed subcontractors',
-      'A delivered product, not a project left open',
+      'Renovation and ground-up scope concepts',
+      'Applicable licenses, insurance, permits, and roles verified per scope',
+      'Completion criteria and remedies defined in the signed agreement',
     ],
     img: 'pegasus-craft-blueprint.webp',
-    imgAlt: 'Blueprints and renovation craftsmanship on a Pegasus development build',
+    imgAlt: 'Blueprints and renovation materials illustrating development planning',
     route: 'development',
-    cta: 'See how we build',
+    cta: 'Explore project controls',
   },
   {
     eyebrow: 'Pillar 03',
     tag: 'Systems',
     title: <>The tools that carry<br />the read forward</>,
-    lead: 'Strategy Lab models the numbers before you commit. Peggy guides the intake and routes it. MarketFlow connects sellers, finders, capital partners, and operators through the same reviewed network.',
+    lead: 'Strategy Lab models user inputs. Peggy explains public paths and can create an intake record. MarketFlow is a controlled private pilot; access, inventory, matching, and transactions are conditional.',
     points: [
-      'Tools that underwrite and route deals',
-      'A private network that routes deals and capital',
-      'Consistent underwriting from first read to exit',
+      'Tools for educational modeling and structured intake',
+      'A controlled pilot with discretionary access',
+      'Written terms govern any actual service or transaction',
     ],
     img: 'pegasus-architecture.png',
     imgAlt: 'A precise scale model of a modern home on a studio table',
@@ -184,7 +184,7 @@ export const ENGINE_INPUTS: { label: string; desc: string; icon: string }[] = [
 
 export const ENGINE_OUTPUT = {
   label: 'Recommended Lane',
-  desc: 'Every input resolves to one clear next step: the lane that fits the deal and the person in front of it.',
+  desc: 'Inputs may illustrate one or more possible lanes. They do not create a recommendation, review, or service commitment.',
 };
 
 /* ================================================================
@@ -193,45 +193,45 @@ export const ENGINE_OUTPUT = {
    ================================================================ */
 // Locked copy — docs/website-v1/COPY_DECK_V1.md §2 "Four Departments".
 export const DEPARTMENTS: { stage: string; name: string; desc: string; icon: string }[] = [
-  { stage: '01', name: 'Acquisitions', desc: 'Finds, reviews, structures, and secures opportunities.', icon: 'search' },
-  { stage: '02', name: 'Development', desc: 'Scopes, renovates, repositions, builds, and manages execution.', icon: 'hammer' },
-  { stage: '03', name: 'Dispositions', desc: 'Packages, markets, sells, assigns, lists, or connects the right exit.', icon: 'handshake' },
-  { stage: '04', name: 'Asset Management', desc: 'Operates, protects, and compounds long-term holds.', icon: 'key' },
+  { stage: '01', name: 'Acquisitions', desc: 'An accountability lane for possible intake, diligence, and transaction structure.', icon: 'search' },
+  { stage: '02', name: 'Development', desc: 'An accountability lane for possible scope, budget, build, and completion terms.', icon: 'hammer' },
+  { stage: '03', name: 'Dispositions', desc: 'An accountability lane for possible sale, assignment, listing, or introduction paths.', icon: 'handshake' },
+  { stage: '04', name: 'Asset Management', desc: 'An accountability lane for possible long-term hold responsibilities.', icon: 'key' },
 ];
 
 // Locked copy — COPY_DECK_V1.md §2 "Situation Router" (PRD homepage §6.2-2).
 export const SITUATION_ROUTER: { key: string; title: string; desc: string; cta: string; href: string }[] = [
   { key: 'own', title: 'I own a property',
     desc: 'Distressed, inherited, occupied, vacant, behind on payments, unfinished, or simply complicated.',
-    cta: 'Start Owner Review', href: '/bring-an-opportunity?intent=sell' },
+    cta: 'Share Owner Context', href: '/bring-an-opportunity?intent=sell' },
   { key: 'found', title: 'I found a deal',
     desc: 'Wholesaler, agent, contractor, investor, or referral partner with an opportunity.',
     cta: 'Submit Deal', href: '/bring-an-opportunity?intent=deal-jv' },
   { key: 'buy', title: 'I want to buy',
-    desc: 'Finished property, investment opportunity, or representation through Apollo/Keller Williams.',
+    desc: 'A buyer request, educational modeling, or a question about current representation availability.',
     cta: 'Explore Buyer Lane', href: '/buyers' },
   { key: 'partner', title: 'I want to partner',
     desc: 'Capital, JV, vendor, operator, or project support.',
-    cta: 'Partner With Pegasus', href: '/capital' },
+    cta: 'Explore Partnership Context', href: '/capital' },
   { key: 'strategy', title: 'I need a strategy',
     desc: 'Not sure whether to sell, hold, refinance, repair, list, partner, or exit.',
-    cta: 'Request Strategy Review', href: '/strategy-lab' },
+    cta: 'Open Strategy Lab', href: '/strategy-lab' },
 ];
 
 // PRD homepage §6.2-3 — the Deal Engine flow and example routes. Real HTML
 // text, never baked into imagery (IMAGE_DIRECTION doctrine).
-export const DEAL_ENGINE_FLOW = ['Submit', 'Review', 'Structure', 'Route', 'Execute', 'Exit / Hold'];
+export const DEAL_ENGINE_FLOW = ['Describe', 'Model', 'Compare', 'Identify', 'Document', 'Decide'];
 export const DEAL_ENGINE_ROUTES: { name: string; path: string }[] = [
-  { name: 'Direct sale', path: 'Acquisitions → Dispositions' },
-  { name: 'Value-add flip', path: 'Acquisitions → Development → Dispositions' },
-  { name: 'Rental hold', path: 'Acquisitions → Development → Asset Management' },
-  { name: 'Owner needs representation', path: 'Strategy Review → Work With Apollo / Keller Williams' },
-  { name: 'Deal finder needs buyer', path: 'Acquisitions → Dispositions / MarketFlow' },
+  { name: 'Possible direct sale', path: 'Property facts → diligence → written purchase terms' },
+  { name: 'Value-add scenario', path: 'Basis → project controls → possible exit' },
+  { name: 'Hold scenario', path: 'Basis → project controls → operating questions' },
+  { name: 'Representation request', path: 'Verify availability → separate brokerage agreement' },
+  { name: 'Deal submission', path: 'Source record → possible consideration → written terms' },
 ];
 
 export const DEPT_PILLARS: { name: string; desc: string; icon: string }[] = [
-  { name: 'Capital & Investor Relations', desc: 'Matches capital partners to specific projects on defined terms. Never a blind pool.', icon: 'layers' },
-  { name: 'Finance & Legal', desc: 'Keeps the numbers, contracts, and disclosures straight from first read through exit.', icon: 'shield' },
+  { name: 'Capital & Investor Relations', desc: 'Describes possible project-specific capital relationships; none are offered publicly.', icon: 'layers' },
+  { name: 'Finance & Legal', desc: 'Identifies disciplines that require qualified professionals and transaction-specific documents.', icon: 'shield' },
 ];
 
 /* ================================================================
@@ -250,7 +250,7 @@ export const PRODUCTS: {
     step: '01',
     name: 'Strategy Lab',
     kind: 'Free · Self-serve',
-    desc: 'A free underwriting console you run yourself. Enter the property and the numbers, then review strategy-tier ranges, the lanes that could fit, and the risks to weigh instantly.',
+    desc: 'A free educational modeling workspace. Enter your own property assumptions to see illustrative ranges, possible lanes, and risk prompts without receiving a valuation or recommendation.',
     cta: 'Open Strategy Lab',
     action: 'strategylab',
   },
@@ -258,7 +258,7 @@ export const PRODUCTS: {
     step: '02',
     name: 'Property Read',
     kind: 'Free · Written',
-    desc: 'Submit a property and Acquisitions returns a short, candid written read of the path and the risk within 48 hours.',
+    desc: 'Submit a property for possible consideration. No human review, written read, or response time is promised.',
     cta: 'Request a Property Read',
     action: 'contact',
   },
@@ -266,7 +266,7 @@ export const PRODUCTS: {
     step: '03',
     name: 'Deal Blueprint',
     kind: 'By request',
-    desc: 'For deals that earn a full plan after a Property Read: scope, capital stack, construction approach, exit, and risk in one reviewed engagement. By review, not self-serve.',
+    desc: 'A possible separately scoped analysis. Availability, author, contents, fee, timing, and limits require a written agreement.',
     cta: 'Request Blueprint Review',
     action: 'contact',
   },
@@ -287,17 +287,17 @@ export const MARKETFLOW: {
   {
     key: 'exchange',
     name: 'Deal Exchange',
-    tag: 'Where deals move',
-    desc: 'Opportunities flow in from finders and owners, get underwritten deal by deal, and route to the right buyer or lane.',
-    points: ['Vetted, underwritten opportunities', 'Clear terms for finders and sellers', 'No spray-and-pray blasts'],
+    tag: 'Private opportunity records',
+    desc: 'The controlled pilot may hold opportunity records. Publication, review, matching, buyer availability, and transactions are not promised.',
+    points: ['Private records, not public offers', 'Separate terms for any participant', 'No guaranteed distribution or match'],
     icon: 'route',
     forWho: 'Deal finders, sellers, buyers',
   },
   {
     key: 'capital',
     name: 'Capital Stack',
-    tag: 'Where deals get funded',
-    desc: 'Capital partners are matched to projects that fit their mandate, on defined terms with the work and risk laid out plainly.',
+    tag: 'Project-specific capital context',
+    desc: 'Any capital discussion must be project specific, privately reviewed, and documented by qualified professionals.',
     points: ['Project-by-project participation', 'Terms and risk stated up front', 'No pooled funds, no promises of return'],
     icon: 'layers',
     forWho: 'Capital partners, operators',
@@ -305,9 +305,9 @@ export const MARKETFLOW: {
   {
     key: 'inventory',
     name: 'Inventory & Exits',
-    tag: 'Where finished product lands',
-    desc: 'Repositioned and newly built homes come to market, and to buyers and agents who want a delivered product, not a project.',
-    points: ['Renovated and ground-up inventory', 'First look for the network', 'Delivered move-in ready, not left mid-project'],
+    tag: 'Authorized property records',
+    desc: 'The pilot may display authorized inventory records if any are available. This page does not promise inventory or early access.',
+    points: ['Authorized records only', 'Access and visibility are discretionary', 'Condition and delivery verified per listing'],
     icon: 'home',
     forWho: 'Buyers, referral partners',
   },
@@ -325,32 +325,32 @@ export const ECOSYSTEM: {
   status: string;
   route?: Route;
 }[] = [
-  { key: 'hq', name: 'Pegasus HQ', role: 'The strategy firm', desc: 'Where deals are read, underwritten, and turned into a plan. The underwriting standard every other part follows.', icon: 'compass', status: 'Operating', route: 'contact' },
-  { key: 'peggy', name: 'Peggy', role: 'The front door', desc: 'A conversational guide that takes a deal in plain language and routes it to the right lane.', icon: 'sparkles', status: 'Early access', route: 'peggy' },
-  { key: 'lab', name: 'Strategy Lab', role: 'The underwriting tool', desc: 'Self-serve modeling that returns an Instant Strategy Preview on any deal.', icon: 'calculator', status: 'Operating', route: 'strategylab' },
-  { key: 'marketflow', name: 'MarketFlow', role: 'The private routing layer', desc: 'Three reviewed lanes for opportunities, capital, and finished inventory.', icon: 'route', status: 'Building', route: 'marketflow' },
-  { key: 'capstack', name: 'CapStack', role: 'The capital layer', desc: 'How funding is structured and matched to projects, on defined terms.', icon: 'layers', status: 'Building', route: 'capital' },
-  { key: 'buildforge', name: 'BuildForge', role: 'The build layer', desc: 'Licensed contractors, engaged under project-specific agreements, turning scope, budget, and draw schedule into delivered product.', icon: 'hammer', status: 'Operating', route: 'development' },
+  { key: 'hq', name: 'Pegasus HQ', role: 'The company layer', desc: 'Public information, intake records, and possible engagement paths.', icon: 'compass', status: 'Operating', route: 'contact' },
+  { key: 'peggy', name: 'Peggy', role: 'The guided front door', desc: 'An early-access assistant that explains public paths and can help create an intake record.', icon: 'sparkles', status: 'Early access', route: 'peggy' },
+  { key: 'lab', name: 'Strategy Lab', role: 'The educational modeling tool', desc: 'Self-serve modeling that generates an illustrative Strategy Preview from user-supplied inputs.', icon: 'calculator', status: 'Operating', route: 'strategylab' },
+  { key: 'marketflow', name: 'MarketFlow', role: 'The private pilot', desc: 'A controlled-pilot workspace with discretionary access and no promised inventory or matching.', icon: 'route', status: 'Controlled pilot', route: 'marketflow' },
+  { key: 'capstack', name: 'CapStack', role: 'A capital concept', desc: 'Educational framing for possible project-specific funding terms; not a public offering.', icon: 'layers', status: 'Concept', route: 'capital' },
+  { key: 'buildforge', name: 'BuildForge', role: 'A build framework', desc: 'Example controls for scope, budget, qualified providers, draws, change orders, and completion.', icon: 'hammer', status: 'Framework', route: 'development' },
 ];
 
 /* ================================================================
    DREAMSCAPER STANDARD (doctrine)
    ================================================================ */
 export const DOCTRINE: { t: string; d: string }[] = [
-  { t: 'Read the situation, not just the spreadsheet', d: 'Behind every property is a person with a deadline, a constraint, or a decision. We solve for both.' },
-  { t: 'Underwrite on real numbers', d: 'All-in cost, after-repair value, and the spread. If it does not pencil, we say so.' },
-  { t: 'Write the exit before we enter', d: 'Sell, hold, refinance, or trade. The plan is decided before capital moves, not after.' },
-  { t: 'Deliver a finished product', d: 'The build team finishes the work to one written finish standard, on a real schedule, not left half-open.' },
+  { t: 'Read the situation, not just the spreadsheet', d: 'A property request may include a deadline, constraint, or personal decision; responsible consideration starts with both facts and context.' },
+  { t: 'Model complete inputs', d: 'Acquisition, improvements, carry, financing, disposition, and downside belong in the same scenario.' },
+  { t: 'Write the intended exit first', d: 'A sell, hold, refinance, or trade scenario should be stated before capital or work is committed.' },
+  { t: 'Define completion before work', d: 'Any project agreement should identify scope, schedule, completion criteria, remedies, and responsible providers.' },
 ];
 
 /* ================================================================
    DEVELOPMENT TEAM (capability band)
    ================================================================ */
 export const DEV_TEAM: { t: string; d: string }[] = [
-  { t: 'A team, not one hire', d: 'Former general contractors, project managers, and trades who have actually run jobsites, not a single person we depend on.' },
-  { t: 'A deep bench', d: 'We work with a deep network of GCs and subcontractors, scaled to the project instead of limited to one crew.' },
-  { t: 'Scoped before we build', d: 'Every project starts with a real budget and a draw schedule, so the plan is honest before the first hammer swings.' },
-  { t: 'One finish standard', d: 'A single, written standard of completion, applied to every renovation and ground-up build, and delivered on a real timeline.' },
+  { t: 'Qualified roles by scope', d: 'A future project should identify the owner, contractor, designers, consultants, and other responsible parties in writing.' },
+  { t: 'Capacity verified per project', d: 'Licenses, insurance, references, availability, and subcontractor roles should be checked for the actual scope.' },
+  { t: 'Scope before work', d: 'A project agreement should set budget, draws, schedule, change control, and information requirements.' },
+  { t: 'Completion defined in writing', d: 'Finish standards, inspection, acceptance, remedies, and handoff belong in the signed project documents.' },
 ];
 
 /* ================================================================
@@ -359,23 +359,23 @@ export const DEV_TEAM: { t: string; d: string }[] = [
 export const FAQ_HOME: FaqItem[] = [
   {
     q: 'What does Pegasus actually do?',
-    a: 'Three things that feed each other: we invest in and reposition real property, Apollo and the build team renovate it to a finished, move-in-ready result, and we run the systems (Strategy Lab, Peggy, and MarketFlow) that run every deal through the same underwriting.',
+    a: 'Pegasus publishes educational strategy tools, accepts structured opportunity requests, and describes possible property, representation, development, and partnership lanes. Availability and actual services are conditional.',
   },
   {
     q: 'I just have one property. Is that too small?',
-    a: 'No. A single property is exactly where most of our work starts. Request a Property Review or run it through the Strategy Lab and you will get a clear read on what it is and what it could become.',
+    a: 'You may run self-service educational tools or submit one property for possible consideration. Neither path promises a human review, recommendation, or response.',
   },
   {
     q: 'Do you guarantee returns to capital partners?',
-    a: 'No. We never promise a return. Capital partners participate project by project on defined terms, with the work, the timeline, and the risk laid out plainly before anyone commits.',
+    a: 'No. This page is not an offering. Any future capital transaction would require project-specific diligence, risk disclosure, qualified advice, and signed documents; no project, return, or principal protection is promised.',
   },
   {
     q: 'What is the difference between Strategy Lab and a Property Read?',
-    a: 'Strategy Lab is the cockpit you can use right away. It helps you model assumptions and see possible lanes. A Property Read is Pegasus looking at the actual situation and writing back a clear next step.',
+    a: 'Strategy Lab models user inputs and illustrates possible lanes. A Property Read is a request for possible human consideration; no written response or timing is promised.',
   },
   {
     q: 'Where do you operate?',
-    a: 'We are rooted in the East Bay, California, through Keller Williams East Bay, and we look at opportunities that fit our buy box wherever they make sense.',
+    a: 'Pegasus is based in the East Bay, California. Licensed-representation availability is separate from Pegasus and must be verified through the applicable DRE license and brokerage agreement.',
   },
 ];
 
@@ -385,14 +385,15 @@ export const FAQ_HOME: FaqItem[] = [
 // Identity block locked per COPY_DECK_V1.md §13 (issue #22).
 export const APOLLO = {
   name: 'Paolo “Apollo” Duran',
-  legal: 'Paolo Duran',
+  legal: 'Duran Ramirez, Paolo Ariel (DRE license record)',
   role: 'Founder, Pegasus Dreamscapes Corp.',
-  license: 'Licensed Real Estate Professional, Keller Williams East Bay · CA DRE #02333658',
-  lead: 'Apollo (Paolo) Duran founded and leads Pegasus. He is a licensed real estate salesperson through Keller Williams Realty East Bay (DRE #02333658) and the strategist on every deal: he reads the situation, underwrites the numbers, and writes the plan. The build work is handled by licensed contractors brought on per project, not an in-house crew. The same underwriting runs from the first call to the final walkthrough.',
+  license: 'CA DRE #02333658 · license record name: Duran Ramirez, Paolo Ariel',
+  broker: 'Responsible broker: BMP Realty Inc DBA Keller Williams Realty-East Bay',
+  lead: 'This site uses Paolo “Apollo” Duran as the founder’s public-facing name. For license verification, CA DRE #02333658 is listed under Duran Ramirez, Paolo Ariel, with responsible broker BMP Realty Inc DBA Keller Williams Realty-East Bay. Verify current status before engagement. Licensed representation may be available only through a separate written brokerage agreement.',
   points: [
-    { t: 'The strategist', d: 'Apollo reads the situation, underwrites the numbers, and writes the plan.' },
-    { t: 'The build team', d: 'Licensed general contractors and trades, brought on per project, turn the plan into a finished home.' },
-    { t: 'The discipline', d: 'Every deal runs the same underwriting and the same build standard, from first call to final walkthrough.' },
+    { t: 'The founder', d: 'Paolo “Apollo” Duran leads Pegasus Dreamscapes Corp. as its public-facing founder.' },
+    { t: 'Licensed work is separate', d: 'Any brokerage representation requires current license verification and its own written agreement.' },
+    { t: 'Project roles are specific', d: 'Construction, design, consulting, and other roles require qualified providers named in project documents.' },
   ],
 };
 
@@ -404,12 +405,12 @@ export const APOLLO = {
 export const NELSON = {
   name: 'Nelson Drive',
   location: 'Richmond / El Sobrante Area, CA',
-  blurb: 'A dated East Bay residential property acquired, renovated, repositioned, and sold. The project shaped the Pegasus operating standard: underwrite honestly, scope carefully, manage the build, and understand the exit before entering.',
+  blurb: 'A completed East Bay residential transformation documented at an approximate $600K acquisition, $105K improvement budget, $705K basis before other costs, and $840K sale. The $135K gross spread is not net profit or return.',
   rows: [
     { k: 'Basis', v: 'Acquired $600,000', note: 'Purchased for full renovation' },
-    { k: 'Scope', v: 'Renovation ≈ $105,000', note: 'Managed with the build team' },
-    { k: 'Exit', v: 'Sold $840,000', note: 'Sold to an owner-occupant' },
-    { k: 'Status', v: 'Closed', note: 'Finished and delivered' },
+    { k: 'Scope', v: 'Improvement budget ≈ $105,000', note: 'Public project-level figure' },
+    { k: 'Exit', v: 'Sold $840,000', note: 'September 2025 record' },
+    { k: 'Limits', v: 'Gross spread ≈ $135,000', note: 'Not net profit; other costs excluded' },
   ],
 };
 
@@ -417,12 +418,12 @@ export const NELSON = {
    HOMEPAGE LANE CARDS (Choose Your Lane)
    ================================================================ */
 export const LANE_CARDS: { key: AudienceKey; title: string; desc: string; icon: string; cta: string }[] = [
-  { key: 'sellers', title: 'I need to sell a complex or stuck property', desc: 'Distressed, inherited, occupied, or stalled. Get a plain read and a real route, or a clean listing with Apollo.', icon: 'home', cta: 'Start a property review' },
-  { key: 'buyers', title: 'I want to buy with an investor’s read', desc: 'Buy a finished home or buy into a deal, underwritten on real numbers before you commit.', icon: 'key', cta: 'See how buyers work with us' },
-  { key: 'dealfinders', title: 'I have a deal to move', desc: 'Bring it once. Get a straight answer, written terms, and one buyer who actually closes.', icon: 'search', cta: 'Submit a deal' },
-  { key: 'capital', title: 'I want to back specific deals', desc: 'Fund named projects on defined terms, with the risk and the downside laid out plainly. No blind pools.', icon: 'layers', cta: 'See how capital partners work' },
-  { key: 'operators', title: 'I build or service the work', desc: 'GCs, subs, agents, and title partners join our bench and get matched to projects that fit their work.', icon: 'hammer', cta: 'Join the build bench' },
-  { key: 'referral', title: 'I want to refer someone', desc: 'Send one name. We handle the relationship and put any referral fee in writing before anything moves.', icon: 'handshake', cta: 'Refer a contact' },
+  { key: 'sellers', title: 'I need to sell a complex or stuck property', desc: 'Record the situation for possible consideration, or ask about current licensed-representation availability.', icon: 'home', cta: 'Share the property' },
+  { key: 'buyers', title: 'I want to frame a buyer request', desc: 'Explore educational buy-box questions, possible future records, or current licensed-representation availability.', icon: 'key', cta: 'Explore the buyer paths' },
+  { key: 'dealfinders', title: 'I have a deal to submit', desc: 'Bring it once for possible consideration. No review, buyer, response, source protection, or transaction is promised.', icon: 'search', cta: 'Submit a deal' },
+  { key: 'capital', title: 'I want to share a capital mandate', desc: 'Review the boundaries for possible private, project-specific discussions. This page is not an offering.', icon: 'layers', cta: 'Review capital boundaries' },
+  { key: 'operators', title: 'I build or service projects', desc: 'Submit a profile for possible future-scope consideration; no approval, placement, work, or volume is promised.', icon: 'hammer', cta: 'Submit a vendor profile' },
+  { key: 'referral', title: 'I want to introduce someone', desc: 'Share context only with permission. Any lawful compensation or coordination requires separate written terms and is not promised.', icon: 'handshake', cta: 'Share an introduction' },
 ];
 
 /* ================================================================
@@ -440,8 +441,8 @@ export const PARTICIPATION_LANES: {
   {
     key: 'seller-representation',
     title: 'Ready to list',
-    desc: 'Apollo can represent clean, ready-to-market sellers through Keller Williams Realty East Bay, with Pegasus-level pricing, prep, and timing discipline behind the listing.',
-    points: ['Agency representation through KW East Bay', 'Pricing, prep, and launch strategy', 'Investor-minded read before you spend'],
+    desc: 'Ask whether licensed seller representation is currently available. Any agency, pricing, preparation, or launch work requires current license verification and a written brokerage agreement.',
+    points: ['Current availability verified first', 'Brokerage terms documented separately', 'No agency created by site use'],
     icon: 'home',
     cta: 'Work With Apollo',
     href: '/work-with-apollo',
@@ -449,8 +450,8 @@ export const PARTICIPATION_LANES: {
   {
     key: 'complex-owner',
     title: 'Complex owner situation',
-    desc: 'Inherited, distressed, occupied, behind on work, or under a deadline? Submit the property and Pegasus will map the honest lane before anyone pushes a product.',
-    points: ['Direct purchase, listing, JV, reposition, or pass', 'No offer until review and written terms', 'A written path within the launch standard'],
+    desc: 'Inherited, distressed, occupied, behind on work, or under a deadline? Submit context for possible consideration; no map, review, offer, or response is promised.',
+    points: ['Possible lanes depend on the facts', 'No offer without diligence and written terms', 'No public response-time commitment'],
     icon: 'compass',
     cta: 'Submit Property',
     href: '/bring-an-opportunity?intent=sell',
@@ -458,8 +459,8 @@ export const PARTICIPATION_LANES: {
   {
     key: 'buyer-representation',
     title: 'Buyer or investor client',
-    desc: 'Apollo can represent buyers who want a sharper read: buy-box discipline, diligence, and offer strategy informed by how operators actually underwrite property.',
-    points: ['Buyer representation through KW East Bay', 'Value-add and finished-home thinking', 'A plain walk-away point before you overpay'],
+    desc: 'Ask whether licensed buyer representation is currently available. Any search, diligence, pricing, or offer work requires a separate brokerage agreement.',
+    points: ['Current availability verified first', 'Duties and scope stated in writing', 'No value or outcome promise'],
     icon: 'key',
     cta: 'Work With Apollo',
     href: '/work-with-apollo',
@@ -467,8 +468,8 @@ export const PARTICIPATION_LANES: {
   {
     key: 'dealfinder-jv',
     title: 'Deal finder or wholesaler',
-    desc: 'Bring the opportunity once. If it fits, Pegasus may buy it. If another buyer is the better route, we can JV or route through the network after written terms.',
-    points: ['Source protection and written terms first', 'Direct acquisition when it fits the buy box', 'JV or MarketFlow routing when that is better'],
+    desc: 'Bring the opportunity once for possible consideration. A purchase, JV, distribution, buyer, or MarketFlow path is possible only after diligence and written terms.',
+    points: ['Submission records source information but is not a protection agreement', 'Acquisition is discretionary', 'Distribution requires authorization and written terms'],
     icon: 'handshake',
     cta: 'Submit a Deal',
     href: '/bring-an-opportunity?intent=deal-jv',
@@ -589,7 +590,7 @@ export const PEGGY_FOLLOWUPS: string[] = [
   'I would rather talk to a person',
 ];
 
-export const PEGGY_SLA = 'Peggy replies in the moment. For anything that needs the team, we respond within 48 hours.';
+export const PEGGY_SLA = 'Peggy may respond in the session. Human review, follow-up, and response timing are not promised.';
 
 /* Honest launch status. Peggy is live for intake and orientation but still being
    widened, so every surface that shows the widget states it plainly (replit.md
@@ -605,24 +606,24 @@ export const PEGGY_COMPLIANCE = 'Peggy is an AI intake assistant. She does not a
    ================================================================ */
 const sellerSplits: { heading: string; copy: string; paths: SplitPath[]; founderPhoto?: boolean; peggyHint?: boolean } = {
   heading: 'List it, or send it for review',
-  copy: 'Ready to list, or facing something complicated? Each path is different. We will tell you which one fits before you commit to anything.',
+  copy: 'Ready to list, or facing something complicated? You may request consideration or ask about representation availability. No path or response is promised.',
   founderPhoto: true,
   peggyHint: true,
   paths: [
-    { name: 'Traditional seller representation', desc: 'Clean and ready to list? Apollo represents you as your agent through Keller Williams Realty East Bay, with an investor’s read on price, prep, and timing. Standard listing agreement, full MLS exposure.', cta: 'List With Apollo', route: 'apollo' },
-    { name: 'Distressed or complex property review', desc: 'Probate, foreclosure, divorce, a tired rental, an inherited home, an expired listing, or ADU upside? Send it for a property review. We evaluate your options, which may include a direct purchase, a reposition, or a listing, subject to underwriting.', cta: 'Request a Property Review', route: 'contact' },
+    { name: 'Possible seller representation', desc: 'Ask about current licensed-representation availability. Agency, pricing, preparation, timing, MLS exposure, and fees require a separate written brokerage agreement.', cta: 'Ask About Representation', route: 'apollo' },
+    { name: 'Complex property request', desc: 'Share a probate, foreclosure, divorce, rental, inherited-home, expired-listing, or development situation for possible consideration. Review and options are not promised.', cta: 'Share the Property', route: 'contact' },
   ],
 };
 
 const buyerSplits: { heading: string; copy: string; paths: SplitPath[]; founderPhoto?: boolean; peggyHint?: boolean } = {
   heading: 'Three ways to buy',
-  copy: 'A finished home, an investment, or first look at what is coming. Pick the lane that fits and we will point you to the right inventory or the right person.',
+  copy: 'A finished home, an investment question, or possible future inventory. These paths describe requests, not guaranteed inventory, matching, or representation.',
   founderPhoto: true,
   peggyHint: true,
   paths: [
-    { name: 'Buyer representation', desc: 'Want Apollo in your corner as your agent? Representation through Keller Williams Realty East Bay, with offers backed by real underwriting so you know what a home is actually worth.', cta: 'See how representation works', route: 'apollo' },
-    { name: 'Investor buyer guidance', desc: 'Open to buying into a deal, not just a finished house? We frame the numbers and route you to the right project or capital lane, subject to review and a written agreement.', cta: 'Talk through a deal', route: 'contact' },
-    { name: 'Inventory & first look', desc: 'Want the finished product or early access? Request access to MarketFlow to see reviewed inventory before it reaches the open market.', cta: 'See MarketFlow inventory', route: 'marketflow' },
+    { name: 'Possible buyer representation', desc: 'Ask about current licensed-representation availability. Search, diligence, valuation, and offer duties require a separate written brokerage agreement.', cta: 'See representation boundaries', route: 'apollo' },
+    { name: 'Investor buyer request', desc: 'Share a buyer mandate for possible consideration. Guidance, a project, a capital path, or a response is not promised.', cta: 'Share a buyer request', route: 'contact' },
+    { name: 'MarketFlow controlled pilot', desc: 'Learn about discretionary access. Inventory, early access, review, matching, and transactions are not promised.', cta: 'See MarketFlow status', route: 'marketflow' },
   ],
 };
 
@@ -636,18 +637,18 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     heroScrimTop: true,
     layout: 'timeline',
     pointsLabel: 'What you get',
-    lead: 'If the property is complicated, the answer does not have to be. Pegasus reviews the situation and helps identify whether the right path is a direct sale, partnership, listing, development strategy, or another structured exit.',
+    lead: 'If the property is complicated, record the facts in one place for possible consideration. Purchase, partnership, representation, development, referral, and other paths are conditional.',
     points: [
-      { t: 'List With Apollo', d: 'Clean and ready to market? Apollo represents you as your agent through Keller Williams Realty East Bay, with an investor’s read on price, prep, and timing.' },
-      { t: 'Structure a complex situation', d: 'Distressed, inherited, occupied, or stalled? Send it for a review. We may evaluate it as an acquisition, a reposition, a JV, a stabilization plan, a listing, or a referral, subject to underwriting.' },
-      { t: 'We handle the work', d: 'When selling as-is is the right lane, we can handle the cleanout, the prep, and the repairs so you do not have to.' },
-      { t: 'Clear terms, a real timeline', d: 'Defined terms and a closing timeline that does not move on you at the last minute. Any offer is subject to review and a written agreement.' },
+      { t: 'Ask about representation', d: 'Clean and ready to market? Ask about current licensed-representation availability; agency requires a separate written brokerage agreement.' },
+      { t: 'Describe a complex situation', d: 'Distressed, inherited, occupied, or stalled? Record the facts and constraints for possible consideration. No review or path is promised.' },
+      { t: 'Possible as-is path', d: 'Any cleanout, preparation, repair, or purchase responsibility must be stated in later written transaction terms.' },
+      { t: 'Terms control the timeline', d: 'Any price, scope, contingency, or closing date exists only in an accepted written agreement.' },
     ],
     rich: ['proof', 'faq'],
-    quote: 'The plan comes from what you actually need, not a formula and not a pitch.',
+    quote: 'Start with the owner’s constraints and the property facts—not a predetermined product.',
     forYou: [
-      'You own a clean, ready property and want an investor-minded agent to list it',
-      'You own something distressed, inherited, occupied, or stalled and want a straight read on your options',
+      'You own a clean, ready property and want to ask about current seller-representation availability',
+      'You own something distressed, inherited, occupied, or stalled and want to organize the facts and possible paths',
       'You value options over a single take-it-or-leave-it pitch',
     ],
     notFit: [
@@ -658,15 +659,15 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     secondary: { label: 'See how a property becomes a plan', route: 'dealstrategy' },
     faqAnchor: 'submitting-a-property',
     faq: [
-      { q: 'Will you actually buy it, or just list it?', a: 'Both are on the table. We can buy directly, or, if it serves you better, reposition and sell it for more. The Review tells you which path wins for you.' },
-      { q: 'What condition does it need to be in?', a: 'Any. Distressed, dated, occupied, or mid-project. Condition changes which path makes sense. A listing, an as-is purchase, or a reposition can all fit.' },
-      { q: 'How fast can you close?', a: 'When speed is the priority, we structure for a fast, certain close. We will give you a real timeline up front, not a moving target.' },
+      { q: 'Will you actually buy it, or just list it?', a: 'Neither is promised. A purchase may be considered after diligence; representation may be available under a separate brokerage agreement.' },
+      { q: 'What condition does it need to be in?', a: 'You may submit the current condition. Pegasus does not promise that any condition, property type, or situation will be reviewed or accepted.' },
+      { q: 'How fast can you close?', a: 'There is no public closing timeline. Any timing depends on title, financing, diligence, counterparties, documents, and accepted terms.' },
     ],
     form: {
       role: 'Seller',
       intent: 'seller',
       heading: <>Tell us about the property</>,
-      lead: 'Share what you are working with. We read it and come back with a clear path, within 48 hours.',
+      lead: 'Share what you are working with for possible consideration. No review, path, or response time is promised.',
       submit: 'Request My Review',
       third: { label: 'Property address or city', placeholder: '1234 Nelson Dr, East Bay' },
       messageLabel: 'What is the situation?',
@@ -683,20 +684,20 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     heroScrimTop: true,
     layout: 'grid',
     pointsLabel: 'How you buy',
-    lead: 'Whether you are looking for a home, investment property, or reviewed opportunity, Apollo can help you think like an operator. Licensed buyer representation is provided through Keller Williams East Bay when applicable.',
+    lead: 'Whether you are looking for a home, investment property, or possible opportunity, you may ask about current licensed-representation availability. Any agency requires a separate written brokerage agreement.',
     points: [
-      { t: 'Investor-minded representation', d: 'Apollo can represent you as your buyer’s agent through Keller Williams Realty East Bay when agency is the right lane, with offers backed by real underwriting.' },
-      { t: 'Buy-box guidance', d: 'We help you define what to chase and what to skip: location, condition, spread, and exit, so you are not bidding blind.' },
-      { t: 'Diligence and value-add thinking', d: 'We read condition, scope, and upside the way an operator does, not just a listing sheet.' },
-      { t: 'Offer strategy and portfolio positioning', d: 'Structure offers that win without overpaying, and think past the closing to how the asset fits a long-term portfolio.' },
+      { t: 'Possible buyer representation', d: 'Availability, duties, search scope, fees, and brokerage relationship must be confirmed in a signed agreement.' },
+      { t: 'Buy-box questions', d: 'Educational tools can help frame location, condition, cost, and exit assumptions without recommending a purchase.' },
+      { t: 'Independent diligence', d: 'Condition, scope, title, financing, value, and specialist findings require qualified professionals.' },
+      { t: 'Offer terms are specific', d: 'No offer strategy, acceptance, price, savings, or portfolio result is promised publicly.' },
     ],
     splits: buyerSplits,
     rich: ['marketflow', 'faq'],
-    quote: 'A delivered product, not a project left open. That is what a buyer gets from us.',
+    quote: 'A buyer decision should separate verified property facts from assumptions and future scope.',
     forYou: [
-      'You want an investor-minded agent representing you on the buy side',
-      'You want buy-box discipline, diligence, and a real read on value before you offer',
-      'You are building a portfolio, not just buying one house',
+      'You want to ask about current buyer-representation availability',
+      'You want to organize buy-box, diligence, cost, and value questions before deciding',
+      'You want to describe a home or investment-property mandate',
     ],
     notFit: [
       'You want to be rushed into a decision before the numbers are clear',
@@ -705,14 +706,14 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     secondary: { label: 'See the work in MarketFlow', route: 'marketflow' },
     faqAnchor: 'working-with-pegasus',
     faq: [
-      { q: 'How do I see what is available?', a: 'Start a Review or talk to Peggy and tell us what you are looking for. Network buyers get first look before inventory reaches the open market.' },
-      { q: 'What does "buy into the deal" mean?', a: 'On select projects you can participate as a capital partner rather than an end buyer, funding the project on defined terms. We will route you to the Capital Partners lane if that fits.' },
+      { q: 'How do I see what is available?', a: 'Public pages do not promise inventory. MarketFlow is a controlled pilot with discretionary access and no guaranteed first look or match.' },
+      { q: 'What does "buy into the deal" mean?', a: 'A capital relationship would be a private, project-specific transaction requiring suitability review, qualified advice, and signed documents. None is offered by this page.' },
     ],
     form: {
       role: 'Buyer',
       intent: 'buyer',
       heading: <>Tell us what you are looking for</>,
-      lead: 'Whether it is a finished home or a deal to buy into, tell us the shape of it and we will point you to the right inventory or lane.',
+      lead: 'Describe the request for possible consideration. Inventory, representation, capital participation, matching, and a response are not promised.',
       submit: 'Get on the buyer list',
       third: { label: 'Target area or budget', placeholder: 'East Bay, up to $900K' },
       messageLabel: 'What are you looking for?',
@@ -724,23 +725,23 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
   dealfinders: {
     eyebrow: 'Who We Serve / Deal Finders & Wholesalers',
     // COPY_DECK §6 locked hero + required source-attribution note (issue #22)
-    title: <>Bring the deal.<br />Get a serious review.</>,
+    title: <>Bring the facts.<br />Set the terms first.</>,
     image: 'pegasus-prop1.png',
     heroScrimTop: true,
     layout: 'ledger',
-    pointsLabel: 'A straight read',
-    lead: 'Pegasus works with deal finders, wholesalers, agents, contractors, and referral partners who come across real estate opportunities that need structure, execution, buyers, or capital. Source attribution is recorded at submission. Any JV, assignment, referral, or compensation structure must be agreed in writing before distribution.',
+    pointsLabel: 'Submission boundaries',
+    lead: 'Deal finders, wholesalers, agents, contractors, and referral partners may submit an opportunity for possible consideration. Source information is recorded at submission, but confidentiality, exclusivity, distribution, JV, assignment, referral, or compensation rights require separate written terms.',
     points: [
-      { t: 'A fast, honest read', d: 'Send the deal. We tell you quickly whether it works, at what number, and which path it fits.' },
-      { t: 'Two paths for a deal', d: 'If it fits our buy box, we may buy or partner directly. If not, we may route it through our JV network or MarketFlow after written terms.' },
-      { t: 'Source protection', d: 'We protect source attribution through documented submission records and written JV or compensation terms before distribution.' },
+      { t: 'One structured submission', d: 'Send the facts once. Review, price feedback, a buyer, a path, and response timing are not promised.' },
+      { t: 'Possible paths stay conditional', d: 'A purchase, partnership, authorized distribution, or MarketFlow record may be discussed only after diligence, capacity review, authorization, and written terms.' },
+      { t: 'Source attribution record', d: 'Submission records source information but is not an NDA, exclusivity agreement, or compensation commitment.' },
       { t: 'Buy box preview', d: 'Value-add SFR, East Bay ADU, estates and probate, and small multifamily. See the full buy box before you bring a deal.' },
     ],
     rich: ['buybox', 'faq'],
-    quote: 'Bring us a deal that pencils and you get a straight answer fast: yes, no, or the number that works.',
+    quote: 'Bring the facts once. Any review, price discussion, distribution, or transaction requires fit, capacity, and written terms.',
     forYou: [
       'You source overlooked or distressed opportunities',
-      'You want a buyer or partner who reviews honestly and moves on written terms',
+      'You understand that a buyer, partner, review, and response are not promised',
       'You value clarity on the path over a vague maybe',
     ],
     notFit: [
@@ -750,15 +751,15 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     secondary: { label: 'See where deals flow', route: 'marketflow' },
     faqAnchor: 'submitting-a-property',
     faq: [
-      { q: 'How fast will I hear back?', a: 'Send the address and the numbers and you will get a real read quickly: yes, no, or "here is the number and the path that works."' },
+      { q: 'How fast will I hear back?', a: 'There is no public review or response-time commitment. Keep the submission reference as proof of receipt.' },
       { q: 'How do payouts and JV terms work?', a: 'If we move forward, we put your role in writing first, whether that is an assignment, a JV, or another compensation structure. We do not distribute a deal before terms are documented, and not every deal is purchased or compensated.' },
-      { q: 'How do you protect my deal?', a: 'We protect source attribution through documented submission records and written JV or compensation terms before distribution.' },
+      { q: 'How do you protect my deal?', a: 'The intake records submitted source information. Actual confidentiality, exclusivity, distribution, JV, and compensation rights require separate written terms.' },
     ],
     form: {
       role: 'Deal Finder',
       intent: 'deal-finder',
       heading: <>Send us the deal</>,
-      lead: 'Drop the address and the numbers. We will underwrite it to our standard and come back with a straight answer.',
+      lead: 'Share the address and numbers for possible consideration. No underwriting, answer, buyer, or response time is promised.',
       submit: 'Submit the Deal',
       third: { label: 'Deal address', placeholder: '1234 Nelson Dr, East Bay' },
       messageLabel: 'The numbers',
@@ -774,17 +775,17 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     image: 'pegasus-arch.png',
     layout: 'grid',
     pointsLabel: 'Eyes open',
-    lead: 'Pegasus reviews capital relationships project-by-project. No public offering, no guaranteed returns, no pooled fund. Any capital relationship must be privately reviewed and documented appropriately.',
+    lead: 'Any possible capital relationship would be project specific, privately reviewed, and documented with qualified advisors. No public offering, return, principal protection, pooled fund, or opportunity is promised.',
     points: [
-      { t: 'Project by project', d: 'You choose what to back. No blind pools, no commitments you did not pick.' },
-      { t: 'Defined terms', d: 'Structure, security, and timeline stated plainly in writing.' },
-      { t: 'Underwriting you can read', d: 'The same numbers we used: all-in, after-repair value, and the spread.' },
-      { t: 'Risk in plain sight', d: 'We tell you what can go wrong and what protects the downside.' },
+      { t: 'Project-specific only', d: 'This public page does not offer a blind pool, fund, security, project, or participation right.' },
+      { t: 'Defined terms required', d: 'Any future transaction documents must state structure, security, priority, timeline, fees, conflicts, and remedies.' },
+      { t: 'Independent diligence', d: 'Acquisition, improvement, carry, financing, disposition, tax, legal, and downside assumptions require verification.' },
+      { t: 'Risk stays explicit', d: 'No return, principal protection, liquidity, timeline, or exit is promised.' },
     ],
     rich: ['stats', 'faq'],
     quote: 'Capital deserves the truth: real numbers, defined terms, and no promise we cannot keep.',
     forYou: [
-      'You want to deploy capital into specific, vetted real estate projects',
+      'You want to discuss possible project-specific real estate structures privately',
       'You prefer defined terms and transparency over vague upside',
       'You understand real estate carries risk and want it stated honestly',
     ],
@@ -795,15 +796,15 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     secondary: { label: 'See the capital layer', route: 'ecosystem' },
     faqAnchor: 'marketflow-network',
     faq: [
-      { q: 'Do you guarantee a return?', a: 'No. Real estate carries risk and we will never tell you otherwise. We show you the underwriting and the terms; the decision and the risk are yours.' },
-      { q: 'How is my capital secured?', a: 'It varies by project and is always stated in writing before you commit: structure, security, and timeline laid out plainly.' },
-      { q: 'What size projects?', a: 'From single-property repositions to ground-up builds. Tell us your mandate and we will only bring you what fits it.' },
+      { q: 'Do you guarantee a return?', a: 'No. This page is not an offering, and no return, principal protection, project, or opportunity is promised.' },
+      { q: 'How is my capital secured?', a: 'No security is described publicly. If a transaction is offered, its documents must state structure, security, priority, risks, and remedies.' },
+      { q: 'What size projects?', a: 'No current project range or inventory is promised. You may share a mandate for possible private consideration.' },
     ],
     form: {
       role: 'Capital Partner',
       intent: 'capital-partner',
       heading: <>Let us understand your mandate</>,
-      lead: 'Tell us what you are looking to deploy and how you think about risk. We will only bring you projects that fit. This is not an offer of securities.',
+      lead: 'Share a mandate for possible private consideration. No project, match, review, response, or offering is promised.',
       submit: 'Start the Conversation',
       third: { label: 'Capital range (optional)', placeholder: '$100K to $500K per project' },
       messageLabel: 'Your mandate',
@@ -815,39 +816,39 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
   operators: {
     eyebrow: 'Who We Serve / Operators & Vendors',
     // COPY_DECK §9 locked hero (issue #22)
-    title: <>Join the Pegasus<br />operator bench.</>,
+    title: <>Submit a vendor<br />profile.</>,
     image: 'pegasus-craft-blueprint.webp',
     layout: 'ledger',
     pointsLabel: 'How we work',
-    lead: 'Pegasus works with contractors, trades, designers, architects, photographers, inspectors, lenders, escrow/title partners, and other operators on a project-by-project basis.',
+    lead: 'Contractors, trades, designers, architects, photographers, inspectors, lenders, escrow/title partners, and other operators may submit a vendor profile for possible future consideration.',
     points: [
-      { t: 'Clear scope', d: 'You bid against a real plan, not a moving target.' },
-      { t: 'Paid on terms', d: 'Defined payment schedules, honored as agreed.' },
-      { t: 'Repeat volume', d: 'A pipeline of projects, not a one-off favor.' },
-      { t: 'A standard to hit', d: 'You know exactly what "done" looks like before you start.' },
+      { t: 'Scope, if offered', d: 'A future project agreement should define deliverables, exclusions, and change control.' },
+      { t: 'Payment terms, if offered', d: 'A future agreement should define invoices, draws, retainage, disputes, and remedies.' },
+      { t: 'No volume promise', d: 'Application does not promise approval, placement, a project, repeat work, or revenue.' },
+      { t: 'Completion criteria', d: 'A future agreement should define inspection, acceptance, handoff, and closeout.' },
     ],
     rich: ['process', 'faq'],
-    quote: 'The people Apollo builds with came up through the trades, so we know what good work costs, and we respect it.',
+    quote: 'Credentials, scope, price, schedule, change control, and acceptance belong in the project documents.',
     forYou: [
       'You are a GC, sub, agent, lender, title, or inspection partner',
-      'You deliver quality and want consistent, well-scoped work',
-      'You want to be paid on clear terms without chasing',
+      'You can document credentials, work history, and current capacity',
+      'You want future scopes and payment terms documented before work',
     ],
     notFit: [
       'You cannot deliver to a defined standard or timeline',
-      'You are looking for a single one-off job rather than an ongoing relationship',
+      'You expect an application to guarantee placement, a project, repeat work, or revenue',
     ],
     secondary: { label: 'See how we build', route: 'development' },
     faqAnchor: 'marketflow-network',
     faq: [
-      { q: 'How do you scope work?', a: 'Every project comes with a real plan and budget. You bid against a defined scope, not a vague wish list.' },
-      { q: 'How do payments work?', a: 'On a defined draw schedule agreed before work starts, and honored. The build team has run jobsites, so we understand cash flow.' },
+      { q: 'How do you scope work?', a: 'If a future opportunity is offered, the applicable agreement should define scope, price, schedule, changes, and completion.' },
+      { q: 'How do payments work?', a: 'No payment or project is promised by applying. Any later agreement should define invoice, draw, retainage, dispute, and remedy terms.' },
     ],
     form: {
       role: 'Operator',
       intent: 'operator',
       heading: <>Tell us what you do</>,
-      lead: 'Share your trade or service and where you work. We will reach out when a project fits.',
+      lead: 'Share your trade, service area, credentials, and capacity. Application does not promise review, approval, work, or follow-up.',
       submit: 'Join the Network',
       third: { label: 'Trade / service & area', placeholder: 'Licensed GC, East Bay' },
       messageLabel: 'About your work',
@@ -859,24 +860,24 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
   referral: {
     eyebrow: 'Who We Serve / Referral Partners',
     // COPY_DECK §10 locked hero + required lawful-compensation note (issue #22)
-    title: <>Send the situation.<br />Pegasus will handle it carefully.</>,
+    title: <>Share an introduction.<br />Set boundaries first.</>,
     image: 'nelson/nelson-exterior-1280.jpg',
     layout: 'timeline',
     pointsLabel: 'How it works',
     lead: 'For professionals and trusted contacts who know a property owner, investor, or situation that may need a structured path. Referral compensation, JV participation, or professional coordination is handled only where lawful, permitted, and agreed in writing.',
     points: [
-      { t: 'Written terms before engagement', d: 'Where permitted by applicable licensing rules, the referral fee or JV split is agreed and documented before we make contact with anyone you send. What we agree is what you receive at close.' },
-      { t: 'Your relationship stays intact', d: 'You keep the professional relationship. We solve the property or deal problem and hand it back to you cleanly.' },
-      { t: 'An honest read', d: 'Your contact gets a straight read on their situation, including a clear "no" when that is the honest answer. Your reputation is safe.' },
-      { t: 'You stay informed', d: 'We keep you in the loop through the process, not just at the end.' },
+      { t: 'Written terms before compensation', d: 'Any lawful referral or JV compensation requires eligibility review and a signed agreement; none is promised by submission.' },
+      { t: 'Permission and roles', d: 'Confirm the contact permits the introduction and document each party’s role, privacy expectations, and boundaries.' },
+      { t: 'No review promise', d: 'An introduction may receive no review, response, service, or transaction.' },
+      { t: 'Updates depend on consent', d: 'Any status sharing depends on privacy, authorization, and the applicable written relationship.' },
     ],
     rich: ['faq'],
     heroScrimTop: true,
-    quote: 'A referral is a piece of your professional reputation. We treat it that way.',
+    quote: 'An introduction should begin with permission, limited context, clear roles, and lawful written terms.',
     forYou: [
       'You are an agent, attorney, advisor, contractor, or trusted professional',
       'You encounter property owners, buyers, operators, or deal sources outside your own lane',
-      'You want your contacts handled honestly, with written terms before anyone is engaged',
+      'You understand that engagement, updates, compensation, and outcomes are not promised',
     ],
     notFit: [
       'You are looking to sell lead lists rather than refer real people in real situations',
@@ -885,15 +886,15 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     secondary: { label: 'Understand our standard', route: 'about' },
     faqAnchor: 'working-with-pegasus',
     faq: [
-      { q: 'How are referrals compensated?', a: 'In writing, before we engage your contact, and only where permitted by applicable licensing and compensation rules. The referral fee or JV split is agreed and documented first. Then we proceed. What we agree is what you receive.' },
+      { q: 'How are referrals compensated?', a: 'No compensation is promised. Any lawful fee or JV economics require eligibility review, required licenses or disclosures, and a signed agreement before services or distribution.' },
       { q: 'What types of professionals refer to Pegasus?', a: 'Estate attorneys, real estate agents with clients outside their lane, financial advisors, contractors, CPAs, and others who encounter property situations they cannot fully service themselves.' },
-      { q: 'What happens to my contact?', a: 'They get the same honest review anyone receives. If there is a path, we lay it out. If there is not, we say so plainly. Either way, your relationship with them is protected.' },
+      { q: 'What happens to my contact?', a: 'An introduction creates no review, response, service, confidentiality, outcome, or relationship-protection guarantee. The contact controls whether to engage.' },
     ],
     form: {
       role: 'Referral Partner',
       intent: 'referral',
       heading: <>Submit a referral</>,
-      lead: 'Introduce the person and the situation. We confirm terms in writing before we engage, then keep you in the loop.',
+      lead: 'With the person’s permission, share limited context for possible consideration. No engagement, fee, update, or response is promised.',
       submit: 'Submit a Referral',
       third: { label: 'Your profession', placeholder: 'Estate attorney · Real estate agent · Advisor' },
       messageLabel: 'About the referral',

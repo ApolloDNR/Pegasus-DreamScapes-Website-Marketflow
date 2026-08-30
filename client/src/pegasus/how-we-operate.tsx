@@ -24,53 +24,53 @@ type Stage = {
 const STAGES: Stage[] = [
   {
     num: '01', name: 'Originate',
-    claim: 'Find, receive, or build the opportunity.',
-    detail: 'Deals reach us three ways: we source them, partners bring them, or owners walk in the front door. However it arrives, it gets the same first pass: the situation, the property, and the people, written down before anyone talks numbers.',
-    decided: ['Where the deal came from', 'Who the parties are', 'What the pressure is'],
+    claim: 'Record the opportunity and its source.',
+    detail: 'An owner, deal source, or prospective partner can submit known facts and constraints. The intake creates a record; it does not promise review, confidentiality, source protection, or a response.',
+    decided: ['Source information to verify', 'Known parties and permissions', 'Property facts and constraints'],
   },
   {
     num: '02', name: 'Structure',
-    claim: 'Set the role, the strategy, and the terms.',
-    detail: 'Structure is where most deals are actually won or lost. We decide what should happen to the property, in what capacity we participate, how the deal is controlled, how it is funded, and how everyone is paid. All of it in writing before material action.',
-    decided: ['Our role and its limits', 'The business plan', 'Control, capital, and compensation'],
+    claim: 'Compare possible roles, strategies, and required terms.',
+    detail: 'The framework asks what could happen to the property, which roles would be required, how control and capital might work, and what must be verified. Any actual role, payment, duty, or transaction requires separate diligence and written agreements.',
+    decided: ['Possible role and its limits', 'Illustrative business plan', 'Required control and transaction terms'],
   },
   {
     num: '03', name: 'Operate',
-    claim: 'Bring the capital and the crew. Manage the work.',
-    detail: 'Only the capabilities the deal needs are switched on: acquisitions, development, dispositions, asset operations, capital, finance. On Nelson Drive that meant Pegasus coordinating a studs-out rebuild with the project team at roughly half a retail bid.',
-    decided: ['Which departments activate', 'The schedule and the budget', 'Who is accountable for what'],
+    claim: 'Define required capabilities before work begins.',
+    detail: 'A possible project may require acquisition, development, disposition, asset operations, capital, finance, or licensed representation. This map describes responsibilities—not current staff, a contractor bench, available capital, or promised services.',
+    decided: ['Capabilities the scenario would require', 'Budget and schedule assumptions', 'Roles requiring qualified providers'],
   },
   {
     num: '04', name: 'Realize',
-    claim: 'Sell, hold, refinance, or pass. Decided up front.',
-    detail: 'The exit is chosen at Structure, not improvised at the end. Realize is execution: list it, place it, refinance it, keep it, or walk away because the numbers said so. Passing on a deal is an outcome we respect.',
-    decided: ['The exit actually taken', 'Final economics against plan', 'What each party receives'],
+    claim: 'Model a possible sale, hold, refinance, or pass.',
+    detail: 'Each exit scenario has different evidence, professional roles, costs, risks, approvals, and written terms. The framework compares those questions; it does not choose or execute an exit for the visitor.',
+    decided: ['Exit assumptions to test', 'Economics to verify', 'Approvals and agreements required'],
   },
   {
     num: '05', name: 'Learn',
-    claim: 'Turn the result into a better next deal.',
-    detail: 'Every closed file becomes evidence: what the scope really cost, what the market really paid, where the plan bent. That record is why the read on the next property gets sharper instead of staying a guess.',
-    decided: ['Actuals versus underwriting', 'What we would repeat', 'What we will not repeat'],
+    claim: 'Compare documented actuals with prior assumptions.',
+    detail: 'When verified project records are available, actual acquisition, scope, carry, disposition, and timeline data can be compared with the original model. One case study does not establish volume or predict another outcome.',
+    decided: ['Actuals versus assumptions', 'Evidence worth retaining', 'Limits on future inference'],
   },
 ];
 
 const ROLES: Array<[string, string]> = [
-  ['Principal', 'We buy it ourselves and carry the outcome.'],
-  ['Joint-venture partner', 'We share the deal, with the split in writing.'],
-  ['Co-GP', 'We stand beside another sponsor and fill their gaps.'],
-  ['Operating partner', 'You hold the deal; we run the execution.'],
-  ['Development partner', 'We carry scope, permits, and build discipline.'],
-  ['Licensed representative', 'Listing or buyer representation through Keller Williams East Bay.'],
-  ['Referral or defined service', 'When someone else is the right fit, we route it and say so.'],
+  ['Possible principal', 'A direct acquisition would require diligence, capacity, and accepted written purchase terms.'],
+  ['Possible joint venture', 'Roles, control, economics, risks, and remedies would require a signed JV agreement.'],
+  ['Possible co-GP', 'Any sponsor role and responsibility would be defined for the specific project.'],
+  ['Possible operating role', 'Scope, authority, reporting, compensation, and performance duties would be written separately.'],
+  ['Possible development role', 'Property scope, providers, permits, budget, schedule, and completion duties would require project documents.'],
+  ['Licensed representation request', 'Availability is separate from Pegasus. CA DRE #02333658 is listed under Duran Ramirez, Paolo Ariel; responsible broker BMP Realty Inc DBA Keller Williams Realty-East Bay. Verify current status; agency requires a separate written agreement.'],
+  ['Possible introduction', 'No referral, buyer, route, compensation, or service is promised; permission and separate written terms control.'],
 ];
 
 const ACTIVATIONS: Array<[string, string]> = [
-  ['Wholesale placement', 'Acquisitions + Dispositions'],
-  ['Fix and flip', 'Acquisitions + Development + Dispositions'],
-  ['BRRRR', 'Acquisitions + Development + Asset Management'],
-  ['Ground-up to sell', 'Acquisitions + Development + Dispositions'],
-  ['Ground-up to hold', 'Acquisitions + Development + Asset Management'],
-  ['Co-GP engagement', 'Custom, based on the role split'],
+  ['Possible assignment', 'Control + authorization + separate disposition terms'],
+  ['Value-add sale scenario', 'Acquisition + project controls + possible disposition'],
+  ['Hold scenario', 'Acquisition + project controls + operating questions'],
+  ['Ground-up sale scenario', 'Entitlements + project controls + possible disposition'],
+  ['Ground-up hold scenario', 'Entitlements + project controls + operating questions'],
+  ['Possible co-GP discussion', 'Project-specific role, capacity, diligence, and written terms'],
 ];
 
 export function HowWeOperatePage({ go }: { go: Nav }) {
@@ -96,8 +96,8 @@ export function HowWeOperatePage({ go }: { go: Nav }) {
           </h1>
           <p className="hv-lead">
             Sourcing, strategy, capital, construction, disposition, and ownership usually live in
-            different hands. Pegasus coordinates the capabilities each path requires, so one accountable
-            operator carries the deal from first read to final outcome.
+            different hands. This page maps the questions and responsibilities that a possible path may
+            require. It does not claim one team performs them or promise review, participation, or execution.
           </p>
           <p className="hwo-hero-caption">Architectural vision &middot; Not property inventory</p>
         </div>
@@ -127,7 +127,7 @@ export function HowWeOperatePage({ go }: { go: Nav }) {
               <p className="hv-muted">{stage.detail}</p>
             </div>
             <div className="hwo-stage-side">
-              <div className="pg-label hv-eyebrow-copper">Settled here</div>
+              <div className="pg-label hv-eyebrow-copper">Questions surfaced</div>
               <ul className="hwo-decided">
                 {stage.decided.map((d) => <li key={d}>{d}</li>)}
               </ul>
@@ -142,8 +142,8 @@ export function HowWeOperatePage({ go }: { go: Nav }) {
           <div className="pg-label hv-eyebrow">Role selection</div>
           <h2 className="hv-h2-cream font-serif-display">The role is chosen, not assumed.</h2>
           <p className="hv-lead-dim">
-            Pegasus may participate in one of several capacities. Which one is decided by the facts of
-            the deal, put in writing, and never mixed.
+            These are possible role structures, not current service or capacity claims. Any Pegasus role
+            would depend on fit, diligence, availability, qualification, and a separate written agreement.
           </p>
           <dl className="hwo-role-list reveal">
             {ROLES.map(([name, desc]) => (
@@ -178,10 +178,10 @@ export function HowWeOperatePage({ go }: { go: Nav }) {
       {/* Department activation */}
       <section className="hwo-activate hv-pad-lg hv-grain">
         <div className="hv-wrap">
-          <div className="pg-label hv-eyebrow">Department activation</div>
-          <h2 className="hv-h2-cream font-serif-display">Not every deal uses every department.</h2>
+          <div className="pg-label hv-eyebrow">Illustrative role maps</div>
+          <h2 className="hv-h2-cream font-serif-display">Different scenarios require different responsibilities.</h2>
           <p className="hv-lead-dim">
-            The selected path switches on only the capabilities it needs. A few common patterns:
+            These examples do not establish separate departments, headcount, available providers, or a commitment to perform the work.
           </p>
           <dl className="hwo-activate-list reveal">
             {ACTIVATIONS.map(([path, depts]) => (
@@ -194,7 +194,7 @@ export function HowWeOperatePage({ go }: { go: Nav }) {
       {/* Close */}
       <section className="hwo-close hv-pad-lg">
         <div className="hv-wrap">
-          <h2 className="hv-h2 font-serif-display">Bring the deal. We will show you the sequence on it.</h2>
+          <h2 className="hv-h2 font-serif-display">Bring the context. Explore the applicable questions.</h2>
           <div className="ow-close-ctas">
             <a href="/bring-an-opportunity" onClick={toIntake}
               className="btn-primary inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px] group">

@@ -91,24 +91,24 @@ const LANES: [string, string[], string, string | null][] = [
   [
     "/buyers",
     ["Buy with a strategy,", "not just a search."],
-    "Licensed buyer representation is provided through Keller Williams East Bay when applicable.",
+    "you may ask about current licensed-representation availability",
     null,
   ],
   [
     "/capital",
     ["Capital should", "follow discipline."],
-    "Pegasus reviews capital relationships project-by-project.",
-    "No public offering, no guaranteed returns, no pooled fund.",
+    "Pegasus begins these conversations only through an existing relationship or a personal introduction.",
+    "This page records relationship context; it does not present project terms or create access, eligibility, or an agreement.",
   ],
   [
     "/operators",
-    ["Join the Pegasus", "operator bench."],
-    "contractors, trades, designers, architects, photographers, inspectors, lenders, escrow/title partners",
+    ["Submit a vendor", "profile."],
+    "Contractors, trades, designers, architects, photographers, inspectors, lenders, escrow/title partners",
     null,
   ],
   [
     "/referral",
-    ["Send the situation.", "Pegasus will handle it carefully."],
+    ["Share an introduction.", "Set boundaries first."],
     "For professionals and trusted contacts who know a property owner, investor, or situation",
     "Referral compensation, JV participation, or professional coordination is handled only where lawful, permitted, and agreed in writing.",
   ],
@@ -176,7 +176,9 @@ describe("Lane pages PRD v1 contract (issue #22)", () => {
     );
     expect(footer.querySelectorAll("button")).toHaveLength(0);
     // The site-wide locked disclosure paragraph stays intact.
-    expect(footer.textContent).toContain("Pegasus Dreamscapes Corp. is not a real estate brokerage.");
+    expect(footer.textContent).toContain("Pegasus Dreamscapes Corp. is a real estate investment, development, and strategy company, not a real estate brokerage.");
+    expect(footer.textContent).toContain("Duran Ramirez, Paolo Ariel");
+    expect(footer.textContent).toContain("BMP Realty Inc DBA Keller Williams Realty-East Bay");
     expect(footer.textContent).toContain("CA DRE #02333658");
     expect(footer.textContent).toContain("Equal Housing Opportunity");
   });

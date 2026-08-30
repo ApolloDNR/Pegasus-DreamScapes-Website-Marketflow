@@ -6,6 +6,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 import { sitemapEntries } from '../shared/seo-routes.ts';
+import { closeWithinDeadline } from './rendered-qa-liveness.mjs';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const buildRoot = path.join(projectRoot, 'dist/public');
@@ -365,9 +366,69 @@ if (!executablePath) {
 }
 
 const serverlessChromium = executablePath === '/tmp/chromium';
-const launchedBrowsers = new Set();
+const browserServers = new Map();
+
+async function closeQaPage(page, label) {
+  await closeWithinDeadline(label, () => page.close());
+}
+
+async function closeQaContext(context, label) {
+  await closeWithinDeadline(label, () => context.close());
+}
+
+async function forceStopBrowserServer(browserServer, label) {
+  try {
+    await closeWithinDeadline(`${label} browser-server kill`, () => browserServer.kill());
+    return;
+  } catch (killError) {
+    const childProcess = browserServer.process();
+    let signalSent = childProcess.exitCode !== null;
+    try {
+      if (childProcess.exitCode === null) {
+        signalSent = childProcess.kill('SIGKILL');
+      }
+    } finally {
+      childProcess.unref();
+    }
+    if (!signalSent) {
+      throw new AggregateError(
+        [killError],
+        `Rendered QA could not force-stop ${label}`,
+      );
+    }
+  }
+}
+
+async function closeQaBrowser(browser, label) {
+  const browserServer = browserServers.get(browser);
+  const closeFailures = [];
+  try {
+    await closeWithinDeadline(`${label} client`, () => browser.close());
+  } catch (error) {
+    closeFailures.push(error);
+  }
+
+  if (browserServer) {
+    try {
+      await closeWithinDeadline(`${label} server`, () => browserServer.close());
+    } catch (error) {
+      closeFailures.push(error);
+      try {
+        await forceStopBrowserServer(browserServer, label);
+      } catch (forceStopError) {
+        closeFailures.push(forceStopError);
+      }
+    }
+  }
+  browserServers.delete(browser);
+
+  if (closeFailures.length > 0) {
+    throw new AggregateError(closeFailures, `Rendered QA failed to close ${label}`);
+  }
+}
+
 async function launchBrowser() {
-  const browser = await chromium.launch({
+  const browserServer = await chromium.launchServer({
     executablePath,
     headless: true,
     ...(serverlessChromium ? {
@@ -388,9 +449,21 @@ async function launchBrowser() {
       },
     } : { args: ['--no-sandbox', '--disable-dev-shm-usage'] }),
   });
-  launchedBrowsers.add(browser);
-  browser.on('disconnected', () => launchedBrowsers.delete(browser));
-  return browser;
+  try {
+    const browser = await chromium.connect(browserServer.wsEndpoint());
+    browserServers.set(browser, browserServer);
+    return browser;
+  } catch (error) {
+    try {
+      await forceStopBrowserServer(browserServer, 'browser launch');
+    } catch (forceStopError) {
+      throw new AggregateError(
+        [error, forceStopError],
+        'Rendered QA failed to connect to and stop its browser server',
+      );
+    }
+    throw error;
+  }
 }
 
 function isAllowedBrowserUrl(rawUrl) {
@@ -777,51 +850,60 @@ async function captureEvidenceScreenshot(
 async function runInteraction(name, options, check) {
   interactionJourneyCount += 1;
   const browser = await launchBrowser();
-  const { context, blockedEgress } = await newGuardedContext(browser, {
-    viewport: options.viewport ?? getViewport('desktop-1440'),
-    colorScheme: options.colorScheme ?? 'dark',
-    reducedMotion: 'reduce',
-  });
-  if (options.seedConsent !== false) {
-    await context.addInitScript(() => {
-      localStorage.setItem('pegasus-cookie-consent', JSON.stringify({
-        essential: true,
-        analytics: false,
-        marketing: false,
-        decidedAt: '2026-01-01T00:00:00.000Z',
-      }));
-    });
-  }
-  const page = await context.newPage();
-  const blockedEgressStart = blockedEgress.length;
-  const health = monitorPageHealth(page);
-
   try {
-    await check(page, health);
-    await settleAfterInteraction(page, health);
-    const browserHealth = browserHealthFailures(health, blockedEgress, blockedEgressStart);
-    assert(!hasBrowserHealthFailures(browserHealth), `Browser health failures: ${JSON.stringify(browserHealth)}`);
-    console.log(`[interaction] ${name}: PASS`);
-  } catch (error) {
-    const failure = {
-      name,
-      error: String(error),
-      browserHealth: browserHealthFailures(health, blockedEgress, blockedEgressStart),
-    };
-    interactionFailures.push(failure);
-    console.error(`[interaction-detail] ${JSON.stringify(failure)}`);
-    console.log(`[interaction] ${name}: FAIL`);
-  } finally {
-    releasePendingControlledEvents();
+    const { context, blockedEgress } = await newGuardedContext(browser, {
+      viewport: options.viewport ?? getViewport('desktop-1440'),
+      colorScheme: options.colorScheme ?? 'dark',
+      reducedMotion: 'reduce',
+    });
     try {
-      await page.unrouteAll({ behavior: 'wait' });
-    } finally {
-      try {
-        await context.close();
-      } finally {
-        await browser.close();
+      if (options.seedConsent !== false) {
+        await context.addInitScript(() => {
+          localStorage.setItem('pegasus-cookie-consent', JSON.stringify({
+            essential: true,
+            analytics: false,
+            marketing: false,
+            decidedAt: '2026-01-01T00:00:00.000Z',
+          }));
+        });
       }
+      const page = await context.newPage();
+      const blockedEgressStart = blockedEgress.length;
+      const health = monitorPageHealth(page);
+
+      try {
+        try {
+          await check(page, health);
+          await settleAfterInteraction(page, health);
+          const browserHealth = browserHealthFailures(health, blockedEgress, blockedEgressStart);
+          assert(!hasBrowserHealthFailures(browserHealth), `Browser health failures: ${JSON.stringify(browserHealth)}`);
+          console.log(`[interaction] ${name}: PASS`);
+        } catch (error) {
+          const failure = {
+            name,
+            error: String(error),
+            browserHealth: browserHealthFailures(health, blockedEgress, blockedEgressStart),
+          };
+          interactionFailures.push(failure);
+          console.error(`[interaction-detail] ${JSON.stringify(failure)}`);
+          console.log(`[interaction] ${name}: FAIL`);
+        }
+      } finally {
+        releasePendingControlledEvents();
+        try {
+          await closeWithinDeadline(
+            `interaction ${name} request-route cleanup`,
+            () => page.unrouteAll({ behavior: 'wait' }),
+          );
+        } finally {
+          await closeQaPage(page, `interaction ${name} page`);
+        }
+      }
+    } finally {
+      await closeQaContext(context, `interaction ${name} context`);
     }
+  } finally {
+    await closeQaBrowser(browser, `interaction ${name} browser`);
   }
 }
 
@@ -1053,16 +1135,19 @@ try {
   for (const colorScheme of interactionsOnly ? [] : colorSchemes) {
     for (const [viewportName, viewport] of viewports) {
       const browser = await launchBrowser();
-      const { context, blockedEgress } = await newGuardedContext(browser, {
-        viewport,
-        colorScheme,
-        reducedMotion: 'reduce',
-      });
+      try {
+        const { context, blockedEgress } = await newGuardedContext(browser, {
+          viewport,
+          colorScheme,
+          reducedMotion: 'reduce',
+        });
+        try {
 
-      for (const route of routes) {
-        const blockedEgressStart = blockedEgress.length;
-        const page = await context.newPage();
-        const health = monitorPageHealth(page);
+          for (const route of routes) {
+            const blockedEgressStart = blockedEgress.length;
+            const page = await context.newPage();
+            const health = monitorPageHealth(page);
+            try {
 
         const response = await page.goto(`${baseUrl}${route}`, { waitUntil: 'load', timeout: 45_000 });
         await page.locator('h1').first().waitFor({ state: 'attached', timeout: 10_000 });
@@ -1127,12 +1212,26 @@ try {
           && !hasBrowserHealthFailures(browserHealth)
           && !hasRenderedPageFailures(renderedPage)
           && !violations.length;
-        console.log(`[a11y] ${colorScheme} ${viewportName} ${route}: ${passed ? 'PASS' : 'FAIL'}`);
-        await page.close();
+              console.log(`[a11y] ${colorScheme} ${viewportName} ${route}: ${passed ? 'PASS' : 'FAIL'}`);
+            } finally {
+              await closeQaPage(
+                page,
+                `route page ${colorScheme} ${viewportName} ${route}`,
+              );
+            }
+          }
+        } finally {
+          await closeQaContext(
+            context,
+            `route context ${colorScheme} ${viewportName}`,
+          );
+        }
+      } finally {
+        await closeQaBrowser(
+          browser,
+          `route browser ${colorScheme} ${viewportName}`,
+        );
       }
-
-      await context.close();
-      await browser.close();
     }
   }
 
@@ -1831,9 +1930,28 @@ try {
   };
   console.error('[rendered-qa] Fatal execution failure:', error);
 } finally {
-  await Promise.allSettled(
-    [...launchedBrowsers].map((browser) => browser.close()),
+  const residualBrowserCleanup = await Promise.allSettled(
+    [...browserServers.keys()].map((browser) => (
+      closeQaBrowser(browser, 'residual browser cleanup')
+    )),
   );
+  const residualCleanupFailures = residualBrowserCleanup
+    .filter((result) => result.status === 'rejected')
+    .map((result) => String(result.reason));
+  if (residualCleanupFailures.length > 0) {
+    const residualError = new AggregateError(
+      residualCleanupFailures,
+      'Rendered QA could not close every residual browser',
+    );
+    console.error('[rendered-qa] Residual browser cleanup failure:', residualError);
+    fatalFailure = fatalFailure
+      ? { ...fatalFailure, residualCleanupFailures }
+      : {
+        error: String(residualError),
+        stack: residualError.stack ?? null,
+        residualCleanupFailures,
+      };
+  }
   await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
 }
 

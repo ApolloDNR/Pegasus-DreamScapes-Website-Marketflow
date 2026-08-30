@@ -1,6 +1,12 @@
 import React, { useState } from 'react';
 import { useLocation } from 'wouter';
 import { ArrowRight, Compass, House, MapPin, UserRound } from 'lucide-react';
+import {
+  NELSON_COST_DISCLOSURE,
+  NELSON_EXECUTION_DISCLOSURE,
+  NELSON_FACTS,
+  NELSON_PUBLIC_DESCRIPTION,
+} from '@shared/nelson-facts';
 import type { Nav } from './theme';
 
 /* ── Opportunity Plan (v5.1 §32.2) — the one signature interaction ── */
@@ -18,14 +24,14 @@ type PlanItem = {
 };
 
 const PLAN_ITEMS: PlanItem[] = [
-  { key: 'control', label: 'Control', caption: 'Acquisitions steps in to secure the contract, with underwriting behind it.', lights: ['control', 'underwriting'] },
-  { key: 'underwriting', label: 'Underwriting', caption: 'We run the numbers ourselves. Real comps, real costs, a written read.', lights: ['underwriting', 'capital'] },
-  { key: 'buyer', label: 'Buyer', caption: 'Dispositions finds the taker: our list, our brokerage lane, or a partner.', lights: ['buyer', 'disposition'] },
-  { key: 'capital', label: 'Capital', caption: 'We bring or arrange the funding, sized to the deal and the timeline.', lights: ['capital', 'underwriting'] },
-  { key: 'development', label: 'Development', caption: 'Scope, budget, permits, and build, coordinated with the right licensed project team.', lights: ['development', 'local'] },
-  { key: 'local', label: 'Local execution', caption: 'Boots in Contra Costa and Alameda. We walk it, we manage it.', lights: ['local', 'development'] },
-  { key: 'disposition', label: 'Disposition', caption: 'Exit planned up front: sell, list, refinance, or hold.', lights: ['disposition', 'buyer'] },
-  { key: 'assetops', label: 'Asset operations', caption: 'If the play is hold, we stabilize and operate it.', lights: ['assetops', 'underwriting'] },
+  { key: 'control', label: 'Control', caption: 'Test whether contract terms, access, and decision rights support further diligence.', lights: ['control', 'underwriting'] },
+  { key: 'underwriting', label: 'Underwriting', caption: 'Organize supplied assumptions around price, scope, carry, exit, and unresolved evidence.', lights: ['underwriting', 'capital'] },
+  { key: 'buyer', label: 'Buyer', caption: 'Identify what a potential buyer path would require; no buyer, introduction, or closing is promised.', lights: ['buyer', 'disposition'] },
+  { key: 'capital', label: 'Capital', caption: 'Map the capital question without implying funding, solicitation, matching, or availability.', lights: ['capital', 'underwriting'] },
+  { key: 'development', label: 'Development', caption: 'Frame scope, budget, permits, and specialist roles that would need project-specific verification.', lights: ['development', 'local'] },
+  { key: 'local', label: 'Local context', caption: 'Surface location-specific constraints without promising field work or project management.', lights: ['local', 'development'] },
+  { key: 'disposition', label: 'Disposition', caption: 'Compare possible sale, listing, refinance, or hold scenarios without recommending an outcome.', lights: ['disposition', 'buyer'] },
+  { key: 'assetops', label: 'Asset operations', caption: 'List the operating questions a hold scenario would need to answer.', lights: ['assetops', 'underwriting'] },
 ];
 
 /* Node positions on the ring (percent of the square stage). */
@@ -114,7 +120,7 @@ function OpportunityPlan() {
           ))}
         </div>
         <p className="hv-plan-caption" aria-live="polite">
-          {item ? item.caption : 'Choose what your deal is missing, and see what we bring.'}
+          {item ? item.caption : 'Choose a constraint to explore an illustrative planning prompt.'}
         </p>
       </div>
       <div className="hv-plan-flow" aria-hidden="true">
@@ -146,12 +152,12 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
           <div className="hv-wrap hv-hero-inner">
             <div className="hv-eyebrow-row">
               <span className="pg-label hv-eyebrow">
-                <span>Real estate operating company</span>
+                <span>Real estate strategy company</span>
                 <span>Contra Costa &amp; Alameda</span>
               </span>
             </div>
             <h1 className="hv-h1 font-serif-display">
-              Complex real estate,<br className="hv-h1-break" /> <em>made executable.</em>
+              Complex real estate,<br className="hv-h1-break" /> <em>structured clearly.</em>
             </h1>
             <div className="hv-cta-row">
               <a href="/bring-an-opportunity" onClick={toIntake}
@@ -173,14 +179,14 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
               <span className="hv-fact-ic"><UserRound aria-hidden="true" /></span>
               <span className="hv-fact-txt">
                 <span className="hv-fact-k font-serif-display">Founder-led</span>
-                <span className="hv-fact-v">Sourced, built, and sold in-house.</span>
+                <span className="hv-fact-v">A defined point of view, published with boundaries.</span>
               </span>
             </li>
             <li className="hv-fact">
               <span className="hv-fact-ic"><House aria-hidden="true" /></span>
               <span className="hv-fact-txt">
                 <span className="hv-fact-k font-serif-display">Nelson Drive</span>
-                <span className="hv-fact-v">A 3/2 rebuild into a 4/3.</span>
+                <span className="hv-fact-v">Documented $600K acquisition to $840K sale.</span>
               </span>
             </li>
             <li className="hv-fact">
@@ -194,7 +200,7 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
               <span className="hv-fact-ic"><Compass aria-hidden="true" /></span>
               <span className="hv-fact-txt">
                 <span className="hv-fact-k font-serif-display">Strategy first</span>
-                <span className="hv-fact-v">We structure the route. You own the outcome.</span>
+                <span className="hv-fact-v">Start with facts, constraints, roles, and written terms.</span>
               </span>
             </li>
           </ul>
@@ -243,35 +249,31 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
               <div className="pg-label hv-eyebrow">Proof before aspiration &middot; Nelson Drive &middot; El Sobrante</div>
               <h2 className="hv-h2-cream font-serif-display">One property, read honestly.</h2>
             </div>
-            <p className="hv-lead-dim">
-              One house, taken down to the studs. Pegasus sourced the opportunity, built the budget
-              and design direction, coordinated the project, positioned the home, and carried it to sale.
-            </p>
+            <p className="hv-lead-dim">{NELSON_PUBLIC_DESCRIPTION}</p>
           </div>
 
           <div className="hv-ba">
             <figure className="hv-ba-after">
               <img src="/images/nelson/kitchen-after.webp" alt="Nelson Drive kitchen after the renovation: navy cabinetry and a waterfall island" loading="lazy" />
-              <figcaption>After &middot; 4-bed / 3-bath home</figcaption>
+              <figcaption>After &middot; completed interior</figcaption>
             </figure>
             <figure>
               <img src="/images/nelson/kitchen-before.webp" alt="Nelson Drive kitchen before the renovation" loading="lazy" />
-              <figcaption>Before &middot; dated 3-bed / 2-bath</figcaption>
+              <figcaption>Before &middot; original interior condition</figcaption>
             </figure>
           </div>
 
-          <p className="hv-proof-thesis font-serif-display">Bought a 3/2. Sold a 4/3.</p>
+          <p className="hv-proof-thesis font-serif-display">Documented basis. Documented sale.</p>
           <dl className="hv-proof-facts">
-            <div><dt>Acquired</dt><dd>$600,000</dd></div>
-            <div><dt>In-house renovation</dt><dd>$105,000</dd></div>
-            <div><dt>All-in</dt><dd>~$705,000</dd></div>
-            <div><dt>Sold</dt><dd>$840,000</dd></div>
+            <div><dt>Acquired</dt><dd>${NELSON_FACTS.acquired.toLocaleString('en-US')}</dd></div>
+            <div><dt>Improvement budget</dt><dd>${NELSON_FACTS.improvementBudget.toLocaleString('en-US')}</dd></div>
+            <div><dt>Basis before other costs</dt><dd>${NELSON_FACTS.totalBasisBeforeOtherCosts.toLocaleString('en-US')}</dd></div>
+            <div><dt>Sold</dt><dd>${NELSON_FACTS.salePrice.toLocaleString('en-US')}</dd></div>
           </dl>
 
           <div className="hv-proof-notes">
-            <p><strong>~$95K</strong> below the comparable ~$200K retail general-contractor bid.</p>
-            <p>Approximately $135K above all-in cost before financing, holding, and selling costs.
-              Value shown is not net profit.</p>
+            <p>{NELSON_COST_DISCLOSURE}</p>
+            <p>{NELSON_EXECUTION_DISCLOSURE}</p>
           </div>
           <button type="button" className="hv-proof-link" onClick={() => go('ourwork')}>
             See the full project <ArrowRight className="inline h-3.5 w-3.5" />
@@ -295,7 +297,7 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
         <div className="hv-method-content">
           <div className="pg-label hv-eyebrow-copper">How we work</div>
           <h2 className="hv-h2 font-serif-display">A method, not a script.</h2>
-          <p className="hv-muted">The role, route, and economics stay visible from the first read through the outcome.</p>
+          <p className="hv-muted">The framework keeps roles, assumptions, decision points, and economics visible without promising a service or outcome.</p>
           <ol className="hv-steps reveal" aria-label="The Pegasus method">
             {([
               ['Originate', 'Find, receive, or develop the opportunity.'],
@@ -310,7 +312,7 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
               </li>
             ))}
           </ol>
-          <p className="hv-method-fine">Execution is coordinated with appropriately licensed contractors and project specialists.</p>
+          <p className="hv-method-fine">Any specialist work requires separate project agreements and appropriate qualification or licensing; this framework does not imply a standing team or available capacity.</p>
         </div>
       </section>
 
@@ -321,10 +323,10 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
             <div className="pg-label hv-eyebrow-copper">The Opportunity Plan</div>
             <h2 className="hv-h2 font-serif-display">Strategy should become visible.</h2>
             <p className="hv-muted">
-              Strategy Lab turns a first property read into a clear set of viable lanes. It exposes
-              assumptions, gaps, and the next decision. It does not make promises.
+              Strategy Lab organizes user-supplied inputs into illustrative planning lanes. It can
+              expose assumptions and missing evidence, but it is not a valuation, advice, or a promise of human review.
             </p>
-            <p className="hv-plan-contract">Every deal is missing something.</p>
+            <p className="hv-plan-contract">Most opportunities have a constraint to resolve.</p>
             <div className="hv-plan-actions">
               <button type="button" className="hv-plan-primary inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px]"
                 onClick={() => go('strategylab')}>
@@ -346,20 +348,19 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
         <div className="hv-wrap hv-partner-shell reveal">
           <div className="hv-partner-copy">
             <div className="pg-label hv-eyebrow-copper">Partners</div>
-            <h2 className="hv-h2 font-serif-display">Bring what you do well. Pegasus completes the operating picture.</h2>
-            <p className="hv-muted">You do not have to hand over the whole deal. Bring the part you are strong in;
-              we supply what is missing, on terms set in writing before anyone moves.</p>
+            <h2 className="hv-h2 font-serif-display">Bring what you do well. Map the missing role before proposing a partnership.</h2>
+            <p className="hv-muted">Describe the opportunity, your role, and the unresolved constraint. Any Pegasus participation depends on diligence, availability, alignment, and separate written terms.</p>
             <dl className="hv-relationships">
-              <div><dt>Deal finder</dt><dd>Pegasus operating support</dd></div>
-              <div><dt>Specialty GP</dt><dd>Pegasus local execution</dd></div>
-              <div><dt>Property owner</dt><dd>Pegasus principal review</dd></div>
-              <div><dt>Capital relationship</dt><dd>Pegasus operating capability</dd></div>
-              <div><dt>Contractor or specialist</dt><dd>Pegasus pipeline</dd></div>
+              <div><dt>Deal finder</dt><dd>Possible operating discussion</dd></div>
+              <div><dt>Specialty GP</dt><dd>Role and location fit</dd></div>
+              <div><dt>Property owner</dt><dd>Possible property consideration</dd></div>
+              <div><dt>Capital relationship</dt><dd>Project-specific context</dd></div>
+              <div><dt>Contractor or specialist</dt><dd>Vendor-profile submission</dd></div>
             </dl>
             <button type="button" className="hv-text-link" onClick={() => go('dealfinders')}>
               Explore a partnership <ArrowRight className="h-3.5 w-3.5" />
             </button>
-            <p className="hv-partner-fine">Licensed representation is provided separately through Keller Williams East Bay when applicable.</p>
+            <p className="hv-partner-fine">Licensed representation may be available only through a separate written brokerage agreement. CA DRE #02333658 is listed under Duran Ramirez, Paolo Ariel; responsible broker: BMP Realty Inc DBA Keller Williams Realty-East Bay. Verify current status.</p>
           </div>
         </div>
       </section>
@@ -377,12 +378,14 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
           </figure>
           <h2 className="font-serif-display">Paolo &ldquo;Apollo&rdquo; Duran</h2>
           <p className="hv-founder-title">Founder, Pegasus DreamScapes</p>
-          <p className="hv-founder-statement">On Nelson Drive, Apollo sourced the deal, formed the LLC, built the budget,
-            ran the schedule and vendors, set the design direction, and carried it to sale.</p>
+          <p className="hv-founder-statement">Apollo founded Pegasus and sets its published strategy framework. Participation in any property, project, or representation request is determined separately and documented in writing.</p>
           <dl className="hv-founder-roles">
             <div><dt>Pegasus</dt><dd>Founder, Pegasus DreamScapes</dd></div>
-            <div><dt>Licensed representation</dt><dd>Real Estate Agent, Keller Williams East Bay<br />CA DRE #02333658</dd></div>
+            <div><dt>Public-facing name</dt><dd>Paolo &ldquo;Apollo&rdquo; Duran</dd></div>
+            <div><dt>License record</dt><dd>Duran Ramirez, Paolo Ariel<br />CA DRE #02333658</dd></div>
+            <div><dt>Responsible broker</dt><dd>BMP Realty Inc DBA Keller Williams Realty-East Bay</dd></div>
           </dl>
+          <p className="hv-founder-statement">The limited public Nelson record does not identify who provided brokerage representation or every project role.</p>
         </div>
       </section>
       </div>
@@ -390,7 +393,7 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
       <section className="hv-final hv-pad-lg" data-hv="final">
         <div className="hv-wrap">
           <h2 className="hv-h2-cream font-serif-display">Bring the property, the contract, the project, or the plan.</h2>
-          <p className="hv-lead-dim">We&apos;ll begin by determining what is missing and whether Pegasus is the right participant.</p>
+          <p className="hv-lead-dim">Use the intake to provide context. Submission does not create representation, confidentiality, source protection, partnership, review, or a duty to respond.</p>
           <div className="hv-final-actions">
             <a href="/bring-an-opportunity" onClick={toIntake}
               className="btn-solid-light inline-flex items-center gap-3 px-8 py-4 pg-label !text-[10px] group">

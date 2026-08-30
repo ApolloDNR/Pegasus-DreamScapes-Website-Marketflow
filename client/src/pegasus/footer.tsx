@@ -85,11 +85,11 @@ export function Footer({ go: _go }: { go: Nav }) {
         </div>
         <div className="mt-16 pt-8 border-t border-[rgba(239,231,218,0.16)] flex flex-col gap-5">
           <p className="text-[var(--cream)]/55 text-[11px] leading-relaxed tracking-[0.03em] max-w-3xl" data-testid="text-footer-identity">
-            Pegasus Dreamscapes Corp. is a real estate investment, development, and strategy company. Pegasus Dreamscapes Corp. is not a real estate brokerage. Licensed real estate representation, when applicable, is provided by Paolo &ldquo;Apollo&rdquo; Duran through Keller Williams East Bay. CA DRE #02333658. No agency relationship is created without a written agreement. Strategy reviews are preliminary and are not legal, tax, lending, appraisal, financial, or investment advice. Each Keller Williams office is independently owned and operated. Equal Housing Opportunity.
+            Pegasus Dreamscapes Corp. is a real estate investment, development, and strategy company, not a real estate brokerage. This site uses Paolo &ldquo;Apollo&rdquo; Duran as a public-facing name. For license verification, CA DRE #02333658 is listed under Duran Ramirez, Paolo Ariel. The responsible broker listed in DRE records is BMP Realty Inc DBA Keller Williams Realty-East Bay. Verify current status before engagement. Licensed representation may be available only through a separate written brokerage agreement. Strategy tools and intake materials are preliminary and are not legal, tax, lending, appraisal, financial, or investment advice. Equal Housing Opportunity.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between pg-label !text-[9px] !tracking-[0.16em] text-[var(--cream)]/55">
             <span>© {new Date().getFullYear()} Pegasus Dreamscapes Corp. All rights reserved.</span>
-            <span>NAR · CAR · Equal Housing Opportunity</span>
+            <span>Verify license and broker details · Equal Housing Opportunity</span>
           </div>
         </div>
       </div>

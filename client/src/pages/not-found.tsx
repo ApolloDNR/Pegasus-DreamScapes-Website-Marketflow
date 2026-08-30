@@ -58,7 +58,7 @@ export default function NotFound() {
         </h1>
 
         <p className="text-base sm:text-lg text-cream/75 leading-relaxed max-w-xl mx-auto mb-10">
-          The page you were looking for doesn't exist or has been moved. Every property gets a path. Every visitor does too.
+          The page you were looking for doesn't exist or has been moved. Use one of the verified destinations below to continue.
         </p>
 
         {/* CTAs */}

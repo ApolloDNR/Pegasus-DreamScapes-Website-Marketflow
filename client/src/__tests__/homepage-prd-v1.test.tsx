@@ -16,10 +16,10 @@ import { Landing } from "@/pegasus/Landing";
 //   1. Arrival  2. Visitor Router  3. Proof (Nelson Drive)  4. Pegasus Method
 //   5. Opportunity Plan (signature)  6. Partner Proposition
 //   7. Founder Trust + Final Invitation
-// It also locks the public promise ("Complex real estate, made executable."),
+// It also locks the public positioning ("Complex real estate, structured clearly."),
 // the primary CTA ("Bring an Opportunity" → /bring-an-opportunity), and the
-// §11-safe framing of the Nelson numbers (transparent stack; the in-house
-// edge as the featured stat; never "profit").
+// evidence-bounded framing of the canonical Nelson figures (never "profit"
+// and never an unsupported attribution of project or brokerage roles).
 //
 // This suite renders the real prototype shell at "/" and pins the locked
 // copy and the movement order so a refactor cannot silently drift the
@@ -105,7 +105,7 @@ describe("Homepage premium editorial contract", () => {
     const { container } = renderHome();
     const arrival = container.querySelector<HTMLElement>('[data-hv="arrival"]')!;
     const text = arrival.textContent!;
-    expect(text).toContain("Complex real estate, made executable.");
+    expect(text).toContain("Complex real estate, structured clearly.");
     expect(text).toContain("Bring an Opportunity");
     expect(text).toContain("See How We Operate");
     expect(text).toContain("Open Strategy Lab");
@@ -120,10 +120,10 @@ describe("Homepage premium editorial contract", () => {
   it("locks the approved four-part proof rail", () => {
     const { container } = renderHome();
     const rail = container.querySelector(".hv-hero-statbar")!;
-    expect(rail.textContent).toContain("Founder-ledSourced, built, and sold in-house.");
-    expect(rail.textContent).toContain("Nelson DriveA 3/2 rebuild into a 4/3.");
+    expect(rail.textContent).toContain("Founder-ledA defined point of view, published with boundaries.");
+    expect(rail.textContent).toContain("Nelson DriveDocumented $600K acquisition to $840K sale.");
     expect(rail.textContent).toContain("East BayContra Costa & Alameda County.");
-    expect(rail.textContent).toContain("Strategy firstWe structure the route. You own the outcome.");
+    expect(rail.textContent).toContain("Strategy firstStart with facts, constraints, roles, and written terms.");
   });
 
   it("locks the Visitor Router question and its four routes (§7.2)", () => {
@@ -143,17 +143,17 @@ describe("Homepage premium editorial contract", () => {
   it("locks the Nelson proof with the §11-safe number framing", () => {
     const { container } = renderHome();
     const text = container.querySelector("main")!.textContent!;
-    expect(text).toContain("One house, taken down to the studs.");
+    expect(text).toContain("A completed East Bay residential transformation documented");
     expect(text).toContain("Nelson Drive");
     expect(text).toContain("El Sobrante");
-    // Transparent stack — acquired / built in-house / sold.
+    // Transparent stack — acquisition / improvement budget / basis / sale.
     expect(text).toContain("$600,000");
     expect(text).toContain("$105,000");
     expect(text).toContain("$840,000");
-    // Featured stat: the in-house operating edge, not a gross-lift headline.
-    expect(text).toContain("~$95K");
-    // §11 discipline: gross value creation is never presented as profit.
+    expect(text).toContain("$135K gross spread");
+    // The arithmetic is not presented as profit or proof of who performed the work.
     expect(text).toContain("not net profit");
+    expect(text).toContain("does not identify every contractor");
     expect(text).not.toContain("$240K value created");
   });
 
@@ -168,14 +168,14 @@ describe("Homepage premium editorial contract", () => {
   it("locks the Opportunity Plan signature with its eight needs (§32.2)", () => {
     const { container } = renderHome();
     const text = container.querySelector("main")!.textContent!;
-    expect(text).toContain("Every deal is missing something.");
+    expect(text).toContain("Most opportunities have a constraint to resolve.");
     for (const need of [
       "Control",
       "Underwriting",
       "Buyer",
       "Capital",
       "Development",
-      "Local execution",
+      "Local context",
       "Disposition",
       "Asset operations",
     ]) {
@@ -190,7 +190,8 @@ describe("Homepage premium editorial contract", () => {
     const text = container.querySelector("main")!.textContent!;
     expect(text).toContain("Bring what you do well.");
     expect(text).toContain("Paolo");
-    expect(text).toContain("Keller Williams East Bay");
+    expect(text).toContain("Duran Ramirez, Paolo Ariel");
+    expect(text).toContain("BMP Realty Inc DBA Keller Williams Realty-East Bay");
     expect(text).toContain("CA DRE #02333658");
   });
 

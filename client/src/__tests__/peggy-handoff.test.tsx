@@ -4,7 +4,7 @@
  * Peggy embeds an inline [[HANDOFF]]{...}[[/HANDOFF]] directive in the
  * assistant stream to decide which next-step CTA to surface. `splitHandoff`
  * parses that directive and strips it from the visible prose; the component
- * then renders either "Open Strategy Lab" or "Start my Review" once streaming
+ * then renders either "Open Strategy Lab" or "Share for Consideration" once streaming
  * finishes. This guards the path from a Peggy chat into a captured lead.
  */
 import React from "react";
@@ -181,7 +181,7 @@ describe("Peggy — handoff action buttons", () => {
     const { onHandoffToReview, setOpen } = renderPeggy();
     await sendMessage("I have a probate property in the East Bay");
 
-    expect(screen.queryByRole("button", { name: /Start my Review/ })).toBeNull();
+    expect(screen.queryByRole("button", { name: /Share for Consideration/ })).toBeNull();
 
     chat.resolve({
       ok: true,
@@ -191,7 +191,7 @@ describe("Peggy — handoff action buttons", () => {
       }),
     } as unknown as Response);
 
-    const cta = await screen.findByRole("button", { name: /Start my Review/ });
+    const cta = await screen.findByRole("button", { name: /Share for Consideration/ });
     fireEvent.click(cta);
     expect(onHandoffToReview).toHaveBeenCalledTimes(1);
     expect(onHandoffToReview).toHaveBeenCalledWith(
@@ -321,8 +321,8 @@ describe("Peggy — handoff action buttons", () => {
     await sendMessage("fail closed once");
     refresh.resolve(refreshResponse());
 
-    expect(await screen.findByText(/I can.t reach my brain at the moment/)).toBeVisible();
-    expect(screen.getByRole("button", { name: /Start a Review/ })).toBeVisible();
+    expect(await screen.findByText(/I can.t reach the chat service right now/)).toBeVisible();
+    expect(screen.getByRole("button", { name: /Share for Consideration/ })).toBeVisible();
     expect(fetchMock.mock.calls.filter(([input]) =>
       String(input) === "/api/peggy/chat",
     )).toHaveLength(1);
