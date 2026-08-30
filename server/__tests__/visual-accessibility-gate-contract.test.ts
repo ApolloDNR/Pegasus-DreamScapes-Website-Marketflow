@@ -250,6 +250,14 @@ describe("rendered visual-accessibility gate contract", () => {
     expect(interaction).toContain("contactName: 'Avery Stone'");
     expect(interaction).toContain("email: 'qa.intake@example.com'");
     expect(interaction).toContain("consentAccepted: true");
+    expect(interaction).toContain(
+      "getByRole('button', { name: 'Record Opportunity', exact: true })",
+    );
+    expect(interaction).toContain(
+      "getByRole('button', { name: 'Recording…', exact: true })",
+    );
+    expect(interaction).not.toContain("Submit for Review");
+    expect(interaction).not.toContain("Sending for Review");
     expect(interaction).toContain("captureEvidenceScreenshot(");
     expect(interaction).toContain("`intake-pending-${intakeViewportName}.png`");
     expect(interaction).toContain("`intake-error-${intakeViewportName}.png`");
@@ -536,8 +544,25 @@ describe("rendered visual-accessibility gate contract", () => {
     expect(interaction).toContain(".pg-root nav");
     expect(interaction).toContain("button-marketflow-submit-deal");
     expect(interaction).toContain("/bring-an-opportunity?intent=deal-jv");
+    expect(interaction).toContain("No reviewed live inventory is published.");
+    expect(interaction).toContain(
+      "Reviewed opportunities are not shown as sample inventory.",
+    );
     expect(interaction).toContain("text-deals-title");
     expect(interaction).toContain("button-sidebar-toggle");
+  });
+
+  it("validates the canonical general-contact action instead of promising a review", () => {
+    const interaction = sliceBetween(
+      "await runInteraction('contact form validation'",
+      "await runInteraction('cookie preference choice'",
+    );
+
+    expect(interaction).toContain(
+      "getByRole('button', { name: 'Send Message', exact: true })",
+    );
+    expect(interaction).not.toContain("Request My Review");
+    expect(interaction).toContain("form input:invalid");
   });
 
   it("renders approved MarketFlow loading/error/retry/empty/data and owner-safe JV evidence", () => {

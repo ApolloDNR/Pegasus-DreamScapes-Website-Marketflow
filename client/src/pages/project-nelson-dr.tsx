@@ -348,7 +348,7 @@ export default function NelsonDrPage() {
             <ArrowLeft className="w-4 h-4" /> Back to Projects
           </Link>
 
-          <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-5">
+          <p className="text-[11px] uppercase tracking-[0.32em] text-[hsl(var(--warm-glow))] font-supporting font-semibold mb-5">
             Case Study · Value-Add Execution
           </p>
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] text-white leading-tight mb-6">
@@ -440,7 +440,7 @@ export default function NelsonDrPage() {
             />
 
             {/* Before & After comparison sliders */}
-            <p className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground/70 font-supporting font-semibold mb-3 mt-12">
+            <p className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground/80 font-supporting font-semibold mb-3 mt-12">
               Before &amp; After — Drag to Compare
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -456,7 +456,7 @@ export default function NelsonDrPage() {
                 />
               ))}
             </div>
-            <p className="text-xs text-muted-foreground/60 mt-3">
+            <p className="text-xs text-muted-foreground/80 mt-3">
               Each slider pairs an as-acquired photo from the original listing record
               with finished project photography of the same space. Camera angles may
               differ slightly between the listing record and the finished shoot. All
@@ -465,7 +465,7 @@ export default function NelsonDrPage() {
             </p>
 
             {/* Finished interior gallery */}
-            <p className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground/70 font-supporting font-semibold mb-3 mt-12">
+            <p className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground/80 font-supporting font-semibold mb-3 mt-12">
               Inside the Finished Home
             </p>
             <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 mb-16">
@@ -482,7 +482,7 @@ export default function NelsonDrPage() {
             </div>
 
             {/* As-acquired documentation — original listing record, not angle-matched */}
-            <p className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground/70 font-supporting font-semibold mb-3">
+            <p className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground/80 font-supporting font-semibold mb-3">
               As-Acquired Documentation
             </p>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
@@ -497,7 +497,7 @@ export default function NelsonDrPage() {
                 />
               ))}
             </div>
-            <p className="text-xs text-muted-foreground/60 mt-3">
+            <p className="text-xs text-muted-foreground/80 mt-3">
               These are documentation-quality photos from the property's as-acquired
               listing record, shown to record its starting condition. They are not
               presented as proof that one company performed every project role.
@@ -567,7 +567,7 @@ export default function NelsonDrPage() {
               {PIPELINE.map((step, i) => (
                 <div key={step} className="flex items-center gap-2 flex-1">
                   <div className="flex-1 rounded-md border border-border bg-muted/40 px-4 py-5 text-center">
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/70 font-supporting mb-1">
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground/80 font-supporting mb-1">
                       Step {i + 1}
                     </p>
                     <p className="font-serif text-lg text-foreground">{step}</p>
@@ -691,7 +691,7 @@ export default function NelsonDrPage() {
         {/* Disclaimer */}
         <ScrollReveal>
           <section className="border-t border-border pt-8">
-            <p className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground/70 font-supporting font-semibold mb-3">
+            <p className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground/80 font-supporting font-semibold mb-3">
               Case Study Disclaimer
             </p>
             <p className="text-xs text-muted-foreground/80 leading-relaxed mb-3" data-testid="text-nelson-address">

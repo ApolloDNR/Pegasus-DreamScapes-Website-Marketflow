@@ -215,7 +215,7 @@ export function Footer() {
             </Link>
             <div>
               <p className="font-display text-xl text-foreground tracking-[0.18em]">Pegasus Dreamscapes</p>
-              <p className="text-xs uppercase tracking-[0.3em] text-primary/80 mt-2 font-medium font-supporting">
+              <p className="text-xs uppercase tracking-[0.3em] text-primary mt-2 font-medium font-supporting">
                 Read the property. Underwrite the numbers. Design the route.
               </p>
             </div>
@@ -263,7 +263,7 @@ export function Footer() {
               >
                 <Linkedin className="w-3.5 h-3.5" />
               </a>
-              <span className="text-xs text-muted-foreground/50">Find us on LinkedIn</span>
+              <span className="text-xs text-muted-foreground">Find us on LinkedIn</span>
             </div>
 
             <FooterEmailCapture />

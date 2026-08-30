@@ -33,8 +33,8 @@ export default function MarketflowBuyboxes() {
           <ScrollReveal>
             <div className="flex items-center gap-3 mb-6">
               <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-primary/40 bg-primary/10">
-                <Lock className="w-3 h-3 text-primary" aria-hidden="true" />
-                <span className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold">
+                <Lock className="w-3 h-3 text-[hsl(var(--warm-glow))]" aria-hidden="true" />
+                <span className="text-[10px] uppercase tracking-[0.28em] text-[hsl(var(--warm-glow))] font-supporting font-semibold">
                   Controlled pilot · reviewed access
                 </span>
               </span>
@@ -52,7 +52,7 @@ export default function MarketflowBuyboxes() {
               <Link href="/marketflow/access">
                 <Button
                   size="lg"
-                  className="text-sm uppercase tracking-[0.15em] px-7 py-6 bg-[hsl(var(--copper))] hover:bg-[hsl(27_56%_66%)] text-[hsl(var(--cream-foreground))] font-semibold"
+                  className="text-sm uppercase tracking-[0.15em] px-7 py-6 bg-[hsl(var(--copper))] hover:bg-[hsl(27_56%_66%)] text-[hsl(var(--copper-foreground))] font-semibold"
                   data-testid="button-buyboxes-access"
                 >
                   Request pilot access <ArrowRight className="ml-2 w-4 h-4" />

@@ -34,7 +34,11 @@
   --stone-foreground: 214 55% 11%;
   --navy: 214 47% 23%;
   --navy-foreground: 37 50% 95%;
-  --copper: 25 57% 44%;
+  /* Accessible ink-copper for light surfaces. The former 44% lightness
+     rendered as #b06630: 4.38:1 on white and only 3.96:1 on the warm page
+     background. At 37% it remains recognizably Pegasus copper while clearing
+     AA on white, cream, and the translucent copper filter surfaces. */
+  --copper: 25 57% 37%;
   --copper-foreground: 0 0% 100%;
   --cream: 37 40% 90%;
   --cream-foreground: 214 55% 11%;
@@ -43,15 +47,15 @@
   --sidebar: 37 38% 95%;
   --sidebar-foreground: 214 55% 14%;
   --sidebar-border: 35 20% 88%;
-  --sidebar-primary: 25 57% 44%;
+  --sidebar-primary: 25 57% 37%;
   --sidebar-primary-foreground: 0 0% 100%;
   --sidebar-accent: 38 30% 92%;
   --sidebar-accent-foreground: 214 55% 14%;
-  --sidebar-ring: 25 57% 44%;
+  --sidebar-ring: 25 57% 37%;
   --popover: 0 0% 100%;
   --popover-foreground: 214 55% 11%;
   --popover-border: 35 18% 88%;
-  --primary: 25 57% 44%;
+  --primary: 25 57% 37%;
   --primary-foreground: 0 0% 100%;
   --secondary: 214 47% 23%;
   --secondary-foreground: 37 50% 95%;
@@ -59,7 +63,7 @@
   /* Bumped from 213 22% 38% → 213 30% 28% so body/muted text clears WCAG AA
      against cream (--background 37 50% 95%) and white card surfaces. */
   --muted-foreground: 213 30% 28%;
-  --accent: 25 57% 44%;
+  --accent: 25 57% 37%;
   --accent-foreground: 0 0% 100%;
   /* Wave 3 — brand-tuned error color. Deeper, slightly warmer red that
      sits beside copper without clashing and clears WCAG AA on cream. */
@@ -68,8 +72,8 @@
   --form-error: var(--destructive);
   --form-error-foreground: var(--destructive-foreground);
   --input: 38 22% 90%;
-  --ring: 25 57% 44%;
-  --chart-1: 25 57% 44%;
+  --ring: 25 57% 37%;
+  --chart-1: 25 57% 37%;
   --chart-2: 213 53% 25%;
   --chart-3: 38 38% 60%;
   --chart-4: 213 45% 18%;
@@ -4162,6 +4166,7 @@ body:has(.connect-premium) .peggy-fab {
   padding-bottom: 1.5rem;
   border-bottom: 1px solid var(--line);
 }
+.px-lab-instruments > header .px-kicker { color: var(--accent-ink); }
 .px-lab-instruments > header h2 {
   max-width: 22ch;
   margin: .55rem 0 0;

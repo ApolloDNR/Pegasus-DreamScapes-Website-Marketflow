@@ -39,6 +39,16 @@
   transition: background-color 0.6s ease, color 0.6s ease;
 }
 
+/* `--accent` is the vivid brand copper used for fills, rules, and large
+   display marks. Small light-theme copy needs the companion ink copper.
+   Several shared page primitives use Tailwind's arbitrary text utility, so
+   normalize that one semantic use here instead of darkening every accent fill
+   (which would break the navy-on-copper button pairing). Dark theme keeps the
+   vivid copper declared below. */
+.pg-root:not([data-theme='dark']) .text-\[var\(--accent\)\] {
+  color: var(--accent-ink);
+}
+
 .pg-root[data-theme='dark'] {
   /* ---- Deep night: a darker, more cinematic navy ---- */
   --bg: #091421;

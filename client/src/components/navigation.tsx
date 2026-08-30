@@ -590,7 +590,7 @@ export function Navigation() {
               >
                 <Button
                   size="sm"
-                  className="bg-[hsl(var(--bronze))] hover:bg-[hsl(var(--bronze))]/90 text-white text-[12px] uppercase tracking-[0.14em] font-semibold px-5 h-10 rounded-sm shadow-sm shadow-black/10 focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2"
+                  className="bg-[hsl(var(--bronze))] hover:bg-[hsl(var(--bronze))] text-[hsl(var(--copper-foreground))] text-[12px] uppercase tracking-[0.14em] font-semibold px-5 h-10 rounded-sm shadow-sm shadow-black/10 focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2"
                   data-testid="button-nav-cta"
                 >
                   {PRIMARY_CTA.label}
@@ -718,7 +718,7 @@ export function Navigation() {
                     }}
                   >
                     <Button
-                      className="w-full bg-[hsl(var(--bronze))] hover:bg-[hsl(var(--bronze))]/90 text-white text-[12px] uppercase tracking-[0.14em] font-semibold h-11 rounded-sm"
+                      className="w-full bg-[hsl(var(--bronze))] hover:bg-[hsl(var(--bronze))] text-[hsl(var(--copper-foreground))] text-[12px] uppercase tracking-[0.14em] font-semibold h-11 rounded-sm"
                       data-testid="button-mobile-cta"
                     >
                       {PRIMARY_CTA.label}

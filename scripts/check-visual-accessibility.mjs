@@ -1521,9 +1521,9 @@ try {
           (response) => response.url() === `${baseUrl}/api/opportunities` && response.status() === 503,
           { timeout: 10_000 },
         ));
-        await page.getByRole('button', { name: 'Submit for Review', exact: true }).click();
+        await page.getByRole('button', { name: 'Record Opportunity', exact: true }).click();
         unwrapBrowserEvent(await firstRequestObserved);
-        const pending = page.getByRole('button', { name: 'Sending for Review…', exact: true });
+        const pending = page.getByRole('button', { name: 'Recording…', exact: true });
         await pending.waitFor({ state: 'visible', timeout: 5_000 });
         assert(await pending.isDisabled(), 'Intake pending control remained enabled');
         assert(await pending.getAttribute('aria-busy') === 'true', 'Intake pending control omitted aria-busy');
@@ -1618,7 +1618,16 @@ try {
     await openPage(page, '/marketflow/deals');
     await page.locator('.pg-root nav').waitFor({ state: 'visible' });
     assert(await page.locator('.pg-root footer').count() === 1, 'Premium public footer was not rendered');
-    await page.getByRole('heading', { name: /Reviewed opportunities are not shown as sample inventory/i }).waitFor({ state: 'visible' });
+    await page.getByRole('heading', {
+      name: 'No reviewed live inventory is published.',
+      exact: true,
+    }).waitFor({ state: 'visible' });
+    assert(
+      await page.getByText('Reviewed opportunities are not shown as sample inventory.', {
+        exact: false,
+      }).count() === 1,
+      'MarketFlow public boundary explanation changed or disappeared',
+    );
     const submitDeal = page.getByTestId('button-marketflow-submit-deal');
     assert(
       await submitDeal.evaluate((element) => element.closest('a')?.getAttribute('href'))
@@ -1876,7 +1885,7 @@ try {
 
   await runInteraction('contact form validation', {}, async (page) => {
     await openPage(page, '/contact');
-    await page.getByRole('button', { name: 'Request My Review' }).click();
+    await page.getByRole('button', { name: 'Send Message', exact: true }).click();
     assert(await page.locator('form input:invalid').count() >= 3, 'Empty contact form did not expose required invalid fields');
   });
 

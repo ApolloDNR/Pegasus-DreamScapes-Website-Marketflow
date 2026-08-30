@@ -20,7 +20,7 @@ export default function StrategyLabBlueprintConfirmedPage() {
   return (
     <div className="min-h-screen bg-[hsl(var(--charcoal))] text-cream">
       <section className="max-w-[820px] mx-auto px-6 lg:px-10 pt-28 pb-16 lg:pt-32 lg:pb-24">
-        <div className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-3">
+        <div className="text-[11px] uppercase tracking-[0.3em] text-[hsl(var(--warm-glow))] font-supporting font-semibold mb-3">
           Pegasus Deal Blueprint
         </div>
         <h1 className="font-serif text-4xl sm:text-5xl font-semibold tracking-tight leading-tight mb-4 text-cream">
@@ -33,7 +33,7 @@ export default function StrategyLabBlueprintConfirmedPage() {
         </p>
 
         <div className="border border-cream/15 bg-white/[0.04] p-6 mb-10 shadow-[0_24px_80px_rgba(0,0,0,0.22)]">
-          <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-supporting font-semibold text-primary mb-2">
+          <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-supporting font-semibold text-[hsl(var(--warm-glow))] mb-2">
             <Info className="w-3.5 h-3.5" aria-hidden="true" /> Use the current request path
           </div>
           <ul className="text-sm leading-relaxed space-y-2 text-cream/88">
