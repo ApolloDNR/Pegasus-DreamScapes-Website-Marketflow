@@ -95,7 +95,7 @@ type SellerFormValues = z.infer<typeof sellerFormSchema>;
 export default function Sell() {
   useSEO({
     title: "Strategy Review",
-    description: "Submit a property and get a free Strategy Snapshot. Strategy-first review across acquisition, wholesale, JV, listing, or honest referral. Every property gets a serious review.",
+    description: "Share a property for possible review. Any analysis, offer, referral, listing, partnership, or other next step is conditional and separately documented.",
     image: "https://pegasusdreamscapes.com/og/sell.svg",
   });
 
@@ -129,7 +129,7 @@ function MarketFlowConnectionSection() {
           </div>
           <div className="lg:col-span-7">
             <p className="text-base text-muted-foreground leading-relaxed mb-6">
-              MarketFlow is our private, invite-only deal-flow network. When wholesale or JV is the right lane, your property is matched to vetted buyers and operators inside that network, never blasted to a public list, never shopped on social media.
+              MarketFlow is a private controlled pilot. A submitted property is not automatically published, matched, or distributed, and access, buyer availability, confidentiality, and transaction outcomes are not guaranteed.
             </p>
             <Link href="/marketflow">
               <Button variant="outline" className="text-sm uppercase tracking-[0.15em] font-semibold px-7 py-6" data-testid="button-sell-marketflow">
@@ -157,7 +157,7 @@ function OperatorSection() {
           Founder &amp; Principal · Pegasus DreamScapes Corp
         </p>
         <p className="text-sm text-muted-foreground leading-relaxed mt-6 max-w-xl mx-auto">
-          A real person reviews every submission. Direct line: <a href="tel:+19257448525" className="text-foreground hover:text-primary transition-colors font-medium" data-testid="link-sell-phone">925-744-8525</a> · <a href="mailto:apollo@pegasusdreamscapes.com" className="text-foreground hover:text-primary transition-colors font-medium" data-testid="link-sell-email">apollo@pegasusdreamscapes.com</a>
+          Share context for possible consideration. Direct line: <a href="tel:+19257448525" className="text-foreground hover:text-primary transition-colors font-medium" data-testid="link-sell-phone">925-744-8525</a> · <a href="mailto:apollo@pegasusdreamscapes.com" className="text-foreground hover:text-primary transition-colors font-medium" data-testid="link-sell-email">apollo@pegasusdreamscapes.com</a>
         </p>
       </div>
     </section>
@@ -222,7 +222,7 @@ function HeroSection() {
               ) : (
                 <>
                   Submit a property.<br />
-                  <span className="bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">Get a free Strategy Snapshot.</span>
+                  <span className="bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">Share the situation once.</span>
                 </>
               )}
             </motion.h1>
@@ -243,8 +243,8 @@ function HeroSection() {
               transition={{ duration: 0.8, delay: 0.7 }}
             >
               {isDealJv
-                ? "Bring us the address, the spread, and the structure you're proposing. A real person reviews every wholesaler and JV submission and routes it to the cleanest path: assignment, JV, double close, capital partner, or honest referral. No spam, no pressure."
-                : "Tell us about the property and the situation. A real person reviews every submission and routes it to the cleanest path: acquisition, wholesale, JV, listing, or honest referral. The Snapshot is preliminary and free; no offer figures, no pressure, no spam."}
+                ? "Share the address, proposed spread, structure, and constraints for possible consideration. Submission does not promise review, routing, funding, partnership, or a transaction."
+                : "Tell us about the property and situation for possible consideration. Submission does not promise a Snapshot, analysis, offer, referral, listing, partnership, or response time."}
             </motion.p>
 
             <motion.div
@@ -289,9 +289,9 @@ function HeroSection() {
                 </p>
                 <div className="space-y-6">
                   {[
-                    { num: "48h", label: "Routed within 48 hours" },
-                    { num: "8", label: "Outcome lanes. Never one-size-fits-all" },
-                    { num: "0", label: "Pressure. Honest answers, every time" },
+                    { num: "1", label: "Canonical intake for property and deal context" },
+                    { num: "6", label: "Possible lanes, each subject to fit and written terms" },
+                    { num: "0", label: "Obligation created by submitting the form" },
                   ].map((item, i) => (
                     <div key={i} className="flex items-baseline gap-5 pb-5 border-b border-white/15 last:border-0 last:pb-0">
                       <p className="font-serif text-4xl font-semibold text-white tabular-nums" style={{ minWidth: "3rem" }}>
@@ -320,13 +320,13 @@ function HowItWorksSection() {
     },
     {
       icon: Search,
-      title: "We review and route.",
-      desc: "Comps, scope, structural fit, and best economic path. Our team works the property against all eight lanes.",
+      title: "Pegasus may assess fit.",
+      desc: "If selected, a preliminary review may consider property facts, possible structure, and current capacity.",
     },
     {
       icon: CheckCircle2,
-      title: "You get a real answer.",
-      desc: "A direct conversation, a documented offer, or an honest referral if Pegasus isn't the right fit.",
+      title: "A next step may follow.",
+      desc: "Pegasus may request information or discuss a lane. No response, analysis, offer, referral, or service is promised.",
     },
   ];
 
@@ -343,7 +343,7 @@ function HowItWorksSection() {
             Three steps. No theatrics.
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            We don't lead with a lowball. We lead with a real review of what your property is and what the cleanest path forward looks like.
+            The form creates one clear record of the situation. What happens next depends on fit, information, capacity, diligence, and written terms.
           </p>
         </ScrollReveal>
 
@@ -375,12 +375,12 @@ function HowItWorksSection() {
 
 function OutcomeRoutingSection() {
   const lanes = [
-    { icon: Building, title: "Pegasus Acquisition", desc: "We purchase directly when the numbers and execution path are clear." },
-    { icon: Handshake, title: "Wholesale Assignment", desc: "Off-market assignment to a vetted buyer in our private network." },
-    { icon: Users, title: "JV / Partnership", desc: "Co-GP or operator-aligned structure when value-add scope demands it." },
-    { icon: TrendingUp, title: "Listing Lane", desc: "Traditional MLS through our KW partnership when that's the right answer." },
-    { icon: Shield, title: "Referral", desc: "Routed to a trusted professional when Pegasus isn't the best fit." },
-    { icon: Clock, title: "Incubation", desc: "Held and revisited as conditions change, long-horizon situations welcome." },
+    { icon: Building, title: "Possible Acquisition", desc: "A purchase may be discussed only after diligence and written terms." },
+    { icon: Handshake, title: "Possible Assignment", desc: "Any assignment path depends on legal rights, buyer interest, and a separate agreement." },
+    { icon: Users, title: "Possible JV", desc: "A partnership is considered case by case and requires complete written terms." },
+    { icon: TrendingUp, title: "Possible Representation", desc: "Licensed representation may be available through a separate brokerage agreement." },
+    { icon: Shield, title: "Possible Introduction", desc: "An introduction may be considered; no referral or professional availability is promised." },
+    { icon: Clock, title: "No Current Fit", desc: "Pegasus may decline or take no action. Submissions are not promised future reconsideration." },
   ];
 
   return (
@@ -396,7 +396,7 @@ function OutcomeRoutingSection() {
             What happens after you submit.
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            Your property is reviewed against six possible outcomes. Whichever lane fits best is the lane we recommend, even when that means routing you somewhere else.
+            These are examples of paths that might be discussed, not outcomes attached to every submission. Each requires its own facts, capacity, diligence, and written terms.
           </p>
         </ScrollReveal>
 
@@ -504,7 +504,7 @@ function LeadFormSection() {
       setSubmitted(true);
       toast({
         title: "Submission received",
-        description: "Your Strategy Snapshot is being prepared.",
+        description: "The site recorded your submission. This is a receipt, not a review or service commitment.",
       });
     },
     onError: () => {
@@ -526,10 +526,10 @@ function LeadFormSection() {
             Submission received.
           </h2>
           <p className="font-serif text-2xl sm:text-3xl text-muted-foreground italic mb-8 tracking-[-0.01em]">
-            Your Strategy Snapshot is being prepared.
+            This confirms receipt only.
           </p>
           <p className="text-sm text-muted-foreground leading-relaxed max-w-lg mx-auto">
-            A real person reviews every submission. We'll be in touch within 1–2 business days with the Snapshot and the recommended path. The Snapshot is preliminary. Not an offer, valuation, or guarantee.
+            Pegasus may consider the information for fit and capacity. No Snapshot, analysis, response, recommendation, offer, valuation, referral, or service is promised.
           </p>
         </div>
       </section>
@@ -552,14 +552,14 @@ function LeadFormSection() {
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed mb-10">
             {isDealJvIntent
-              ? "Five minutes. Wholesaler-friendly intake. Share the address, the spread, the structure you're proposing, and the constraints. We'll route it cleanly."
-              : "Five minutes. Real review. Real answer. Whatever you know about the property is enough to start. We'll fill in the rest."}
+              ? "Share the address, proposed spread, structure, and constraints in one record for possible consideration."
+              : "Share what you know about the property in one record for possible consideration."}
           </p>
           <ul className="space-y-4">
             {[
-              { icon: FileCheck, text: "We review against eight outcome lanes" },
+              { icon: FileCheck, text: "One structured record for the property and situation" },
               { icon: Shield, text: "No pressure, no obligation, no spam" },
-              { icon: Clock, text: "Direct response within 1–2 business days" },
+              { icon: Clock, text: "No review or response-time commitment" },
             ].map((item, i) => (
               <li key={i} className="flex items-start gap-3 text-sm text-foreground/85">
                 <item.icon className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
@@ -849,7 +849,7 @@ function LeadFormSection() {
                       <div className="space-y-1">
                         <FormLabel className="text-sm font-normal cursor-pointer">
                           I agree Pegasus Dreamscapes may contact me by email or phone call about
-                          this property. Pegasus uses the information to evaluate and route the
+                          this property. Pegasus may use the information to consider the
                           request. See the <a className="underline" href="/privacy">Privacy Policy</a>{' '}
                           for retention, rights, and deletion requests.
                         </FormLabel>
@@ -869,7 +869,7 @@ function LeadFormSection() {
                       </FormControl>
                       <div className="space-y-1">
                         <FormLabel className="text-sm font-normal cursor-pointer">
-                          I would like to receive a free Strategy Snapshot for this property.
+                          I request consideration for a preliminary Strategy Snapshot and understand none is promised.
                         </FormLabel>
                         <FormMessage />
                       </div>
@@ -924,27 +924,27 @@ function FAQSection() {
   const faqs = [
     {
       question: "What actually happens after I submit?",
-      answer: "Within 48 hours, your property is reviewed against eight possible outcomes: direct acquisition, wholesale, JV, listing through our KW partnership, referral, and others. Whichever lane fits best is the one we recommend. We reach out with a real answer, not a templated lowball.",
+      answer: "The site records your submission. Pegasus may consider it for fit, information needs, and capacity, but submission does not promise review, analysis, routing, an offer, or a response time.",
     },
     {
       question: "Will Pegasus always be the buyer?",
-      answer: "No. And that's the point. Pegasus participates only when the numbers, scope, and structure are clean. Otherwise we wholesale to a vetted buyer in our network, route to a JV partner, or refer you to a trusted professional. The 'No Lead Dies' doctrine means every property gets a path, not necessarily a Pegasus path.",
+      answer: "No. A submission may result in no transaction or response. Any purchase, assignment, JV, introduction, or representation path depends on diligence, availability, and separate written terms.",
     },
     {
       question: "Do I need to make repairs first?",
-      answer: "No. We review properties in any condition. Distressed, occupied, mid-rehab, raw land. Submit it and we'll evaluate based on the situation as it stands.",
+      answer: "You may submit a property in its current condition. That does not mean Pegasus accepts every property type or will evaluate a particular submission.",
     },
     {
       question: "How fast can a transaction close?",
-      answer: "When Pegasus acquires directly, transactions can move in 7–14 days. Wholesale assignments and JV structures vary. The first conversation is always about your timeline and which lane respects it best.",
+      answer: "There is no public closing timeline. Timing depends on title, financing, diligence, counterparties, documents, and the specific transaction terms, if any.",
     },
     {
       question: "Are there any fees or commissions?",
-      answer: "Direct Pegasus acquisitions involve no agent commissions or fees to you. If a listing path is recommended, it would be handled through our licensed Keller Williams partnership with documented terms upfront. We tell you which lane and what the structure is before you commit to anything.",
+      answer: "Submitting is free. Any later purchase, assignment, referral, brokerage, consulting, partnership, or other economics must be disclosed in the applicable written agreement before you accept them.",
     },
     {
       question: "What kinds of properties do you review?",
-      answer: "Single-family homes, condos, 2–4 unit multi-family, raw and infill lots, and select commercial situations across California, primarily Bay Area and Northern California. Out-of-area submissions are still reviewed for referral routing.",
+      answer: "The form accepts context about residential, land, and selected commercial situations. Geographic or property-type fit is determined case by case; out-of-area routing is not promised.",
     },
   ];
 

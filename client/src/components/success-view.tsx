@@ -34,22 +34,22 @@ const DEFAULT_TIMELINE = [
   {
     icon: Inbox,
     title: "Received",
-    sub: "Logged the moment you hit send.",
+    sub: "The site recorded the information you submitted.",
   },
   {
     icon: Search,
-    title: "Triaged",
-    sub: "Acquisitions reads every submission within 48 hours.",
+    title: "Possible triage",
+    sub: "Pegasus may consider the request for fit, information needs, and current capacity.",
   },
   {
     icon: Compass,
-    title: "Strategy review",
-    sub: "We pull comps, run the structural read, decide if the path fits.",
+    title: "Possible review",
+    sub: "Any property or strategy work occurs only if Pegasus elects to proceed.",
   },
   {
     icon: FlagTriangleRight,
-    title: "Path decision",
-    sub: "You get a real answer — even if the answer is a referral elsewhere.",
+    title: "Possible response",
+    sub: "A submission does not guarantee review, an offer, a referral, or a response time.",
   },
 ];
 
@@ -72,7 +72,7 @@ const MARKETFLOW_TIMELINE = [
   {
     icon: FlagTriangleRight,
     title: "Direct response",
-    sub: "Pegasus responds directly if a responsible next step exists.",
+    sub: "Pegasus may respond directly if a responsible next step exists.",
   },
 ];
 
@@ -88,23 +88,23 @@ const FORM_COPY: Record<
 > = {
   submit: {
     kicker: "Submission received",
-    headline: "The property is in review.",
-    lead: "Acquisitions reads every serious submission. You will hear back with the structural read on your property and the next step, even if the answer is that Pegasus is not the right fit.",
+    headline: "Your property submission was recorded.",
+    lead: "This confirms receipt only. Pegasus may review the information for fit and capacity, but no analysis, offer, referral, or response is promised.",
     expectations: [
-      "Most Property Reads come back within 48 hours.",
-      "If we need more on the situation, we will reach out directly — no auto-emails.",
-      "Every property gets a path. Not every property gets an offer.",
+      "You can save the reference shown here for your records.",
+      "Pegasus may request more information if it chooses to consider the opportunity.",
+      "Any service, representation, purchase, or partnership requires separate written terms.",
     ],
     addAnotherLabel: "Submit another property",
   },
   contact: {
     kicker: "Message received",
     headline: "The note is in.",
-    lead: "The team reads every message that lands here. We will reply within 48 hours with a direct answer.",
+    lead: "This page confirms that the site recorded your note. It does not promise review, routing, or a response time.",
     expectations: [
-      "Replies come from the team lead closest to your topic.",
-      "If your note belongs in a structured path (sell, build, capital), we will redirect you to the right intake.",
-      "Press and partnership requests are routed the same day.",
+      "Keep the reference shown here if one was issued.",
+      "Pegasus may direct a relevant note to another intake if capacity and context support it.",
+      "No relationship or obligation is created by sending a message.",
     ],
     addAnotherLabel: "Send another message",
   },
@@ -115,18 +115,18 @@ const FORM_COPY: Record<
     expectations: [
       "Access is discretionary and reviewed case by case.",
       "A request does not guarantee approval, inventory, placement, compensation, or an introduction.",
-      "If the relationship is not a fit now, Pegasus will say so plainly.",
+      "Pegasus may contact you if a responsible next step exists.",
     ],
     addAnotherLabel: "Submit a different request",
   },
   vendor: {
     kicker: "Application received",
-    headline: "Your application is in front of the team.",
-    lead: "We review every vendor intake by hand. If there is a fit on a current or upcoming scope, we will reach out directly.",
+    headline: "Your vendor application was recorded.",
+    lead: "This is an application receipt, not approval, placement, onboarding, or an offer of work. Pegasus may contact you if a future scope and current capacity support a next step.",
     expectations: [
-      "Vendor reviews include reference checks and license verification.",
-      "Approval is rolling — we add new operators as scopes open up.",
-      "We do not sell directory listings. The list stays short on purpose.",
+      "Credentials, licenses, insurance, and references may be requested for a specific future scope.",
+      "Status and eligibility are determined case by case; no application outcome is promised.",
+      "Submitting does not create employment, agency, exclusivity, compensation, or volume rights.",
     ],
     addAnotherLabel: "Submit another application",
   },
@@ -244,13 +244,13 @@ export function SuccessView({
               <Link href="/strategy-lab">
                 <div className="group p-4 rounded-md border border-border/40 bg-background hover:border-primary/30 transition-colors cursor-pointer">
                   <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors mb-1">Run Strategy Lab</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">See where your property fits across 14 strategies — ranges and lane fit — while we prepare the review.</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">Explore educational ranges and possible lanes without implying that a submitted property is under review.</p>
                 </div>
               </Link>
               <Link href="/projects">
                 <div className="group p-4 rounded-md border border-border/40 bg-background hover:border-primary/30 transition-colors cursor-pointer">
                   <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors mb-1">See Our Work</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">Review completed projects and the structural approaches behind each one.</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">View the one case study currently ready for public review, with its stated limits.</p>
                 </div>
               </Link>
             </div>

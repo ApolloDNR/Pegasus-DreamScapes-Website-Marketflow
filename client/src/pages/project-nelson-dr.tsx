@@ -6,6 +6,11 @@ import { CardSurface } from "@/components/ui/card-primitives";
 import { ScrollReveal } from "@/components/animations";
 import { ContourLines } from "@/pegasus/primitives";
 import {
+  NELSON_COST_DISCLOSURE,
+  NELSON_EXECUTION_DISCLOSURE,
+  NELSON_PUBLIC_DESCRIPTION,
+} from "@shared/nelson-facts";
+import {
   ArrowLeft,
   ArrowRight,
   Compass,
@@ -73,26 +78,24 @@ const PIPELINE = [
 
 const TIMELINE = [
   { phase: "Acquire", note: "Acquired on the open market at approximately $600K — a dated property where the work was the opportunity." },
-  { phase: "Define Scope", note: "Set a $105K improvement budget focused on kitchen, bathrooms, flooring, and finish quality — improvements that present clearly to retail buyers without overbuilding." },
-  { phase: "Execute", note: "Ran the improvements in sequence on the defined budget, managed by the Pegasus development team." },
-  { phase: "Prepare", note: "Staged and positioned the finished product for the retail market." },
-  { phase: "Exit", note: "Listed, accepted, and settled at approximately $840K — September 2025." },
+  { phase: "Improvement budget", note: "The available project materials identify an approximate $105K improvement budget." },
+  { phase: "Finished condition", note: "Project photographs document the property before work and in its later finished condition." },
+  { phase: "Exit", note: "The available record identifies an approximate $840K sale settled in September 2025." },
 ];
 
-const CONTROLLED = [
-  "Budget discipline",
-  "Scope discipline",
-  "Execution sequence",
-  "Market positioning",
-  "Exit readiness",
+const DOCUMENTED = [
+  "Approx. $600K acquisition",
+  "Approx. $105K improvement budget",
+  "Approx. $705K basis before other costs",
+  "Approx. $840K sale",
+  "$135K gross spread before other costs",
 ];
 
 const NELSON_JSONLD = {
   "@context": "https://schema.org",
   "@type": "CreativeWork",
   name: "Nelson Dr — Value-Add Execution Case Study",
-  about: "Pegasus DreamScapes value-add residential acquisition and retail exit",
-  creator: { "@type": "Person", name: 'Paolo "Apollo" Duran' },
+  about: NELSON_PUBLIC_DESCRIPTION,
   publisher: { "@type": "Organization", name: "Pegasus DreamScapes Corp." },
   inLanguage: "en",
 };
@@ -344,7 +347,7 @@ export default function NelsonDrPage() {
   useSEO({
     title: "Nelson Dr — Value-Add Execution Case Study",
     description:
-      "How Pegasus DreamScapes read a Richmond / El Sobrante Area property, defined the improvement path, controlled scope and budget, and prepared it for a stronger finished-market exit.",
+      NELSON_PUBLIC_DESCRIPTION,
     image: "/og/nelson-dr.png",
   });
 
@@ -384,9 +387,8 @@ export default function NelsonDrPage() {
             Nelson Dr
           </h1>
           <p className="text-lg sm:text-xl text-white/85 leading-relaxed max-w-2xl mb-8">
-            Acquired around $600K, improved on a disciplined $105K budget, and
-            exited around $840K in September 2025 — one value-add project, read and
-            executed from acquisition through scope, build, and retail exit.
+            {NELSON_PUBLIC_DESCRIPTION} The figures describe this project only and
+            do not establish who performed each brokerage, construction, or management role.
           </p>
 
           <div className="flex flex-wrap gap-2 mb-10">
@@ -490,8 +492,8 @@ export default function NelsonDrPage() {
               Each slider pairs an as-acquired photo from the original listing record
               with finished project photography of the same space. Camera angles may
               differ slightly between the listing record and the finished shoot. All
-              images are real project photography — Pegasus does not publish
-              AI-generated or stand-in property images.
+              images are presented as project photography, not as representative
+              stand-ins or proof that one company performed every project role.
             </p>
 
             {/* Finished interior gallery */}
@@ -529,8 +531,8 @@ export default function NelsonDrPage() {
             </div>
             <p className="text-xs text-muted-foreground/60 mt-3">
               These are documentation-quality photos from the property's as-acquired
-              listing record, shown to record its full starting condition. Pegasus does
-              not publish AI-generated or stand-in property images.
+              listing record, shown to record its starting condition. They are not
+              presented as proof that one company performed every project role.
             </p>
           </div>
         </ScrollReveal>
@@ -542,34 +544,29 @@ export default function NelsonDrPage() {
               The Situation
             </h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              Nelson Dr was the type of property Pegasus is built to read: not simply
-              "good" or "bad," but unfinished in its potential. The opportunity was not
-              just the house — it was the spread between current condition, improvement
-              scope, buyer expectations, and exit strategy.
+              The published record shows a dated residential property, a defined
+              improvement budget, finished-condition photographs, and a later sale.
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              The opportunity required more than a listing mindset. It needed a clear
-              understanding of condition, capital exposure, and the finished exit. The
-              value was not unlocked by one move. It came from sequencing the right
-              moves in the right order.
+              It does not establish the complete scope, capital stack, diligence file,
+              or the identity of every professional involved.
             </p>
           </section>
         </ScrollReveal>
 
-        {/* The Pegasus Read */}
+        {/* Public reading framework */}
         <ScrollReveal>
           <section>
             <h2 className="font-serif text-3xl font-semibold text-foreground mb-3">
-              The Pegasus Read
+              A Public Reading Framework
             </h2>
             <p className="text-muted-foreground leading-relaxed mb-8 max-w-2xl">
-              Pegasus approached Nelson Dr through one disciplined question:{" "}
+              One useful way to read this public record is to ask:{" "}
               <span className="text-foreground font-medium">
                 what path creates the strongest realistic outcome for this property?
               </span>{" "}
-              The answer was not to overbuild or chase every possible upgrade — it was
-              to focus the scope around visible value, buyer confidence, and exit
-              readiness.
+              The public figures do not answer every underwriting or construction
+              question; any current opportunity requires independent diligence.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {LENS.map((item) => {
@@ -645,28 +642,24 @@ export default function NelsonDrPage() {
               The Outcome
             </h2>
             <p className="text-muted-foreground leading-relaxed mb-4">
-              The result was a clean value-add execution path: acquire at the right
-              basis, improve the property with a controlled scope, and position the
-              finished product for a stronger exit. On a project level, the asset was
-              acquired around $600K, improved with a $105K budget, and exited around
-              $840K, settling in September 2025.
+              The available figures show an acquisition around $600K, an improvement
+              budget around $105K, and a sale around $840K in September 2025.
             </p>
             <p className="text-muted-foreground leading-relaxed">
-              Nelson Dr is not presented as a promise that every property can produce
-              the same result. It is proof of process: Pegasus reads the asset, studies
-              the path, and executes with discipline.
+              Nelson Dr is not a promise of future results or proof that the same roles,
+              costs, timing, or outcome will apply elsewhere. {NELSON_COST_DISCLOSURE}
             </p>
           </section>
         </ScrollReveal>
 
-        {/* What Pegasus controlled */}
+        {/* What is documented */}
         <ScrollReveal>
           <section>
             <h2 className="font-serif text-3xl font-semibold text-foreground mb-6">
-              What Pegasus Controlled
+              What the Public Record Documents
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {CONTROLLED.map((item) => (
+              {DOCUMENTED.map((item) => (
                 <div
                   key={item}
                   className="flex items-center gap-3 rounded-md border border-border bg-muted/30 px-4 py-3"
@@ -686,11 +679,8 @@ export default function NelsonDrPage() {
               What This Demonstrates
             </h2>
             <p className="text-muted-foreground leading-relaxed">
-              Some properties are not obvious wins at first glance. Some need the right
-              scope, the right capital plan, or the right exit. Some need someone to
-              structure the deal before the market sees the finished version. That is
-              where Pegasus DreamScapes operates — in the path to the finished product,
-              not just the purchase.
+              This case study demonstrates how fixed project-level facts can be shown
+              with real images and explicit limits. {NELSON_EXECUTION_DISCLOSURE}
             </p>
           </CardSurface>
         </ScrollReveal>
@@ -703,11 +693,11 @@ export default function NelsonDrPage() {
             </h2>
             <p className="text-muted-foreground leading-relaxed max-w-xl mx-auto mb-8">
               Whether the property is distressed, dated, inherited, underused, or simply
-              unclear in its next move, Pegasus can review the situation and help
-              identify the path.
+              unclear in its next move, you may share it for possible consideration.
+              Submission does not promise a review, recommendation, offer, or service.
             </p>
             <div className="flex flex-col sm:flex-row gap-3 justify-center">
-              <Link href="/submit">
+              <Link href="/bring-an-opportunity">
                 <Button
                   size="lg"
                   className="bg-primary hover:bg-primary/90 text-primary-foreground text-[12px] uppercase tracking-[0.18em] font-semibold px-8 h-12 rounded-sm w-full sm:w-auto"
@@ -750,8 +740,8 @@ export default function NelsonDrPage() {
             <p className="text-xs text-muted-foreground/80 leading-relaxed mb-3">
               Past project outcomes are not guarantees of future results. Every property,
               market, seller situation, capital structure, construction scope, timeline,
-              and exit path is different. Pegasus DreamScapes reviews opportunities on a
-              case-by-case basis, and any acquisition, partnership, listing, referral,
+              and exit path is different. Pegasus DreamScapes may consider opportunities
+              case by case, and any acquisition, partnership, listing, referral,
               JV, or disposition path is subject to underwriting, diligence, written
               agreement, and applicable law.
             </p>
@@ -762,10 +752,11 @@ export default function NelsonDrPage() {
               making decisions.
             </p>
             <p className="text-xs text-muted-foreground/80 leading-relaxed">
-              Licensed real estate representation, when applicable, is provided by Paolo
-              "Apollo" Duran, California real estate salesperson, DRE #02333658, through
-              Keller Williams Realty East Bay. Pegasus DreamScapes is not currently
-              presented as its own real estate brokerage.
+              This site uses Paolo “Apollo” Duran as a public-facing name. For license
+              verification, CA DRE #02333658 is listed under Duran Ramirez, Paolo Ariel;
+              the responsible broker listed in DRE records is BMP Realty Inc DBA Keller
+              Williams Realty-East Bay. Verify current status before engagement. This
+              case study does not identify who provided brokerage representation on Nelson.
             </p>
           </section>
         </ScrollReveal>

@@ -319,6 +319,9 @@ describe("public property snapshot trust boundary", () => {
       expect(body.snapshot.lanes[0].headline).toMatch(
         /^Based on user-entered, unverified inputs, the automated model indicates:/,
       );
+      expect(body.snapshot.lanes[0].headline).toContain(
+        "the automated model indicates this path.",
+      );
       expect(body.snapshot.memo.paragraph).toMatch(
         /^Automated model summary based on user-entered, unverified inputs:/,
       );
@@ -370,6 +373,7 @@ describe("public property snapshot trust boundary", () => {
       const svg = await res.text();
       expect(svg).toContain("MODELED PATH · USER INPUTS");
       expect(svg).toContain("MODEL OUTPUT · UNVERIFIED");
+      expect(svg).not.toContain("UNVERIFIED · AUTOMATED MODEL FIT:");
       expect(svg).not.toContain("RECOMMENDED PATH");
       expect(svg).not.toContain("VERDICT ·");
     } finally {

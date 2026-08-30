@@ -95,7 +95,11 @@ function neutralizeUnverifiedAttribution(value: string): string {
       "the automated model processed",
     )
     .replace(
-      /\bPegasus(?:\s+DreamScapes(?:\s+Corp\.?)?)?\s+(?:recommends?|recommendation)\b/gi,
+      /\bPegasus(?:\s+DreamScapes(?:\s+Corp\.?)?)?\s+recommends?\b/gi,
+      "the automated model indicates",
+    )
+    .replace(
+      /\bPegasus(?:\s+DreamScapes(?:\s+Corp\.?)?)?\s+recommendation\b/gi,
       "automated model consideration",
     )
     .replace(/\brecommends?\b/gi, "indicates")
@@ -104,6 +108,11 @@ function neutralizeUnverifiedAttribution(value: string): string {
       /\bevery (?:submission|property)[^.]{0,100}\b(?:reviewed|review)\b/gi,
       "A separate human review may be requested",
     );
+}
+
+export function getPublicModelFitDisplayLabel(value: unknown): string {
+  const clean = sanitizePublicText(value, 120) ?? "Needs more data";
+  return clean.replace(/^Automated model fit:\s*/i, "") || "Needs more data";
 }
 
 function sanitizeStringArray(

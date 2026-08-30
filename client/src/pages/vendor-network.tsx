@@ -61,7 +61,7 @@ export default function VendorNetwork() {
   useSEO({
     title: "Vendor Network",
     description:
-      "Apply to the Pegasus DreamScapes Corp. private vendor network. Vetted contractors, lenders, agents, and operators routed to active deal flow.",
+      "Submit a vendor profile for possible future project consideration. Application does not promise review, approval, placement, work, volume, or compensation.",
     image: "/og/default.png",
   });
 
@@ -116,9 +116,9 @@ function HeroSection() {
             transition={{ duration: 0.7, delay: 0.3 }}
             data-testid="text-vendor-hero"
           >
-            Operators we trust.<br />
+            Vendor applications.<br />
             <span className="bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">
-              Routed to real work.
+              Considered case by case.
             </span>
           </motion.h1>
 
@@ -128,7 +128,7 @@ function HeroSection() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.55 }}
           >
-            The Pegasus Vendor Network is how we line up the contractors, lenders, agents, and specialists behind every project. Vetted intake, real references, and a private list. Not a public marketplace.
+            This page collects vendor profiles that may be considered for a future scope. It is not a directory, roster of approved vendors, employment portal, or promise of active work.
           </motion.p>
         </div>
       </div>
@@ -141,7 +141,7 @@ const VENDOR_CATEGORIES = [
   {
     icon: HardHat,
     title: "General Contractors",
-    desc: "Full-scope GCs for ADUs, flips, and ground-up. License + insurance required.",
+    desc: "General-contractor profiles for possible future scopes; applicable licenses and insurance may be requested.",
   },
   {
     icon: Wrench,
@@ -221,14 +221,14 @@ const JOIN_STEPS = [
   {
     icon: ShieldCheck,
     step: "02",
-    title: "Vetting & references",
-    desc: "We review credentials, call references, and look at past work. Vendors are flagged Submitted, Under Review, Approved, or Preferred internally.",
+    title: "Possible diligence",
+    desc: "For a specific future scope, Pegasus may request credentials, licenses, insurance, references, and work samples.",
   },
   {
     icon: Handshake,
     step: "03",
-    title: "Routed to active work",
-    desc: "Approved vendors get matched to scopes inside live Pegasus projects. Preferred vendors are first call on the lanes they fit.",
+    title: "Separate scope, if offered",
+    desc: "Any invitation, diligence, scope, schedule, payment, or relationship exists only in later written terms.",
   },
 ];
 
@@ -238,20 +238,20 @@ const PEGASUS_STANDARDS = [
     desc: "Current GL coverage, workers' comp where applicable, and an active license on file for any trade that requires one.",
   },
   {
-    title: "Real references, recently checked",
-    desc: "We call 2–3 recent references: clients, GCs, or capital partners who can speak to scope, schedule, and behavior on site.",
+    title: "References may be checked",
+    desc: "A future scope may require recent references who can speak to work quality, schedule, and site conduct.",
   },
   {
     title: "Clear scope, written change orders",
     desc: "Quotes are itemized. Change orders are written, not verbal. Surprise invoices break trust and end the relationship.",
   },
   {
-    title: "Communication on a project clock",
-    desc: "Same-day acknowledgement, next-day answers. If a date is going to slip, we want to hear it before the date, not after.",
+    title: "Communication terms in writing",
+    desc: "A future scope can set acknowledgement, update, escalation, and delay-notice expectations in writing.",
   },
   {
     title: "Safe sites, clean handoffs",
-    desc: "PPE, lien waivers, permits where required, and a broom-clean handoff. We document the standard with photos at each milestone.",
+    desc: "A future scope may require PPE, lien waivers, permits, site records, milestone photos, and handoff criteria.",
   },
   {
     title: "Aligned with the doctrine",
@@ -271,10 +271,10 @@ function PegasusStandardSection() {
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5 text-white">
-            The bar we hold every vendor to.
+            Criteria a future scope may require.
           </h2>
           <p className="text-base text-cream/85 leading-relaxed">
-            Scope it right, price it straight, finish what you start. Vendors who hold that bar get routed to real work, repeatedly.
+            These are example expectations, not evidence of an approved bench or a promise of work. The signed project agreement controls.
           </p>
         </ScrollReveal>
 
@@ -310,7 +310,7 @@ function HowToJoinSection() {
             Three steps. No pay-to-play.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed">
-            We don't sell directory listings. The list is short on purpose so we can keep the bar high.
+            The application creates a profile only. Pegasus may decline, request more information, or take no action.
           </p>
         </ScrollReveal>
 
@@ -330,7 +330,7 @@ function HowToJoinSection() {
         </div>
 
         <p className="mt-12 text-center text-xs text-muted-foreground/80 max-w-2xl mx-auto leading-relaxed">
-          Submitting an application doesn't guarantee approval, placement, or volume. Vendor status is reviewed on an ongoing basis.
+          Submitting does not guarantee review, approval, placement, work, volume, compensation, or a future response.
         </p>
       </div>
     </section>
@@ -414,7 +414,7 @@ function VendorFormSection() {
             Apply to be considered.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed">
-            Real numbers, real references, real availability. The more specific, the faster we can route you.
+            Share accurate credentials, references, and availability. Completeness helps preserve the record but does not create review or routing priority.
           </p>
         </ScrollReveal>
 

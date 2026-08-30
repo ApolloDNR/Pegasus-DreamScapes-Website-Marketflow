@@ -30,11 +30,11 @@ export default function StrategyLabBlueprintConfirmedPage() {
           Blueprint request received.
         </h1>
         <p className="text-base text-cream/78 leading-relaxed mb-10">
-          Thank you. Your Blueprint request is ready for a written Pegasus read
+          Thank you. The site recorded your Blueprint request
           {referenceId ? <> (reference <span className="font-mono text-cream" data-testid="text-request-id">#{referenceId}</span>)</> : null}.
           This is not an order confirmation, payment receipt, or offer. Pegasus
-          reviews the property first, then confirms fit, scope, fee, and next
-          steps before any Blueprint work begins.
+          may consider the property for fit and capacity, but no review, response,
+          scope, timing, price, or Blueprint engagement is promised.
         </p>
 
         <div className="border border-cream/15 bg-white/[0.04] p-6 mb-10 shadow-[0_24px_80px_rgba(0,0,0,0.22)]">
@@ -42,9 +42,9 @@ export default function StrategyLabBlueprintConfirmedPage() {
             <CheckCircle2 className="w-3.5 h-3.5" /> What happens next
           </div>
           <ul className="text-sm leading-relaxed space-y-2 text-cream/88">
-            <li>1. Pegasus reviews the situation, property details, and urgency.</li>
-            <li>2. If a Blueprint is the right tier, scope, fee, and timing are confirmed directly.</li>
-            <li>3. Work begins only after written scope and payment terms are approved.</li>
+            <li>1. Keep the reference above as proof of receipt.</li>
+            <li>2. Pegasus may request more information if it elects to consider the request.</li>
+            <li>3. Work exists only after both parties accept written scope, fee, timing, author, and limits.</li>
           </ul>
         </div>
 

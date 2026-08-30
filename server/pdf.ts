@@ -1,6 +1,7 @@
 import PDFDocument from "pdfkit";
 import { PassThrough } from "stream";
 import {
+  getPublicModelFitDisplayLabel,
   projectPublicPropertyAnalysis,
   projectPublicSavedAnalysis,
   sanitizeCalculatorRecord,
@@ -86,30 +87,47 @@ function addHeader(doc: PDFKit.PDFDocument, title: string, subtitle?: string): v
   }
 }
 
+function withoutBottomMargin(
+  doc: PDFKit.PDFDocument,
+  draw: () => void,
+): void {
+  const previousBottomMargin = doc.page.margins.bottom;
+  doc.page.margins.bottom = 0;
+  try {
+    draw();
+  } finally {
+    doc.page.margins.bottom = previousBottomMargin;
+  }
+}
+
 function addFooter(doc: PDFKit.PDFDocument): void {
   const pageHeight = doc.page.height;
 
-  doc
-    .fontSize(8)
-    .fillColor(BRAND_COLORS.textMuted)
-    .font("Helvetica")
-    .text(
-      `Generated ${new Date().toLocaleDateString()}  |  Pegasus DreamScapes Corp  |  apollo@pegasusdreamscapes.com`,
-      50,
-      pageHeight - 40,
-      { align: "center", width: doc.page.width - 100 }
-    );
+  // PDFKit treats text below the content margin as overflow and silently adds
+  // a page. Suspend only the bottom margin while drawing the fixed footer.
+  withoutBottomMargin(doc, () => {
+    doc
+      .fontSize(8)
+      .fillColor(BRAND_COLORS.textMuted)
+      .font("Helvetica")
+      .text(
+        `Generated ${new Date().toLocaleDateString()}  |  Pegasus DreamScapes Corp  |  apollo@pegasusdreamscapes.com`,
+        50,
+        pageHeight - 40,
+        { align: "center", width: doc.page.width - 100 }
+      );
 
-  doc
-    .fontSize(8)
-    .fillColor(BRAND_COLORS.accent)
-    .font("Helvetica-Oblique")
-    .text(
-      getSavedAnalysisDisclosureCopy(),
-      50,
-      pageHeight - 25,
-      { align: "center", width: doc.page.width - 100 }
-    );
+    doc
+      .fontSize(8)
+      .fillColor(BRAND_COLORS.accent)
+      .font("Helvetica-Oblique")
+      .text(
+        "User-entered inputs · Automated estimates · Not Pegasus-verified · Scenario analysis only · Not advice, an offer, or a guarantee.",
+        50,
+        pageHeight - 25,
+        { align: "center", width: doc.page.width - 100, lineBreak: false }
+      );
+  });
 }
 
 export function getSavedAnalysisDisclosureCopy(): string {
@@ -1175,14 +1193,17 @@ function snapshotCoverPage(doc: PDFKit.PDFDocument, a: PropertyAnalysisLike): vo
   doc.fontSize(12).fillColor("#F6EFE4").fillOpacity(0.85).font(bf("serifItalic"))
     .text(topLane?.headline ?? "", 50, doc.y + 4, { width: w - 100 }).fillOpacity(1);
   doc.fontSize(9).fillColor(BRAND_COLORS.accent).font(bf("sansBold"))
-    .text(`AUTOMATED MODEL FIT · ${(topLane?.verdictLabel ?? "—").toUpperCase()}`, 50, bandY + 130, { characterSpacing: 1.5 });
+    .text(`AUTOMATED MODEL FIT · ${getPublicModelFitDisplayLabel(topLane?.verdictLabel).toUpperCase()}`, 50, bandY + 130, { characterSpacing: 1.5 });
 
-  // Footer mark
-  doc.fontSize(8).fillColor("#F6EFE4").fillOpacity(0.7).font(bf("sans"))
-    .text(`Automated model v${snap.engineVersion ?? "—"} · User-entered inputs · Unverified · ${new Date().toLocaleDateString()}`,
-      50, h - 50, { width: w - 100 }).fillOpacity(1);
-  doc.fontSize(8).fillColor(BRAND_COLORS.accent).font(bf("sansBold"))
-    .text("apollo@pegasusdreamscapes.com · 925-744-8525", 50, h - 35, { width: w - 100, align: "right" });
+  // Footer mark. The cover also reaches below PDFKit's normal content margin,
+  // so keep these fixed-position marks from creating overflow pages.
+  withoutBottomMargin(doc, () => {
+    doc.fontSize(8).fillColor("#F6EFE4").fillOpacity(0.7).font(bf("sans"))
+      .text(`Automated model v${snap.engineVersion ?? "—"} · User-entered inputs · Unverified · ${new Date().toLocaleDateString()}`,
+        50, h - 50, { width: w - 100 }).fillOpacity(1);
+    doc.fontSize(8).fillColor(BRAND_COLORS.accent).font(bf("sansBold"))
+      .text("apollo@pegasusdreamscapes.com · 925-744-8525", 50, h - 35, { width: w - 100, align: "right" });
+  });
 }
 
 function snapshotPageHeader(doc: PDFKit.PDFDocument, kicker: string, title: string): number {
@@ -1206,14 +1227,16 @@ const SNAPSHOT_FOOTER =
 function snapshotPageFooter(doc: PDFKit.PDFDocument, _legacyLabel?: string): void {
   void _legacyLabel; // legacy per-page label retired — footer is canonical now.
   const y = doc.page.height - 40;
-  // Hairline rule above the footer for visual quietness.
-  doc.moveTo(50, y - 6).lineTo(doc.page.width - 50, y - 6)
-    .strokeColor(BRAND_COLORS.accent).lineWidth(0.4).stroke();
-  doc.fontSize(7.5).fillColor(BRAND_COLORS.textMuted).font(bf("sans"))
-    .text(SNAPSHOT_FOOTER, 50, y, { width: doc.page.width - 200, align: "left" });
-  doc.fontSize(7.5).fillColor(BRAND_COLORS.textMuted).font(bf("sans"))
-    .text(new Date().toLocaleDateString(),
-      50, y - 18, { width: doc.page.width - 100, align: "right" });
+  withoutBottomMargin(doc, () => {
+    // Hairline rule above the footer for visual quietness.
+    doc.moveTo(50, y - 6).lineTo(doc.page.width - 50, y - 6)
+      .strokeColor(BRAND_COLORS.accent).lineWidth(0.4).stroke();
+    doc.fontSize(7.5).fillColor(BRAND_COLORS.textMuted).font(bf("sans"))
+      .text(SNAPSHOT_FOOTER, 50, y, { width: doc.page.width - 200, align: "left" });
+    doc.fontSize(7.5).fillColor(BRAND_COLORS.textMuted).font(bf("sans"))
+      .text(new Date().toLocaleDateString(),
+        50, y - 18, { width: doc.page.width - 100, align: "right" });
+  });
 }
 
 function snapshotTwoCol(doc: PDFKit.PDFDocument, rows: [string, string][], y: number): number {

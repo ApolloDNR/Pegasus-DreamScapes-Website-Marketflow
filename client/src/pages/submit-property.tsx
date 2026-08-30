@@ -156,8 +156,7 @@ const CONSENT_COPY =
   "No agency relationship, offer, or agreement is created by submitting this form.";
 
 const CONFIRMATION_COPY =
-  "Your submission has been received. Pegasus will review the property and route it to the appropriate lane: " +
-  "acquisition, development, disposition, asset management, licensed representation, referral, or pass/no-fit.";
+  "Your submission has been recorded. This receipt does not promise review, routing, a response, an offer, representation, referral, or any other service.";
 
 type FormState = {
   visitorType: string;
@@ -248,7 +247,7 @@ function ChoiceGrid({ options, value, onPick, cols = 2 }:
 export default function SubmitPropertyPage() {
   useSEO({
     title: "Bring an Opportunity",
-    description: "Bring the property, contract, project, or plan. Pegasus reads the situation and routes the right next step.",
+    description: "Record a property, contract, project, or plan for possible consideration. Submission does not promise review, routing, service, or response timing.",
     image: "/og/submit.png",
   });
 
@@ -764,8 +763,8 @@ export default function SubmitPropertyPage() {
                 </p>
               )}
               <p id="sp-privacy-notice" className="text-xs leading-relaxed text-[#6e6455] dark:text-[#9aa6b7]">
-                Pegasus uses this information to evaluate and route the request and may share it
-                with service providers or qualified professionals involved in that review. The{' '}
+                Pegasus may use this information to consider the request and may share it
+                with service providers as described in the privacy notice. The{' '}
                 <a className="underline underline-offset-2" href="/privacy">Privacy Policy</a>{' '}
                 explains retention and your rights. To request access or deletion, email{' '}
                 <a className="underline underline-offset-2" href="mailto:apollo@pegasusdreamscapes.com">
@@ -821,15 +820,16 @@ export default function SubmitPropertyPage() {
             </button>
           </div>
           <p className="mt-5 text-center text-[12px] text-[#6e6455] dark:text-[#7d8ba0] lg:hidden">
-            Reviewed by a person within 48 hours. No agency created by submitting.
+            Receipt is immediate. Review and response timing are not promised. No agency is created by submitting.
           </p>
         </form>
 
         <p className="mt-8 text-xs leading-relaxed text-[#6e6455] dark:text-[#7d8ba0]">
           Pegasus Dreamscapes Corp. is a real estate investment, development, and strategy company.
-          Pegasus Dreamscapes Corp. is not a real estate brokerage. Licensed real estate representation,
-          when applicable, is provided by Paolo “Apollo” Duran through Keller Williams East Bay.
-          CA DRE #02333658. No agency relationship is created without a written agreement.
+          Pegasus Dreamscapes Corp. is not a real estate brokerage. This site uses Paolo “Apollo”
+          Duran as a public-facing name. For license verification, CA DRE #02333658 is listed under
+          Duran Ramirez, Paolo Ariel, with responsible broker BMP Realty Inc DBA Keller Williams
+          Realty-East Bay. Verify current status. No agency relationship exists without a written agreement.
         </p>
         </div>
 
@@ -840,9 +840,9 @@ export default function SubmitPropertyPage() {
             <ol className="mt-5 space-y-5">
               {[
                 ["Received", "Your submission creates a private record — never a public listing."],
-                ["Read", "A person reviews it. Numbers first, adjectives second."],
-                ["Routed", "It goes to the right lane: acquisition, development, disposition, asset management, representation, or referral."],
-                ["Your call", "We lay out the options; you choose. If there is no fit, we say so plainly."],
+                ["Possible consideration", "Pegasus may assess fit, information needs, and current capacity."],
+                ["Possible next step", "If Pegasus elects to proceed, it may request information or discuss a lane."],
+                ["Separate terms", "Any analysis, offer, service, representation, referral, or transaction requires its own terms."],
               ].map(([t, d], i) => (
                 <li key={t} className="flex gap-3">
                   <span className="mt-px font-serif text-[15px] leading-none text-[#8b5a36] dark:text-[#c88a5d]">{`0${i + 1}`}</span>
@@ -855,9 +855,9 @@ export default function SubmitPropertyPage() {
             </ol>
             <div className="mt-6 border-t border-[#d8cdbc] pt-5 dark:border-[#2a3a4e]">
               <ul className="space-y-2 text-[12px] leading-relaxed text-[#6b5f4d] dark:text-[#b9a888]">
-                <li className="flex gap-2"><span aria-hidden="true" className="mt-1.5 h-1 w-1 rounded-full bg-[#9c5a24]" />Response within 48 hours</li>
+                <li className="flex gap-2"><span aria-hidden="true" className="mt-1.5 h-1 w-1 rounded-full bg-[#9c5a24]" />No review or response-time commitment</li>
                 <li className="flex gap-2"><span aria-hidden="true" className="mt-1.5 h-1 w-1 rounded-full bg-[#9c5a24]" />No agency created by submitting</li>
-                <li className="flex gap-2"><span aria-hidden="true" className="mt-1.5 h-1 w-1 rounded-full bg-[#9c5a24]" />Nothing shared without written agreement</li>
+                <li className="flex gap-2"><span aria-hidden="true" className="mt-1.5 h-1 w-1 rounded-full bg-[#9c5a24]" />Data use follows the privacy notice</li>
               </ul>
             </div>
           </div>

@@ -2,10 +2,9 @@ import { ArrowRight } from "lucide-react";
 
 /**
  * Public Website v1 (issue #22) — Departments.
- * PRD §7.2 + COPY_DECK §4: the operating model page. Four departments,
- * each with its role, what it handles, and an example route. Copy is
- * locked; the operating spine is Acquisitions → Development →
- * Dispositions → Asset Management.
+ * Public explanation of the four operating functions Pegasus may use.
+ * These are accountability lanes, not a claim that four separately
+ * staffed departments are available on every engagement.
  */
 
 const DEPARTMENTS: {
@@ -16,7 +15,7 @@ const DEPARTMENTS: {
 }[] = [
   {
     name: "Acquisitions",
-    role: "Acquisitions reviews and structures incoming opportunities.",
+    role: "The acquisitions lane covers initial review and possible transaction structure.",
     handles: [
       "Property intake",
       "Seller motivation",
@@ -30,7 +29,7 @@ const DEPARTMENTS: {
   },
   {
     name: "Development",
-    role: "Development creates value when the property needs work.",
+    role: "The development lane frames a possible improvement scope when a property needs work.",
     handles: [
       "Scope planning",
       "Renovation strategy",
@@ -44,7 +43,7 @@ const DEPARTMENTS: {
   },
   {
     name: "Dispositions",
-    role: "Dispositions moves the asset toward the right exit.",
+    role: "The dispositions lane considers possible sale, assignment, or partner paths.",
     handles: [
       "Property marketing",
       "Buyer network",
@@ -58,7 +57,7 @@ const DEPARTMENTS: {
   },
   {
     name: "Asset Management",
-    role: "Asset Management protects and operates long-term holds.",
+    role: "The asset-management lane frames responsibilities for a possible long-term hold.",
     handles: [
       "Rental strategy",
       "Portfolio operations",
@@ -82,12 +81,12 @@ export default function DepartmentsPage() {
             The Pegasus operating model
           </p>
           <h1 className="font-serif text-4xl sm:text-6xl leading-[1.05]">
-            Four departments. One operating system.
+            Four functions. One operating model.
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-[17px] leading-relaxed text-[#e8ded0]/80">
-            Every opportunity moves through the departments it actually needs. Some deals only
-            require acquisition and disposition. Others need development, asset management, or
-            licensed representation. Pegasus routes the path before forcing the outcome.
+            These labels describe work that may be required; they do not represent a promise of
+            separate staffing or service on every submission. Any review, project work, or licensed
+            representation depends on fit, diligence, capacity, and a separate written agreement.
           </p>
           <p className="mt-8 text-[12px] uppercase tracking-[0.2em] text-[#e8ded0]/50">
             Acquisitions <span className="text-[#b47645]">→</span> Development{" "}
@@ -106,7 +105,7 @@ export default function DepartmentsPage() {
           <div className="mx-auto grid max-w-5xl gap-10 lg:grid-cols-[1fr_1.2fr]">
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#c8915b] mb-3">
-                Department {String(i + 1).padStart(2, "0")}
+                Function {String(i + 1).padStart(2, "0")}
               </p>
               <h2 className="font-serif text-3xl sm:text-4xl">{d.name}</h2>
               <p className="mt-4 text-[16px] leading-relaxed text-[#e8ded0]/80">{d.role}</p>
@@ -143,12 +142,12 @@ export default function DepartmentsPage() {
             Have a property, deal, or situation worth reviewing?
           </h2>
           <p className="mt-4 text-[15px] leading-relaxed text-[#e8ded0]/70">
-            Submit the property, explain the situation, and Pegasus will route it to the right
-            lane.
+            Share the property and situation for possible review. If Pegasus has a responsible
+            next step, the applicable lane and terms can be discussed directly.
           </p>
           <div className="mt-9">
             <a
-              href="/submit-property"
+              href="/bring-an-opportunity"
               className="inline-flex items-center gap-2 rounded-md bg-[#b47645] px-8 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-white hover:bg-[#8b5a36] transition-colors"
             >
               Submit a Property <ArrowRight className="h-4 w-4" />

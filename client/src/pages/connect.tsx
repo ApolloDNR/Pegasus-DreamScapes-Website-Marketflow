@@ -42,7 +42,7 @@ const LANES: ConnectLane[] = [
     label: "I need to sell or solve a property situation",
     short: "Distress, inherited property, repairs, vacancy, pressure, or a sale that is not simple.",
     detail:
-      "Start here when the property needs structure before it needs a sales pitch. Pegasus looks at the property, the pressure, and the possible paths: represent, sell, partner, develop, route, or pass with a clear reason.",
+      "Start here to record the property, pressure, and possible paths for consideration. Submission does not promise review, routing, service, or a response.",
     nextStep: "Send the address, condition, timeline, and the truth of the situation.",
     standard: "No blind offers. No pressure. No promise of a result before the facts are known.",
     cta: "Send the property",
@@ -56,7 +56,7 @@ const LANES: ConnectLane[] = [
     label: "I want Apollo to represent me",
     short: "Listing representation, buyer representation, pricing, negotiation, and closing discipline.",
     detail:
-      "Use this lane when the right answer is licensed representation. Apollo can represent sellers and buyers through Keller Williams Realty East Bay when agency is the proper path.",
+      "Use this lane to ask about current licensed-representation availability. Any agency relationship requires current license verification and a separate written brokerage agreement.",
     nextStep: "Review the representation page before any agency conversation begins.",
     standard: "Pegasus strategy and licensed real estate representation stay clearly separated.",
     cta: "See representation",
@@ -82,9 +82,9 @@ const LANES: ConnectLane[] = [
     audience: "Wholesaler or finder",
     routeCode: "DEAL FINDER",
     label: "I have a deal or lead",
-    short: "Bring the opportunity. Keep the relationship clean. Get a straight answer.",
+    short: "Bring the opportunity once, with enough context to discuss a possible path.",
     detail:
-      "If the deal fits the Pegasus buy box, Pegasus can buy. If another buyer is the cleaner move, we can discuss a JV or network path under written terms.",
+      "Pegasus may consider a purchase, JV, or other path, but no buyer, review, source protection, response, or transaction is promised by this page.",
     nextStep: "Submit the deal once there is enough context to protect the source and the path.",
     standard: "We do not build trust by taking someone's lead around them.",
     cta: "Bring the deal",
@@ -98,7 +98,7 @@ const LANES: ConnectLane[] = [
     label: "I want to build, renovate, or reposition",
     short: "ADU, value-add, scope, budget logic, timeline control, and finished-product thinking.",
     detail:
-      "This lane is for properties where the work itself creates the value. Pegasus Development thinks through scope, cost, timeline, and the finished asset before work begins.",
+      "This lane explains a framework for thinking about scope, cost, timeline, and the finished asset. Any project service requires separate diligence and written terms.",
     nextStep: "Bring the site, scope, rough budget, and the finished asset you are trying to create.",
     standard: "Development is treated as operating work, not decoration.",
     cta: "See development",
@@ -126,9 +126,9 @@ const LANES: ConnectLane[] = [
     label: "I want to work with Pegasus",
     short: "Contractors, trades, lenders, agents, inspectors, and reliable operators.",
     detail:
-      "The vendor lane is for people who can help active property work move cleanly. Reliable scope, clean communication, and repeatable execution matter here.",
+      "The vendor lane accepts profiles for possible future scope consideration. It is not evidence of active work or an approved bench.",
     nextStep: "Share the trade, market, capacity, and proof of reliable work.",
-    standard: "Good operators get routed to real work when the fit is right.",
+    standard: "Application does not promise review, approval, placement, work, or volume.",
     cta: "Apply to network",
     icon: Network,
   },
@@ -363,7 +363,7 @@ function LaneDirectory({
       <div className="connect-shell">
         <div className="connect-section-head">
           <p className="connect-eyebrow">Routing ledger</p>
-          <h2>Every serious conversation starts in the correct lane.</h2>
+          <h2>Choose the lane that best describes the request.</h2>
           <p>
             Pick the door that matches the work. If the situation is messy, start with property intake or send a plain note. Pegasus can name the lane after the facts are clear.
           </p>
@@ -411,15 +411,15 @@ function StandardsBand() {
         </div>
         <div className="connect-standards-copy">
           <p>
-            Pegasus Dreamscapes is an East Bay real estate operating company. It can read property situations, development paths, JV opportunities, buyer needs, and operator relationships.
+            Pegasus Dreamscapes presents educational frameworks and request paths for property situations, development, possible JV discussions, buyer needs, and vendor profiles. Availability is conditional.
           </p>
           <p>
-            Licensed representation is handled by Apollo Duran through Keller Williams Realty East Bay when agency is the right path. This site is not an offer to buy property, sell securities, promise returns, give legal advice, or give a valuation.
+            This site uses Paolo “Apollo” Duran as a public-facing name. For license verification, CA DRE #02333658 is listed under Duran Ramirez, Paolo Ariel, with responsible broker BMP Realty Inc DBA Keller Williams Realty-East Bay. Verify current status. Any representation requires a separate written brokerage agreement.
           </p>
         </div>
         <div className="connect-standard-tags" aria-label="Compliance and trust standards">
           <span>DRE #02333658</span>
-          <span>KW East Bay for representation</span>
+          <span>Responsible broker: BMP Realty Inc DBA Keller Williams Realty-East Bay</span>
           <span>Equal Housing</span>
           <span>No public securities offering</span>
         </div>

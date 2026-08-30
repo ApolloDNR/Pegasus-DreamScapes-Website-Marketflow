@@ -82,7 +82,7 @@ export default function Disclosures() {
               testId="disclosure-securities"
             >
               <p>
-                Nothing on this website constitutes an offer to buy or sell any security, an offer of guaranteed returns, or a promise of principal protection. Capital relationships, joint ventures, and project participations are conducted privately, on a relationship basis, with parties who qualify under applicable federal and state law.
+                Nothing on this website constitutes an offer to buy or sell any security, an offer of guaranteed returns, or a promise of principal protection. Any future capital relationship, joint venture, or project participation requires transaction-specific diligence, qualified legal advice, and signed documents.
               </p>
               <p>
                 Any reference to a project, structure, or return profile on the public site is descriptive, not promotional. We do not publicly market specific deals, securities, or investment vehicles.
@@ -99,10 +99,10 @@ export default function Disclosures() {
               testId="disclosure-realestate"
             >
               <p>
-                Submitting a property through the Strategy Review intake or through Peggy is a request for a structural read of the situation. Every submission gets a serious review. Not every submission gets an offer. When the right path is a referral, listing, or partner introduction, we will say so plainly.
+                Submitting a property through the intake or Peggy records a request for possible consideration. It does not promise review, analysis, an offer, referral, listing, introduction, response, or response time.
               </p>
               <p>
-                Pegasus Dreamscapes operates across acquisition, joint venture, creative-finance, listing, and referral lanes. The lane that fits the property is the lane we route it to. We do not guarantee timing, price, or outcome on any submission.
+                Acquisition, joint venture, creative-finance, licensed-representation, and introduction paths are examples only. Any available path depends on facts, capacity, diligence, applicable law, and separate written terms.
               </p>
             </DisclosureBlock>
           </ScrollReveal>
@@ -133,13 +133,13 @@ export default function Disclosures() {
               testId="disclosure-peggy"
             >
               <p>
-                Peggy is a conversational assistant trained on the Pegasus operating philosophy. Peggy can route you to the right lane, summarize structural options, and help you start a Strategy Read. Peggy cannot give legal, tax, or investment advice; cannot quote a specific offer; and cannot guarantee an outcome.
+                Peggy is a conversational assistant that can explain public site paths, summarize educational structural concepts, and help create an intake record. Peggy cannot promise human review or routing, give legal, tax, or investment advice, quote a specific offer, or bind Pegasus.
               </p>
               <p>
-                Decisions on offers, structures, and capital relationships are always made by Pegasus operators. Peggy responses are conversational guidance, not contractual representations of the company.
+                Only an authorized human acting through applicable signed documents can create a company obligation. Peggy responses are educational conversation, not contractual representations.
               </p>
               <p>
-                On the live website surface, Peggy uses four hard refusal categories: (1) protected-class steering under federal and California Fair Housing law; (2) price quotes, valuations, fitness claims, or any DRE-licensed representation; (3) legal, tax, or investment advice; (4) any commitment that binds Pegasus to an offer or transaction. Planned voice and ecosystem surfaces must meet the same guardrails before release. Triggering any of these routes moves the conversation to Apollo for a direct written read.
+                On the live website surface, Peggy uses four hard refusal categories: (1) protected-class steering under federal and California Fair Housing law; (2) price quotes, valuations, fitness claims, or any DRE-licensed representation; (3) legal, tax, or investment advice; (4) any commitment that binds Pegasus to an offer or transaction. A refusal may point to a public contact path but does not promise follow-up.
               </p>
             </DisclosureBlock>
           </ScrollReveal>
@@ -173,7 +173,7 @@ export default function Disclosures() {
               testId="disclosure-marketflow"
             >
               <p>
-                MarketFlow is a private dealflow layer for reviewed opportunities, vetted operators, buyers, and capital relationships. Visibility is role-gated. Listings inside MarketFlow are not public offers. Access does not constitute, and is not a substitute for, the due diligence required of any real estate or capital transaction.
+                MarketFlow is a private, controlled-pilot workspace. Access, inventory, participant status, review, matching, introductions, and transaction availability are not guaranteed. Visible records are not public offers and do not replace independent diligence.
               </p>
             </DisclosureBlock>
           </ScrollReveal>
@@ -187,7 +187,7 @@ export default function Disclosures() {
               testId="disclosure-fairhousing"
             >
               <p>
-                Pegasus Dreamscapes Corp. operates in compliance with the federal Fair Housing Act and applicable state fair-housing statutes. We do not discriminate on the basis of race, color, religion, sex, national origin, familial status, disability, or any other protected class.
+                Pegasus Dreamscapes Corp.'s policy is not to discriminate on the basis of race, color, religion, sex, national origin, familial status, disability, or any other class protected by applicable fair-housing law. Report a concern through the contact information below.
               </p>
             </DisclosureBlock>
           </ScrollReveal>

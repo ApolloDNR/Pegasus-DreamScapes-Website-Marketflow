@@ -24,6 +24,7 @@ import { extractSupabaseUser } from "./supabaseAuth";
 import { generateStrategySnapshotPDF } from "./pdf";
 import { frameDecisionMemo, type LabDealStatus, type LabSubmitterRole } from "@shared/strategy-lab";
 import {
+  getPublicModelFitDisplayLabel,
   projectPublicPropertyAnalysis,
   type PublicPropertyAnalysis,
 } from "./publicAnalysis";
@@ -368,7 +369,7 @@ export function registerPropertyAnalysisRoutes(app: Express, ctx: AuthCtx) {
         : [];
       const topLane = lanes.find((l) => l.lane === snap.topLane) ?? lanes[0];
       const lane = typeof topLane?.laneLabel === "string" ? topLane.laneLabel : "Model path pending";
-      const modelFit = typeof topLane?.verdictLabel === "string" ? topLane.verdictLabel : "More inputs needed";
+      const modelFit = getPublicModelFitDisplayLabel(topLane?.verdictLabel);
       const esc = (s: string) =>
         s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
       const svg = `<?xml version="1.0" encoding="UTF-8"?>
