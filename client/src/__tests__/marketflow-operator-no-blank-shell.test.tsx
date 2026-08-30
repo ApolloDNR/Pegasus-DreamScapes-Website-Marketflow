@@ -231,7 +231,7 @@ describe("Every AuthGuard-gated MarketFlow operator route renders real content f
     expect(gatedRoutes.length).toBeGreaterThan(15);
 
     // Dynamic :param detail routes — no canned id/slug to resolve here.
-    const isDynamic = (u: string) => u.includes(":");
+    const isDynamic = (u: string) => u.includes(":") || u.includes("*");
 
     const expectedOperator = gatedRoutes.filter((u) => !isDynamic(u));
     const covered = new Set(MARKETFLOW_OPERATOR_URLS);

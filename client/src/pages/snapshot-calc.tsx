@@ -13,7 +13,31 @@ import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency, extractProjection, type ProjectionSpec } from "@/components/calculator-shared";
 import { SendAnalysisPdfDialog } from "@/components/send-analysis-pdf-dialog";
-import type { SavedAnalysis } from "@shared/schema";
+
+interface PublicSharedAnalysis {
+  id?: number;
+  name: string;
+  calculatorType: string;
+  propertyAddress?: string;
+  inputs: Record<string, unknown>;
+  results: Record<string, unknown>;
+  primaryMetric?: string;
+  primaryValue?: string;
+  secondaryMetric?: string;
+  secondaryValue?: string;
+  dealGrade?: string;
+  scenarioLabel?: string;
+  notes?: string;
+  sharedAt?: string;
+  createdAt?: string;
+  viewCount?: number;
+  outputContext: {
+    source: "user_entered_inputs_and_automated_model";
+    verifiedByPegasus: false;
+    label: string;
+    disclaimer: string;
+  };
+}
 
 const LINE_COLORS = ["#d57f2e", "#1f3757", "#3b82f6", "#22c55e"];
 
@@ -185,13 +209,13 @@ export default function SnapshotCalc() {
   };
 
   useSEO({
-    title: "Strategy Snapshot: Calculator",
-    description:
-      "A read-only strategy snapshot from the Pegasus DreamScapes calculator suite.",
+    title: "Shared Calculator Snapshot · Pegasus Dreamscapes",
+    description: "Automated calculator output generated from user-entered, unverified inputs.",
     noIndex: true,
+    noCanonical: true,
   });
 
-  const { data, isLoading, isError } = useQuery<SavedAnalysis>({
+  const { data, isLoading, isError } = useQuery<PublicSharedAnalysis>({
     queryKey: ["/api/shared-analyses", token],
     enabled: !!token,
   });
@@ -212,7 +236,7 @@ export default function SnapshotCalc() {
           <p className="text-muted-foreground">
             This share link is no longer active. The owner may have removed it.
           </p>
-          <Link href="/calculators">
+          <Link href="/strategy-lab?tool=calculators">
             <Button>Open the calculators</Button>
           </Link>
         </div>
@@ -240,9 +264,9 @@ export default function SnapshotCalc() {
           </h1>
           <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
             <Badge variant="outline">{calcLabel}</Badge>
-            {data.dealGrade && <Badge variant="outline">Grade {data.dealGrade}</Badge>}
+            {data.dealGrade && <Badge variant="outline">Model grade {data.dealGrade}</Badge>}
             <span>
-              Shared {data.sharedAt ? new Date(data.sharedAt as unknown as string).toLocaleDateString() : ""}
+              Shared {data.sharedAt ? new Date(data.sharedAt).toLocaleDateString() : ""}
             </span>
             {typeof data.viewCount === "number" && data.viewCount > 0 && (
               <span>· {data.viewCount} views</span>
@@ -251,7 +275,7 @@ export default function SnapshotCalc() {
           {data.primaryMetric && (
             <div className="mt-8 flex items-baseline gap-4">
               <span className="text-[11px] uppercase tracking-[0.28em] text-muted-foreground">
-                {data.primaryMetric}
+                Model estimate · {data.primaryMetric}
               </span>
               <span className="font-serif text-5xl font-semibold tabular-nums text-primary">
                 {data.primaryValue}
@@ -259,8 +283,21 @@ export default function SnapshotCalc() {
             </div>
           )}
           {data.notes && (
-            <p className="mt-6 text-base text-muted-foreground italic max-w-2xl">"{data.notes}"</p>
+            <div className="mt-6 max-w-2xl">
+              <p className="text-[10px] uppercase tracking-[0.24em] text-muted-foreground font-supporting font-semibold">User-entered note</p>
+              <p className="mt-1 text-base text-muted-foreground italic">“{data.notes}”</p>
+            </div>
           )}
+        </div>
+      </section>
+
+      <section className="max-w-4xl mx-auto px-6 pt-8" aria-label="Snapshot source and verification status">
+        <div className="border border-primary/25 bg-secondary/30 p-5" data-testid="snapshot-output-context">
+          <p className="text-[10px] uppercase tracking-[0.24em] text-primary font-supporting font-semibold">
+            Automated output · not independently verified
+          </p>
+          <p className="mt-2 text-sm font-medium leading-relaxed">{data.outputContext.label}</p>
+          <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{data.outputContext.disclaimer}</p>
         </div>
       </section>
 
@@ -268,7 +305,7 @@ export default function SnapshotCalc() {
         <Card>
           <CardContent className="p-6">
             <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
-              Inputs
+              User-entered inputs
             </p>
             <dl className="space-y-2.5">
               {Object.entries(inputs).map(([k, v]) => (
@@ -283,7 +320,7 @@ export default function SnapshotCalc() {
         <Card>
           <CardContent className="p-6">
             <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
-              Results
+              Automated calculation outputs
             </p>
             <dl className="space-y-2.5">
               {Object.entries(results)
@@ -304,7 +341,7 @@ export default function SnapshotCalc() {
           <Card>
             <CardContent className="p-6">
               <p className="text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-2">
-                Projection
+                Automated projection
               </p>
               <h2 className="font-serif text-2xl font-semibold tracking-tight leading-tight mb-4">
                 {projection.title}
@@ -320,7 +357,7 @@ export default function SnapshotCalc() {
 
       <section className="max-w-3xl mx-auto px-6 pt-4 pb-16 text-center">
         <p className="text-xs text-muted-foreground italic mb-6">
-          Illustrative math only. Not investment advice and not an offer.
+          Generated from user-entered, unverified inputs and automated assumptions. Not a Pegasus review or recommendation, investment advice, valuation, financing commitment, or offer.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Button
@@ -351,13 +388,13 @@ export default function SnapshotCalc() {
               </Button>
             }
           />
-          <Link href="/calculators">
+          <Link href="/strategy-lab?tool=calculators">
             <Button className="gap-2" data-testid="button-snapshot-run-your-own">
               <Calculator className="w-4 h-4" />
               Run your own
             </Button>
           </Link>
-          <Link href="/submit">
+          <Link href="/bring-an-opportunity">
             <Button variant="outline" className="gap-2" data-testid="button-snapshot-submit">
               Submit a property
               <ArrowRight className="w-4 h-4" />

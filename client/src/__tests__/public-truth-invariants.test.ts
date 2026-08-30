@@ -61,6 +61,17 @@ describe("standalone public truth invariants", () => {
     expect(facts).toMatch(/does not identify every contractor/i);
   });
 
+  it("seeds the public Nelson record from the same facts without invented execution claims", () => {
+    const seed = read("server/seed.ts");
+
+    expect(seed).toContain("NELSON_FACTS.improvementBudget");
+    expect(seed).toContain("NELSON_PUBLIC_DESCRIPTION");
+    expect(seed).toContain("holdTime: null");
+    expect(seed).not.toContain("The first Pegasus-controlled project");
+    expect(seed).not.toContain("Permit coordination with the City of Richmond");
+    expect(seed).not.toContain("produces on every reviewed property");
+  });
+
   it("uses the verified license-record name and responsible broker", () => {
     const source = [
       read("client/src/pages/connect.tsx"),
