@@ -22,7 +22,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Progress } from "@/components/ui/progress";
 import {
   Select,
   SelectContent,
@@ -422,7 +421,7 @@ function DealsPage() {
               {dealCategory === "wholesale" 
                 ? "Browse wholesale assignments. Find contracts to assign or JV partner on."
                 : dealCategory === "capital"
-                  ? "Browse capital raise opportunities. Invest in operator projects."
+                  ? "Browse private, source-supplied project records. Capital actions are relationship information only."
                   : "Browse ready-to-move-in properties. Request info or schedule showings."}
             </p>
           </div>
@@ -463,7 +462,7 @@ function DealsPage() {
             </TabsTrigger>
             <TabsTrigger value="capital" className="gap-1 sm:gap-2 text-xs sm:text-sm" data-testid="tab-capital">
               <TrendingUp className="w-4 h-4 shrink-0" />
-              <span className="hidden sm:inline truncate">Capital Raises</span>
+              <span className="hidden sm:inline truncate">Project Records</span>
               <span className="sm:hidden truncate">Capital</span>
             </TabsTrigger>
             <TabsTrigger value="listings" className="gap-1 sm:gap-2 text-xs sm:text-sm" data-testid="tab-listings">
@@ -584,12 +583,6 @@ function DealsPage() {
               onSelectProject={(project) => {
                 setLocation(`/marketflow/capital/${project.id}`);
               }}
-              onAcceptTerms={(project) => {
-                openDealAction(project.id, "capital_accept");
-              }}
-              onCounterTerms={(project) => {
-                openDealAction(project.id, "capital_counter");
-              }}
               isItemSaved={(id) => isItemSaved('capital_project', String(id))}
               onSave={(id) => toggleSaveItem('capital_project', String(id))}
             />
@@ -597,13 +590,6 @@ function DealsPage() {
             <CapitalRaiseSwipeView
               projects={capitalProjects || []}
               onSave={(id) => toggleSaveItem('capital_project', String(id))}
-              onAcceptTerms={(project) => {
-                openDealAction(project.id, "capital_accept");
-              }}
-              onCounterTerms={(project) => {
-                openDealAction(project.id, "capital_counter");
-              }}
-              isItemSaved={(id) => isItemSaved('capital_project', String(id))}
             />
           )}
         </InventoryBoundary>
@@ -1723,8 +1709,6 @@ interface CapitalRaiseGridViewProps {
   projects: CapitalProject[];
   isLoading: boolean;
   onSelectProject: (project: CapitalProject) => void;
-  onAcceptTerms: (project: CapitalProject) => void;
-  onCounterTerms: (project: CapitalProject) => void;
   isItemSaved: (id: number) => boolean;
   onSave: (id: number) => void;
 }
@@ -1733,8 +1717,6 @@ function CapitalRaiseGridView({
   projects, 
   isLoading, 
   onSelectProject, 
-  onAcceptTerms, 
-  onCounterTerms,
   isItemSaved,
   onSave
 }: CapitalRaiseGridViewProps) {
@@ -1759,9 +1741,9 @@ function CapitalRaiseGridView({
     return (
       <Card className="p-12 text-center">
         <TrendingUp className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-        <h3 className="text-lg font-semibold mb-2">No Capital Raises Available</h3>
+        <h3 className="text-lg font-semibold mb-2">No private project records available</h3>
         <p className="text-muted-foreground">
-          Check back later for new investment opportunities.
+          New source-supplied project context will appear here when it is available.
         </p>
       </Card>
     );
@@ -1775,8 +1757,6 @@ function CapitalRaiseGridView({
             <CapitalRaiseCard
               project={project}
               onView={() => onSelectProject(project)}
-              onAcceptTerms={() => onAcceptTerms(project)}
-              onCounterTerms={() => onCounterTerms(project)}
               isSaved={isItemSaved(project.id)}
               onSave={() => onSave(project.id)}
             />
@@ -1790,24 +1770,11 @@ function CapitalRaiseGridView({
 interface CapitalRaiseCardProps {
   project: CapitalProject;
   onView: () => void;
-  onAcceptTerms: () => void;
-  onCounterTerms: () => void;
   isSaved: boolean;
   onSave: () => void;
 }
 
-function CapitalRaiseCard({ project, onView, onAcceptTerms, onCounterTerms, isSaved, onSave }: CapitalRaiseCardProps) {
-  const fundingGoal = project.fundingGoal || 0;
-  const amountRaised = project.amountRaised || 0;
-  const progressPercent = fundingGoal > 0 ? Math.min((amountRaised / fundingGoal) * 100, 100) : 0;
-  const isFunded = project.status === "FUNDED" || progressPercent >= 100;
-
-  const formatCurrency = (amount: number) => {
-    if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
-    if (amount >= 1000) return `$${(amount / 1000).toFixed(0)}K`;
-    return `$${amount.toLocaleString()}`;
-  };
-
+function CapitalRaiseCard({ project, onView, isSaved, onSave }: CapitalRaiseCardProps) {
   const getStrategyLabel = (strategy: string | null | undefined) => {
     const labels: Record<string, string> = {
       "fix-flip": "Fix & Flip",
@@ -1816,16 +1783,7 @@ function CapitalRaiseCard({ project, onView, onAcceptTerms, onCounterTerms, isSa
       "development": "Development",
       "new-construction": "New Construction",
     };
-    return labels[strategy || ""] || strategy || "Investment";
-  };
-
-  const getStructureLabel = (structure: string | null | undefined) => {
-    const labels: Record<string, string> = {
-      "EQUITY": "Equity",
-      "DEBT": "Debt",
-      "HYBRID": "Hybrid",
-    };
-    return labels[structure || ""] || structure || "Equity";
+    return labels[strategy || ""] || strategy || "Project";
   };
 
   return (
@@ -1844,11 +1802,8 @@ function CapitalRaiseCard({ project, onView, onAcceptTerms, onCounterTerms, isSa
         )}
         
         <div className="absolute top-2 left-2 flex gap-1 flex-wrap">
-          <Badge className={isFunded ? "bg-green-600 text-white" : "bg-amber-500 text-white"}>
-            {isFunded ? "Funded" : project.status?.replace(/_/g, ' ') || "Open"}
-          </Badge>
-          <Badge variant="outline" className="bg-background/80">
-            {getStructureLabel(project.structure)}
+          <Badge variant="outline" className="bg-background/90 text-foreground">
+            Private project record
           </Badge>
         </div>
 
@@ -1883,51 +1838,10 @@ function CapitalRaiseCard({ project, onView, onAcceptTerms, onCounterTerms, isSa
           </p>
         </div>
 
-        <div className="mb-4">
-          <div className="flex items-center justify-between text-sm mb-2">
-            <span className="text-muted-foreground">Funding Progress</span>
-            <span className="font-semibold">{progressPercent.toFixed(0)}%</span>
-          </div>
-          <Progress value={progressPercent} className="h-2" />
-          <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
-            <span>{formatCurrency(amountRaised)} raised</span>
-            <span>of {formatCurrency(fundingGoal)}</span>
-          </div>
-        </div>
-
-        <div className="p-3 bg-muted/50 rounded-lg mb-3">
-          <p className="text-[10px] text-muted-foreground mb-1 font-medium">Operator Terms</p>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            {project.structure === "DEBT" ? (
-              <>
-                <div>
-                  <span className="text-muted-foreground">Interest: </span>
-                  <span className="font-medium">{project.askingInterestRate || "Negotiable"}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Duration: </span>
-                  <span className="font-medium">{project.askingLoanDuration || "Negotiable"}</span>
-                </div>
-              </>
-            ) : (
-              <>
-                <div>
-                  <span className="text-muted-foreground">Return: </span>
-                  <span className="font-medium">{project.projectedReturn || "Negotiable"}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Split: </span>
-                  <span className="font-medium">{project.askingProfitSplit || "Negotiable"}</span>
-                </div>
-              </>
-            )}
-          </div>
-          {project.minInvestment && (
-            <div className="mt-2 pt-2 border-t border-muted text-xs">
-              <span className="text-muted-foreground">Minimum Capital: </span>
-              <span className="font-medium">{formatCurrency(project.minInvestment)}</span>
-            </div>
-          )}
+        <div className="mb-3 rounded-lg border bg-muted/40 p-3 text-xs leading-relaxed text-muted-foreground">
+          <span className="font-medium text-foreground">Relationship information only.</span>{" "}
+          This source-supplied record is not an offering and does not accept funds, offers,
+          allocations, or commitments.
         </div>
 
         <div className="flex gap-2">
@@ -1936,29 +1850,6 @@ function CapitalRaiseCard({ project, onView, onAcceptTerms, onCounterTerms, isSa
             View Details
           </Button>
         </div>
-        {!isFunded && (
-          <>
-            <div className="flex gap-2 mt-2">
-              <Button className="flex-1" onClick={onAcceptTerms} data-testid={`button-accept-terms-${project.id}`}>
-                <DollarSign className="w-4 h-4 mr-2" />
-                Commit Capital
-              </Button>
-              <Button variant="secondary" className="flex-1" onClick={onCounterTerms} data-testid={`button-counter-terms-${project.id}`}>
-                <Handshake className="w-4 h-4 mr-2" />
-                Negotiate
-              </Button>
-            </div>
-            <div className="mt-2">
-              <OpenOfferStudioButton
-                dealId={project.id}
-                lane="CAPITAL"
-                variant="outline"
-                className="w-full"
-                stopPropagation
-              />
-            </div>
-          </>
-        )}
       </CardContent>
     </Card>
   );
@@ -1967,12 +1858,9 @@ function CapitalRaiseCard({ project, onView, onAcceptTerms, onCounterTerms, isSa
 interface CapitalRaiseSwipeViewProps {
   projects: CapitalProject[];
   onSave: (id: number) => void;
-  onAcceptTerms: (project: CapitalProject) => void;
-  onCounterTerms: (project: CapitalProject) => void;
-  isItemSaved: (id: number) => boolean;
 }
 
-function CapitalRaiseSwipeView({ projects, onSave, onAcceptTerms, onCounterTerms, isItemSaved }: CapitalRaiseSwipeViewProps) {
+function CapitalRaiseSwipeView({ projects, onSave }: CapitalRaiseSwipeViewProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [exitDirection, setExitDirection] = useState<"left" | "right" | null>(null);
   const [isAdvancing, setIsAdvancing] = useState(false);
@@ -2064,9 +1952,9 @@ function CapitalRaiseSwipeView({ projects, onSave, onAcceptTerms, onCounterTerms
     return (
       <Card className="p-12 text-center max-w-lg mx-auto">
         <TrendingUp className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-        <h3 className="text-lg font-semibold mb-2">No Capital Raises to Swipe</h3>
+        <h3 className="text-lg font-semibold mb-2">No private project records available</h3>
         <p className="text-muted-foreground">
-          Check back later for new investment opportunities.
+          New source-supplied project context will appear here when it is available.
         </p>
       </Card>
     );
@@ -2078,16 +1966,12 @@ function CapitalRaiseSwipeView({ projects, onSave, onAcceptTerms, onCounterTerms
         <Sparkles className="w-12 h-12 mx-auto text-primary mb-4" />
         <h3 className="text-lg font-semibold mb-2">You've Seen All Projects!</h3>
         <p className="text-muted-foreground mb-6">
-          You've reviewed all available capital raises. Saved sets remain inside the controlled pilot.
+          You've reviewed all available private project records.
         </p>
-        <div className="flex gap-3 justify-center">
+        <div className="flex justify-center">
           <Button variant="outline" onClick={() => setCurrentIndex(0)} data-testid="button-capital-start-over">
             <RotateCcw className="w-4 h-4 mr-2" />
             Start Over
-          </Button>
-          <Button type="button" disabled data-testid="button-capital-view-saved-pilot">
-            <Bookmark className="w-4 h-4 mr-2" />
-            Saved workspace · pilot
           </Button>
         </div>
       </Card>
@@ -2105,7 +1989,7 @@ function CapitalRaiseSwipeView({ projects, onSave, onAcceptTerms, onCounterTerms
         </p>
       </div>
 
-      <div className="relative h-[560px]">
+      <div className="relative h-[440px]">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentProject.id}
@@ -2136,8 +2020,6 @@ function CapitalRaiseSwipeView({ projects, onSave, onAcceptTerms, onCounterTerms
               likeOpacity={likeOpacity}
               passOpacity={passOpacity}
               onView={() => setLocation(`/marketflow/capital/${currentProject.id}`)}
-              onAcceptTerms={() => onAcceptTerms(currentProject)}
-              onCounterTerms={() => onCounterTerms(currentProject)}
               isAdvancing={isAdvancing}
             />
           </motion.div>
@@ -2177,31 +2059,10 @@ function CapitalRaiseSwipeView({ projects, onSave, onAcceptTerms, onCounterTerms
         >
           <Heart className="w-5 h-5" />
         </Button>
-        <Button 
-          aria-label="Commit capital"
-          size="lg" 
-          className="rounded-full h-12 w-12"
-          onClick={() => onAcceptTerms(currentProject)}
-          disabled={isAdvancing}
-          data-testid="button-capital-accept"
-        >
-          <DollarSign className="w-5 h-5" />
-        </Button>
-        <Button 
-          aria-label="Negotiate"
-          size="lg" 
-          variant="secondary"
-          className="rounded-full h-12 w-12"
-          onClick={() => onCounterTerms(currentProject)}
-          disabled={isAdvancing}
-          data-testid="button-capital-counter"
-        >
-          <Handshake className="w-4 h-4" />
-        </Button>
       </div>
 
       <p className="text-center text-xs text-muted-foreground mt-4">
-        Undo • Pass • Save • Invest • Negotiate
+        Undo • Pass • Save
       </p>
     </div>
   );
@@ -2212,23 +2073,10 @@ interface CapitalSwipeCardProps {
   likeOpacity: any;
   passOpacity: any;
   onView: () => void;
-  onAcceptTerms: () => void;
-  onCounterTerms: () => void;
   isAdvancing: boolean;
 }
 
-function CapitalSwipeCard({ project, likeOpacity, passOpacity, onView, onAcceptTerms, onCounterTerms, isAdvancing }: CapitalSwipeCardProps) {
-  const fundingGoal = project.fundingGoal || 0;
-  const amountRaised = project.amountRaised || 0;
-  const progressPercent = fundingGoal > 0 ? Math.min((amountRaised / fundingGoal) * 100, 100) : 0;
-  const isFunded = project.status === "FUNDED" || progressPercent >= 100;
-
-  const formatCurrency = (amount: number) => {
-    if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
-    if (amount >= 1000) return `$${(amount / 1000).toFixed(0)}K`;
-    return `$${amount.toLocaleString()}`;
-  };
-
+function CapitalSwipeCard({ project, likeOpacity, passOpacity, onView, isAdvancing }: CapitalSwipeCardProps) {
   const getStrategyLabel = (strategy: string | null | undefined) => {
     const labels: Record<string, string> = {
       "fix-flip": "Fix & Flip",
@@ -2237,16 +2085,7 @@ function CapitalSwipeCard({ project, likeOpacity, passOpacity, onView, onAcceptT
       "development": "Development",
       "new-construction": "New Construction",
     };
-    return labels[strategy || ""] || strategy || "Investment";
-  };
-
-  const getStructureLabel = (structure: string | null | undefined) => {
-    const labels: Record<string, string> = {
-      "EQUITY": "Equity",
-      "DEBT": "Debt",
-      "HYBRID": "Hybrid",
-    };
-    return labels[structure || ""] || structure || "Equity";
+    return labels[strategy || ""] || strategy || "Project";
   };
 
   return (
@@ -2278,11 +2117,8 @@ function CapitalSwipeCard({ project, likeOpacity, passOpacity, onView, onAcceptT
         </motion.div>
 
         <div className="absolute bottom-2 left-2 flex gap-1">
-          <Badge className={isFunded ? "bg-green-600 text-white" : "bg-amber-500 text-white"}>
-            {isFunded ? "Funded" : project.status?.replace(/_/g, ' ') || "Open"}
-          </Badge>
-          <Badge variant="outline" className="bg-background/80">
-            {getStructureLabel(project.structure)}
+          <Badge variant="outline" className="bg-background/90 text-foreground">
+            Private project record
           </Badge>
         </div>
       </div>
@@ -2301,51 +2137,9 @@ function CapitalSwipeCard({ project, likeOpacity, passOpacity, onView, onAcceptT
           </p>
         </div>
 
-        <div>
-          <div className="flex items-center justify-between text-sm mb-2">
-            <span className="text-muted-foreground">Funding Progress</span>
-            <span className="font-semibold">{progressPercent.toFixed(0)}%</span>
-          </div>
-          <Progress value={progressPercent} className="h-2" />
-          <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
-            <span>{formatCurrency(amountRaised)} raised</span>
-            <span>of {formatCurrency(fundingGoal)}</span>
-          </div>
-        </div>
-
-        <div className="p-3 bg-muted/50 rounded-lg">
-          <p className="text-[10px] text-muted-foreground mb-1 font-medium">Operator Terms</p>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            {project.structure === "DEBT" ? (
-              <>
-                <div>
-                  <span className="text-muted-foreground">Interest: </span>
-                  <span className="font-medium">{project.askingInterestRate || "Negotiable"}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Duration: </span>
-                  <span className="font-medium">{project.askingLoanDuration || "Negotiable"}</span>
-                </div>
-              </>
-            ) : (
-              <>
-                <div>
-                  <span className="text-muted-foreground">Return: </span>
-                  <span className="font-medium">{project.projectedReturn || "Negotiable"}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Split: </span>
-                  <span className="font-medium">{project.askingProfitSplit || "Negotiable"}</span>
-                </div>
-              </>
-            )}
-          </div>
-          {project.minInvestment && (
-            <div className="mt-2 pt-2 border-t border-muted text-xs">
-              <span className="text-muted-foreground">Minimum Capital: </span>
-              <span className="font-medium">{formatCurrency(project.minInvestment)}</span>
-            </div>
-          )}
+        <div className="rounded-lg border bg-muted/40 p-3 text-xs leading-relaxed text-muted-foreground">
+          <span className="font-medium text-foreground">Relationship information only.</span>{" "}
+          This record is not an offering and does not accept funds, offers, allocations, or commitments.
         </div>
 
         <div className="flex gap-2">
@@ -2354,30 +2148,6 @@ function CapitalSwipeCard({ project, likeOpacity, passOpacity, onView, onAcceptT
             View Details
           </Button>
         </div>
-        {!isFunded && (
-          <>
-            <div className="flex gap-2 mt-2">
-              <Button className="flex-1" onClick={onAcceptTerms} disabled={isAdvancing} data-testid="button-accept-capital-swipe">
-                <DollarSign className="w-4 h-4 mr-2" />
-                Commit Capital
-              </Button>
-              <Button variant="secondary" className="flex-1" onClick={onCounterTerms} disabled={isAdvancing} data-testid="button-counter-capital-swipe">
-                <Handshake className="w-4 h-4 mr-2" />
-                Negotiate
-              </Button>
-            </div>
-            <div className="mt-2">
-              <OpenOfferStudioButton
-                dealId={project.id}
-                lane="CAPITAL"
-                variant="outline"
-                className="w-full"
-                stopPropagation
-                disabled={isAdvancing}
-              />
-            </div>
-          </>
-        )}
       </CardContent>
     </Card>
   );

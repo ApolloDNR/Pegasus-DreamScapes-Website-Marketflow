@@ -10,9 +10,17 @@ interface SubmissionRow {
   createdAt: string;
 }
 
+const POSITIVE_INTEGER = /^[1-9]\d*$/;
+
+function parseSubmissionId(value: string | null): number | null {
+  if (!value || !POSITIVE_INTEGER.test(value)) return null;
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) ? parsed : null;
+}
+
 export default function StrategyLabSubmittedPage() {
   const params = new URLSearchParams(useSearch());
-  const id = params.get("id");
+  const submissionId = parseSubmissionId(params.get("id"));
 
   useSEO({
     title: "Submission Receipt · Pegasus Dreamscapes",
@@ -21,15 +29,34 @@ export default function StrategyLabSubmittedPage() {
     noCanonical: true,
   });
 
-  const { data } = useQuery<SubmissionRow>({
-    queryKey: ["/api/strategy-lab/submission", id],
+  const { data, isLoading, isError } = useQuery<SubmissionRow>({
+    queryKey: ["/api/strategy-lab/submission", submissionId],
     queryFn: async () => {
-      const response = await authenticatedRequest(`/api/strategy-lab/submission/${id}`);
+      if (submissionId === null) throw new Error("Missing submission reference");
+      const response = await authenticatedRequest(`/api/strategy-lab/submission/${submissionId}`);
       if (!response.ok) throw new Error("Could not load submission receipt");
-      return response.json();
+      return response.json() as Promise<SubmissionRow>;
     },
-    enabled: Boolean(id),
+    enabled: submissionId !== null,
   });
+
+  const isVerified = submissionId !== null && data?.id === submissionId;
+  const heading =
+    submissionId === null
+      ? "No verified submission receipt is available."
+      : isLoading
+        ? "Verifying submission receipt…"
+        : isError || !isVerified
+          ? "We could not verify this submission receipt."
+          : "Submission receipt verified.";
+  const description =
+    submissionId === null
+      ? "This link does not contain a valid submission reference. Return to Strategy Lab or use the private opportunity intake if you intended to submit property information."
+      : isLoading
+        ? "Checking the owner-scoped submission record before showing any receipt details."
+        : isError || !isVerified
+          ? "This link does not prove that Pegasus received a submission. Sign in with the account that created the record, check the link, or return to Strategy Lab."
+          : "The owner-scoped record exists. Keep this reference for your records; Pegasus may contact you only if it elects to consider the information or needs clarification.";
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -38,20 +65,18 @@ export default function StrategyLabSubmittedPage() {
           Submission receipt
         </div>
         <h1 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-tight mb-6">
-          {id ? "Your request was recorded." : "No submission reference was provided."}
+          {heading}
         </h1>
         <p className="text-lg text-muted-foreground leading-relaxed mb-8">
-          {id
-            ? "Keep this reference for your records. Pegasus may contact you if it elects to consider the information or needs clarification."
-            : "Return to Strategy Lab to run another model, or use the private opportunity intake if you intended to submit property information."}
+          {description}
         </p>
 
-        {id ? (
+        {isVerified ? (
           <div className="border border-[hsl(var(--copper))]/45 bg-[hsl(var(--copper)/0.05)] p-5 mb-6" data-testid="card-submission-receipt">
             <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary mb-2">
-              <CircleCheck className="w-3.5 h-3.5" aria-hidden="true" /> Reference
+              <CircleCheck className="w-3.5 h-3.5" aria-hidden="true" /> Verified reference
             </div>
-            <p className="font-mono text-lg">#{id}</p>
+            <p className="font-mono text-lg">#{submissionId}</p>
             {data?.status ? (
               <p className="mt-2 text-sm text-muted-foreground">
                 Current system status: <span className="font-medium text-foreground">{data.status}</span>
@@ -70,6 +95,15 @@ export default function StrategyLabSubmittedPage() {
         </div>
 
         <div className="flex flex-wrap gap-3">
+          {submissionId !== null && !isLoading && !isVerified ? (
+            <Link
+              href={`/login?returnTo=${encodeURIComponent(`/strategy-lab/submitted?id=${submissionId}`)}`}
+              className="bg-[hsl(var(--copper))] text-white px-5 py-3 text-sm font-supporting font-semibold inline-flex items-center gap-2"
+              data-testid="link-sign-in-to-verify"
+            >
+              Sign in to verify <ArrowRight className="w-4 h-4" aria-hidden="true" />
+            </Link>
+          ) : null}
           <Link
             href="/strategy-lab"
             className="border border-[hsl(var(--rule))] px-5 py-3 text-sm font-supporting font-semibold inline-flex items-center gap-2"
@@ -79,7 +113,7 @@ export default function StrategyLabSubmittedPage() {
           </Link>
           <Link
             href="/bring-an-opportunity"
-            className="bg-[hsl(var(--copper))] text-white px-5 py-3 text-sm font-supporting font-semibold inline-flex items-center gap-2"
+            className="border border-[hsl(var(--rule))] px-5 py-3 text-sm font-supporting font-semibold inline-flex items-center gap-2"
             data-testid="link-open-intake"
           >
             Open private intake <ArrowRight className="w-4 h-4" aria-hidden="true" />

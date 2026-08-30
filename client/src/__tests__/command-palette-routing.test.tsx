@@ -44,4 +44,18 @@ describe("Command Palette route destinations", () => {
 
     expect(memory.history.at(-1)).toBe("/deal-partners");
   });
+
+  it("opens the real Saved Work surface instead of the obsolete account library", () => {
+    const memory = memoryLocation({ path: "/strategy-lab", record: true });
+    render(
+      <Router hook={memory.hook}>
+        <CommandPalette />
+      </Router>,
+    );
+
+    fireEvent.keyDown(document, { key: "k", ctrlKey: true });
+    fireEvent.click(screen.getByTestId("command-resources"));
+
+    expect(memory.history.at(-1)).toBe("/saved");
+  });
 });

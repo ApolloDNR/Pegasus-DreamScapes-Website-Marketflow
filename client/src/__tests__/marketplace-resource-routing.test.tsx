@@ -32,7 +32,7 @@ const ARTICLES: Article[] = Array.from({ length: 7 }, (_, index) => ({
 afterEach(() => cleanup());
 
 describe("authenticated MarketFlow resource destinations", () => {
-  it("routes article cards and View All to the owned Strategy Lab surface", () => {
+  it("routes article cards and View All to their real published destinations", () => {
     const memory = memoryLocation({ path: "/marketflow/resources", static: true });
     const client = new QueryClient({
       defaultOptions: {
@@ -52,10 +52,23 @@ describe("authenticated MarketFlow resource destinations", () => {
 
     expect(screen.getByRole("link", { name: /view all/i })).toHaveAttribute(
       "href",
-      "/strategy-lab",
+      "/resources",
     );
-    for (const card of screen.getAllByTestId(/^article-card-/)) {
-      expect(card.closest("a")).toHaveAttribute("href", "/strategy-lab");
-    }
+    screen.getAllByTestId(/^article-card-/).forEach((card, index) => {
+      expect(card.closest("a")).toHaveAttribute(
+        "href",
+        `/resources/article-${index + 1}`,
+      );
+    });
+
+    expect(screen.queryByTestId(/^guide-card-/)).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /deal calculators/i })).toHaveAttribute(
+      "href",
+      "/strategy-lab?tool=calculators",
+    );
+    expect(screen.getByRole("link", { name: /property workspace/i })).toHaveAttribute(
+      "href",
+      "/saved",
+    );
   });
 });

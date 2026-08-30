@@ -162,31 +162,6 @@ export function useSupabaseMarketplace() {
     },
   });
 
-  const createCapitalCommitmentMutation = useMutation({
-    mutationFn: async (data: {
-      projectId: string;
-      amount: number;
-      structurePreference?: string;
-      notes?: string;
-    }) => {
-      return apiRequest("POST", "/api/supabase/capital-commitments", data);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/supabase/capital-commitments'] });
-      toast({
-        title: "Commitment Submitted",
-        description: "Your investment commitment has been submitted",
-      });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to submit commitment",
-        variant: "destructive",
-      });
-    },
-  });
-
   const createBuyerOfferMutation = useMutation({
     mutationFn: async (data: {
       listingId: string;
@@ -272,9 +247,6 @@ export function useSupabaseMarketplace() {
     
     createJVRequest: createJVRequestMutation.mutateAsync,
     isCreatingJVRequest: createJVRequestMutation.isPending,
-    
-    createCapitalCommitment: createCapitalCommitmentMutation.mutateAsync,
-    isCreatingCommitment: createCapitalCommitmentMutation.isPending,
     
     createBuyerOffer: createBuyerOfferMutation.mutateAsync,
     isCreatingOffer: createBuyerOfferMutation.isPending,

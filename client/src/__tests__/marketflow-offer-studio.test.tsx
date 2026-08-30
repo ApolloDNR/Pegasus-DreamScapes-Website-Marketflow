@@ -443,19 +443,42 @@ describe("MarketFlow Offer Studio", () => {
     15_000,
   );
 
-  it.each(["CAPITAL", "LISTING"])(
-    "keeps the %s composer labeled Offer Price",
-    async (lane) => {
-      setAuthState("buyer");
-      await renderOfferStudio(
-        `/marketflow/offer-studio/${DEAL_ID}`,
-        `?lane=${lane}`,
-      );
+  it("fails the CAPITAL lane closed to relationship information without loading offer data", async () => {
+    setAuthState("buyer");
+    await renderOfferStudio(
+      `/marketflow/offer-studio/${DEAL_ID}`,
+      "?lane=CAPITAL",
+    );
 
-      expect(await screen.findByLabelText("Offer Price")).toBeInTheDocument();
-      expect(screen.queryByLabelText("Total assignment price")).toBeNull();
-    },
-  );
+    expect(await screen.findByTestId("card-capital-offer-retired")).toHaveTextContent(
+      /relationship information only/i,
+    );
+    expect(screen.getByTestId("button-capital-relationship-info").closest("a")).toHaveAttribute(
+      "href",
+      "/capital#capital-introduction",
+    );
+    expect(screen.queryByTestId("page-offer-studio")).toBeNull();
+    expect(screen.queryByLabelText("Offer Price")).toBeNull();
+    expect(fetchState.postedOffers).toEqual([]);
+    expect(fetchState.postedResponses).toEqual([]);
+    expect(
+      fetchMock.mock.calls.some(([url]) => String(url).includes("/api/capital-projects/")),
+    ).toBe(false);
+    expect(
+      fetchMock.mock.calls.some(([url]) => String(url).includes("/api/marketflow/negotiations")),
+    ).toBe(false);
+  });
+
+  it("keeps the LISTING composer labeled Offer Price", async () => {
+    setAuthState("buyer");
+    await renderOfferStudio(
+      `/marketflow/offer-studio/${DEAL_ID}`,
+      "?lane=LISTING",
+    );
+
+    expect(await screen.findByLabelText("Offer Price")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Total assignment price")).toBeNull();
+  });
 
   it("loads the private listing DTO, displays listPrice, and submits one exact LISTING offer", async () => {
     setAuthState("buyer");

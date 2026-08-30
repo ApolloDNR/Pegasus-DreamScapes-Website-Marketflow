@@ -266,7 +266,7 @@ export default function ArticleDetail() {
                   Have a property that may fit?
                 </h3>
                 <p className="text-muted-foreground leading-relaxed mb-7 max-w-2xl mx-auto">
-                  Reading is one thing. A real read on a real property is the next step. Strategy Review is free, written, and routes every property to a path.
+                  Reading is one thing. A real situation is the next step. You may submit context for discretionary consideration, or use Strategy Lab as an educational starting point. Submission does not promise review, analysis, a response, or a transaction.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-3 justify-center">
                   <Link href="/submit">

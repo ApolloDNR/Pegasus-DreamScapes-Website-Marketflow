@@ -10,15 +10,11 @@ import type { CommittedInvestment, CapitalProject } from "@shared/schema";
 import {
   TrendingUp,
   DollarSign,
-  ArrowRight,
   Briefcase,
   Target,
   BarChart3,
-  Sparkles,
   Compass,
   Heart,
-  Building,
-  MapPin,
   Eye,
   LogIn,
 } from "lucide-react";
@@ -38,7 +34,7 @@ interface CommitmentWithProject extends CommittedInvestment {
 }
 
 export default function MarketplaceInvestorPage() {
-  const { profile, isGuestMode, exitGuestMode } = useSupabaseAuth();
+  const { isGuestMode, exitGuestMode } = useSupabaseAuth();
   const [, setLocation] = useLocation();
 
   const handleExitPreview = () => {
@@ -46,27 +42,19 @@ export default function MarketplaceInvestorPage() {
     setLocation("/marketflow/discover");
   };
 
-  const { data: stats, isLoading } = useAuthenticatedQuery<InvestorStats>(
+  const { data: stats, isLoading, isError: statsError } = useAuthenticatedQuery<InvestorStats>(
     QUERY_KEYS.userStats("investor"),
   );
 
-  const { data: myCommitments, isLoading: isCommitmentsLoading } = useQuery<CommitmentWithProject[]>({
+  const {
+    data: myCommitments,
+    isLoading: isCommitmentsLoading,
+    isError: commitmentsError,
+  } = useQuery<CommitmentWithProject[]>({
     queryKey: ["/api/supabase/capital-commitments"],
   });
 
-  const { data: availableProjects, isLoading: isProjectsLoading } = useQuery<CapitalProject[]>({
-    queryKey: ["/api/supabase/capital-projects"],
-  });
-
-  const displayStats: InvestorStats = stats ?? {
-    totalInvested: 0,
-    activeDeals: 0,
-    savedDeals: 0,
-    pendingOffers: 0,
-  };
-
   const recentCommitments = myCommitments?.slice(0, 3) || [];
-  const recommendedProjects = availableProjects?.slice(0, 3) || [];
 
   return (
     <AuthGuard requiredRoles={["admin", "investor"]}>
@@ -100,7 +88,7 @@ export default function MarketplaceInvestorPage() {
                 {isGuestMode ? "Welcome, Guest Investor" : "Investor Dashboard"}
               </h1>
               <p className="text-muted-foreground">
-                Discover deals and grow your real estate portfolio
+                Review account records and controlled-pilot deal context.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -122,12 +110,14 @@ export default function MarketplaceInvestorPage() {
               <CardContent>
                 {isLoading ? (
                   <Skeleton className="h-8 w-16" />
+                ) : statsError || !stats ? (
+                  <p className="text-sm text-muted-foreground">Unavailable</p>
                 ) : (
                   <div className="text-2xl font-bold" data-testid="stat-active-investments">
-                    {displayStats.activeDeals}
+                    {stats.activeDeals}
                   </div>
                 )}
-                <p className="text-xs text-muted-foreground">In your portfolio</p>
+                <p className="text-xs text-muted-foreground">Accepted offer records</p>
               </CardContent>
             </Card>
 
@@ -139,12 +129,14 @@ export default function MarketplaceInvestorPage() {
               <CardContent>
                 {isLoading ? (
                   <Skeleton className="h-8 w-24" />
+                ) : statsError || !stats ? (
+                  <p className="text-sm text-muted-foreground">Unavailable</p>
                 ) : (
                   <div className="text-2xl font-bold" data-testid="stat-total-invested">
-                    ${displayStats.totalInvested.toLocaleString()}
+                    ${stats.totalInvested.toLocaleString()}
                   </div>
                 )}
-                <p className="text-xs text-muted-foreground">Capital deployed</p>
+                <p className="text-xs text-muted-foreground">Accepted offer amount; not proof of funds transferred</p>
               </CardContent>
             </Card>
 
@@ -156,9 +148,11 @@ export default function MarketplaceInvestorPage() {
               <CardContent>
                 {isLoading ? (
                   <Skeleton className="h-8 w-16" />
+                ) : statsError || !stats ? (
+                  <p className="text-sm text-muted-foreground">Unavailable</p>
                 ) : (
                   <div className="text-2xl font-bold" data-testid="stat-saved-deals">
-                    {displayStats.savedDeals}
+                    {stats.savedDeals}
                   </div>
                 )}
                 <p className="text-xs text-muted-foreground">In your watchlist</p>
@@ -173,9 +167,11 @@ export default function MarketplaceInvestorPage() {
               <CardContent>
                 {isLoading ? (
                   <Skeleton className="h-8 w-16" />
+                ) : statsError || !stats ? (
+                  <p className="text-sm text-muted-foreground">Unavailable</p>
                 ) : (
                   <div className="text-2xl font-bold" data-testid="stat-pending-offers">
-                    {displayStats.pendingOffers}
+                    {stats.pendingOffers}
                   </div>
                 )}
                 <p className="text-xs text-muted-foreground">Awaiting response</p>
@@ -186,8 +182,8 @@ export default function MarketplaceInvestorPage() {
           <div className="grid gap-6 lg:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>Portfolio Overview</CardTitle>
-                <CardDescription>Your active investments</CardDescription>
+                <CardTitle>Recorded commitments</CardTitle>
+                <CardDescription>Historical records associated with this account</CardDescription>
               </CardHeader>
               <CardContent>
                 {isCommitmentsLoading ? (
@@ -196,14 +192,16 @@ export default function MarketplaceInvestorPage() {
                       <Skeleton key={i} className="h-16 w-full" />
                     ))}
                   </div>
+                ) : commitmentsError ? (
+                  <AccountDataUnavailable scope="Commitment records" />
                 ) : recentCommitments.length === 0 ? (
                   <div className="text-center py-8">
                     <Briefcase className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-muted-foreground mb-4">No investments yet</p>
+                    <p className="text-muted-foreground mb-4">No recorded commitment entries</p>
                     <Link href="/marketflow/capital">
                       <Button size="sm">
                         <Compass className="w-4 h-4 mr-2" />
-                        Discover Opportunities
+                        View private project records
                       </Button>
                     </Link>
                   </div>
@@ -220,14 +218,14 @@ export default function MarketplaceInvestorPage() {
                             {commitment.project?.title || `Project #${commitment.projectId}`}
                           </p>
                           <p className="text-sm text-muted-foreground">
-                            ${(commitment.committedAmount || 0).toLocaleString()} invested | 
+                            ${(commitment.committedAmount || 0).toLocaleString()} recorded commitment |
                             {commitment.structureType === "debt" 
                               ? ` ${commitment.interestRate || "0"}% interest`
                               : ` ${commitment.equityPercent || "0"}% equity`
                             }
                           </p>
                         </div>
-                        <Badge>Active</Badge>
+                        <Badge variant="outline">Recorded</Badge>
                       </div>
                     ))}
                   </div>
@@ -250,61 +248,23 @@ export default function MarketplaceInvestorPage() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Capital Opportunities</CardTitle>
-                <CardDescription>Projects seeking investor capital</CardDescription>
+                <CardTitle>Private project records</CardTitle>
+                <CardDescription>Context only—not a transaction surface</CardDescription>
               </CardHeader>
-              <CardContent>
-                {isProjectsLoading ? (
-                  <div className="space-y-3">
-                    {[1, 2, 3].map((i) => (
-                      <Skeleton key={i} className="h-16 w-full" />
-                    ))}
-                  </div>
-                ) : recommendedProjects.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Building className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-muted-foreground">No open opportunities at this time</p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {recommendedProjects.map((project) => (
-                      <Link key={project.id} href={`/marketflow/capital/${project.id}`}>
-                        <div 
-                          className="flex items-center justify-between p-3 rounded-lg border hover-elevate cursor-pointer"
-                          data-testid={`project-recommendation-${project.id}`}
-                        >
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <p className="font-medium">{project.title}</p>
-                              {project.status === "OPEN_FOR_INVESTMENT" && (
-                                <Badge variant="secondary" className="gap-1">
-                                  <Sparkles className="h-3 w-3" />
-                                  Open
-                                </Badge>
-                              )}
-                            </div>
-                            <p className="text-sm text-muted-foreground flex items-center gap-1">
-                              {project.location && (
-                                <>
-                                  <MapPin className="h-3 w-3" />
-                                  {project.location} |{" "}
-                                </>
-                              )}
-                              ${((project.fundingGoal || 0) / 1000).toFixed(0)}K goal
-                              {project.projectedReturn ? ` | ${project.projectedReturn} return` : ""}
-                            </p>
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                )}
+              <CardContent className="space-y-5">
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  MarketFlow may display source-supplied project context to separately approved
+                  participants. These records are not offerings, allocations, recommendations, or verified investment terms.
+                </p>
                 <Link href="/marketflow/capital">
-                  <Button variant="ghost" className="w-full mt-4" data-testid="link-discover-more">
-                    Browse All Opportunities
-                    <ArrowRight className="h-4 w-4 ml-2" />
+                  <Button variant="outline" className="w-full" data-testid="link-discover-more">
+                    Review available records
                   </Button>
                 </Link>
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  Capital participation is not accepted through this website. Relationship context
+                  can be shared separately, with any follow-up subject to written terms.
+                </p>
               </CardContent>
             </Card>
           </div>
@@ -319,7 +279,7 @@ export default function MarketplaceInvestorPage() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Browse wholesale deals and capital projects matched to your preferences.
+                  Browse reviewed private records available to this approved account. No personalized match is implied.
                 </p>
                 <Link href="/marketflow/deals">
                   <Button className="w-full" data-testid="action-discover">
@@ -384,21 +344,13 @@ export default function MarketplaceInvestorPage() {
   );
 }
 
-function CommitmentStatusBadge({ status }: { status: string }) {
-  switch (status.toLowerCase()) {
-    case "pending":
-      return <Badge variant="secondary">Pending</Badge>;
-    case "approved":
-    case "active":
-      return <Badge>Active</Badge>;
-    case "funded":
-      return <Badge className="bg-green-600">Funded</Badge>;
-    case "completed":
-    case "exited":
-      return <Badge variant="outline">Completed</Badge>;
-    case "rejected":
-      return <Badge variant="destructive">Rejected</Badge>;
-    default:
-      return <Badge variant="secondary">{status}</Badge>;
-  }
+function AccountDataUnavailable({ scope }: { scope: string }) {
+  return (
+    <div className="rounded-lg border border-dashed p-6 text-center" role="status">
+      <p className="font-medium">Account data unavailable</p>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {scope} could not be loaded. No zero or empty state is being inferred.
+      </p>
+    </div>
+  );
 }

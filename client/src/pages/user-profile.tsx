@@ -6,9 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { 
   Star, 
   Loader2,
@@ -24,7 +21,6 @@ import {
   BarChart3,
   ThumbsUp,
   ArrowLeft,
-  Send,
   Trophy,
   Crown,
   Medal,
@@ -34,11 +30,13 @@ import {
   MessageSquare,
   Gavel
 } from "lucide-react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest, authenticatedRequest, queryClient } from "@/lib/queryClient";
+import { authenticatedRequest } from "@/lib/queryClient";
 import type { User, UserReview } from "@shared/schema";
+
+const REVIEW_UNAVAILABLE_COPY =
+  "Reviews are unavailable until Pegasus can verify a completed transaction.";
 
 interface UserActivity {
   id: number;
@@ -181,12 +179,7 @@ const getRatingStars = (rating: number) => {
 export default function UserProfile() {
   const { userId } = useParams<{ userId: string }>();
   const { user: currentUser, isAuthenticated } = useSupabaseAuth();
-  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("overview");
-  const [writeReviewOpen, setWriteReviewOpen] = useState(false);
-  const [reviewRating, setReviewRating] = useState(5);
-  const [reviewTitle, setReviewTitle] = useState("");
-  const [reviewContent, setReviewContent] = useState("");
 
   const validUserId = userId || "";
 
@@ -254,35 +247,6 @@ export default function UserProfile() {
       return res.json();
     },
     enabled: !!userId,
-  });
-
-  const submitReviewMutation = useMutation({
-    mutationFn: async () => {
-      return apiRequest("POST", "/api/reviews", {
-        revieweeId: userId,
-        overallRating: reviewRating,
-        title: reviewTitle,
-        content: reviewContent,
-      });
-    },
-    onSuccess: () => {
-      toast({
-        title: "Review Submitted",
-        description: "Your review has been posted successfully.",
-      });
-      setWriteReviewOpen(false);
-      setReviewTitle("");
-      setReviewContent("");
-      setReviewRating(5);
-      queryClient.invalidateQueries({ queryKey: ["user-reviews", validUserId] });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to submit review. Please try again.",
-        variant: "destructive",
-      });
-    },
   });
 
   const isOwnProfile = currentUser?.id === userId;
@@ -391,17 +355,30 @@ export default function UserProfile() {
                 )}
 
                 {!isOwnProfile && isAuthenticated && (
-                  <div className="flex gap-2 mt-6 w-full">
-                    <Link href={`/marketflow/messages?to=${userId}`} className="flex-1">
-                      <Button variant="outline" className="w-full" data-testid="button-message">
-                        <MessageCircle className="w-4 h-4 mr-2" />
-                        Message
+                  <div className="mt-6 w-full space-y-2">
+                    <div className="flex gap-2">
+                      <Link href={`/marketflow/messages?to=${userId}`} className="flex-1">
+                        <Button variant="outline" className="w-full" data-testid="button-message">
+                          <MessageCircle className="w-4 h-4 mr-2" />
+                          Message
+                        </Button>
+                      </Link>
+                      <Button
+                        className="flex-1"
+                        disabled
+                        aria-describedby="review-unavailable-note"
+                        data-testid="button-write-review"
+                      >
+                        <Star className="w-4 h-4 mr-2" />
+                        Reviews unavailable
                       </Button>
-                    </Link>
-                    <Button onClick={() => setWriteReviewOpen(true)} className="flex-1" data-testid="button-write-review">
-                      <Star className="w-4 h-4 mr-2" />
-                      Review
-                    </Button>
+                    </div>
+                    <p
+                      id="review-unavailable-note"
+                      className="text-xs leading-relaxed text-muted-foreground"
+                    >
+                      {REVIEW_UNAVAILABLE_COPY}
+                    </p>
                   </div>
                 )}
               </div>
@@ -628,16 +605,8 @@ export default function UserProfile() {
                       <Star className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                       <h3 className="font-semibold mb-2">No Reviews Yet</h3>
                       <p className="text-muted-foreground">
-                        {isOwnProfile 
-                          ? "Complete some transactions to receive reviews" 
-                          : "Be the first to leave a review!"}
+                        {REVIEW_UNAVAILABLE_COPY}
                       </p>
-                      {!isOwnProfile && isAuthenticated && (
-                        <Button className="mt-4" onClick={() => setWriteReviewOpen(true)}>
-                          <Star className="w-4 h-4 mr-2" />
-                          Write a Review
-                        </Button>
-                      )}
                     </CardContent>
                   </Card>
                 ) : (
@@ -780,75 +749,6 @@ export default function UserProfile() {
         </div>
       </div>
 
-      <Dialog open={writeReviewOpen} onOpenChange={setWriteReviewOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Write a Review</DialogTitle>
-            <DialogDescription>
-              Share your experience working with {profile.firstName}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <Label>Rating</Label>
-              <div className="flex gap-1 mt-2">
-                {Array.from({ length: 5 }, (_, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => setReviewRating(i + 1)}
-                    className="focus:outline-none"
-                    data-testid={`star-${i + 1}`}
-                  >
-                    <Star 
-                      className={`w-8 h-8 cursor-pointer transition-colors ${
-                        i < reviewRating ? "fill-amber-400 text-amber-400" : "text-muted-foreground hover:text-amber-300"
-                      }`}
-                    />
-                  </button>
-                ))}
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="review-title">Title (optional)</Label>
-              <input
-                id="review-title"
-                type="text"
-                placeholder="Summarize your experience"
-                value={reviewTitle}
-                onChange={(e) => setReviewTitle(e.target.value)}
-                className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-base shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50 md:text-sm mt-1"
-                data-testid="input-review-title"
-              />
-            </div>
-            <div>
-              <Label htmlFor="review-content">Your Review</Label>
-              <Textarea
-                id="review-content"
-                placeholder="Describe your experience working with this person..."
-                value={reviewContent}
-                onChange={(e) => setReviewContent(e.target.value)}
-                className="mt-1 min-h-[120px]"
-                data-testid="textarea-review-content"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setWriteReviewOpen(false)}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={() => submitReviewMutation.mutate()} 
-              disabled={submitReviewMutation.isPending || !reviewContent}
-              data-testid="button-submit-review"
-            >
-              {submitReviewMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              <Send className="w-4 h-4 mr-2" />
-              Submit Review
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

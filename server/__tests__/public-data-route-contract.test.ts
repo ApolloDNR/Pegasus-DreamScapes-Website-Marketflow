@@ -105,8 +105,6 @@ describe("reviewed inventory data route contract", () => {
   it("resolves reviewed access before new inventory interactions", () => {
     const initiationRoutes = [
       "/api/marketplace/jv-requests",
-      "/api/marketplace/investment-interest",
-      "/api/supabase/capital-commitments",
       "/api/supabase/buyer-offers",
       "/api/capital-projects/:projectId/term-sheet-preview",
       "/api/marketflow/offers",
@@ -118,6 +116,57 @@ describe("reviewed inventory data route contract", () => {
         new RegExp(
           `app\\.post\\(\\s*["']${escaped}["'],\\s*isHybridAuthenticated,\\s*loadMarketflowInventoryAccessContext,`,
           "s",
+        ),
+      );
+    }
+  });
+
+  it("retires the legacy investment-interest write instead of accepting capital submissions", () => {
+    expect(routesSource).toMatch(
+      /app\.post\(\s*["']\/api\/marketplace\/investment-interest["'],\s*rejectCapitalInvestmentInterest\s*\)/,
+    );
+    expect(routesSource).not.toMatch(
+      /app\.post\(\s*["']\/api\/marketplace\/investment-interest["'][\s\S]{0,2000}createInvestmentOffer\(/,
+    );
+  });
+
+  it("fails every generic capital offer and commitment write closed", () => {
+    expect(routesSource).toMatch(
+      /app\.post\(\s*["']\/api\/supabase\/capital-commitments["'],\s*rejectCapitalInvestmentInterest\s*\)/,
+    );
+
+    const createStart = routesSource.indexOf('app.post("/api/marketflow/offers"');
+    const createRoute = routesSource.slice(
+      createStart,
+      routesSource.indexOf("// Get offers for a deal", createStart),
+    );
+    expect(createRoute).toContain("isCapitalOfferExecution");
+    expect(createRoute.indexOf("isCapitalOfferExecution")).toBeLessThan(
+      createRoute.indexOf("storage.createCurrentMarketflowOffer"),
+    );
+
+    const respondStart = routesSource.indexOf(
+      'app.post("/api/marketflow/offers/:offerId/respond"',
+    );
+    const respondRoute = routesSource.slice(
+      respondStart,
+      routesSource.indexOf("// Get negotiation by ID", respondStart),
+    );
+    expect(respondRoute).toContain("isCapitalOfferExecution");
+    expect(respondRoute.indexOf("isCapitalOfferExecution")).toBeLessThan(
+      respondRoute.indexOf("storage.respondToCurrentMarketflowOffer"),
+    );
+
+    for (const route of [
+      "/api/investment-offers",
+      "/api/investment-offers/:offerId/accept",
+      "/api/investment-offers/:offerId/decline",
+      "/api/hq/investment-offers/:id/respond",
+    ]) {
+      const escaped = route.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      expect(routesSource).toMatch(
+        new RegExp(
+          `app\\.post\\(\\s*["']${escaped}["'](?:,\\s*isAuthenticated)?(?:,\\s*requireStaffRole)?,\\s*rejectCapitalInvestmentInterest\\s*\\)`,
         ),
       );
     }

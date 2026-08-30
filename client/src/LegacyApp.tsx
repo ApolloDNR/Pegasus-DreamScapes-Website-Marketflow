@@ -97,7 +97,6 @@ import ResetPassword from "@/pages/reset-password";
 
 const Projects = lazy(() => import("@/pages/projects"));
 const Calculators = lazy(() => import("@/pages/calculators"));
-const StrategyLabLibrary = lazy(() => import("@/pages/strategy-lab-library"));
 const StrategyLabSubmitted = lazy(() => import("@/pages/strategy-lab-submitted"));
 const StrategyLabBlueprintConfirmed = lazy(() => import("@/pages/strategy-lab-blueprint-confirmed"));
 const AdminStrategyLab = lazy(() => import("@/pages/admin-strategy-lab"));
@@ -193,7 +192,6 @@ export function Router() {
       {/* Website Spec v4 — /strategy-lab is a live prototype shell page again
        * (mounted via PEGASUS_URLS above). The /strategy-lab/* tool subroutes
        * below stay live as their own standalone surfaces. */}
-      <Route path="/strategy-lab/library" component={StrategyLabLibrary} />
       <Route path="/strategy-lab/submitted" component={StrategyLabSubmitted} />
       <Route path="/strategy-lab/blueprint-confirmed" component={StrategyLabBlueprintConfirmed} />
       <Route path="/admin/strategy-lab" component={AdminStrategyLab} />

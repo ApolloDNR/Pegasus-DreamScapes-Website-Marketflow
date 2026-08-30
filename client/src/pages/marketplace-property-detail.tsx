@@ -32,7 +32,6 @@ import {
   Ruler,
   Calendar,
   ChevronLeft,
-  Share2,
   FileText,
   DollarSign,
   Building2,
@@ -46,6 +45,7 @@ import { useAuthenticatedQuery } from "@/hooks/use-authenticated-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { buildMarketplaceListingMailto } from "@/lib/listing-inquiry";
+import { ShareButtons } from "@/components/share-buttons";
 
 interface MarketplaceListingDetail {
   id: string | number;
@@ -249,10 +249,10 @@ function PropertyDetailContent({
             <Heart className="h-4 w-4" />
             <span className="sr-only">Save</span>
           </Button>
-          <Button variant="outline" size="icon" data-testid="button-share" aria-label="Share property">
-            <Share2 className="h-4 w-4" />
-            <span className="sr-only">Share</span>
-          </Button>
+          <ShareButtons
+            title={listing.title || listing.propertyAddress}
+            description={`Property at ${listing.propertyAddress}, ${listing.city || ""} ${listing.state || ""}`.trim()}
+          />
         </div>
       </div>
 

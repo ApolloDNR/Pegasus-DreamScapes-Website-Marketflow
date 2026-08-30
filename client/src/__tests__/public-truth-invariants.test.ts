@@ -19,7 +19,9 @@ const STANDALONE_PUBLIC_SOURCES = [
   "client/src/pages/pegasus-standard.tsx",
   "client/src/pages/strategy-lab-blueprint-confirmed.tsx",
   "client/src/pages/disclosures.tsx",
+  "client/src/pages/article-detail.tsx",
   "client/src/components/success-view.tsx",
+  "shared/structured-data.ts",
   "shared/faq-data.ts",
 ];
 

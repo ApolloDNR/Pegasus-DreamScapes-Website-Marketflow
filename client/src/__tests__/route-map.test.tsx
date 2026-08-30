@@ -143,6 +143,7 @@ describe("Route map (Website Brief v1.0 §1)", () => {
     "/calculators",
     "/library",
     "/strategy-library",
+    "/strategy-lab/library",
   ];
 
   it("registers every canonical public route in App.tsx", () => {

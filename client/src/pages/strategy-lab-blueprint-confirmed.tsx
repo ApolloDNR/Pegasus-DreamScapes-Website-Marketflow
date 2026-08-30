@@ -1,17 +1,14 @@
 import { useEffect } from "react";
-import { Link, useSearch } from "wouter";
+import { Link } from "wouter";
 import { useSEO } from "@/hooks/use-seo";
-import { CheckCircle2, ArrowRight, FileText } from "lucide-react";
+import { Info, ArrowRight, FileText } from "lucide-react";
 
 export default function StrategyLabBlueprintConfirmedPage() {
-  const search = useSearch();
-  const params = new URLSearchParams(search);
-  const referenceId = params.get("orderId") ?? params.get("requestId");
-
   useSEO({
-    title: "Blueprint request received. Pegasus DreamScapes.",
-    description: "Your Pegasus Deal Blueprint request has been received for review.",
+    title: "Blueprint receipt unavailable · Pegasus DreamScapes",
+    description: "This retired link cannot verify a Pegasus Deal Blueprint request.",
     noIndex: true,
+    noCanonical: true,
   });
 
   useEffect(() => {
@@ -27,24 +24,22 @@ export default function StrategyLabBlueprintConfirmedPage() {
           Pegasus Deal Blueprint
         </div>
         <h1 className="font-serif text-4xl sm:text-5xl font-semibold tracking-tight leading-tight mb-4 text-cream">
-          Blueprint request received.
+          Blueprint confirmation is not available at this link.
         </h1>
         <p className="text-base text-cream/78 leading-relaxed mb-10">
-          Thank you. The site recorded your Blueprint request
-          {referenceId ? <> (reference <span className="font-mono text-cream" data-testid="text-request-id">#{referenceId}</span>)</> : null}.
-          This is not an order confirmation, payment receipt, or offer. Pegasus
-          may consider the property for fit and capacity, but no review, response,
-          scope, timing, price, or Blueprint engagement is promised.
+          This retired link cannot verify that Pegasus received a request. A reference in the URL
+          is not proof of receipt. This page is not an order confirmation, payment receipt, or
+          submission receipt.
         </p>
 
         <div className="border border-cream/15 bg-white/[0.04] p-6 mb-10 shadow-[0_24px_80px_rgba(0,0,0,0.22)]">
           <div className="flex items-center gap-2 text-[11px] uppercase tracking-wider font-supporting font-semibold text-primary mb-2">
-            <CheckCircle2 className="w-3.5 h-3.5" /> What happens next
+            <Info className="w-3.5 h-3.5" aria-hidden="true" /> Use the current request path
           </div>
           <ul className="text-sm leading-relaxed space-y-2 text-cream/88">
-            <li>1. Keep the reference above as proof of receipt.</li>
-            <li>2. Pegasus may request more information if it elects to consider the request.</li>
-            <li>3. Work exists only after both parties accept written scope, fee, timing, author, and limits.</li>
+            <li>1. Submit property details through the current private opportunity intake.</li>
+            <li>2. Treat only a verified receipt shown immediately after a successful submission as confirmation.</li>
+            <li>3. A request does not promise review, response, scope, timing, price, or an engagement.</li>
           </ul>
         </div>
 

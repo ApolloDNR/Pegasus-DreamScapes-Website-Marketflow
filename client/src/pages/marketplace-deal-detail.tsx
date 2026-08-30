@@ -27,7 +27,6 @@ import {
   Calendar,
   Award,
   Star,
-  Bookmark,
   CheckCircle2,
   Clock,
   Target,
@@ -278,15 +277,6 @@ function DealDetailPage() {
                       <Printer className="w-4 h-4" />
                       <span className="sr-only">Print</span>
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      size="icon" 
-                      data-testid="button-save-deal"
-                      aria-label="Save deal to favorites"
-                    >
-                      <Bookmark className="w-4 h-4" />
-                      <span className="sr-only">Save</span>
-                    </Button>
                   </div>
                 </div>
               </CardHeader>
@@ -499,7 +489,8 @@ function DealDetailPage() {
               <div className="mt-4 p-3 rounded-lg bg-amber-500/10 text-center">
                 <Lock className="w-5 h-5 text-amber-600 mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground">
-                  Request access to view deal documents. Available after offer accepted.
+                  Document access is not available in this preview. If a real deal advances,
+                  access terms would be communicated separately in writing.
                 </p>
               </div>
             </CardContent>
@@ -556,23 +547,16 @@ function DealDetailPage() {
                 className="w-full"
               />
 
-              <Button 
-                variant="outline" 
-                className="w-full"
-                data-testid="button-analyze-deal"
-              >
-                <Calculator className="w-4 h-4 mr-2" />
-                Run Analysis
-              </Button>
-
-              <Button 
-                variant="ghost" 
-                className="w-full"
-                data-testid="button-save-deal-sidebar"
-              >
-                <Bookmark className="w-4 h-4 mr-2" />
-                Save for Later
-              </Button>
+              <Link href="/strategy-lab">
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  data-testid="button-analyze-deal"
+                >
+                  <Calculator className="w-4 h-4 mr-2" />
+                  Open Strategy Lab
+                </Button>
+              </Link>
 
               <Link href={`/marketflow/deals/${deal.id}/negotiate`}>
                 <Button 

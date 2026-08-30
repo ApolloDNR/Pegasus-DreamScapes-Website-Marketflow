@@ -10,7 +10,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Link } from "wouter";
 import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -23,8 +22,6 @@ import {
   Clock,
   TrendingUp,
   ShieldCheck,
-  ArrowRight,
-  Settings,
   XCircle,
   Home,
   DollarSign,
@@ -110,6 +107,18 @@ interface AuditLogsResponse {
   offset: number;
 }
 
+function AdminDataUnavailable({ scope }: { scope: string }) {
+  return (
+    <div className="rounded-lg border border-dashed p-5 text-center" role="status">
+      <AlertCircle className="mx-auto mb-3 h-7 w-7 text-amber-600" aria-hidden="true" />
+      <p className="font-medium">Admin data unavailable</p>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {scope} could not be loaded. Refresh or try again later; no zero or empty state is being inferred.
+      </p>
+    </div>
+  );
+}
+
 export default function MarketplaceAdminPage() {
   const { toast } = useToast();
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
@@ -117,35 +126,35 @@ export default function MarketplaceAdminPage() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [auditLogFilter, setAuditLogFilter] = useState<string>("all");
 
-  const { data: stats, isLoading: statsLoading } = useQuery<AdminStats>({
-    queryKey: ["/api/marketflow/admin/stats"],
+  const { data: stats, isLoading: statsLoading, isError: statsError } = useQuery<AdminStats>({
+    queryKey: ["/api/marketplace/admin/stats"],
   });
 
-  const { data: pendingItems = [], isLoading: pendingLoading } = useQuery<PendingItem[]>({
-    queryKey: ["/api/marketflow/admin/pending"],
+  const { data: pendingItems = [], isLoading: pendingLoading, isError: pendingError } = useQuery<PendingItem[]>({
+    queryKey: ["/api/marketplace/admin/pending"],
   });
 
-  const { data: users = [], isLoading: usersLoading } = useQuery<AdminUser[]>({
-    queryKey: ["/api/marketflow/admin/users"],
+  const { data: users = [], isLoading: usersLoading, isError: usersError } = useQuery<AdminUser[]>({
+    queryKey: ["/api/marketplace/admin/users"],
   });
 
-  const { data: leads = [], isLoading: leadsLoading } = useQuery<Lead[]>({
-    queryKey: ["/api/marketflow/admin/leads"],
+  const { data: leads = [], isLoading: leadsLoading, isError: leadsError } = useQuery<Lead[]>({
+    queryKey: ["/api/marketplace/admin/leads"],
   });
 
   const auditLogQueryKey = auditLogFilter === "all" 
     ? "/api/audit-logs?limit=50" 
     : `/api/audit-logs?limit=50&actionType=${auditLogFilter}`;
   
-  const { data: auditLogsData, isLoading: auditLogsLoading } = useQuery<AuditLogsResponse>({
+  const { data: auditLogsData, isLoading: auditLogsLoading, isError: auditLogsError } = useQuery<AuditLogsResponse>({
     queryKey: [auditLogQueryKey],
   });
 
   const approveMutation = useMutation({
     mutationFn: async ({ itemType, itemId, approved }: { itemType: string; itemId: number; approved: boolean }) => {
       const endpoint = itemType === "wholesale_deal" 
-        ? `/api/marketflow/admin/deals/${itemId}/status`
-        : `/api/marketflow/admin/projects/${itemId}/status`;
+        ? `/api/marketplace/admin/deals/${itemId}/status`
+        : `/api/marketplace/admin/projects/${itemId}/status`;
       return apiRequest("PATCH", endpoint, {
         status: approved ? "listed" : "rejected",
         rejectionReason: approved ? undefined : rejectionReason,
@@ -156,8 +165,8 @@ export default function MarketplaceAdminPage() {
         title: variables.approved ? "Approved" : "Rejected",
         description: `Item has been ${variables.approved ? "approved and listed" : "rejected"}.`,
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/marketflow/admin/pending"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/marketflow/admin/stats"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/marketplace/admin/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/marketplace/admin/stats"] });
       setReviewDialogOpen(false);
       setSelectedItem(null);
       setRejectionReason("");
@@ -170,14 +179,6 @@ export default function MarketplaceAdminPage() {
       });
     },
   });
-
-  const displayStats: AdminStats = stats ?? {
-    totalSellerLeads: 0,
-    pendingSellerLeads: 0,
-    totalInvestorLeads: 0,
-    activeWholesaleDeals: 0,
-    activeCapitalProjects: 0,
-  };
 
   const handleReview = (item: PendingItem) => {
     setSelectedItem(item);
@@ -222,14 +223,6 @@ export default function MarketplaceAdminPage() {
                 Manage users, deals, and platform operations
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <Link href="/marketflow/admin/settings">
-                <Button variant="outline" data-testid="button-settings">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Settings
-                </Button>
-              </Link>
-            </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
@@ -241,9 +234,11 @@ export default function MarketplaceAdminPage() {
               <CardContent>
                 {statsLoading ? (
                   <Skeleton className="h-8 w-16" />
+                ) : statsError || !stats ? (
+                  <span className="text-sm text-muted-foreground">Unavailable</span>
                 ) : (
                   <div className="text-2xl font-bold" data-testid="stat-seller-leads">
-                    {displayStats.totalSellerLeads}
+                    {stats.totalSellerLeads}
                   </div>
                 )}
               </CardContent>
@@ -255,8 +250,10 @@ export default function MarketplaceAdminPage() {
                 <Clock className="h-4 w-4 text-amber-500" />
               </CardHeader>
               <CardContent>
-                {statsLoading ? (
+                {pendingLoading ? (
                   <Skeleton className="h-8 w-16" />
+                ) : pendingError ? (
+                  <span className="text-sm text-muted-foreground">Unavailable</span>
                 ) : (
                   <div className="text-2xl font-bold text-amber-600" data-testid="stat-pending">
                     {pendingItems.length}
@@ -273,9 +270,11 @@ export default function MarketplaceAdminPage() {
               <CardContent>
                 {statsLoading ? (
                   <Skeleton className="h-8 w-16" />
+                ) : statsError || !stats ? (
+                  <span className="text-sm text-muted-foreground">Unavailable</span>
                 ) : (
                   <div className="text-2xl font-bold" data-testid="stat-investor-leads">
-                    {displayStats.totalInvestorLeads}
+                    {stats.totalInvestorLeads}
                   </div>
                 )}
               </CardContent>
@@ -289,9 +288,11 @@ export default function MarketplaceAdminPage() {
               <CardContent>
                 {statsLoading ? (
                   <Skeleton className="h-8 w-16" />
+                ) : statsError || !stats ? (
+                  <span className="text-sm text-muted-foreground">Unavailable</span>
                 ) : (
                   <div className="text-2xl font-bold" data-testid="stat-wholesale-deals">
-                    {displayStats.activeWholesaleDeals}
+                    {stats.activeWholesaleDeals}
                   </div>
                 )}
               </CardContent>
@@ -305,9 +306,11 @@ export default function MarketplaceAdminPage() {
               <CardContent>
                 {statsLoading ? (
                   <Skeleton className="h-8 w-16" />
+                ) : statsError || !stats ? (
+                  <span className="text-sm text-muted-foreground">Unavailable</span>
                 ) : (
                   <div className="text-2xl font-bold" data-testid="stat-capital-projects">
-                    {displayStats.activeCapitalProjects}
+                    {stats.activeCapitalProjects}
                   </div>
                 )}
               </CardContent>
@@ -352,6 +355,8 @@ export default function MarketplaceAdminPage() {
                         <Skeleton key={i} className="h-16 w-full" />
                       ))}
                     </div>
+                  ) : pendingError ? (
+                    <AdminDataUnavailable scope="Pending submissions" />
                   ) : pendingItems.length === 0 ? (
                     <div className="text-center py-8">
                       <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-4" />
@@ -412,6 +417,8 @@ export default function MarketplaceAdminPage() {
                         <Skeleton key={i} className="h-16 w-full" />
                       ))}
                     </div>
+                  ) : usersError ? (
+                    <AdminDataUnavailable scope="User records" />
                   ) : users.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       No users found
@@ -460,6 +467,9 @@ export default function MarketplaceAdminPage() {
                   <CardDescription>Manage wholesale deals and capital projects</CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {statsError || pendingError || !stats ? (
+                    <AdminDataUnavailable scope="Deal overview" />
+                  ) : (
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="p-4 rounded-lg border">
                       <div className="flex items-center gap-2 mb-3">
@@ -469,7 +479,7 @@ export default function MarketplaceAdminPage() {
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Active</span>
-                          <span className="font-medium">{displayStats.activeWholesaleDeals}</span>
+                          <span className="font-medium">{stats.activeWholesaleDeals}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Pending Review</span>
@@ -487,7 +497,7 @@ export default function MarketplaceAdminPage() {
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Active</span>
-                          <span className="font-medium">{displayStats.activeCapitalProjects}</span>
+                          <span className="font-medium">{stats.activeCapitalProjects}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Pending Review</span>
@@ -498,6 +508,7 @@ export default function MarketplaceAdminPage() {
                       </div>
                     </div>
                   </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -515,6 +526,8 @@ export default function MarketplaceAdminPage() {
                         <Skeleton key={i} className="h-16 w-full" />
                       ))}
                     </div>
+                  ) : leadsError ? (
+                    <AdminDataUnavailable scope="Lead records" />
                   ) : leads.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       No leads found
@@ -546,18 +559,11 @@ export default function MarketplaceAdminPage() {
                             <Badge variant={lead.status === "new" ? "default" : "secondary"} className="capitalize">
                               {lead.status}
                             </Badge>
-                            <Button size="sm" variant="outline">Contact</Button>
                           </div>
                         </div>
                       ))}
                     </div>
                   )}
-                  <Link href="/marketflow/admin/leads">
-                    <Button variant="ghost" className="w-full mt-4" data-testid="link-manage-leads">
-                      View All Leads
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </Button>
-                  </Link>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -598,6 +604,8 @@ export default function MarketplaceAdminPage() {
                         <Skeleton key={i} className="h-16 w-full" />
                       ))}
                     </div>
+                  ) : auditLogsError ? (
+                    <AdminDataUnavailable scope="Audit log" />
                   ) : !auditLogsData?.logs?.length ? (
                     <div className="text-center py-8">
                       <History className="h-12 w-12 text-muted-foreground mx-auto mb-4" />

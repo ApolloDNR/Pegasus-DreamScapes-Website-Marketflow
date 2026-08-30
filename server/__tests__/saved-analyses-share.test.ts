@@ -75,7 +75,10 @@ vi.mock("../storage", () => {
         if (data.tags === null || Array.isArray(data.tags))
           patch.tags = data.tags;
         // Mirror the production token-mint rule.
-        if (data.isShared === true && !row.shareToken) {
+        if (data.isShared === false) {
+          patch.shareToken = null;
+          patch.sharedAt = null;
+        } else if (data.isShared === true && !row.shareToken) {
           patch.shareToken =
             "tok_" + Math.random().toString(36).slice(2, 18).padEnd(16, "x");
           patch.sharedAt = new Date();
@@ -219,6 +222,43 @@ describe("PATCH /api/saved-analyses/:id (share flow over HTTP)", () => {
       body: JSON.stringify({ isShared: true, shareToken: "x" }),
     });
     expect(updateCalls).toHaveLength(0);
+  });
+
+  it("revokes the old public URL and returns a different token when shared again", async () => {
+    seedRow({
+      id: 6,
+      userId: "owner-1",
+      isShared: true,
+      shareToken: "OLD_PUBLIC_TOKEN",
+      sharedAt: new Date("2026-08-20T12:00:00.000Z"),
+    });
+
+    const revoke = await fetch(`${baseUrl}/api/saved-analyses/6`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ isShared: false }),
+    });
+    expect(revoke.status).toBe(200);
+    expect(await revoke.json()).toMatchObject({
+      isShared: false,
+      shareToken: null,
+      sharedAt: null,
+    });
+
+    const oldLink = await fetch(
+      `${baseUrl}/api/shared-analyses/OLD_PUBLIC_TOKEN`,
+    );
+    expect(oldLink.status).toBe(404);
+
+    const reShare = await fetch(`${baseUrl}/api/saved-analyses/6`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ isShared: true }),
+    });
+    expect(reShare.status).toBe(200);
+    const reSharedBody = await reShare.json();
+    expect(reSharedBody.shareToken).toBeTruthy();
+    expect(reSharedBody.shareToken).not.toBe("OLD_PUBLIC_TOKEN");
   });
 });
 

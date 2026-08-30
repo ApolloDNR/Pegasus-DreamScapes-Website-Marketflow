@@ -136,11 +136,12 @@ function assignIfDefined(target: UnknownRecord, key: string, value: unknown): vo
 function sanitizePropertyInput(value: unknown, full: boolean): UnknownRecord {
   const input = asRecord(value) ?? {};
   const output: UnknownRecord = {};
-  assignIfDefined(output, "address", sanitizePublicText(input.address, 240));
   assignIfDefined(output, "city", sanitizePublicText(input.city, 120));
   assignIfDefined(output, "state", sanitizePublicText(input.state, 8));
-  assignIfDefined(output, "zip", sanitizePublicText(input.zip, 12));
   if (!full) return output;
+
+  assignIfDefined(output, "address", sanitizePublicText(input.address, 240));
+  assignIfDefined(output, "zip", sanitizePublicText(input.zip, 12));
 
   for (const field of [
     "askingPrice", "purchasePrice", "asIsValueEstimate", "rehabBudget",
@@ -482,10 +483,12 @@ export function projectPublicPropertyAnalysis(value: unknown): PublicPropertyAna
   };
   const target = output as unknown as UnknownRecord;
   assignIfDefined(target, "id", sanitizeInteger(row.id, 1, Number.MAX_SAFE_INTEGER));
-  assignIfDefined(target, "address", sanitizePublicText(row.address, 240));
   assignIfDefined(target, "city", sanitizePublicText(row.city, 120));
   assignIfDefined(target, "state", sanitizePublicText(row.state, 8));
-  assignIfDefined(target, "zip", sanitizePublicText(row.zip, 12));
+  if (visibility === "full") {
+    assignIfDefined(target, "address", sanitizePublicText(row.address, 240));
+    assignIfDefined(target, "zip", sanitizePublicText(row.zip, 12));
+  }
   assignIfDefined(target, "createdAt", sanitizeIsoDate(row.createdAt));
   return output;
 }

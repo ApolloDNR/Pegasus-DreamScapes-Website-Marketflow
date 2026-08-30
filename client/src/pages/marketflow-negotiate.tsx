@@ -14,6 +14,7 @@ import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { OfferStudio, type OfferStudioData } from "@/components/offer-studio";
 import { QuickCounterOffer, type QuickCounterData } from "@/components/quick-counter-offer";
+import { CapitalRelationshipOnlyNotice } from "@/components/capital-relationship-only-notice";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { MarketflowOffer, MarketflowNegotiation, NegotiationMessage } from "@shared/schema";
 import {
@@ -133,22 +134,17 @@ function NegotiationRoom() {
     enabled: !!dealId && lane === "WHOLESALE",
   });
 
-  const { data: capitalProject, isLoading: capitalLoading } = useQuery<any>({
-    queryKey: ['/api/capital-projects', dealId],
-    enabled: !!dealId && lane === "CAPITAL",
-  });
-
   const { data: listing, isLoading: listingLoading } = useQuery<any>({
     queryKey: ['/api/retail-listings', dealId],
     enabled: !!dealId && lane === "LISTING",
   });
 
-  const deal = lane === "WHOLESALE" ? wholesaleDeal : lane === "CAPITAL" ? capitalProject : listing;
+  const deal = lane === "WHOLESALE" ? wholesaleDeal : lane === "LISTING" ? listing : undefined;
   const dealOwnerId = deal?.submittedBy || deal?.operatorId || deal?.createdBy || null;
 
   const { data: dealNegotiations } = useQuery<MarketflowNegotiation[]>({
     queryKey: ['/api/marketflow/negotiations/deal', lane, dealId],
-    enabled: !!dealId && isAuthenticated,
+    enabled: !!dealId && lane !== "CAPITAL" && isAuthenticated,
   });
   
   const currentNegotiation = dealNegotiations?.find(
@@ -157,17 +153,20 @@ function NegotiationRoom() {
 
   const { data: negotiationData, isLoading: negotiationLoading, refetch: refetchNegotiation } = useQuery<NegotiationData>({
     queryKey: ['/api/marketflow/negotiations', currentNegotiation?.id],
-    enabled: !!currentNegotiation?.id && isAuthenticated,
+    enabled: !!currentNegotiation?.id && lane !== "CAPITAL" && isAuthenticated,
   });
 
   const offers = negotiationData?.offers?.map(o => transformMarketflowOffer(o, user?.id)) || [];
   const messages = negotiationData?.messages || [];
-  const isLoading = wholesaleLoading || capitalLoading || listingLoading || negotiationLoading;
+  const isLoading = wholesaleLoading || listingLoading || negotiationLoading;
 
   const createOfferMutation = useMutation({
     mutationFn: async (payload: Record<string, unknown>) => {
       if (!dealId) {
         throw new Error("Deal ID is required to submit an offer");
+      }
+      if (lane === "CAPITAL") {
+        throw new Error("Capital negotiation routes are relationship information only");
       }
       
       const negotiation = currentNegotiation;
@@ -193,7 +192,7 @@ function NegotiationRoom() {
         lane,
         dealId: parsedDealId,
         recipientId,
-        offerKind: lane === "WHOLESALE" ? "WHOLESALE_ASSIGNMENT" : lane === "CAPITAL" ? "CAPITAL_INVESTMENT" : "LISTING_INQUIRY",
+        offerKind: lane === "WHOLESALE" ? "WHOLESALE_ASSIGNMENT" : "LISTING_INQUIRY",
         payload,
       });
       return res.json();
@@ -397,6 +396,15 @@ function NegotiationRoom() {
 
   const latestOffer = offers[offers.length - 1];
   const agreementReached = latestOffer?.status === "accepted";
+
+  if (lane === "CAPITAL") {
+    return (
+      <CapitalRelationshipOnlyNotice
+        backPath={dealId ? `/marketflow/capital/${dealId}` : "/marketflow/capital"}
+        backLabel={dealId ? "Back to project record" : "Back to projects"}
+      />
+    );
+  }
 
   if (isLoading) {
     return (

@@ -47,6 +47,15 @@ describe("legacy SPA server redirects", () => {
     });
   });
 
+  it("retires the obsolete Strategy Lab account library into Saved Work", () => {
+    expect(
+      requestRedirect("/strategy-lab/library", "/strategy-lab/library"),
+    ).toEqual({
+      status: 301,
+      location: "/saved",
+    });
+  });
+
   it.each([
     ["/marketplace/admin/*", "/marketplace/admin/users/operator-42", "/marketflow/admin"],
     ["/marketplace/deals/*", "/marketplace/deals/deal-42/negotiate", "/marketflow/deals"],

@@ -51,7 +51,7 @@ function organizationNode(): Record<string, unknown> {
     email: EMAIL,
     telephone: PHONE,
     description:
-      "Strategy-first real estate operating company serving the East Bay. Pegasus Dreamscapes Corp. is not a real estate brokerage. Complex property, structured opportunity. Every property gets a path.",
+      "Strategy-first real estate operating company serving the East Bay. Pegasus Dreamscapes Corp. is not a real estate brokerage. Complex property, structured opportunity. Public information is educational and availability is conditional.",
     areaServed: {
       "@type": "AdministrativeArea",
       name: "East Bay, California",

@@ -120,7 +120,6 @@ const STANDALONE_SOLID_NAV: string[] = [
   // the unified chrome so users don't drop to the legacy site mid-conversion.
   '/strategy-lab/submitted',
   '/strategy-lab/blueprint-confirmed',
-  '/strategy-lab/library',
 ];
 
 // Prefix-matched standalone routes. `/projects/...` detail/case-study pages

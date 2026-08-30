@@ -82,7 +82,7 @@ export function CommandPalette() {
 
   const toolItems: CommandItem[] = [
     { id: "strategy-lab", label: "Strategy Lab", description: "Run a property through the Pegasus lens", icon: Calculator, href: "/strategy-lab", keywords: ["math", "analyze", "calculator", "lane", "verdict"], badge: "New" },
-    { id: "resources", label: "Strategy Library", description: "Read the Pegasus frameworks", icon: BookOpen, href: "/strategy-lab/library", keywords: ["learn", "education"] },
+    { id: "resources", label: "Saved Work", description: "Resume Strategy Lab drafts and saved conversations", icon: BookOpen, href: "/saved", keywords: ["saved", "drafts", "conversations"] },
     { id: "community", label: "MarketFlow Community", description: "Private network conversations", icon: MessageSquare, href: "/marketflow/community", keywords: ["forum", "chat", "social"] },
   ];
 

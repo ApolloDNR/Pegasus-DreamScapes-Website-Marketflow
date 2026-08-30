@@ -29,6 +29,7 @@ export const LEGACY_SPA_EXACT_REDIRECTS: ReadonlyArray<
   ["/deal-strategy", "/how-we-operate"],
   ["/wholesale", "/bring-an-opportunity?intent=deal-jv"],
   ["/deal-architecture", "/how-we-operate"],
+  ["/strategy-lab/library", "/saved"],
   ["/dashboard", "/marketflow/dashboard"],
   ["/dealflow/hq", "/marketflow/admin"],
   ["/hq", "/marketflow/admin"],

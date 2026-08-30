@@ -15,8 +15,19 @@ vi.mock("../storage", () => {
         return out;
       },
       getPropertyAnalysis: async (id: number) => created[id - 1] ?? null,
-      updatePropertyAnalysis: async (id: number, patch: Row) =>
-        (created[id - 1] = { ...created[id - 1], ...patch }),
+      updatePropertyAnalysis: async (id: number, patch: Row) => {
+        const next = { ...created[id - 1], ...patch };
+        if (patch.isShared === false) {
+          next.shareToken = null;
+          next.sharedAt = null;
+        }
+        if (patch.isShared === true && !next.shareToken) {
+          next.shareToken = `rotated_${id}_${Date.now()}`;
+          next.sharedAt = new Date();
+        }
+        created[id - 1] = next;
+        return next;
+      },
       listPropertyAnalysesByUser: async () => [],
       deletePropertyAnalysis: async () => {},
       getPropertyAnalysisByShareToken: async (token: string) =>
@@ -53,11 +64,17 @@ const { registerPropertyAnalysisRoutes } = await import("../propertyAnalysisRout
 let server: Server;
 let baseUrl = "";
 
-async function startServer() {
+async function startServer(authenticatedUserId?: string) {
   const app = express();
   app.use(express.json());
   registerPropertyAnalysisRoutes(app, {
-    isAuthenticated: (_req, res, _next) => res.status(401).json({ message: "Unauthorized" }),
+    isAuthenticated: (req: any, res, next) => {
+      if (!authenticatedUserId) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
+      req.user = { claims: { sub: authenticatedUserId } };
+      next();
+    },
   });
   await new Promise<void>((resolve) => {
     server = app.listen(0, () => resolve());
@@ -144,13 +161,14 @@ describe("GET /api/pdf/strategy-snapshot/by-id/:id?tone= — Reading Lens (Task 
 
       const handed = pdfCalls[0];
       const memo = handed.snapshot?.memo;
-      // Wholesaler-on-listed framing sentence is prepended verbatim by
-      // frameDecisionMemo. If the route fell back to dealStatus=unknown
-      // we would see the generic wholesale framing instead.
-      expect(memo.paragraph).toContain("It's listed");
+      // The listed-property branch is prepended by frameDecisionMemo. If the
+      // route fell back to dealStatus=unknown, this disclosure would be absent.
+      expect(memo.paragraph).toContain("visitor marked the property listed");
+      expect(memo.paragraph).toContain("representation, disclosure, and contract restrictions");
       expect(memo.paragraph).toContain(rawParagraph);
       expect(memo.nextStep).not.toBe(rawNextStep);
-      expect(memo.nextStep).toContain("Assignment math is tighter");
+      expect(memo.nextStep).toContain("qualified legal and licensed advice");
+      expect(memo.nextStep).toContain("assignment assumptions");
 
       // Visibility is still forced to 'full' for owner-only export.
       expect(handed.visibility).toBe("full");
@@ -313,6 +331,9 @@ describe("public property snapshot trust boundary", () => {
       });
       expect(body.outputContext.label).toMatch(/user-entered, unverified inputs/i);
       expect(body.address).toBe("400 Model Way");
+      expect(body.zip).toBe("94601");
+      expect(body.propertyInput.address).toBe("400 Model Way");
+      expect(body.propertyInput.zip).toBe("94601");
       expect(body.propertyInput.knownIssues[0]).not.toContain("\u202E");
       expect(body.snapshot.lanes).toHaveLength(1);
       expect(body.snapshot.lanes[0].verdictLabel).toMatch(/^Automated model fit:/);
@@ -334,6 +355,99 @@ describe("public property snapshot trust boundary", () => {
       expect(JSON.stringify(body.snapshot)).not.toMatch(
         /Pegasus[^.]{0,40}(?:reviewed|recommends)/i,
       );
+    } finally {
+      await stopServer();
+    }
+  });
+
+  it("redacts street address and ZIP from every summary-tier public surface", async () => {
+    seedSharedPropertyAnalysis();
+    created[0].visibility = "summary";
+    await startServer();
+    try {
+      const jsonResponse = await fetch(
+        `${baseUrl}/api/property-analyses/by-token/property_public_token`,
+      );
+      expect(jsonResponse.status).toBe(200);
+      const body = await jsonResponse.json();
+      expect(body.visibility).toBe("summary");
+      expect(body).not.toHaveProperty("address");
+      expect(body).not.toHaveProperty("zip");
+      expect(body).toMatchObject({ city: "Oakland", state: "CA" });
+      expect(body.propertyInput).not.toHaveProperty("address");
+      expect(body.propertyInput).not.toHaveProperty("zip");
+      expect(body.propertyInput).toEqual({ city: "Oakland", state: "CA" });
+
+      const pdfResponse = await fetch(
+        `${baseUrl}/api/pdf/strategy-snapshot/by-token/property_public_token`,
+      );
+      expect(pdfResponse.status).toBe(200);
+      expect(pdfCalls.at(-1)).not.toHaveProperty("address");
+      expect(pdfCalls.at(-1)).not.toHaveProperty("zip");
+      expect(pdfCalls.at(-1)?.propertyInput).not.toHaveProperty("address");
+      expect(pdfCalls.at(-1)?.propertyInput).not.toHaveProperty("zip");
+
+      const ogResponse = await fetch(
+        `${baseUrl}/og/snapshot/property_public_token`,
+      );
+      expect(ogResponse.status).toBe(200);
+      const svg = await ogResponse.text();
+      expect(svg).not.toContain("400 Model Way");
+      expect(svg).not.toContain("94601");
+      expect(svg).toContain("Oakland, CA");
+    } finally {
+      await stopServer();
+    }
+  });
+
+  it("lets the owner revoke a property share and rotates the token when sharing again", async () => {
+    seedSharedPropertyAnalysis();
+    await startServer("private-owner-id");
+    try {
+      const revoke = await fetch(
+        `${baseUrl}/api/property-analyses/1/share`,
+        { method: "DELETE" },
+      );
+      expect(revoke.status).toBe(200);
+      expect(await revoke.json()).toEqual({
+        isShared: false,
+        shareToken: null,
+        sharedAt: null,
+      });
+
+      const oldLink = await fetch(
+        `${baseUrl}/api/property-analyses/by-token/property_public_token`,
+      );
+      expect(oldLink.status).toBe(404);
+
+      const reShare = await fetch(
+        `${baseUrl}/api/property-analyses/1/share`,
+        {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ visibility: "summary" }),
+        },
+      );
+      expect(reShare.status).toBe(200);
+      const reSharedBody = await reShare.json();
+      expect(reSharedBody.shareToken).toBeTruthy();
+      expect(reSharedBody.shareToken).not.toBe("property_public_token");
+    } finally {
+      await stopServer();
+    }
+  });
+
+  it("does not let a different user revoke a property share", async () => {
+    seedSharedPropertyAnalysis();
+    await startServer("different-user-id");
+    try {
+      const revoke = await fetch(
+        `${baseUrl}/api/property-analyses/1/share`,
+        { method: "DELETE" },
+      );
+      expect(revoke.status).toBe(403);
+      expect(created[0].shareToken).toBe("property_public_token");
+      expect(created[0].isShared).toBe(true);
     } finally {
       await stopServer();
     }

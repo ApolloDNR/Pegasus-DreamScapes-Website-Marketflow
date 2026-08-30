@@ -13,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CapitalRelationshipOnlyNotice } from "@/components/capital-relationship-only-notice";
 import {
   ArrowLeft,
   Building2,
@@ -95,17 +96,6 @@ function adaptOfferStudioDeal(
           : rawDeal.askingPrice,
       propertyAddress:
         rawDeal.propertyAddress || rawDeal.address || rawDeal.title,
-    };
-  }
-  if (lane === "CAPITAL") {
-    return {
-      ...rawDeal,
-      askingPrice:
-        typeof rawDeal.fundingGoal === "number"
-          ? rawDeal.fundingGoal
-          : rawDeal.askingPrice,
-      propertyAddress:
-        rawDeal.propertyAddress || rawDeal.title || rawDeal.address,
     };
   }
   return rawDeal;
@@ -257,10 +247,6 @@ export default function MarketflowOfferStudioPage() {
     queryKey: ["/api/wholesale-deals", dealId],
     enabled: !!dealId && lane === "WHOLESALE" && isAuthenticated,
   });
-  const { data: capitalProject, isLoading: capitalLoading } = useQuery<any>({
-    queryKey: ["/api/capital-projects", dealId],
-    enabled: !!dealId && lane === "CAPITAL" && isAuthenticated,
-  });
   const { data: listing, isLoading: listingLoading } = useQuery<any>({
     queryKey: ["/api/listings", dealId],
     enabled: !!dealId && lane === "LISTING" && isAuthenticated,
@@ -270,19 +256,15 @@ export default function MarketflowOfferStudioPage() {
     () =>
       adaptOfferStudioDeal(
         lane,
-        lane === "WHOLESALE"
-          ? wholesaleDeal
-          : lane === "CAPITAL"
-            ? capitalProject
-            : listing,
+        lane === "WHOLESALE" ? wholesaleDeal : lane === "LISTING" ? listing : undefined,
       ),
-    [lane, wholesaleDeal, capitalProject, listing],
+    [lane, wholesaleDeal, listing],
   );
 
   // --- Negotiation loading ---
   const { data: dealNegotiations } = useQuery<MarketflowNegotiation[]>({
     queryKey: ["/api/marketflow/negotiations/deal", lane, dealId],
-    enabled: !!dealId && isAuthenticated && roleAllowed,
+    enabled: !!dealId && lane !== "CAPITAL" && isAuthenticated && roleAllowed,
   });
 
   const currentNegotiation = dealNegotiations?.find(
@@ -299,7 +281,7 @@ export default function MarketflowOfferStudioPage() {
     messages: NegotiationMessage[];
   }>({
     queryKey: ["/api/marketflow/negotiations", currentNegotiation?.id],
-    enabled: !!currentNegotiation?.id && isAuthenticated,
+    enabled: !!currentNegotiation?.id && lane !== "CAPITAL" && isAuthenticated,
   });
 
   const offers: LadderOffer[] = useMemo(
@@ -381,6 +363,9 @@ export default function MarketflowOfferStudioPage() {
   const createOfferMutation = useMutation({
     mutationFn: async (payload: MarketflowFinancialTerms) => {
       if (!dealId) throw new Error("Deal ID is required");
+      if (lane === "CAPITAL") {
+        throw new Error("Capital Offer Studio is relationship information only.");
+      }
 
       let parsedDealId: number | string = dealId;
       if (lane === "WHOLESALE") {
@@ -395,8 +380,6 @@ export default function MarketflowOfferStudioPage() {
         offerKind:
           lane === "WHOLESALE"
             ? "WHOLESALE_ASSIGNMENT"
-            : lane === "CAPITAL"
-            ? "CAPITAL_INVESTMENT"
             : "LISTING_INQUIRY",
         payload,
       });
@@ -579,7 +562,16 @@ export default function MarketflowOfferStudioPage() {
     return <AccessDenied reason="Missing deal reference. Open Offer Studio from a deal card." />;
   }
 
-  const isLoading = wholesaleLoading || capitalLoading || listingLoading;
+  if (lane === "CAPITAL") {
+    return (
+      <CapitalRelationshipOnlyNotice
+        backPath={`/marketflow/capital/${dealId}`}
+        backLabel="Back to project record"
+      />
+    );
+  }
+
+  const isLoading = wholesaleLoading || listingLoading;
 
   if (isLoading) {
     return (

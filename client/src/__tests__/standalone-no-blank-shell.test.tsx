@@ -136,7 +136,6 @@ const STANDALONE_URLS: string[] = [
   "/privacy",
   "/terms",
   "/deal-blueprint",
-  "/strategy-lab/library",
   "/strategy-lab/submitted",
   "/strategy-lab/blueprint-confirmed",
   // /strategy-lab/classic is now a pure redirect into the unified Lab's

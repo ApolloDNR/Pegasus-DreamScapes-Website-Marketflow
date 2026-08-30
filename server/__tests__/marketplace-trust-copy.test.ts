@@ -98,13 +98,16 @@ describe("marketplace deal trust copy", () => {
     );
   });
 
-  it("does not invent projected returns when a capital record omits them", () => {
+  it("does not present source projections as executable capital terms", () => {
     const capitalSurfaces = `${capitalIndexSource}\n${capitalDetailSource}`;
     expect(capitalSurfaces).not.toContain('projectedReturn || "15-20%"');
     expect(capitalSurfaces).not.toContain(
       "Browse investment opportunities from verified Dreamscapers",
     );
-    expect(capitalSurfaces).toContain('projectedReturn || "Not provided"');
+    expect(capitalIndexSource).not.toContain("Projected Return");
+    expect(capitalIndexSource).not.toContain("Minimum Capital");
+    expect(capitalIndexSource).not.toContain("Funding Progress");
+    expect(capitalIndexSource).toContain("Relationship information only");
   });
 
   it("removes unsupported ROI, timing, and buyer-vetting claims", () => {

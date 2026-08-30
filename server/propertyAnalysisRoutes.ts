@@ -9,6 +9,7 @@
  *  - DELETE /api/property-analyses/:id          delete (owner)
  *  - GET    /api/property-analyses/by-token/:t  public read (summary-aware)
  *  - POST   /api/property-analyses/:id/share    mint share token + visibility
+ *  - DELETE /api/property-analyses/:id/share    revoke share token
  *  - POST   /api/property-analyses/:id/submit   mark submitted-to-Pegasus
  *  - POST   /api/property-analyses/claim        anon → user (body { sessionId })
  *  - GET    /api/pdf/strategy-snapshot/by-id/:id        owner-only PDF
@@ -252,6 +253,29 @@ export function registerPropertyAnalysisRoutes(app: Express, ctx: AuthCtx) {
     } catch (err) {
       console.error("Error sharing property analysis:", err);
       return res.status(500).json({ message: "Failed to share" });
+    }
+  });
+
+  // ── Revoke share (auth + owner) — invalidates the old URL ────────────
+  app.delete("/api/property-analyses/:id/share", isAuthenticated, async (req: any, res) => {
+    try {
+      const id = Number(req.params.id);
+      if (!Number.isFinite(id)) return res.status(400).json({ message: "Invalid id" });
+      const row = await storage.getPropertyAnalysis(id);
+      if (!row) return res.status(404).json({ message: "Not found" });
+      if (row.userId !== authUserId(req)) return res.status(403).json({ message: "Not authorized" });
+      const updated = await storage.updatePropertyAnalysis(id, {
+        isShared: false,
+      } as Parameters<typeof storage.updatePropertyAnalysis>[1]);
+      if (!updated) return res.status(500).json({ message: "Failed to revoke share" });
+      return res.json({
+        isShared: false,
+        shareToken: updated.shareToken ?? null,
+        sharedAt: updated.sharedAt ?? null,
+      });
+    } catch (err) {
+      console.error("Error revoking property analysis share:", err);
+      return res.status(500).json({ message: "Failed to revoke share" });
     }
   });
 

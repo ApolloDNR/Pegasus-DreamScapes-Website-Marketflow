@@ -2687,11 +2687,14 @@ export class DatabaseStorage implements IStorage {
     // (vanishingly unlikely) collision.
     const patch: Partial<InsertSavedAnalysis> & {
       isShared?: boolean;
-      shareToken?: string;
-      sharedAt?: Date;
+      shareToken?: string | null;
+      sharedAt?: Date | null;
       updatedAt: Date;
     } = { ...data, updatedAt: new Date() };
-    if (data.isShared === true) {
+    if (data.isShared === false) {
+      patch.shareToken = null;
+      patch.sharedAt = null;
+    } else if (data.isShared === true) {
       const existing = await this.getSavedAnalysis(id);
       if (existing && !existing.shareToken) {
         for (let attempt = 0; attempt < 5; attempt++) {
@@ -3935,7 +3938,10 @@ export class DatabaseStorage implements IStorage {
     data: Partial<InsertPropertyAnalysis> & { isShared?: boolean; submittedToPegasus?: boolean },
   ): Promise<PropertyAnalysis | undefined> {
     const patch: Record<string, unknown> = { ...data, updatedAt: new Date() };
-    if (data.isShared === true) {
+    if (data.isShared === false) {
+      patch.shareToken = null;
+      patch.sharedAt = null;
+    } else if (data.isShared === true) {
       const existing = await this.getPropertyAnalysis(id);
       if (existing && !existing.shareToken) {
         for (let i = 0; i < 5; i++) {

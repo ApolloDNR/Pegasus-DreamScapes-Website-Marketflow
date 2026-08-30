@@ -7,18 +7,11 @@ import {
   Calendar,
   ArrowRight,
   Loader2,
-  User,
-  TrendingUp,
-  Home,
   Calculator,
-  DollarSign,
-  FileText,
-  GraduationCap,
   Target,
-  BarChart3,
   Lightbulb,
-  CheckCircle2,
-  ExternalLink
+  MessageCircle,
+  FolderOpen,
 } from "lucide-react";
 import { Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
@@ -38,89 +31,14 @@ export default function MarketplaceResources() {
             </h1>
           </div>
           <p className="text-muted-foreground">
-            Master real estate investing with guides, market analysis, and expert insights
+            Published field notes and user-controlled educational tools. Nothing here is individualized investment, legal, tax, or accounting advice.
           </p>
         </div>
 
-        <InvestmentGuides />
         <ArticlesSection />
         <QuickTools />
       </div>
     </MarketplaceLayout>
-  );
-}
-
-function InvestmentGuides() {
-  const guides = [
-    {
-      icon: Home,
-      title: "Fix & Flip Fundamentals",
-      description: "Learn the basics of finding, renovating, and selling properties for profit.",
-      topics: ["Finding Deals", "Renovation Planning", "Exit Strategies"],
-      difficulty: "Beginner",
-    },
-    {
-      icon: TrendingUp,
-      title: "BRRRR Strategy Guide",
-      description: "Master the Buy, Rehab, Rent, Refinance, Repeat method for building wealth.",
-      topics: ["Cash Recycling", "Refinancing", "Portfolio Building"],
-      difficulty: "Intermediate",
-    },
-    {
-      icon: Calculator,
-      title: "Deal Analysis Mastery",
-      description: "Learn to analyze deals like a pro with comprehensive calculation methods.",
-      topics: ["ARV Calculation", "Repair Estimates", "ROI Analysis"],
-      difficulty: "Intermediate",
-    },
-    {
-      icon: BarChart3,
-      title: "Market Analysis",
-      description: "Understand market trends, identify opportunities, and make data-driven decisions.",
-      topics: ["Market Cycles", "Neighborhood Analysis", "Timing"],
-      difficulty: "Advanced",
-    },
-  ];
-
-  return (
-    <section className="mb-10">
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-xl font-semibold mb-1">Investment Guides</h2>
-          <p className="text-sm text-muted-foreground">Structured learning for real estate success</p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {guides.map((guide, index) => (
-          <Card key={index} className="hover-elevate cursor-pointer" data-testid={`guide-card-${index}`}>
-            <CardContent className="p-5">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
-                  <guide.icon className="w-6 h-6 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-2 flex-wrap">
-                    <h3 className="text-lg font-semibold">{guide.title}</h3>
-                    <Badge variant="outline" className="text-xs">
-                      {guide.difficulty}
-                    </Badge>
-                  </div>
-                  <p className="text-muted-foreground text-sm mb-3 line-clamp-2">{guide.description}</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {guide.topics.map((topic, i) => (
-                      <Badge key={i} variant="secondary" className="text-xs">
-                        {topic}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    </section>
   );
 }
 
@@ -149,7 +67,7 @@ function ArticlesSection() {
     });
   };
 
-  const displayArticles = articles && articles.length > 0 ? articles.slice(0, 6) : [];
+  const displayArticles = !error && articles && articles.length > 0 ? articles.slice(0, 6) : [];
 
   return (
     <section className="mb-10">
@@ -159,7 +77,7 @@ function ArticlesSection() {
           <p className="text-sm text-muted-foreground">Insights and analysis from our team</p>
         </div>
         {articles && articles.length > 6 && (
-          <Link href="/strategy-lab">
+          <Link href="/resources">
             <Button variant="ghost" size="sm">
               View All <ArrowRight className="w-4 h-4 ml-1" />
             </Button>
@@ -167,17 +85,27 @@ function ArticlesSection() {
         )}
       </div>
 
-      {displayArticles.length === 0 ? (
+      {error ? (
+        <Card className="py-12" role="status">
+          <div className="mx-auto max-w-md px-6 text-center">
+            <BookOpen className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
+            <p className="font-medium">Articles are unavailable right now.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              The article service did not respond. No empty library is being inferred from that error.
+            </p>
+          </div>
+        </Card>
+      ) : displayArticles.length === 0 ? (
         <Card className="py-12">
           <div className="text-center text-muted-foreground">
             <BookOpen className="w-12 h-12 mx-auto mb-3 text-muted-foreground/50" />
-            <p className="text-sm">No articles available yet. Check back soon!</p>
+            <p className="text-sm">No published articles are available yet.</p>
           </div>
         </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {displayArticles.map((article) => (
-            <Link key={article.id} href="/strategy-lab">
+            <Link key={article.id} href={`/resources/${article.slug}`}>
               <Card className="h-full hover-elevate cursor-pointer" data-testid={`article-card-${article.id}`}>
                 <CardContent className="p-5">
                   <div className="flex items-center gap-2 mb-3 text-xs text-muted-foreground">
@@ -209,30 +137,26 @@ function QuickTools() {
     {
       icon: Calculator,
       title: "Deal Calculators",
-      description: "ARV, ROI, BRRRR, Cash Flow, and Wholesale calculators",
-      href: "/marketflow/calculators",
-      internal: true,
+      description: "Run illustrative calculators with inputs and assumptions you control.",
+      href: "/strategy-lab?tool=calculators",
     },
     {
-      icon: Target,
-      title: "Property Analysis",
-      description: "Deep dive into property metrics and comparables",
-      href: "/marketflow/discover",
-      internal: true,
+      icon: FolderOpen,
+      title: "Property Workspace",
+      description: "Resume browser-saved Strategy Lab drafts and saved conversations.",
+      href: "/saved",
     },
     {
       icon: Lightbulb,
-      title: "Investment Strategies",
-      description: "Compare different approaches to real estate investing",
-      href: "/marketflow/discover",
-      internal: true,
+      title: "Explore Strategies",
+      description: "Compare possible lanes using the property inputs you provide.",
+      href: "/strategy-lab",
     },
     {
-      icon: GraduationCap,
+      icon: MessageCircle,
       title: "Ask Peggy",
-      description: "Get answers to your real estate investing questions",
+      description: "Explore educational questions and find the appropriate next route.",
       href: "/peggy",
-      internal: true,
     },
   ];
 

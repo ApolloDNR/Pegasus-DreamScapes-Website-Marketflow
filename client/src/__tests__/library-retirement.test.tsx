@@ -35,6 +35,9 @@ function renderRedirect(path: string) {
         <Route path="/strategy-lab">
           {() => <div data-testid="strategy-lab" />}
         </Route>
+        <Route path="/saved">
+          {() => <div data-testid="saved-work" />}
+        </Route>
       </Switch>
     </Router>,
   );
@@ -69,5 +72,10 @@ describe("retired public Strategy Library", () => {
 
   it("removes the retired library from visible legacy navigation data", () => {
     expect(NAV_MORE.some((item) => item.href === "/library")).toBe(false);
+  });
+
+  it("redirects the obsolete account library to the real saved-work surface", async () => {
+    const sink = renderRedirect("/strategy-lab/library");
+    await waitFor(() => expect(sink.current).toBe("/saved"));
   });
 });
