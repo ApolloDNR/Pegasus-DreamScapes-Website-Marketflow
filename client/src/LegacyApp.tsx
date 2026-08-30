@@ -1,4 +1,4 @@
-import { useEffect, Suspense, lazy } from "react";
+import { useEffect, Suspense, lazy, type ReactNode } from "react";
 import { Switch, Route, Redirect, useLocation, useSearch } from "wouter";
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -28,8 +28,12 @@ import { Landing as PegasusSite } from "@/pegasus/Landing";
 import { PEGASUS_URLS, isSolidNavUrl } from "@/pegasus/routes";
 import { PegasusStandaloneShell } from "@/pegasus/standalone-shell";
 import { classifyShellMode } from "@/lib/shell-mode";
+import type { ShellMode } from "@/lib/shell-mode";
+import { MarketplaceLayout } from "@/components/marketplace-layout";
 import {
   appendRedirectSearch,
+  LEGACY_SPA_EXACT_REDIRECTS,
+  LEGACY_SPA_PREFIX_REDIRECTS,
   QUERY_PRESERVING_INTAKE_PATHS,
 } from "@shared/redirects";
 
@@ -88,6 +92,8 @@ function AuthGatedPeggyDock() {
 import NotFound from "@/pages/not-found";
 import Login from "@/pages/login";
 import Signup from "@/pages/signup";
+import ForgotPassword from "@/pages/forgot-password";
+import ResetPassword from "@/pages/reset-password";
 
 const About = lazy(() => import("@/pages/about"));
 const Development = lazy(() => import("@/pages/development"));
@@ -154,73 +160,18 @@ const Ecosystem = lazy(() => import("@/pages/ecosystem"));
 const FAQ = lazy(() => import("@/pages/faq"));
 
 export const legacyRedirects: [string, string][] = [
-  // Master Blueprint v5.1: /bring-an-opportunity is canonical; old funnel
-  // routes collapse into that desk with their intent preserved via query.
-  // Mirror of server LEGACY_REDIRECTS for SPA-internal navigation only.
-  // Server-side 301s / 410s are authoritative for direct HTTP hits.
-  // Master Blueprint v5.1 (§6): owners/deal-source funnels route to their
-  // audience pages; the intake desk is canonical at /bring-an-opportunity.
-  ["/sell", "/property-owners"],
-  ["/submit-deal", "/bring-an-opportunity?intent=deal-jv"],
-  ["/submit-property", "/bring-an-opportunity"],
-  ["/submit", "/bring-an-opportunity"],
-  ["/services", "/how-we-operate"],
+  ...LEGACY_SPA_EXACT_REDIRECTS.map(([from, to]) => [from, to] as [string, string]),
+  ...LEGACY_SPA_PREFIX_REDIRECTS.map(
+    ([prefix, to]) => [`${prefix}/*`, to] as [string, string],
+  ),
+  // Public library retirement and calculator query behavior intentionally
+  // remain specialized rather than becoming permanent shared 301 aliases.
   ["/library", "/strategy-lab"],
   ["/library/:slug", "/strategy-lab"],
   ["/resources", "/strategy-lab"],
   ["/education", "/strategy-lab"],
   ["/strategy-library", "/strategy-lab"],
-  ["/buy", "/marketflow"],
-  ["/partner", "/deal-partners"],
-  ["/invest", "/capital"],
-  // v5.1 spine renames — permanent forwards for the old canonical URLs.
-  ["/sellers", "/property-owners"],
-  ["/dealfinders", "/deal-partners"],
-  ["/deal-strategy", "/how-we-operate"],
-  // Phase 1 route-cleanup (Apollo guardrail #3 — redirects, not 410s,
-  // for paths that still have a clear canonical replacement).
   ["/calculators", "/strategy-lab?tool=calculators"],
-  ["/wholesale", "/bring-an-opportunity?intent=deal-jv"],
-  // Website Spec v4 (Re-skin) — the audience lanes are restored to the public
-  // prototype shell (PEGASUS_URLS), so they are no longer redirected. The only
-  // lane-level redirect kept here is the permanent rename of the Deal Strategy
-  // surface, which 301s its old URL forward.
-  ["/deal-architecture", "/how-we-operate"],
-  ["/dealflow/hq", "/marketflow/admin"],
-  ["/hq", "/marketflow/admin"],
-  ["/portal", "/marketflow"],
-  ["/portal/investor", "/marketflow/investor"],
-  ["/portal/wholesaler", "/marketflow/wholesaler"],
-  ["/portal/buyer", "/marketflow/buyer"],
-  ["/portal/dreamscaper", "/marketflow/dreamscaper"],
-  ["/community", "/marketflow/community"],
-  ["/dealflow", "/marketflow"],
-  ["/dealflow/office", "/marketflow"],
-  ["/dealflow/deals", "/marketflow/deals"],
-  ["/dealflow/community", "/marketflow/community"],
-  ["/dealflow/messages", "/marketflow/messages"],
-  ["/marketplace", "/marketflow"],
-  ["/marketplace/wholesaler/:rest*", "/marketflow/wholesaler"],
-  ["/marketplace/wholesaler", "/marketflow/wholesaler"],
-  ["/marketplace/dreamscaper/:rest*", "/marketflow/dreamscaper"],
-  ["/marketplace/dreamscaper", "/marketflow/dreamscaper"],
-  ["/marketplace/investor/:rest*", "/marketflow/investor"],
-  ["/marketplace/investor", "/marketflow/investor"],
-  ["/marketplace/buyer/:rest*", "/marketflow/buyer"],
-  ["/marketplace/buyer", "/marketflow/buyer"],
-  ["/marketplace/admin/:rest*", "/marketflow/admin"],
-  ["/marketplace/admin", "/marketflow/admin"],
-  ["/marketplace/discover", "/marketflow/deals"],
-  ["/marketplace/calculators", "/marketflow/calculators"],
-  ["/marketplace/resources", "/marketflow/resources"],
-  ["/marketplace/community", "/marketflow/community"],
-  ["/marketplace/messages", "/marketflow/messages"],
-  ["/marketplace/deals/:id", "/marketflow/deals"],
-  ["/marketplace/deals", "/marketflow/deals"],
-  ["/marketplace/capital/:id", "/marketflow/capital"],
-  ["/marketplace/capital", "/marketflow/capital"],
-  ["/marketplace/properties/:id", "/marketflow/properties"],
-  ["/marketplace/properties", "/marketflow/properties"],
 ];
 
 export function Router() {
@@ -235,6 +186,8 @@ export function Router() {
       ))}
       <Route path="/login" component={Login} />
       <Route path="/signup" component={Signup} />
+      <Route path="/forgot-password" component={ForgotPassword} />
+      <Route path="/reset-password" component={ResetPassword} />
       <Route path="/about" component={About} />
       <Route path="/development" component={Development} />
       {/* Master Blueprint v5.1 (§31): "Bring an Opportunity" is the primary

@@ -117,7 +117,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 // Every public, standalone (non-prototype) content route mounted in App.tsx.
 // Deliberately excludes: PEGASUS_URLS (covered by the prototype net),
 // AuthGuard-gated operator surfaces, pure redirects (legacyRedirects), the
-// /login + /signup auth forms, and dynamic-:param detail routes (no canned
+// /login + /signup + password-recovery auth forms, and dynamic-:param detail routes (no canned
 // id to resolve). Each entry must render a real heading + copy, never a
 // blank/crashing/mis-redirected shell.
 const STANDALONE_URLS: string[] = [
@@ -220,7 +220,12 @@ describe("Every standalone (non-prototype) public route renders real content, ne
     expect(componentRoutes.length).toBeGreaterThan(15);
 
     // Auth forms — exercised by their own flows, not "content pages".
-    const AUTH_FORMS = new Set(["/login", "/signup"]);
+    const AUTH_FORMS = new Set([
+      "/login",
+      "/signup",
+      "/forgot-password",
+      "/reset-password",
+    ]);
     // Admin surfaces — gated by their own in-page auth, need an admin
     // session to render real content (see keyboard-a11y.test.tsx's
     // setAuthState pattern); out of scope for this public-content net.

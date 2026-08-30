@@ -52,7 +52,7 @@ function componentRoutesFromApp(): string[] {
 
 // Surfaces that intentionally keep the legacy global chrome and are therefore
 // out of scope for the public-premium-chrome contract:
-//   • /login, /signup — auth forms.
+//   • /login, /signup, /forgot-password, /reset-password — auth forms.
 //   • /admin/*        — admin-only surfaces (own in-page auth).
 //   • private /marketflow/* operator and auth surfaces. The landing,
 //     request-access page, and public criteria belong to the premium public
@@ -63,7 +63,12 @@ function componentRoutesFromApp(): string[] {
 //                       layout rather than the marketing chrome.
 // Dynamic :param routes are excluded only from the literal-URL classification
 // assertions (no canned id), but their prefix is still covered below.
-const AUTH_FORMS = new Set(["/login", "/signup"]);
+const AUTH_FORMS = new Set([
+  "/login",
+  "/signup",
+  "/forgot-password",
+  "/reset-password",
+]);
 const PUBLIC_MARKETFLOW = new Set(["/marketflow/access", "/marketflow/buyboxes"]);
 const isAdmin = (u: string) => u.startsWith("/admin");
 const isPrivateMarketflow = (u: string) =>

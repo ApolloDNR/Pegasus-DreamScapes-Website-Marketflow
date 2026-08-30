@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { useLocation, Link } from "wouter";
+import { useLocation, useSearch, Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useSupabaseAuth, getRoleDashboardPath } from "@/contexts/supabase-auth-context";
 import type { UserRole } from "@/lib/supabase";
+import { getReturnToFromSearch, withReturnTo } from "@/lib/auth-return";
 import {
   Form,
   FormControl,
@@ -28,6 +29,8 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const [, setLocation] = useLocation();
+  const search = useSearch();
+  const returnTo = getReturnToFromSearch(search);
   const { signIn, isLoading, profile, enterGuestMode } = useSupabaseAuth();
 
   const handleGuestExplore = (role: UserRole) => {
@@ -62,7 +65,7 @@ export default function LoginPage() {
           description: "You've been signed in successfully.",
         });
         const dashboardPath = getRoleDashboardPath(profile?.primary_role ?? null);
-        setLocation(dashboardPath);
+        setLocation(returnTo ?? dashboardPath);
       }
     } catch (err) {
       toast({
@@ -125,7 +128,16 @@ export default function LoginPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <div className="flex items-center justify-between gap-4">
+                      <FormLabel>Password</FormLabel>
+                      <Link
+                        href={withReturnTo("/forgot-password", returnTo)}
+                        className="text-xs text-primary hover:underline font-medium"
+                        data-testid="link-forgot-password"
+                      >
+                        Forgot password?
+                      </Link>
+                    </div>
                     <FormControl>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -162,7 +174,7 @@ export default function LoginPage() {
           <div className="mt-6 text-center text-sm text-muted-foreground">
             Don't have an account?{" "}
             <Link
-              href="/signup"
+              href={withReturnTo("/signup", returnTo)}
               className="text-primary hover:underline font-medium"
               data-testid="link-signup"
             >

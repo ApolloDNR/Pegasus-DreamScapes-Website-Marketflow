@@ -72,6 +72,8 @@ describe("isCrawlablePublicPath", () => {
       "/dashboard",
       "/login",
       "/signup",
+      "/forgot-password",
+      "/reset-password",
       "/offer-studio",
       "/profile/123",
       "/snapshot/abc",
@@ -91,6 +93,16 @@ describe("isCrawlablePublicPath", () => {
     expect(SEO_ROUTES["/saved"]?.noIndex).toBe(true);
     expect(sitemapPaths.has("/saved")).toBe(false);
     expect(ROBOTS_DISALLOW).toContain("/saved");
+  });
+
+  it("keeps password-recovery routes out of search and the sitemap", () => {
+    const sitemapPaths = new Set(sitemapEntries().map((entry) => entry.path));
+
+    for (const route of ["/forgot-password", "/reset-password"]) {
+      expect(isCrawlablePublicPath(route)).toBe(false);
+      expect(sitemapPaths.has(route)).toBe(false);
+      expect(ROBOTS_DISALLOW).toContain(route);
+    }
   });
 });
 

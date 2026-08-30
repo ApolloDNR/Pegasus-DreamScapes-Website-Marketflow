@@ -18,11 +18,15 @@
 import type { Express, Request, Response, NextFunction, RequestHandler } from "express";
 import { storage } from "./storage";
 import { insertPropertyAnalysisSchema, type PropertyAnalysis } from "@shared/schema";
-import type { StrategySnapshot, LaneFitResult, PropertyInput } from "@shared/strategy-lab/types";
+import type { StrategySnapshot, PropertyInput } from "@shared/strategy-lab/types";
 import { fromError } from "zod-validation-error";
 import { extractSupabaseUser } from "./supabaseAuth";
 import { generateStrategySnapshotPDF } from "./pdf";
 import { frameDecisionMemo, type LabDealStatus, type LabSubmitterRole } from "@shared/strategy-lab";
+import {
+  projectPublicPropertyAnalysis,
+  type PublicPropertyAnalysis,
+} from "./publicAnalysis";
 
 // 4-tone Reading Lens (Task #90). The Strategy Lab UI lets the user pick
 // one of four lenses above the Decision Memo. The PDF export honors that
@@ -119,46 +123,13 @@ async function optionalAuth(req: Request, _res: Response, next: NextFunction) {
   next();
 }
 
-interface PropertyInputAddress {
-  address?: string | null;
-  city?: string | null;
-  state?: string | null;
-  zip?: string | null;
+function applyVisibility(row: PropertyAnalysis | null): PublicPropertyAnalysis | null {
+  return projectPublicPropertyAnalysis(row);
 }
 
-function applyVisibility(row: PropertyAnalysis | null): PropertyAnalysis | null {
-  if (!row) return row;
-  if (row.visibility === "full") return row;
-  // Summary tier — strip detailed engine output.
-  const snap = (row.snapshot ?? {}) as Partial<StrategySnapshot>;
-  const lanes: LaneFitResult[] = snap.lanes ?? [];
-  const topLane = lanes.find((l) => l.lane === snap.topLane) ?? lanes[0] ?? null;
-  const propertyInput = (row.propertyInput ?? {}) as PropertyInputAddress;
-  return {
-    ...row,
-    propertyInput: {
-      address: propertyInput.address,
-      city: propertyInput.city,
-      state: propertyInput.state,
-      zip: propertyInput.zip,
-    },
-    snapshot: {
-      engineVersion: snap.engineVersion,
-      generatedAt: snap.generatedAt,
-      topLane: snap.topLane,
-      lanes: topLane ? [topLane] : [],
-      memo: snap.memo
-        ? { paragraph: snap.memo.paragraph, nextStep: snap.memo.nextStep, hasCompOverrideWarning: false }
-        : null,
-      risks: [],
-      capitalStack: [],
-      sensitivities: [],
-      reverseSolvers: [],
-      totalCashIn: null,
-      breakevens: {},
-      compsUsed: [],
-    },
-  } as PropertyAnalysis;
+function setPrivateTokenHeaders(res: Response): void {
+  res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+  res.setHeader("Cache-Control", "private, no-store, max-age=0");
 }
 
 export function registerPropertyAnalysisRoutes(app: Express, ctx: AuthCtx) {
@@ -326,6 +297,7 @@ export function registerPropertyAnalysisRoutes(app: Express, ctx: AuthCtx) {
         incrementViewCount: true,
       });
       if (!row) return res.status(404).json({ message: "Not found" });
+      setPrivateTokenHeaders(res);
       return res.json(applyVisibility(row));
     } catch (err) {
       console.error("Error reading shared analysis:", err);
@@ -365,6 +337,7 @@ export function registerPropertyAnalysisRoutes(app: Express, ctx: AuthCtx) {
       if (!visible) return res.status(404).json({ message: "Not found" });
       const buf = await generateStrategySnapshotPDF(visible);
       const safe = String(visible.address || "snapshot").replace(/[^a-z0-9\-]+/gi, "-").slice(0, 60);
+      setPrivateTokenHeaders(res);
       res.setHeader("Content-Type", "application/pdf");
       res.setHeader("Content-Disposition", `attachment; filename="pegasus-snapshot-${safe}.pdf"`);
       return res.send(buf);
@@ -380,19 +353,24 @@ export function registerPropertyAnalysisRoutes(app: Express, ctx: AuthCtx) {
       const row = await storage.getPropertyAnalysisByShareToken(req.params.token, {
         incrementViewCount: false,
       });
-      const propertyInput = (row?.propertyInput ?? {}) as PropertyInputAddress;
+      if (!row) return res.status(404).end();
+      const visible = applyVisibility(row);
+      if (!visible) return res.status(404).end();
+      const propertyInput = visible.propertyInput;
       const addr =
-        row?.address ||
+        visible.address ||
         propertyInput.address ||
         "Property Strategy Snapshot";
-      const sub = [row?.city, row?.state, row?.zip].filter(Boolean).join(", ");
-      const snap = (row?.snapshot ?? {}) as Partial<StrategySnapshot>;
-      const lanes: LaneFitResult[] = snap.lanes ?? [];
+      const sub = [visible.city, visible.state, visible.zip].filter(Boolean).join(", ");
+      const snap = visible.snapshot;
+      const lanes = Array.isArray(snap.lanes)
+        ? snap.lanes.filter((lane): lane is Record<string, unknown> => !!lane && typeof lane === "object")
+        : [];
       const topLane = lanes.find((l) => l.lane === snap.topLane) ?? lanes[0];
-      const lane = topLane?.laneLabel ?? "Strategy under review";
-      const verdict = (topLane?.verdictLabel ?? "").toUpperCase();
+      const lane = typeof topLane?.laneLabel === "string" ? topLane.laneLabel : "Model path pending";
+      const modelFit = typeof topLane?.verdictLabel === "string" ? topLane.verdictLabel : "More inputs needed";
       const esc = (s: string) =>
-        s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+        s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
       const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <rect width="1200" height="630" fill="#0D1B2D"/>
@@ -401,16 +379,16 @@ export function registerPropertyAnalysisRoutes(app: Express, ctx: AuthCtx) {
   <text x="60" y="106" font-family="Helvetica, Arial, sans-serif" font-size="13" fill="#F6EFE4" letter-spacing="2.5">DEAL STRATEGY</text>
   <line x1="60" y1="170" x2="200" y2="170" stroke="#C77A3A" stroke-width="2"/>
   <text x="60" y="200" font-family="Helvetica, Arial, sans-serif" font-size="16" font-weight="700" fill="#C77A3A" letter-spacing="3">PROPERTY STRATEGY SNAPSHOT</text>
-  <text x="60" y="290" font-family="Georgia, 'Times New Roman', serif" font-size="60" font-weight="700" fill="#F6EFE4">${esc(addr).slice(0, 42)}</text>
-  ${sub ? `<text x="60" y="335" font-family="Georgia, 'Times New Roman', serif" font-size="26" font-style="italic" fill="#F6EFE4" opacity="0.85">${esc(sub).slice(0, 60)}</text>` : ""}
+  <text x="60" y="290" font-family="Georgia, 'Times New Roman', serif" font-size="60" font-weight="700" fill="#F6EFE4">${esc(String(addr).slice(0, 42))}</text>
+  ${sub ? `<text x="60" y="335" font-family="Georgia, 'Times New Roman', serif" font-size="26" font-style="italic" fill="#F6EFE4" opacity="0.85">${esc(sub.slice(0, 60))}</text>` : ""}
   <line x1="0" y1="430" x2="1200" y2="430" stroke="#C77A3A" stroke-width="1" opacity="0.6"/>
-  <text x="60" y="475" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#C77A3A" letter-spacing="3">RECOMMENDED PATH</text>
-  <text x="60" y="535" font-family="Georgia, 'Times New Roman', serif" font-size="48" font-weight="700" fill="#F6EFE4">${esc(lane).slice(0, 36)}</text>
-  ${verdict ? `<text x="60" y="575" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#C77A3A" letter-spacing="2">VERDICT · ${esc(verdict).slice(0, 40)}</text>` : ""}
+  <text x="60" y="475" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#C77A3A" letter-spacing="3">MODELED PATH · USER INPUTS</text>
+  <text x="60" y="535" font-family="Georgia, 'Times New Roman', serif" font-size="48" font-weight="700" fill="#F6EFE4">${esc(lane.slice(0, 36))}</text>
+  <text x="60" y="575" font-family="Helvetica, Arial, sans-serif" font-size="13" font-weight="700" fill="#C77A3A" letter-spacing="1.5">MODEL OUTPUT · UNVERIFIED · ${esc(modelFit.toUpperCase().slice(0, 52))}</text>
   <text x="1140" y="600" text-anchor="end" font-family="Helvetica, Arial, sans-serif" font-size="12" fill="#F6EFE4" opacity="0.7">apollo@pegasusdreamscapes.com</text>
 </svg>`;
+      setPrivateTokenHeaders(res);
       res.setHeader("Content-Type", "image/svg+xml; charset=utf-8");
-      res.setHeader("Cache-Control", "public, max-age=300");
       return res.send(svg);
     } catch (err) {
       console.error("Error generating OG snapshot SVG:", err);

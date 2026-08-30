@@ -19,7 +19,8 @@ vi.mock("../storage", () => {
         (created[id - 1] = { ...created[id - 1], ...patch }),
       listPropertyAnalysesByUser: async () => [],
       deletePropertyAnalysis: async () => {},
-      getPropertyAnalysisByShareToken: async () => null,
+      getPropertyAnalysisByShareToken: async (token: string) =>
+        created.find((row) => row.isShared === true && row.shareToken === token) ?? null,
       claimPropertyAnalysesForUser: async () => 0,
     },
   };
@@ -193,6 +194,184 @@ describe("GET /api/pdf/strategy-snapshot/by-id/:id?tone= — Reading Lens (Task 
       const memo = pdfCalls[0].snapshot?.memo;
       expect(memo.paragraph).toBe(rawParagraph);
       expect(memo.nextStep).toBe(rawNextStep);
+    } finally {
+      await stopServer();
+    }
+  });
+});
+
+describe("public property snapshot trust boundary", () => {
+  beforeEach(() => {
+    created.length = 0;
+    pdfCalls.length = 0;
+  });
+
+  function seedSharedPropertyAnalysis() {
+    created.push({
+      id: 1,
+      userId: "private-owner-id",
+      sessionId: "private-anonymous-session-id",
+      isShared: true,
+      shareToken: "property_public_token",
+      sharedAt: new Date("2026-08-20T12:00:00.000Z"),
+      viewCount: 42,
+      submittedToPegasus: true,
+      submittedAt: new Date("2026-08-21T12:00:00.000Z"),
+      notes: "Internal owner notes must never be public.",
+      visibility: "full",
+      address: "400 Model Way\u0000",
+      city: "Oakland",
+      state: "CA",
+      zip: "94601",
+      propertyInput: {
+        address: "400 Model Way\u0000",
+        city: "Oakland",
+        state: "CA",
+        zip: "94601",
+        askingPrice: 510_000,
+        arvEstimate: 760_000,
+        rehabBudget: 120_000,
+        marketRent: 4_200,
+        knownIssues: ["User-entered foundation concern\u202E"],
+      },
+      snapshot: {
+        engineVersion: "1.0.0",
+        generatedAt: "2026-08-20T12:00:00.000Z",
+        topLane: "flip",
+        lanes: [
+          {
+            lane: "flip",
+            laneLabel: "Fix and Flip",
+            verdict: "strong",
+            verdictLabel: "Strong fit",
+            headline: "Pegasus recommends this path.",
+            confidence: {
+              score: 91,
+              supportingFactors: ["ARV spread"],
+              sensitiveFactors: ["Rehab scope"],
+              missingInputs: [],
+            },
+            economics: {
+              primaryMetric: "Modeled profit",
+              primaryValue: "$82K",
+              metrics: [{ label: "Modeled ROI", value: "19%" }],
+            },
+            laneRisks: ["Rehab variance"],
+          },
+          { lane: "not-a-real-lane", verdictLabel: "Guaranteed" },
+        ],
+        memo: {
+          paragraph: "Pegasus reviewed this property and recommends moving forward.",
+          nextStep: "Treat this as the Pegasus recommendation.",
+          hasCompOverrideWarning: false,
+        },
+        risks: [
+          {
+            id: "rehab",
+            category: "construction",
+            severity: "watch",
+            title: "Budget movement",
+            detail: "Pegasus reviewed the budget.",
+            affects: ["flip"],
+          },
+        ],
+        capitalStack: [
+          { source: "rehab_cash", label: "Rehab cash", amount: 120_000, note: "Illustrative" },
+        ],
+        sensitivities: [],
+        reverseSolvers: [],
+        totalCashIn: 210_000,
+        breakevens: {},
+        compsUsed: [],
+        scenarios: {},
+      },
+    });
+  }
+
+  it("projects a sanitized public DTO and explicitly frames every narrative as unverified model output", async () => {
+    seedSharedPropertyAnalysis();
+    await startServer();
+    try {
+      const res = await fetch(
+        `${baseUrl}/api/property-analyses/by-token/property_public_token`,
+      );
+      expect(res.status).toBe(200);
+      expect(res.headers.get("x-robots-tag")).toContain("noindex");
+      expect(res.headers.get("cache-control")).toContain("no-store");
+
+      const body = await res.json();
+      expect(body).not.toHaveProperty("userId");
+      expect(body).not.toHaveProperty("sessionId");
+      expect(body).not.toHaveProperty("notes");
+      expect(body).not.toHaveProperty("shareToken");
+      expect(body).not.toHaveProperty("submittedToPegasus");
+      expect(body).not.toHaveProperty("submittedAt");
+      expect(body).not.toHaveProperty("viewCount");
+      expect(body.outputContext).toMatchObject({
+        source: "user_entered_inputs_and_automated_model",
+        verifiedByPegasus: false,
+      });
+      expect(body.outputContext.label).toMatch(/user-entered, unverified inputs/i);
+      expect(body.address).toBe("400 Model Way");
+      expect(body.propertyInput.knownIssues[0]).not.toContain("\u202E");
+      expect(body.snapshot.lanes).toHaveLength(1);
+      expect(body.snapshot.lanes[0].verdictLabel).toMatch(/^Automated model fit:/);
+      expect(body.snapshot.lanes[0].headline).toMatch(
+        /^Based on user-entered, unverified inputs, the automated model indicates:/,
+      );
+      expect(body.snapshot.memo.paragraph).toMatch(
+        /^Automated model summary based on user-entered, unverified inputs:/,
+      );
+      expect(body.snapshot.memo.nextStep).toMatch(
+        /^Automated model consideration \(not a Pegasus recommendation\):/,
+      );
+      expect(body.snapshot.risks[0].detail).toMatch(
+        /^Automated model flag based on unverified inputs:/,
+      );
+      expect(JSON.stringify(body.snapshot)).not.toMatch(
+        /Pegasus[^.]{0,40}(?:reviewed|recommends)/i,
+      );
+    } finally {
+      await stopServer();
+    }
+  });
+
+  it("sanitizes the public-token payload before passing it to the PDF generator", async () => {
+    seedSharedPropertyAnalysis();
+    await startServer();
+    try {
+      const res = await fetch(
+        `${baseUrl}/api/pdf/strategy-snapshot/by-token/property_public_token`,
+      );
+      expect(res.status).toBe(200);
+      expect(res.headers.get("x-robots-tag")).toContain("noindex");
+      expect(pdfCalls).toHaveLength(1);
+      expect(pdfCalls[0]).not.toHaveProperty("userId");
+      expect(pdfCalls[0]).not.toHaveProperty("notes");
+      expect(pdfCalls[0].snapshot.memo.paragraph).toMatch(
+        /^Automated model summary based on user-entered, unverified inputs:/,
+      );
+    } finally {
+      await stopServer();
+    }
+  });
+
+  it("404s missing OG tokens and labels existing cards as unverified model output", async () => {
+    seedSharedPropertyAnalysis();
+    await startServer();
+    try {
+      const missing = await fetch(`${baseUrl}/og/snapshot/missing-token`);
+      expect(missing.status).toBe(404);
+
+      const res = await fetch(`${baseUrl}/og/snapshot/property_public_token`);
+      expect(res.status).toBe(200);
+      expect(res.headers.get("x-robots-tag")).toContain("noindex");
+      expect(res.headers.get("cache-control")).toContain("no-store");
+      const svg = await res.text();
+      expect(svg).toContain("MODELED PATH · USER INPUTS");
+      expect(svg).toContain("MODEL OUTPUT · UNVERIFIED");
+      expect(svg).not.toContain("RECOMMENDED PATH");
+      expect(svg).not.toContain("VERDICT ·");
     } finally {
       await stopServer();
     }
