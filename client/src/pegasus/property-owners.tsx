@@ -14,15 +14,15 @@ import type { Nav } from './theme';
 type Situation = { label: string; path: string };
 
 const SITUATIONS: Situation[] = [
-  { label: 'Significant repairs', path: 'We price the real scope, not the fear of it. Often we buy as-is with a project team ready; sometimes the honest answer is a light touch-up and a clean listing.' },
-  { label: 'Vacant property', path: 'An empty house burns money quietly. We move on a short timeline: direct purchase, or a prepared listing with the carrying costs counted honestly.' },
-  { label: 'Inherited property', path: 'Probate timing, siblings, and an old house at once. We map the estate steps with your attorney and hold the property decision until the family is actually ready.' },
-  { label: 'Unfinished construction', path: 'Half-done work scares retail buyers and most investors. We can coordinate the right licensed project team to finish the scope, or buy it standing exactly as it stands.' },
-  { label: 'Tenant or occupancy issues', path: 'Occupied is workable. We buy with tenants in place, respect the tenancy rules, and never ask you to solve the hard part before the sale.' },
-  { label: 'Code or permit concerns', path: 'Open permits and violations are a paperwork problem with a price. We underwrite the cure cost and carry the resolution ourselves after closing.' },
-  { label: 'Time-sensitive sale', path: 'When the calendar is the pressure, certainty beats the last dollar. We give you a written read fast and close on the date the situation needs.' },
-  { label: 'ADU or development potential', path: 'Unbuilt value is real but not automatic. We read the lot against local rules and tell you whether the upside is worth building, selling with, or ignoring.' },
-  { label: 'A listing that is not working', path: 'Expired or sitting still usually means price, prep, or story. We tell you which one, then either fix the listing or make a direct offer.' },
+  { label: 'Significant repairs', path: 'Document the known condition, completed inspections or estimates, occupancy, and timing. Those facts can frame questions for possible consideration; they do not establish value, scope, or a Pegasus role.' },
+  { label: 'Vacant property', path: 'Record when the property became vacant, the carrying-cost assumptions you know, current access, and your preferred timing. The intake does not create a sale process or closing commitment.' },
+  { label: 'Inherited property', path: 'Record the known ownership, probate or trust status, decision-makers, and timing. An attorney or title professional should confirm authority and legal requirements before anyone relies on them.' },
+  { label: 'Unfinished construction', path: 'Share the current condition, available plans, permits, invoices, and remaining-scope estimates. Submission does not promise a contractor, project team, purchase, budget, or completion path.' },
+  { label: 'Tenant or occupancy issues', path: 'Share the occupancy facts you are authorized to disclose, including any written agreement and known dates. Tenancy rights and next steps require qualified legal and property professionals.' },
+  { label: 'Code or permit concerns', path: 'Attach notices, permit records, and correspondence you already have. The local authority and qualified professionals determine status, cure requirements, cost, and timing.' },
+  { label: 'Time-sensitive sale', path: 'State the target date, why it matters, and any known title, loan, or occupancy constraints. A requested date is useful context, not a promised review, response, offer, or closing.' },
+  { label: 'ADU or development potential', path: 'Record parcel facts and the assumptions you want to explore. Strategy Lab can model visitor-entered assumptions directionally; local agencies and qualified professionals determine what is allowed.' },
+  { label: 'A listing that is not working', path: 'Share the listing history, current agreement, feedback, condition, and your objective. The intake cannot diagnose the cause, promise representation, or create an offer.' },
 ];
 
 export function PropertyOwnersPage({ go }: { go: Nav }) {
@@ -56,12 +56,12 @@ export function PropertyOwnersPage({ go }: { go: Nav }) {
           <div className="hv-rule" />
           <div className="pg-label hv-eyebrow">Property Owners</div>
           <h1 className="hwo-h1 font-serif-display">
-            A difficult property does not always need a conventional solution.
+            A complex property starts with accurate facts, not a promised outcome.
           </h1>
           <p className="hv-lead">
-            Pegasus acquires selected properties directly and reviews situations involving condition,
-            timing, inheritance, occupancy, unfinished work, title complications, or unrealized
-            development potential. You get a straight read before you commit to anything.
+            Use the private intake to document condition, timing, ownership, occupancy, unfinished
+            work, title questions, or development assumptions. Submission may be considered, but no
+            written review, response, route, or offer is promised.
           </p>
           <div className="hv-cta-row">
             <a href="/bring-an-opportunity" onClick={toIntake}
@@ -79,8 +79,8 @@ export function PropertyOwnersPage({ go }: { go: Nav }) {
       {/* Signature: situation → path stepper */}
       <section className="po-stepper hv-pad" data-testid="situation-stepper">
         <div className="hv-wrap">
-          <div className="pg-label hv-eyebrow-copper">Start with the situation</div>
-          <h2 className="hv-h2 font-serif-display">Pick the one that sounds like yours.</h2>
+          <div className="pg-label hv-eyebrow-copper">Start with the known facts</div>
+          <h2 className="hv-h2 font-serif-display">Choose the situation you need to document.</h2>
           <div className="po-step-grid reveal">
             <div className="po-situations" role="group" aria-label="Common owner situations">
               {SITUATIONS.map((s, i) => (
@@ -92,7 +92,7 @@ export function PropertyOwnersPage({ go }: { go: Nav }) {
               ))}
             </div>
             <div className="po-path" key={SITUATIONS[idx].label} aria-live="polite">
-              <div className="pg-label hv-eyebrow-copper">The honest path</div>
+              <div className="pg-label hv-eyebrow-copper">A bounded starting point</div>
               <p className="po-path-copy font-serif-display">{SITUATIONS[idx].path}</p>
               <a href={selectedSituationHref} onClick={toIntake} className="hv-proof-link hv-link-ink">
                 Start with this situation <ArrowRight className="inline h-3.5 w-3.5" />
@@ -102,16 +102,16 @@ export function PropertyOwnersPage({ go }: { go: Nav }) {
         </div>
       </section>
 
-      {/* Process — §9, static */}
+      {/* Intake boundary — static */}
       <section className="po-process hv-pad-lg hv-grain">
         <div className="hv-wrap">
-          <div className="pg-label hv-eyebrow">What happens next</div>
-          <h2 className="hv-h2-cream font-serif-display">Four steps, no pressure at any of them.</h2>
+          <div className="pg-label hv-eyebrow">What the intake records</div>
+          <h2 className="hv-h2-cream font-serif-display">Four ways to make the submission clearer.</h2>
           <ol className="po-steps reveal">
-            <li><b>Tell Pegasus about the property.</b> Address, condition, timing, and what you want out of it.</li>
-            <li><b>We review the facts and circumstances.</b> The numbers, the title, the tenancy, the local rules.</li>
-            <li><b>We determine whether a direct purchase or another path fits.</b> Sometimes the answer is a listing, or a wait.</li>
-            <li><b>The role, the economics, and the next steps are explained before commitment.</b> In writing, in plain language.</li>
+            <li><b>Describe the property.</b> Add the address, known condition, occupancy, timing, and your objective.</li>
+            <li><b>Separate facts from assumptions.</b> Label estimates and unknowns instead of presenting them as verified.</li>
+            <li><b>Share only what you are authorized to share.</b> Supporting files remain subject to the site privacy terms.</li>
+            <li><b>Submit without assuming an outcome.</b> Any later role, economics, or service requires separate diligence and written terms.</li>
           </ol>
         </div>
       </section>
@@ -122,9 +122,9 @@ export function PropertyOwnersPage({ go }: { go: Nav }) {
           <div className="pg-label hv-eyebrow-copper">What we will not promise</div>
           <h2 className="hv-h2 font-serif-display">The limits, stated plainly.</h2>
           <p className="hv-muted">
-            No guaranteed offer. No guaranteed closing date. We do not purchase every property, and a
-            review is not a valuation, an appraisal, or foreclosure rescue. If Pegasus is not the right
-            participant, we say so and point you somewhere better.
+            Submission may be considered, but no written review, response, route, or offer is promised.
+            It is not a valuation, appraisal, legal opinion, foreclosure-rescue service, representation
+            agreement, or closing commitment.
           </p>
         </div>
       </section>
@@ -132,7 +132,7 @@ export function PropertyOwnersPage({ go }: { go: Nav }) {
       {/* Close */}
       <section className="po-close hv-pad-lg hv-grain">
         <div className="hv-wrap">
-          <h2 className="hv-h2-cream font-serif-display">One conversation. A written read. Your decision.</h2>
+          <h2 className="hv-h2-cream font-serif-display">Share the facts. Keep control of the decision.</h2>
           <div className="ow-close-ctas">
             <a href="/bring-an-opportunity" onClick={toIntake}
               className="btn-solid-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px] group">

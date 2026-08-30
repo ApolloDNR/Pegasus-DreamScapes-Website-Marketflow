@@ -3,9 +3,9 @@ import { ContourLines } from "@/pegasus/primitives";
 import { Mail, Scale, FileText, Shield, AlertCircle, Users, Briefcase, MessageSquare } from "lucide-react";
 
 const SECTIONS = [
-  { id: "agreement", label: "Agreement", icon: FileText, title: "By using the site, you agree to these terms.", kicker: "Agreement" },
+  { id: "agreement", label: "Status", icon: FileText, title: "Operator-prepared draft pending qualified legal review.", kicker: "Document status" },
   { id: "what-we-do", label: "What we do", icon: Briefcase, title: "Strategy-first real estate. Not a public investment platform.", kicker: "What we do" },
-  { id: "submissions", label: "Submissions", icon: Users, title: "Every submission gets a serious read. Not every submission gets an offer.", kicker: "Property submissions" },
+  { id: "submissions", label: "Submissions", icon: Users, title: "A submission records a request. It does not promise an outcome.", kicker: "Property submissions" },
   { id: "no-offer", label: "No offer", icon: AlertCircle, title: "Nothing here is an offer of guaranteed returns or principal protected investment products.", kicker: "Not a securities offer" },
   { id: "your-conduct", label: "Your conduct", icon: Shield, title: "Submit honest information. Don't try to break the site.", kicker: "Your conduct" },
   { id: "content", label: "Content", icon: MessageSquare, title: "We own ours. You own yours. You give us a limited license to use it.", kicker: "Content and IP" },
@@ -42,7 +42,8 @@ export default function Terms() {
             </span>
           </h1>
           <p className="text-lg text-cream/85 leading-relaxed max-w-2xl">
-            By using the Pegasus Dreamscapes website, you agree to the terms on this page. They cover what the site is, what it isn't, and how we work together.
+            These operator-prepared terms describe the intended rules for the public website and its
+            intake tools. Draft pending qualified legal review; this page is not legal advice.
           </p>
         </div>
       </section>
@@ -73,31 +74,47 @@ export default function Terms() {
           <div className="grid lg:grid-cols-2 gap-x-12 gap-y-14">
             <LegalBlock id="agreement" idx={0} icon={SECTIONS[0].icon} kicker={SECTIONS[0].kicker} title={SECTIONS[0].title}>
               <p>
-                These Terms of Service form a binding agreement between you and Pegasus Dreamscapes Corp. when you access pegasusdreamscapes.com or submit a property, request, or message through it. If you do not agree, do not use the site.
+                This page is an operator-prepared draft pending qualified legal review. It states the
+                intended conditions for accessing pegasusdreamscapes.com or submitting a property,
+                request, or message. Questions about enforceability or your rights require qualified counsel.
               </p>
             </LegalBlock>
 
             <LegalBlock id="what-we-do" idx={1} icon={SECTIONS[1].icon} kicker={SECTIONS[1].kicker} title={SECTIONS[1].title}>
               <p>
-                Pegasus Dreamscapes Corp. is a strategy-first real estate operating company in the East Bay. We acquire, joint-venture, refer, and list real property across acquisition, value-add, ADU, and creative-finance lanes. We do not operate a public investment marketplace or securities platform.
+                Pegasus Dreamscapes Corp. presents educational tools, a limited project record, and
+                private intake forms for possible consideration of property, deal, and relationship
+                questions. References to possible acquisition, joint-venture, referral, or listing
+                paths are not commitments or claims that each path is available for a submission. We
+                do not operate a public investment marketplace or securities platform.
               </p>
               <p>
-                Paolo "Apollo" Duran is a licensed California real estate agent (DRE #02333658) with Keller Williams East Bay. Each office is independently owned and operated.
+                The site lists Paolo "Apollo" Duran as a California real estate agent, DRE #02333658,
+                affiliated with Keller Williams East Bay. Visitors should independently verify current
+                license and affiliation information before relying on it. Each office is independently owned and operated.
               </p>
             </LegalBlock>
 
             <LegalBlock id="submissions" idx={2} icon={SECTIONS[2].icon} kicker={SECTIONS[2].kicker} title={SECTIONS[2].title}>
               <p>
-                When you submit a property through the Strategy Review intake, you are asking for a structural read of the situation. Every submission gets a serious review. Not every submission gets an offer. When the right path is a referral, listing, or partner introduction, we will say so plainly.
+                A property or deal submission records information for possible consideration. It does
+                not guarantee review, analysis, an offer, a referral, a listing, an introduction, a
+                response, or a response time. Any later path depends on the facts, capacity, diligence,
+                applicable law, and separate signed terms.
               </p>
               <p>
-                You are responsible for the accuracy of the information you submit. We do not guarantee timing, price, or outcome on any submission.
+                You are responsible for the accuracy of the information you submit and for having
+                authority to share it. Receipt does not create representation, confidentiality beyond
+                the posted Privacy notice, exclusivity, compensation, or a transaction relationship.
               </p>
             </LegalBlock>
 
             <LegalBlock id="no-offer" idx={3} icon={SECTIONS[3].icon} kicker={SECTIONS[3].kicker} title={SECTIONS[3].title}>
               <p>
-                Nothing on this website is an offer to buy or sell any security, an offer of guaranteed returns, or a promise of principal protected investment products. Capital relationships, joint ventures, and project participations are conducted privately, on a relationship basis, with parties who qualify under applicable federal and state law.
+                Nothing on this website is an offer to buy or sell any security, an offer of guaranteed
+                returns, or a promise of principal-protected investment products. Any future capital
+                relationship, joint venture, or project participation would require separate
+                qualification, diligence, documents, and compliance with applicable law.
               </p>
               <p>
                 Any reference to a project, structure, or return profile on the public site is descriptive, not promotional. We do not publicly market specific deals, securities, or investment vehicles. Past performance does not predict future results.
@@ -118,7 +135,10 @@ export default function Terms() {
                 The site, its content, the Pegasus name, brand, and operating frameworks belong to Pegasus Dreamscapes Corp. You may read and share public pages with attribution. You may not copy or republish the site or its frameworks for commercial use without written permission.
               </p>
               <p>
-                You keep ownership of any property, photo, or information you submit. By submitting it, you grant us a non-exclusive license to use it to do the work you asked us to do (review, route, and respond), and to keep operating records of that work.
+                You keep ownership of property information, photos, and other material you submit. By
+                submitting it, you grant Pegasus a non-exclusive license to receive, store, and process
+                it in connection with the requested intake and related operating records, subject to
+                the posted Privacy notice. That license does not require review, routing, or a response.
               </p>
             </LegalBlock>
 
@@ -142,7 +162,7 @@ export default function Terms() {
           </div>
 
           <div className="mt-16 pt-8 border-t border-border text-sm text-muted-foreground">
-            <p>Last updated: May 2026.</p>
+            <p>Site-copy consistency update: August 2026. Draft pending qualified legal review.</p>
           </div>
         </div>
       </section>

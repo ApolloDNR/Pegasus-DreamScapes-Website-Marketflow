@@ -2,18 +2,18 @@ import React from 'react';
 import { useLocation } from 'wouter';
 import { ArrowRight } from 'lucide-react';
 import type { Nav } from './theme';
+import {
+  NELSON_COST_DISCLOSURE,
+  NELSON_EXECUTION_DISCLOSURE,
+  NELSON_FACTS,
+  NELSON_PUBLIC_DESCRIPTION,
+} from '@shared/nelson-facts';
 
 /* ================================================================
    OUR WORK — Master Blueprint v5.1 (§11, §32.4, §32.13)
-   One excellent, verified case study beats a grid of weak proof.
-   This page IS the Nelson Drive case study, built from the approved
-   copy deck (docs/design/copy-deck/02-our-work-nelson-drive.md) and
-   Apollo's own project photography (watermarks removed, house number
-   withheld for the current owner's privacy).
-
-   Numbers framing is the agreed §11-safe stack: transparent stack,
-   the in-house edge as the featured stat, market lift stated
-   precisely, never "profit".
+   One bounded case study, driven by the canonical Nelson public record.
+   Photographs show the visible transformation. The financial register
+   states only the supported figures and does not assign project roles.
    ================================================================ */
 
 const PAIRS: Array<{ title: string; before: string; after: string; beforeAlt: string; afterAlt: string; note: string; tag?: string }> = [
@@ -23,7 +23,7 @@ const PAIRS: Array<{ title: string; before: string; after: string; beforeAlt: st
     after: '/images/nelson/kitchen-after.webp',
     beforeAlt: 'Nelson Drive kitchen before: dated galley kitchen with laminate counters',
     afterAlt: 'Nelson Drive kitchen after: deep-navy cabinetry, waterfall quartz island, statement hood',
-    note: 'Rebuilt as the center of the home: deep-navy cabinetry, a waterfall quartz island, and a statement hood.',
+    note: 'The finished image shows deep-navy cabinetry, a waterfall quartz island, and a statement hood.',
   },
   {
     title: 'The primary bath',
@@ -32,7 +32,7 @@ const PAIRS: Array<{ title: string; before: string; after: string; beforeAlt: st
     after: '/images/nelson/bath-after.webp',
     beforeAlt: 'Primary bath during construction: open stud framing and rough plumbing',
     afterAlt: 'Primary bath finished: freestanding soaking tub, glass walk-in shower, warm wood paneling',
-    note: 'Taken down to the studs and rebuilt as a spa bath: a freestanding soaking tub, a glass walk-in shower, and warm wood paneling.',
+    note: 'The construction image shows exposed framing; the finished image shows a soaking tub, glass shower, and warm wood paneling.',
   },
   {
     title: 'The living space',
@@ -40,9 +40,11 @@ const PAIRS: Array<{ title: string; before: string; after: string; beforeAlt: st
     after: '/images/nelson/living-after.webp',
     beforeAlt: 'Living room before: dark wood paneling and a dropped soffit',
     afterAlt: 'Living room after: one open, staged great room across living, dining, and kitchen',
-    note: 'Dark paneling and a dropped soffit came out, opening one warm great room across living, dining, and kitchen.',
+    note: 'The paired images show a transition from dark paneling and a dropped soffit to an open, staged living, dining, and kitchen area.',
   },
 ];
+
+const dollars = (value: number) => `$${value.toLocaleString('en-US')}`;
 
 const FINISH_STRIP: Array<[string, string]> = [
   ['/images/nelson/bath2-after.webp', 'Second bath finished with tub, glass shower, and tile surround'],
@@ -63,12 +65,11 @@ export function OurWorkPage({ go }: { go: Nav }) {
         </div>
         <div className="hv-wrap ow-hero-inner">
           <div className="pg-label hv-eyebrow">Our Work &middot; Completed</div>
-          <h1 className="ow-h1 font-serif-display">A tired ranch, rebuilt into a home a family bought.</h1>
-          <p className="ow-loc pg-label">Nelson Drive &middot; El Sobrante, CA</p>
+          <h1 className="ow-h1 font-serif-display">Nelson Drive: a documented East Bay transformation.</h1>
+          <p className="ow-loc pg-label">{NELSON_FACTS.name} &middot; {NELSON_FACTS.areaLabel}</p>
           <p className="hv-lead-dim">
-            We bought a dated three-bed, two-bath ranch with an undersized sunroom and a detached
-            shed, took it down to the studs, and coordinated its rebuild as a four-bed, three-bath home.
-            Here is the whole project: before, during, and after.
+            {NELSON_PUBLIC_DESCRIPTION} The paired photographs show visible before, construction,
+            and finished conditions; they do not by themselves establish who performed each role.
           </p>
         </div>
       </section>
@@ -77,49 +78,43 @@ export function OurWorkPage({ go }: { go: Nav }) {
       <section className="ow-numbers hv-pad">
         <div className="hv-wrap ow-numbers-grid reveal">
           <div>
-            <div className="pg-label hv-eyebrow-copper">The thesis</div>
-            <h2 className="hv-h2 font-serif-display">Bought a 3/2. Sold a 4/3.</h2>
+            <div className="pg-label hv-eyebrow-copper">The public record</div>
+            <h2 className="hv-h2 font-serif-display">Documented figures, with their limits intact.</h2>
             <p className="hv-muted">
-              In this market, price follows bed and bath count. The plan was simple and disciplined:
-              turn dead, undersized space into a real bedroom and a real bathroom the market actually
-              pays for, then sell to someone who wants to live there.
+              The available record supports the acquisition amount, improvement budget, subtotal
+              before other costs, sale amount, and settlement month shown here.
             </p>
             <p className="hv-muted">
-              A comparable retail general-contractor bid for this scope came in around $200K. In-house,
-              the build ran about $105K. On a project this size, that discipline is the difference
-              between a thin flip and a real return.
+              It does not document every project cost, participant, contract, permit, license,
+              financing term, or service relationship. No broader conclusion is stated as fact.
             </p>
           </div>
           <div>
             <dl className="hv-stack ow-stack">
-              <div><dt>Acquired</dt><dd>$600,000</dd></div>
-              <div><dt>Renovation, in-house</dt><dd>$105,000</dd></div>
-              <div><dt>All-in</dt><dd>~$705,000</dd></div>
-              <div><dt>Sold</dt><dd>$840,000</dd></div>
+              <div><dt>Acquisition</dt><dd>{dollars(NELSON_FACTS.acquired)}</dd></div>
+              <div><dt>Improvement budget</dt><dd>{dollars(NELSON_FACTS.improvementBudget)}</dd></div>
+              <div><dt>Basis before other costs</dt><dd>{dollars(NELSON_FACTS.totalBasisBeforeOtherCosts)}</dd></div>
+              <div><dt>Sale</dt><dd>{dollars(NELSON_FACTS.salePrice)}</dd></div>
             </dl>
             <div className="hv-edge ow-edge">
-              <div className="hv-edge-big font-serif-display">~$95K</div>
-              <p>saved against a comparable retail-GC bid. The operating edge: Pegasus builds, it does not just buy.</p>
+              <div className="hv-edge-big font-serif-display">{dollars(NELSON_FACTS.grossSpreadBeforeOtherCosts)}</div>
+              <p>gross spread before other costs, calculated from the three documented figures.</p>
             </div>
-            <p className="ow-lift">~$135,000 above all-in cost, before financing, holding, and selling costs.</p>
+            <p className="ow-lift">{dollars(NELSON_FACTS.grossSpreadBeforeOtherCosts)} gross spread. Not net profit or return.</p>
             <p className="hv-fine">
-              Figures from the closing statement and project records, rounded. Value shown is not net profit.
+              {NELSON_COST_DISCLOSURE}
             </p>
           </div>
         </div>
       </section>
 
-      {/* Operator */}
+      {/* Evidence boundary */}
       <section className="ow-operator">
         <div className="hv-wrap">
-          <div className="pg-label hv-eyebrow">The operator</div>
-          <h2 className="hv-h2-cream font-serif-display">One person led it, with a team built to repeat.</h2>
+          <div className="pg-label hv-eyebrow">Evidence boundary</div>
+          <h2 className="hv-h2-cream font-serif-display">What the record does not assign.</h2>
           <p className="hv-lead-dim">
-            Paolo &ldquo;Apollo&rdquo; Duran sourced and bought the deal, formed the LLC, built the
-            budget, ran the schedule and project team, set the design direction, and carried it to the
-            sale. Pegasus coordinated construction and repairs without a retail GC layer, which is
-            where the documented cost edge comes from. Licensed representation through Keller Williams East Bay
-            (CA DRE #02333658).
+            {NELSON_EXECUTION_DISCLOSURE}
           </p>
         </div>
       </section>
@@ -162,8 +157,9 @@ export function OurWorkPage({ go }: { go: Nav }) {
         <div className="hv-wrap">
           <div className="pg-label hv-eyebrow-copper">Carried forward</div>
           <p className="ow-lesson font-serif-display">
-            Bed-and-bath count is the lever in this market. Dead space is opportunity when you can
-            build it yourself. And the cost edge is not a trick. It is owning the execution.
+            The photographs document visible change. The financial register documents limited
+            arithmetic. Neither is presented as proof of a participant&apos;s role, net profit, return,
+            savings, or a result another property will repeat.
           </p>
         </div>
       </section>
@@ -172,9 +168,12 @@ export function OurWorkPage({ go }: { go: Nav }) {
       <section className="ow-close hv-pad-lg hv-grain">
         <div className="hv-wrap">
           <h2 className="hv-h2-cream font-serif-display">
-            Have a property, a partnership, or a stalled project with hidden upside?
+            Have a property or proposal you want to document clearly?
           </h2>
-          <p className="hv-lead-dim">We read the situation, underwrite the numbers, and tell you what the deal actually is.</p>
+          <p className="hv-lead-dim">
+            Use the intake to share facts for possible consideration. Submission does not promise
+            review, response, routing, an offer, a service, or a timeline.
+          </p>
           <div className="ow-close-ctas">
             <a href="/bring-an-opportunity" onClick={toIntake}
               className="btn-solid-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px] group">
