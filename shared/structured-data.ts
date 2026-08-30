@@ -6,7 +6,8 @@
 //
 // Grounding rule: only real, already-published facts. No invented numbers,
 // timelines, or credentials. Business identity mirrors the existing site copy
-// (DRE #02333658, phone 925-744-8525, Keller Williams East Bay).
+// (salesperson DRE #02333658, phone 925-744-8525, and responsible broker
+// BMP Realty Inc., DBA Keller Williams Realty-East Bay, DRE #01277896).
 
 import { SITE_URL, seoFor } from "./seo-routes";
 import { FAQ_SECTIONS } from "./faq-data";
@@ -28,7 +29,12 @@ const DEFAULT_IMAGE = `${SITE_URL}/og/default.png`;
 
 const PHONE = "+1-925-744-8525";
 const EMAIL = "apollo@pegasusdreamscapes.com";
-const DRE = "CA DRE #02333658";
+const APOLLO_LEGAL_NAME = "Paolo Ariel Duran Ramirez";
+const APOLLO_ALTERNATE_NAME = 'Paolo "Apollo" Duran';
+const SALESPERSON_DRE = "CA DRE #02333658";
+const RESPONSIBLE_BROKER = "BMP Realty Inc.";
+const RESPONSIBLE_BROKER_DBA = "Keller Williams Realty-East Bay";
+const RESPONSIBLE_BROKER_DRE = "CA DRE #01277896";
 
 // Pegasus is the operating company. The founder's real-estate license and
 // brokerage affiliation live on the separate Person node below so structured
@@ -45,7 +51,7 @@ function organizationNode(): Record<string, unknown> {
     email: EMAIL,
     telephone: PHONE,
     description:
-      "Strategy-first real estate operating company serving the East Bay. Complex property, structured opportunity. Every property gets a path.",
+      "Strategy-first real estate operating company serving the East Bay. Pegasus Dreamscapes Corp. is not a real estate brokerage. Complex property, structured opportunity. Every property gets a path.",
     areaServed: {
       "@type": "AdministrativeArea",
       name: "East Bay, California",
@@ -67,22 +73,26 @@ function organizationNode(): Record<string, unknown> {
   };
 }
 
-// Licensed representation belongs to Apollo through Keller Williams East Bay,
-// not to Pegasus Dreamscapes Corp.
+// The salesperson license and responsible-broker affiliation belong to the
+// Person node, not to Pegasus Dreamscapes Corp.
 function apolloPersonNode(): Record<string, unknown> {
   return {
     "@type": "Person",
     "@id": APOLLO_ID,
-    name: 'Paolo "Apollo" Duran',
+    name: APOLLO_LEGAL_NAME,
+    alternateName: APOLLO_ALTERNATE_NAME,
     jobTitle: "Founder & Principal",
-    identifier: DRE,
+    identifier: SALESPERSON_DRE,
     email: EMAIL,
     telephone: PHONE,
     worksFor: { "@id": ORG_ID },
     affiliation: {
       "@type": "Organization",
-      name: "Keller Williams East Bay",
-      description: "Each office is independently owned and operated.",
+      name: RESPONSIBLE_BROKER,
+      alternateName: RESPONSIBLE_BROKER_DBA,
+      identifier: RESPONSIBLE_BROKER_DRE,
+      description:
+        "BMP Realty Inc. is the responsible broker; Keller Williams Realty-East Bay is its active DBA. Each Keller Williams office is independently owned and operated.",
     },
   };
 }
