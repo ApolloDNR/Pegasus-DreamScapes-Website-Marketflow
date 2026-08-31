@@ -503,9 +503,10 @@ describe("PeggyDock focused control boundary", () => {
     await waitFor(() => expect(callsFor("/api/peggy/conversations")).toHaveLength(1));
     fireEvent.click(screen.getByTestId("button-peggy-dock"));
 
-    expect(
-      await screen.findByText(/your message is stored and processed by an ai service/i),
-    ).toBeVisible();
+    const disclosure = await screen.findByText(
+      /your message is stored and processed by an ai service/i,
+    );
+    await waitFor(() => expect(disclosure).toBeVisible());
     expect(screen.getByRole("link", { name: /privacy policy/i })).toHaveAttribute(
       "href",
       "/privacy",

@@ -6,9 +6,21 @@ type CloseWithinDeadline = (
   timeoutMs?: number,
 ) => Promise<void>;
 
+type RunWithinDeadline = <Value>(
+  label: string,
+  operation: () => Value | Promise<Value>,
+  timeoutMs?: number,
+) => Promise<Value>;
+
 async function loadCloseWithinDeadline(): Promise<CloseWithinDeadline> {
   const module = await import("../../scripts/rendered-qa-liveness.mjs");
   return module.closeWithinDeadline as CloseWithinDeadline;
+}
+
+async function loadRunWithinDeadline(): Promise<RunWithinDeadline> {
+  const module = await import("../../scripts/rendered-qa-liveness.mjs");
+  expect(typeof module.runWithinDeadline).toBe("function");
+  return module.runWithinDeadline as RunWithinDeadline;
 }
 
 afterEach(() => {
@@ -16,6 +28,37 @@ afterEach(() => {
 });
 
 describe("rendered QA resource liveness", () => {
+  it("returns a cooperative browser operation result and clears its deadline timer", async () => {
+    vi.useFakeTimers();
+    const runWithinDeadline = await loadRunWithinDeadline();
+
+    await expect(
+      runWithinDeadline("rendered page settlement", async () => "settled", 50),
+    ).resolves.toBe("settled");
+
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("rejects a frozen browser operation at its own deadline", async () => {
+    vi.useFakeTimers();
+    const runWithinDeadline = await loadRunWithinDeadline();
+    const frozenOperation = runWithinDeadline(
+      "rendered page http://127.0.0.1/__launch-404-check settlement",
+      () => new Promise(() => undefined),
+      50,
+    );
+    const rejection = expect(frozenOperation).rejects.toMatchObject({
+      name: "RenderedQaOperationTimeoutError",
+      label: "rendered page http://127.0.0.1/__launch-404-check settlement",
+      timeoutMs: 50,
+    });
+
+    await vi.advanceTimersByTimeAsync(50);
+    await rejection;
+
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
   it("completes a cooperative close and clears its deadline timer", async () => {
     vi.useFakeTimers();
     const closeWithinDeadline = await loadCloseWithinDeadline();

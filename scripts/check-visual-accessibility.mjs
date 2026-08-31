@@ -7,7 +7,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 import { sitemapEntries } from '../shared/seo-routes.ts';
-import { closeWithinDeadline } from './rendered-qa-liveness.mjs';
+import { closeWithinDeadline, runWithinDeadline } from './rendered-qa-liveness.mjs';
 import {
   renderedQaColorSchemes,
   renderedQaFullPublicRoutes,
@@ -832,7 +832,14 @@ function hasBrowserHealthFailures(browserHealth) {
   return Object.values(browserHealth).some((entries) => entries.length > 0);
 }
 
-async function settleRenderedPage(page) {
+async function settleRenderedPage(page, phase) {
+  return await runWithinDeadline(
+    `rendered page ${page.url()} ${phase} settlement`,
+    () => collectRenderedPageState(page),
+  );
+}
+
+async function collectRenderedPageState(page) {
   const settleStatus = await page.evaluate(async () => {
     const nextFrame = () => new Promise((resolve) => requestAnimationFrame(resolve));
     const completesWithin = (promise, timeoutMs) => new Promise((resolve) => {
@@ -993,13 +1000,13 @@ async function settleEvidenceState(
   // lazy assets, and the first request wait lets their responses update the
   // DOM. The second pass then inspects that updated DOM and reconfirms the
   // expected request state immediately before evidence is accepted.
-  await settleRenderedPage(page);
+  await settleRenderedPage(page, 'evidence activation');
   const firstRequestState = await waitForActiveRequestCount(
     health,
     expectedActiveRequests,
     timeoutMs,
   );
-  const renderedPage = await settleRenderedPage(page);
+  const renderedPage = await settleRenderedPage(page, 'evidence verification');
   const requestState = await waitForActiveRequestCount(
     health,
     expectedActiveRequests,
@@ -1072,10 +1079,16 @@ async function runInteraction(name, options, check) {
 
         try {
           try {
-            await check(page, health);
-            await settleAfterInteraction(page, health);
-            const browserHealth = browserHealthFailures(health, blockedEgress, blockedEgressStart);
-            assert(!hasBrowserHealthFailures(browserHealth), `Browser health failures: ${JSON.stringify(browserHealth)}`);
+            await runWithinDeadline(
+              `interaction journey ${name}`,
+              async () => {
+                await check(page, health);
+                await settleAfterInteraction(page, health);
+                const browserHealth = browserHealthFailures(health, blockedEgress, blockedEgressStart);
+                assert(!hasBrowserHealthFailures(browserHealth), `Browser health failures: ${JSON.stringify(browserHealth)}`);
+              },
+              90_000,
+            );
             journeyOutcome = { result: 'passed', failure: null };
             console.log(`[interaction] ${name}: PASS`);
           } catch (error) {
@@ -1127,7 +1140,7 @@ async function openPage(page, route) {
   const response = await page.goto(`${baseUrl}${route}`, { waitUntil: 'load', timeout: 45_000 });
   assert(response?.ok(), `${route} returned ${response?.status() ?? 'no response'}`);
   await page.locator('h1').first().waitFor({ state: 'attached', timeout: 10_000 });
-  await settleRenderedPage(page);
+  await settleRenderedPage(page, 'open-page initial');
 }
 
 const approvedMarketflowFixtures = {
@@ -1366,86 +1379,105 @@ try {
             const page = await context.newPage();
             const health = monitorPageHealth(page);
             try {
+              await runWithinDeadline(
+                `route ${colorScheme} ${viewportName} ${route}`,
+                async () => {
+                  const response = await page.goto(
+                    `${baseUrl}${route}`,
+                    { waitUntil: 'load', timeout: 45_000 },
+                  );
+                  await page.locator('h1').first().waitFor({ state: 'attached', timeout: 10_000 });
+                  await settleRenderedPage(page, 'route pre-axe');
+                  const firstRequestState = await waitForActiveRequestCount(health, 0);
+                  await page.addScriptTag({ content: axeSource });
 
-        const response = await page.goto(`${baseUrl}${route}`, { waitUntil: 'load', timeout: 45_000 });
-        await page.locator('h1').first().waitFor({ state: 'attached', timeout: 10_000 });
-        await settleRenderedPage(page);
-        const firstRequestState = await waitForActiveRequestCount(health, 0);
-        await page.addScriptTag({ content: axeSource });
+                  const violations = await runWithinDeadline(
+                    `accessibility scan ${page.url()}`,
+                    () => page.evaluate(async () => {
+                      const result = await globalThis.axe.run(document, {
+                        runOnly: {
+                          type: 'tag',
+                          values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22a', 'wcag22aa'],
+                        },
+                      });
+                      return result.violations
+                        .filter((violation) => violation.impact === 'critical' || violation.impact === 'serious')
+                        .map((violation) => ({
+                          id: violation.id,
+                          impact: violation.impact,
+                          help: violation.help,
+                          nodes: violation.nodes.map((node) => ({
+                            target: node.target.join(' '),
+                            summary: node.failureSummary,
+                          })),
+                        }));
+                    }),
+                  );
+                  const renderedPage = await settleRenderedPage(page, 'route post-axe');
+                  const requestState = await waitForActiveRequestCount(health, 0);
+                  const requestsSettled = firstRequestState.settled && requestState.settled;
+                  let routeScreenshot = null;
 
-        const violations = await page.evaluate(async () => {
-          const result = await globalThis.axe.run(document, {
-            runOnly: {
-              type: 'tag',
-              values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22a', 'wcag22aa'],
-            },
-          });
-          return result.violations
-            .filter((violation) => violation.impact === 'critical' || violation.impact === 'serious')
-            .map((violation) => ({
-              id: violation.id,
-              impact: violation.impact,
-              help: violation.help,
-              nodes: violation.nodes.map((node) => ({
-                target: node.target.join(' '),
-                summary: node.failureSummary,
-              })),
-            }));
-        });
-        const renderedPage = await settleRenderedPage(page);
-        const requestState = await waitForActiveRequestCount(health, 0);
-        const requestsSettled = firstRequestState.settled && requestState.settled;
-        let routeScreenshot = null;
+                  if (
+                    screenshotDir
+                    && requestsSettled
+                    && !hasRenderedPageFailures(renderedPage)
+                  ) {
+                    const slug = route === '/'
+                      ? 'home'
+                      : route.replace(/^\//, '').replace(/[^a-z0-9]+/gi, '-');
+                    routeScreenshot = await captureScreenshot(
+                      page,
+                      `${slug}-${viewportName}-${colorScheme}.png`,
+                      { kind: 'route', route, viewportName, colorScheme },
+                    );
+                  }
 
-        if (
-          screenshotDir &&
-          requestsSettled &&
-          !hasRenderedPageFailures(renderedPage)
-        ) {
-          const slug = route === '/' ? 'home' : route.replace(/^\//, '').replace(/[^a-z0-9]+/gi, '-');
-          routeScreenshot = await captureScreenshot(
-            page,
-            `${slug}-${viewportName}-${colorScheme}.png`,
-            { kind: 'route', route, viewportName, colorScheme },
-          );
-        }
-
-        const browserHealth = browserHealthFailures(health, blockedEgress, blockedEgressStart);
-        let failure = null;
-        if (!response?.ok()
-          || !requestsSettled
-          || hasBrowserHealthFailures(browserHealth)
-          || hasRenderedPageFailures(renderedPage)
-          || violations.length) {
-          failure = {
-            colorScheme,
-            viewport: viewportName,
-            route,
-            status: response?.status(),
-            firstRequestState,
-            requestState,
-            browserHealth,
-            renderedPage,
-            violations,
-          };
-          failures.push(failure);
-          console.error(`[a11y-detail] ${JSON.stringify(failure)}`);
-        }
-        const passed = response?.ok()
-          && requestsSettled
-          && !hasBrowserHealthFailures(browserHealth)
-          && !hasRenderedPageFailures(renderedPage)
-          && !violations.length;
-              routeChecks.push({
-                route,
-                viewportName,
-                colorScheme,
-                result: passed ? 'passed' : 'failed',
-                failure,
-                screenshotPath: routeScreenshot?.path ?? null,
-              });
-              await writeManifest({ result: 'running' });
-              console.log(`[a11y] ${colorScheme} ${viewportName} ${route}: ${passed ? 'PASS' : 'FAIL'}`);
+                  const browserHealth = browserHealthFailures(
+                    health,
+                    blockedEgress,
+                    blockedEgressStart,
+                  );
+                  let failure = null;
+                  if (!response?.ok()
+                    || !requestsSettled
+                    || hasBrowserHealthFailures(browserHealth)
+                    || hasRenderedPageFailures(renderedPage)
+                    || violations.length) {
+                    failure = {
+                      colorScheme,
+                      viewport: viewportName,
+                      route,
+                      status: response?.status(),
+                      firstRequestState,
+                      requestState,
+                      browserHealth,
+                      renderedPage,
+                      violations,
+                    };
+                    failures.push(failure);
+                    console.error(`[a11y-detail] ${JSON.stringify(failure)}`);
+                  }
+                  const passed = response?.ok()
+                    && requestsSettled
+                    && !hasBrowserHealthFailures(browserHealth)
+                    && !hasRenderedPageFailures(renderedPage)
+                    && !violations.length;
+                  routeChecks.push({
+                    route,
+                    viewportName,
+                    colorScheme,
+                    result: passed ? 'passed' : 'failed',
+                    failure,
+                    screenshotPath: routeScreenshot?.path ?? null,
+                  });
+                  await writeManifest({ result: 'running' });
+                  console.log(
+                    `[a11y] ${colorScheme} ${viewportName} ${route}: ${passed ? 'PASS' : 'FAIL'}`,
+                  );
+                },
+                30_000,
+              );
             } finally {
               await closeQaPage(
                 page,
@@ -1606,13 +1638,25 @@ try {
       { width: 390, height: 844 },
     ]) {
       await page.setViewportSize(viewport);
-      await page.evaluate(async () => {
-        await document.fonts.ready;
-        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-      });
+      const preToggleRenderedPage = await settleRenderedPage(
+        page,
+        `theme geometry ${viewport.width}px pre-toggle`,
+      );
+      assert(
+        !hasRenderedPageFailures(preToggleRenderedPage),
+        `Theme geometry did not settle before the toggle at ${viewport.width}px`,
+      );
       const before = await geometryAt();
       await page.getByRole('button', { name: 'Switch to light mode' }).click();
       await page.waitForFunction(() => document.querySelector('.pg-root')?.getAttribute('data-theme') !== 'dark');
+      const postToggleRenderedPage = await settleRenderedPage(
+        page,
+        `theme geometry ${viewport.width}px post-toggle`,
+      );
+      assert(
+        !hasRenderedPageFailures(postToggleRenderedPage),
+        `Theme geometry did not settle after the toggle at ${viewport.width}px`,
+      );
       const after = await geometryAt();
 
       assert(before.src === after.src, `Theme changed hero source at ${viewport.width}px`);

@@ -159,7 +159,7 @@ describe("rendered visual-accessibility gate contract", () => {
 
   it("settles and inspects the complete rendered page before recording evidence", () => {
     expect(source).toContain("async function settleRenderedPage");
-    expect(source).toContain("await document.fonts.ready");
+    expect(source).toContain("await completesWithin(document.fonts.ready");
     expect(source).toContain("image.decode()");
     expect(source).toContain("fontsTimedOut");
     expect(source).toContain("imageDecodeTimedOut");
@@ -173,7 +173,7 @@ describe("rendered visual-accessibility gate contract", () => {
     expect(source).toContain("consoleWarnings");
     expect(source).toContain("page.on('requestfailed'");
     expect(source).toContain("page.on('response'");
-    expect(source).toContain("await settleRenderedPage(page)");
+    expect(source).toContain("await settleRenderedPage(page,");
     expect(source).toContain("async function settleAfterInteraction");
     expect(source).toContain("async function waitForActiveRequestCount");
     expect(source).toContain("stableMs = 150");
@@ -204,17 +204,20 @@ describe("rendered visual-accessibility gate contract", () => {
       "async function settleEvidenceState(",
       "async function settleAfterInteraction",
     );
-    expect(fixedPoint.match(/await settleRenderedPage\(page\)/g)).toHaveLength(2);
+    expect(fixedPoint.match(/await settleRenderedPage\(page, '[^']+'\)/g)).toHaveLength(2);
     expect(fixedPoint.match(/await waitForActiveRequestCount\(/g)).toHaveLength(2);
 
     const routeEvidence = sliceBetween(
       "for (const route of routes) {",
       "const browserHealth = browserHealthFailures",
     );
-    const firstSettle = routeEvidence.indexOf("await settleRenderedPage(page)");
+    const firstSettle = routeEvidence.indexOf("await settleRenderedPage(page, 'route pre-axe')");
     const firstRequestWait = routeEvidence.indexOf("await waitForActiveRequestCount(health, 0)");
     const axeRun = routeEvidence.indexOf("await globalThis.axe.run(document");
-    const secondSettle = routeEvidence.indexOf("await settleRenderedPage(page)", firstSettle + 1);
+    const secondSettle = routeEvidence.indexOf(
+      "await settleRenderedPage(page, 'route post-axe')",
+      firstSettle + 1,
+    );
     const secondRequestWait = routeEvidence.indexOf(
       "await waitForActiveRequestCount(health, 0)",
       firstRequestWait + 1,
@@ -295,7 +298,7 @@ describe("rendered visual-accessibility gate contract", () => {
 
   it("bounds every Playwright close and force-stops a browser server after transport failure", () => {
     expect(source).toContain(
-      "import { closeWithinDeadline } from './rendered-qa-liveness.mjs';",
+      "import { closeWithinDeadline, runWithinDeadline } from './rendered-qa-liveness.mjs';",
     );
     expect(source).toContain("const browserServers = new Map();");
     expect(source).toContain("await chromium.launchServer({");
@@ -331,6 +334,45 @@ describe("rendered visual-accessibility gate contract", () => {
     expect(finalCleanup).toContain("closeQaBrowser(browser, 'residual browser cleanup')");
     expect(finalCleanup).toContain("residualCleanupFailures");
     expect(source).not.toMatch(/await\s+(?:page|context|browser)\.close\(/);
+  });
+
+  it("bounds rendered-page settlement and axe scans outside the page event loop", () => {
+    const settlement = sliceBetween(
+      "async function settleRenderedPage",
+      "function hasRenderedPageFailures",
+    );
+    const routeEvidence = sliceBetween(
+      "for (const colorScheme of interactionsOnly ? [] : colorSchemes)",
+      "await runInteraction('desktop navigation spine'",
+    );
+
+    expect(source).toContain(
+      "import { closeWithinDeadline, runWithinDeadline } from './rendered-qa-liveness.mjs';",
+    );
+    expect(settlement).toContain("await runWithinDeadline(");
+    expect(settlement).toContain("page.url()");
+    expect(settlement).toContain("phase");
+    expect(settlement).not.toContain("setTimeout(finish");
+    expect(routeEvidence).toContain("await settleRenderedPage(page, 'route pre-axe');");
+    expect(routeEvidence).toContain("await settleRenderedPage(page, 'route post-axe');");
+    expect(routeEvidence).toContain("`accessibility scan ${page.url()}`");
+    expect(routeEvidence).toContain("() => page.evaluate(async () => {");
+  });
+
+  it("keeps every route and interaction journey inside the shard time budget", () => {
+    const routeEvidence = sliceBetween(
+      "for (const route of routes) {",
+      "await runInteraction('desktop navigation spine'",
+    );
+    const interactionRunner = sliceBetween(
+      "async function runInteraction",
+      "async function openPage",
+    );
+
+    expect(routeEvidence).toContain("`route ${colorScheme} ${viewportName} ${route}`");
+    expect(routeEvidence).toContain("30_000");
+    expect(interactionRunner).toContain("`interaction journey ${name}`");
+    expect(interactionRunner).toContain("90_000");
   });
 
   it("never re-enables CSS motion after reduced motion is requested", () => {
@@ -826,6 +868,19 @@ describe("rendered visual-accessibility gate contract", () => {
     expect(interaction).toMatch(/panelRect\.top\s*>=\s*0/);
     expect(interaction).toMatch(/panelRect\.bottom\s*<=\s*innerHeight/);
     expect(interaction).toContain("overlapsConsent");
+  });
+
+  it("bounds theme geometry rendering before and after every toggle", () => {
+    const interaction = sliceBetween(
+      "await runInteraction('theme toggle persistence'",
+      "await runInteraction('homepage primary CTA'",
+    );
+
+    expect(interaction).toContain("`theme geometry ${viewport.width}px pre-toggle`");
+    expect(interaction).toContain("`theme geometry ${viewport.width}px post-toggle`");
+    expect(interaction).not.toContain("await document.fonts.ready");
+    expect(interaction).not.toContain("requestAnimationFrame");
+    expect(interaction).toContain("hasRenderedPageFailures");
   });
 
   it("uses the visible homepage hero conversion CTA instead of navigation chrome", () => {
