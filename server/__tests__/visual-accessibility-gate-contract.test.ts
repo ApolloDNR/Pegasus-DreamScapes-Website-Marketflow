@@ -488,7 +488,7 @@ describe("rendered visual-accessibility gate contract", () => {
     }
   });
 
-  it("tests and uploads exact PR-head evidence while checking the synthetic merge separately", () => {
+  it("builds the exact PR head once, verifies every shard against it, and enforces one PR-only aggregate gate", () => {
     expect(workflow).toContain("concurrency:");
     expect(workflow).toContain("cancel-in-progress: true");
     expect(workflow).toContain("timeout-minutes: 45");
@@ -503,24 +503,178 @@ describe("rendered visual-accessibility gate contract", () => {
     expect(workflow).toContain("if-no-files-found: error");
     expect(workflow).toContain("A11Y_SCREENSHOT_DIR:");
     expect(workflow).toContain("RENDERED_QA_TESTED_SHA:");
-    expect(workflow.match(/node-version: '22\.23\.2'/g)).toHaveLength(3);
-    expect(workflow.match(/npm@10\.9\.2/g)).toHaveLength(3);
+    expect(workflow.match(/node-version: '22\.23\.2'/g)).toHaveLength(5);
+    expect(workflow.match(/npm@10\.9\.2/g)).toHaveLength(4);
     const workflowConfig = parse(workflow) as {
       jobs: Record<string, {
+        name?: string;
+        needs?: string | string[];
         if?: string;
         "timeout-minutes"?: number;
-        steps?: Array<{ name?: string; if?: string; run?: string }>;
+        outputs?: Record<string, string>;
+        env?: Record<string, string>;
+        strategy?: {
+          "fail-fast"?: boolean;
+          matrix?: { include?: Array<{ shard_id?: string; qa_timeout?: string }> };
+        };
+        steps?: Array<{
+          name?: string;
+          id?: string;
+          if?: string;
+          run?: string;
+          "continue-on-error"?: boolean;
+          uses?: string;
+          with?: Record<string, unknown>;
+        }>;
       }>;
     };
+    const renderedBuildJob = workflowConfig.jobs["rendered-qa-build"];
+    expect(renderedBuildJob).toBeDefined();
+    expect(renderedBuildJob.name).toBe("rendered QA exact build");
+    expect(renderedBuildJob.if).toBe("github.event_name == 'pull_request'");
+    expect(renderedBuildJob.outputs).toEqual({
+      artifact_name: "${{ steps.provenance.outputs.artifact_name }}",
+      build_sha256: "${{ steps.build-digest.outputs.build_sha256 }}",
+    });
+    expect(renderedBuildJob.env?.TESTED_SOURCE_SHA).toBe(
+      "${{ github.event.pull_request.head.sha }}",
+    );
+
+    const exactBuildStep = renderedBuildJob.steps?.find(
+      ({ name }) => name === "Build exact rendered QA client once",
+    );
+    expect(exactBuildStep?.run).toBe("npm run build");
+    const digestStep = renderedBuildJob.steps?.find(
+      ({ name }) => name === "Record exact rendered QA build digest",
+    );
+    expect(digestStep?.id).toBe("build-digest");
+    expect(digestStep?.run).toContain("node scripts/rendered-qa-build-digest.mjs");
+    expect(digestStep?.run).toContain("--root dist/public");
+    expect(digestStep?.run).toContain(
+      "--output artifacts/rendered-qa-build/rendered-qa-build-digest.json",
+    );
+    expect(digestStep?.run).toContain('echo "build_sha256=$build_sha256" >> "$GITHUB_OUTPUT"');
+
+    const buildUpload = renderedBuildJob.steps?.find(
+      ({ name }) => name === "Upload exact rendered QA client build",
+    );
+    expect(buildUpload).toMatchObject({
+      uses: "actions/upload-artifact@v4",
+      with: {
+        name: "${{ steps.provenance.outputs.artifact_name }}",
+        path: "dist/public",
+        "if-no-files-found": "error",
+        "include-hidden-files": true,
+        overwrite: true,
+      },
+    });
+
+    const shardJob = workflowConfig.jobs["rendered-qa-shards"];
+    expect(shardJob).toBeDefined();
+    expect(shardJob.needs).toBe("rendered-qa-build");
+    expect(shardJob.if).toBe("github.event_name == 'pull_request'");
+    expect(shardJob["timeout-minutes"]).toBe(50);
+    expect(shardJob.strategy?.["fail-fast"]).toBe(false);
+    expect(shardJob.strategy?.matrix?.include?.map(({ shard_id }) => shard_id)).toEqual([
+      "routes-dark-desktop-1440",
+      "routes-dark-tablet-1024",
+      "routes-dark-tablet-768",
+      "routes-dark-mobile-390",
+      "routes-light-desktop-1440",
+      "routes-light-tablet-1024",
+      "routes-light-tablet-768",
+      "routes-light-mobile-390",
+      "interactions-core",
+      "interactions-intake-wide",
+      "interactions-intake-narrow",
+      "interactions-marketflow",
+    ]);
+    expect(shardJob.env?.RENDERED_QA_BUILD_SHA256).toBe(
+      "${{ needs.rendered-qa-build.outputs.build_sha256 }}",
+    );
+    expect(
+      shardJob.steps?.find(({ name }) => name === "Run exhaustive rendered accessibility shard")?.run,
+    ).toContain("timeout --signal=TERM --kill-after=1m");
+    const buildDownload = shardJob.steps?.find(
+      ({ name }) => name === "Download exact rendered QA client build",
+    );
+    expect(buildDownload).toMatchObject({
+      uses: "actions/download-artifact@v4",
+      with: {
+        name: "${{ needs.rendered-qa-build.outputs.artifact_name }}",
+        path: "dist/public",
+      },
+    });
+    const buildVerification = shardJob.steps?.find(
+      ({ name }) => name === "Verify exact rendered QA client build",
+    );
+    expect(buildVerification?.run).toContain("node scripts/rendered-qa-build-digest.mjs");
+    expect(buildVerification?.run).toContain("--root dist/public");
+    expect(buildVerification?.run).toContain('--expect "$RENDERED_QA_BUILD_SHA256"');
+    expect(buildVerification?.run).toContain(
+      '--output "$A11Y_SCREENSHOT_DIR/rendered-qa-build-digest.json"',
+    );
+    const shardStepNames = shardJob.steps?.map(({ name }) => name) ?? [];
+    expect(shardStepNames.indexOf("Download exact rendered QA client build")).toBeLessThan(
+      shardStepNames.indexOf("Verify exact rendered QA client build"),
+    );
+    expect(shardStepNames.indexOf("Verify exact rendered QA client build")).toBeLessThan(
+      shardStepNames.indexOf("Run exhaustive rendered accessibility shard"),
+    );
+    const shardUpload = shardJob.steps?.find(
+      ({ name }) => name === "Upload rendered QA shard evidence",
+    );
+    expect(shardUpload?.if).toBe("always()");
+    expect(shardUpload?.with?.overwrite).toBe(true);
+    expect(workflow).toContain("A11Y_QA_SHARD_ID: ${{ matrix.shard_id }}");
+    expect(workflow).toContain("A11Y_PUBLIC_ROUTE_COVERAGE: full");
+    expect(workflow).toContain("fail-fast: false");
+    expect(workflow).toContain("shard-started.json");
+
     const fullQaJob = workflowConfig.jobs["rendered-qa-full"];
     expect(fullQaJob).toBeDefined();
-    expect(fullQaJob.if).toBe(
-      "github.event_name == 'pull_request' || github.ref == 'refs/heads/codex/launch-recovery-v2'",
+    expect(fullQaJob.name).toBe("exhaustive rendered public-route QA");
+    expect(fullQaJob.needs).toEqual(["rendered-qa-build", "rendered-qa-shards"]);
+    expect(fullQaJob.if).toBe("${{ always() && github.event_name == 'pull_request' }}");
+    expect(fullQaJob.env?.RENDERED_QA_BUILD_SHA256).toBe(
+      "${{ needs.rendered-qa-build.outputs.build_sha256 }}",
     );
-    expect(fullQaJob["timeout-minutes"]).toBe(60);
+    expect(fullQaJob["timeout-minutes"]).toBe(30);
     expect(
-      fullQaJob.steps?.find(({ name }) => name === "Run exhaustive rendered accessibility gate")?.run,
-    ).toBe("npm run check:a11y:full");
+      fullQaJob.steps?.find(({ name }) => name === "Aggregate rendered QA evidence")?.run,
+    ).toContain("node scripts/aggregate-rendered-qa.mjs");
+    expect(
+      fullQaJob.steps?.find(({ name }) => name === "Aggregate rendered QA evidence")?.["continue-on-error"],
+    ).toBe(true);
+    expect(
+      fullQaJob.steps?.find(({ name }) => name === "Enforce exhaustive rendered QA gate")?.run,
+    ).toContain('test "$BUILD_RESULT" = "success"');
+    expect(
+      fullQaJob.steps?.find(({ name }) => name === "Enforce exhaustive rendered QA gate")?.run,
+    ).toContain('test "$MATRIX_RESULT" = "success"');
+    expect(
+      fullQaJob.steps?.find(({ name }) => name === "Enforce exhaustive rendered QA gate")?.run,
+    ).toContain('test "$AGGREGATE_RESULT" = "success"');
+    expect(
+      fullQaJob.steps?.filter(({ name }) => name?.startsWith("Download ")),
+    ).toHaveLength(12);
+    expect(workflow).toContain("artifacts/rendered-qa-shards/routes-dark-desktop-1440");
+    expect(workflow).toContain("artifacts/rendered-qa-shards/interactions-marketflow");
+
+    const renderedPipelineBuilds = [renderedBuildJob, shardJob, fullQaJob].flatMap(
+      (job) => job.steps?.filter(({ run }) => run?.trim() === "npm run build") ?? [],
+    );
+    expect(renderedPipelineBuilds).toEqual([exactBuildStep]);
+    expect(
+      Object.entries(workflowConfig.jobs)
+        .filter(([, job]) => job.strategy?.matrix)
+        .map(([jobId]) => jobId),
+    ).toEqual(["rendered-qa-shards"]);
+    for (const job of [renderedBuildJob, shardJob]) {
+      expect(job.if).toBe("github.event_name == 'pull_request'");
+      expect(job.if).not.toContain("github.ref");
+    }
+    expect(fullQaJob.if).not.toContain("github.ref");
     expect(
       workflowConfig.jobs.test.steps?.find(({ name }) => name === "Run rendered accessibility gate")?.if,
     ).toBe(
@@ -719,6 +873,13 @@ describe("rendered visual-accessibility gate contract", () => {
 
   it("writes SHA-bound artifact lineage and exact evidence counts", () => {
     expect(source).toContain("rendered-qa-manifest.json");
+    expect(source).toContain("schemaVersion: 2");
+    expect(source).toContain("await writeManifest({ result: 'running' })");
+    expect(source).toContain("resolveRenderedQaShard(process.env.A11Y_QA_SHARD_ID)");
+    expect(source).toContain("routeChecks.push({");
+    expect(source).toContain("journeyChecks.push({");
+    expect(source).toContain("Rendered QA screenshot filename collision");
+    expect(source).toContain("createHash('sha256')");
     expect(source).toContain("RENDERED_QA_TESTED_SHA");
     expect(source).toContain("RENDERED_QA_PR_HEAD_SHA");
     expect(source).toContain("RENDERED_QA_PR_MERGE_SHA");
@@ -726,6 +887,7 @@ describe("rendered visual-accessibility gate contract", () => {
     expect(source).toContain("const result = failures.length");
     expect(source).toContain("result,");
     expect(source).toContain("routeCheckCount: expectedRouteCheckCount");
+    expect(source).toContain("actualRouteCheckCount: routeChecks.length");
     expect(source).toContain("publicRouteCoverage,");
     expect(source).toContain("routeFailureCount: failures.length");
     expect(source).toContain("interactionJourneyCount");

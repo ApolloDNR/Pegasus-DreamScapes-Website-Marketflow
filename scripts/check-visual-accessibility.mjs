@@ -1,5 +1,6 @@
 import { existsSync } from 'node:fs';
-import { mkdir, readFile, stat, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, stat, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { createServer } from 'node:http';
 import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
@@ -7,6 +8,14 @@ import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
 import { sitemapEntries } from '../shared/seo-routes.ts';
 import { closeWithinDeadline } from './rendered-qa-liveness.mjs';
+import {
+  renderedQaColorSchemes,
+  renderedQaFullPublicRoutes,
+  renderedQaJourneyIds,
+  renderedQaReleaseRoutes,
+  renderedQaViewports,
+  resolveRenderedQaShard,
+} from './rendered-qa-contract.mjs';
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const buildRoot = path.join(projectRoot, 'dist/public');
@@ -98,9 +107,37 @@ function isAllowedPreviewStubApiPath(pathname) {
 }
 
 const interactionsOnly = process.env.A11Y_INTERACTIONS_ONLY === '1';
-const expectedRouteCheckCount = interactionsOnly
+const selectedShard = resolveRenderedQaShard(process.env.A11Y_QA_SHARD_ID);
+if (selectedShard && interactionsOnly) {
+  throw new Error('A11Y_INTERACTIONS_ONLY=1 cannot be combined with A11Y_QA_SHARD_ID');
+}
+if (selectedShard?.kind === 'routes' && publicRouteCoverage !== 'full') {
+  throw new Error('Rendered QA route shards require A11Y_PUBLIC_ROUTE_COVERAGE=full');
+}
+
+const selectedRouteColorSchemes = selectedShard?.kind === 'routes'
+  ? colorSchemes.filter((colorScheme) => selectedShard.colorSchemes.includes(colorScheme))
+  : selectedShard?.kind === 'interactions'
+    ? []
+    : interactionsOnly
+      ? []
+      : colorSchemes;
+const selectedRouteViewportNames = selectedShard?.kind === 'routes'
+  ? new Set(selectedShard.viewportNames)
+  : null;
+const selectedJourneyIds = selectedShard
+  ? selectedShard.journeyIds
+  : renderedQaJourneyIds;
+const selectedJourneyIdSet = new Set(selectedJourneyIds);
+const unshardedExpectedRouteCheckCount = interactionsOnly
   ? 0
   : routes.length * viewports.length * colorSchemes.length;
+const expectedRouteCheckCount = selectedShard
+  ? selectedShard.expectedRouteChecks
+  : unshardedExpectedRouteCheckCount;
+const expectedInteractionJourneyCount = selectedShard
+  ? selectedShard.expectedJourneyChecks
+  : renderedQaJourneyIds.length;
 let interactionJourneyCount = 0;
 let screenshotCount = 0;
 const screenshotDir = process.env.A11Y_SCREENSHOT_DIR
@@ -108,13 +145,160 @@ const screenshotDir = process.env.A11Y_SCREENSHOT_DIR
   : null;
 if (screenshotDir) await mkdir(screenshotDir, { recursive: true });
 
-async function captureScreenshot(page, filename) {
-  if (!screenshotDir) return;
+const expectedScreenshotCount = screenshotDir
+  ? selectedShard?.expectedScreenshots ?? expectedRouteCheckCount + 39
+  : null;
+const qaStartedAt = new Date().toISOString();
+const qaLineage = Object.freeze({
+  testedSourceSha: process.env.RENDERED_QA_TESTED_SHA || 'local-uncommitted',
+  prHeadSha: process.env.RENDERED_QA_PR_HEAD_SHA || null,
+  prMergeSha: process.env.RENDERED_QA_PR_MERGE_SHA || null,
+  githubEvent: process.env.RENDERED_QA_GITHUB_EVENT || null,
+  buildSha256: process.env.RENDERED_QA_BUILD_SHA256 || null,
+});
+const githubRunAttempt = Number.parseInt(
+  process.env.RENDERED_QA_GITHUB_RUN_ATTEMPT || process.env.GITHUB_RUN_ATTEMPT || '',
+  10,
+);
+const qaRun = Object.freeze({
+  githubRunId: process.env.RENDERED_QA_GITHUB_RUN_ID || process.env.GITHUB_RUN_ID || null,
+  githubRunAttempt: Number.isSafeInteger(githubRunAttempt) && githubRunAttempt > 0
+    ? githubRunAttempt
+    : null,
+  githubJob: process.env.GITHUB_JOB || null,
+  githubWorkflow: process.env.GITHUB_WORKFLOW || null,
+});
+const routeChecks = [];
+const journeyChecks = [];
+const screenshots = [];
+const screenshotNames = new Set();
+let currentScreenshotOwner = null;
+const selectedExpectations = Object.freeze({
+  routeCheckCount: expectedRouteCheckCount,
+  interactionJourneyCount: expectedInteractionJourneyCount,
+  screenshotCount: expectedScreenshotCount,
+  routes: selectedShard?.kind === 'interactions' || interactionsOnly
+    ? []
+    : selectedShard?.kind === 'routes' || publicRouteCoverage === 'full'
+      ? renderedQaFullPublicRoutes
+      : renderedQaReleaseRoutes,
+  viewportNames: selectedShard?.kind === 'routes'
+    ? selectedShard.viewportNames
+    : selectedShard?.kind === 'interactions' || interactionsOnly
+      ? []
+      : viewports.map(([viewportName]) => viewportName),
+  colorSchemes: selectedRouteColorSchemes,
+  journeyIds: selectedJourneyIds,
+});
+const manifestPath = screenshotDir
+  ? path.join(screenshotDir, ['rendered', 'qa', 'manifest.json'].join('-'))
+  : null;
+const manifestTemporaryPath = manifestPath ? `${manifestPath}.tmp` : null;
+let manifestWriteQueue = Promise.resolve();
+let manifestFinalized = false;
+
+function createManifest({
+  result,
+  routeFailures = [],
+  journeyFailures = [],
+  invariantFailures = [],
+  fatalFailure = null,
+  completedAt = null,
+  counts = null,
+  lastCheckpointAt = null,
+}) {
+  return {
+    schemaVersion: 2,
+    result,
+    shardId: selectedShard?.id ?? null,
+    shardKind: selectedShard?.kind ?? 'unsharded',
+    ...qaRun,
+    ...qaLineage,
+    publicRouteCoverage,
+    selectedExpectations,
+    routeChecks,
+    journeyChecks,
+    screenshots,
+    routeCheckCount: expectedRouteCheckCount,
+    actualRouteCheckCount: routeChecks.length,
+    routeFailureCount: counts?.routeFailureCount ?? routeFailures.length,
+    routes: selectedExpectations.routes,
+    viewports: Object.fromEntries(
+      viewports.filter(([viewportName]) => selectedExpectations.viewportNames.includes(viewportName)),
+    ),
+    colorSchemes: selectedExpectations.colorSchemes,
+    interactionJourneyCount,
+    expectedInteractionJourneyCount,
+    interactionFailureCount: counts?.interactionFailureCount ?? journeyFailures.length,
+    invariantFailureCount: counts?.invariantFailureCount ?? invariantFailures.length,
+    invariantFailures,
+    fatalFailureCount: counts?.fatalFailureCount ?? (fatalFailure ? 1 : 0),
+    fatalFailure,
+    expectedScreenshotCount,
+    screenshotCount,
+    screenshotEvidenceEnabled: Boolean(screenshotDir),
+    routeFailures,
+    interactionFailures: journeyFailures,
+    startedAt: qaStartedAt,
+    lastCheckpointAt,
+    completedAt,
+  };
+}
+
+function writeManifest(state, { final = false } = {}) {
+  if (!manifestPath || !manifestTemporaryPath) return Promise.resolve();
+  if (manifestFinalized) return Promise.resolve();
+
+  const lastCheckpointAt = new Date().toISOString();
+  const serializedManifest = `${JSON.stringify(
+    createManifest({ ...state, lastCheckpointAt }),
+    null,
+    2,
+  )}\n`;
+  const writeCheckpoint = async () => {
+    if (manifestFinalized) return;
+    await writeFile(manifestTemporaryPath, serializedManifest, 'utf8');
+    await rename(manifestTemporaryPath, manifestPath);
+    if (final) manifestFinalized = true;
+  };
+  const checkpoint = manifestWriteQueue.then(writeCheckpoint, writeCheckpoint);
+  manifestWriteQueue = checkpoint.catch(() => undefined);
+  return checkpoint;
+}
+
+await writeManifest({ result: 'running' });
+
+async function captureScreenshot(page, filename, owner = currentScreenshotOwner) {
+  if (!screenshotDir) return null;
+  if (filename !== path.basename(filename)) {
+    throw new Error(`Rendered QA screenshot name must be a filename: ${filename}`);
+  }
+  if (screenshotNames.has(filename)) {
+    throw new Error(`Rendered QA screenshot filename collision: ${filename}`);
+  }
+  screenshotNames.add(filename);
+  const screenshotPath = path.join(screenshotDir, filename);
   await page.screenshot({
-    path: path.join(screenshotDir, filename),
+    path: screenshotPath,
     fullPage: true,
   });
-  screenshotCount += 1;
+  const screenshotBytes = await readFile(screenshotPath);
+  if (screenshotBytes.byteLength === 0) {
+    throw new Error(`Rendered QA screenshot was empty: ${filename}`);
+  }
+  const metadata = {
+    path: filename,
+    filename,
+    bytes: screenshotBytes.byteLength,
+    sha256: createHash('sha256').update(screenshotBytes).digest('hex'),
+    owner: owner ? { ...owner } : null,
+  };
+  screenshots.push(metadata);
+  screenshotCount = screenshots.length;
+  if (owner?.kind === 'journey') {
+    await writeManifest({ result: 'running' });
+  }
+  return metadata;
 }
 
 const pendingControlledReleases = new Set();
@@ -363,7 +547,16 @@ const candidates = [
 ].filter(Boolean);
 const executablePath = candidates.find((candidate) => existsSync(candidate));
 if (!executablePath) {
-  server.close();
+  const browserFatalFailure = {
+    error: 'Error: No Chromium executable found. Set CHROME_PATH to run the rendered accessibility gate.',
+    stack: null,
+  };
+  await new Promise((resolve) => server.close(() => resolve()));
+  await writeManifest({
+    result: 'failed',
+    fatalFailure: browserFatalFailure,
+    completedAt: new Date().toISOString(),
+  }, { final: true });
   throw new Error('No Chromium executable found. Set CHROME_PATH to run the rendered accessibility gate.');
 }
 
@@ -850,62 +1043,83 @@ async function captureEvidenceScreenshot(
 }
 
 async function runInteraction(name, options, check) {
-  interactionJourneyCount += 1;
-  const browser = await launchBrowser();
+  if (!selectedJourneyIdSet.has(name)) return;
+  const screenshotStartIndex = screenshots.length;
+  let journeyOutcome = null;
+  currentScreenshotOwner = { kind: 'journey', journeyId: name };
   try {
-    const { context, blockedEgress } = await newGuardedContext(browser, {
-      viewport: options.viewport ?? getViewport('desktop-1440'),
-      colorScheme: options.colorScheme ?? 'dark',
-      reducedMotion: 'reduce',
-    });
+    const browser = await launchBrowser();
     try {
-      if (options.seedConsent !== false) {
-        await context.addInitScript(() => {
-          localStorage.setItem('pegasus-cookie-consent', JSON.stringify({
-            essential: true,
-            analytics: false,
-            marketing: false,
-            decidedAt: '2026-01-01T00:00:00.000Z',
-          }));
-        });
-      }
-      const page = await context.newPage();
-      const blockedEgressStart = blockedEgress.length;
-      const health = monitorPageHealth(page);
-
+      const { context, blockedEgress } = await newGuardedContext(browser, {
+        viewport: options.viewport ?? getViewport('desktop-1440'),
+        colorScheme: options.colorScheme ?? 'dark',
+        reducedMotion: 'reduce',
+      });
       try {
+        if (options.seedConsent !== false) {
+          await context.addInitScript(() => {
+            localStorage.setItem('pegasus-cookie-consent', JSON.stringify({
+              essential: true,
+              analytics: false,
+              marketing: false,
+              decidedAt: '2026-01-01T00:00:00.000Z',
+            }));
+          });
+        }
+        const page = await context.newPage();
+        const blockedEgressStart = blockedEgress.length;
+        const health = monitorPageHealth(page);
+
         try {
-          await check(page, health);
-          await settleAfterInteraction(page, health);
-          const browserHealth = browserHealthFailures(health, blockedEgress, blockedEgressStart);
-          assert(!hasBrowserHealthFailures(browserHealth), `Browser health failures: ${JSON.stringify(browserHealth)}`);
-          console.log(`[interaction] ${name}: PASS`);
-        } catch (error) {
-          const failure = {
-            name,
-            error: String(error),
-            browserHealth: browserHealthFailures(health, blockedEgress, blockedEgressStart),
-          };
-          interactionFailures.push(failure);
-          console.error(`[interaction-detail] ${JSON.stringify(failure)}`);
-          console.log(`[interaction] ${name}: FAIL`);
+          try {
+            await check(page, health);
+            await settleAfterInteraction(page, health);
+            const browserHealth = browserHealthFailures(health, blockedEgress, blockedEgressStart);
+            assert(!hasBrowserHealthFailures(browserHealth), `Browser health failures: ${JSON.stringify(browserHealth)}`);
+            journeyOutcome = { result: 'passed', failure: null };
+            console.log(`[interaction] ${name}: PASS`);
+          } catch (error) {
+            const failure = {
+              name,
+              error: String(error),
+              browserHealth: browserHealthFailures(health, blockedEgress, blockedEgressStart),
+            };
+            interactionFailures.push(failure);
+            journeyOutcome = { result: 'failed', failure };
+            console.error(`[interaction-detail] ${JSON.stringify(failure)}`);
+            console.log(`[interaction] ${name}: FAIL`);
+          }
+        } finally {
+          releasePendingControlledEvents();
+          try {
+            await closeWithinDeadline(
+              `interaction ${name} request-route cleanup`,
+              () => page.unrouteAll({ behavior: 'wait' }),
+            );
+          } finally {
+            await closeQaPage(page, `interaction ${name} page`);
+          }
         }
       } finally {
-        releasePendingControlledEvents();
-        try {
-          await closeWithinDeadline(
-            `interaction ${name} request-route cleanup`,
-            () => page.unrouteAll({ behavior: 'wait' }),
-          );
-        } finally {
-          await closeQaPage(page, `interaction ${name} page`);
-        }
+        await closeQaContext(context, `interaction ${name} context`);
       }
     } finally {
-      await closeQaContext(context, `interaction ${name} context`);
+      await closeQaBrowser(browser, `interaction ${name} browser`);
     }
   } finally {
-    await closeQaBrowser(browser, `interaction ${name} browser`);
+    currentScreenshotOwner = null;
+  }
+
+  if (journeyOutcome) {
+    journeyChecks.push({
+      journeyId: name,
+      ...journeyOutcome,
+      screenshotPaths: screenshots
+        .slice(screenshotStartIndex)
+        .map(({ path: screenshotPath }) => screenshotPath),
+    });
+    interactionJourneyCount = journeyChecks.length;
+    await writeManifest({ result: 'running' });
   }
 }
 
@@ -1134,8 +1348,10 @@ async function captureInventoryState(
 
 let fatalFailure = null;
 try {
-  for (const colorScheme of interactionsOnly ? [] : colorSchemes) {
+  // Unsharded behavior remains equivalent to: for (const colorScheme of interactionsOnly ? [] : colorSchemes)
+  for (const colorScheme of selectedRouteColorSchemes) {
     for (const [viewportName, viewport] of viewports) {
+      if (selectedRouteViewportNames && !selectedRouteViewportNames.has(viewportName)) continue;
       const browser = await launchBrowser();
       try {
         const { context, blockedEgress } = await newGuardedContext(browser, {
@@ -1179,6 +1395,7 @@ try {
         const renderedPage = await settleRenderedPage(page);
         const requestState = await waitForActiveRequestCount(health, 0);
         const requestsSettled = firstRequestState.settled && requestState.settled;
+        let routeScreenshot = null;
 
         if (
           screenshotDir &&
@@ -1186,16 +1403,21 @@ try {
           !hasRenderedPageFailures(renderedPage)
         ) {
           const slug = route === '/' ? 'home' : route.replace(/^\//, '').replace(/[^a-z0-9]+/gi, '-');
-          await captureScreenshot(page, `${slug}-${viewportName}-${colorScheme}.png`);
+          routeScreenshot = await captureScreenshot(
+            page,
+            `${slug}-${viewportName}-${colorScheme}.png`,
+            { kind: 'route', route, viewportName, colorScheme },
+          );
         }
 
         const browserHealth = browserHealthFailures(health, blockedEgress, blockedEgressStart);
+        let failure = null;
         if (!response?.ok()
           || !requestsSettled
           || hasBrowserHealthFailures(browserHealth)
           || hasRenderedPageFailures(renderedPage)
           || violations.length) {
-          const failure = {
+          failure = {
             colorScheme,
             viewport: viewportName,
             route,
@@ -1214,6 +1436,15 @@ try {
           && !hasBrowserHealthFailures(browserHealth)
           && !hasRenderedPageFailures(renderedPage)
           && !violations.length;
+              routeChecks.push({
+                route,
+                viewportName,
+                colorScheme,
+                result: passed ? 'passed' : 'failed',
+                failure,
+                screenshotPath: routeScreenshot?.path ?? null,
+              });
+              await writeManifest({ result: 'running' });
               console.log(`[a11y] ${colorScheme} ${viewportName} ${route}: ${passed ? 'PASS' : 'FAIL'}`);
             } finally {
               await closeQaPage(
@@ -2005,12 +2236,23 @@ try {
         residualCleanupFailures,
       };
   }
-  await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+  try {
+    await new Promise((resolve, reject) => server.close((error) => error ? reject(error) : resolve()));
+  } catch (error) {
+    const serverCleanupFailure = {
+      error: String(error),
+      stack: error instanceof Error ? error.stack ?? null : null,
+    };
+    console.error('[rendered-qa] Preview server cleanup failure:', error);
+    fatalFailure = fatalFailure
+      ? { ...fatalFailure, serverCleanupFailure }
+      : serverCleanupFailure;
+  }
 }
 
-const testedSourceSha = process.env.RENDERED_QA_TESTED_SHA || 'local-uncommitted';
-const prHeadSha = process.env.RENDERED_QA_PR_HEAD_SHA || null;
-const prMergeSha = process.env.RENDERED_QA_PR_MERGE_SHA || null;
+const testedSourceSha = qaLineage.testedSourceSha;
+const prHeadSha = qaLineage.prHeadSha;
+const prMergeSha = qaLineage.prMergeSha;
 const invariantFailures = [];
 if (process.env.GITHUB_ACTIONS === 'true') {
   if (!/^[0-9a-f]{40}$/.test(testedSourceSha)) {
@@ -2024,6 +2266,11 @@ if (process.env.GITHUB_ACTIONS === 'true') {
       invariantFailures.push('Pull-request rendered QA recorded an invalid merge SHA');
     }
   }
+  if (selectedShard && !/^[0-9a-f]{64}$/.test(String(qaLineage.buildSha256 ?? ''))) {
+    invariantFailures.push(
+      'Rendered QA shard did not record a valid exact-build SHA-256 digest',
+    );
+  }
 }
 
 if (releaseRoutes.length !== 17) {
@@ -2036,22 +2283,87 @@ if (fullPublicRoutes.length !== 45) {
     `Rendered full public route inventory contains ${fullPublicRoutes.length} routes; expected exactly 45`,
   );
 }
+if (JSON.stringify(releaseRoutes) !== JSON.stringify(renderedQaReleaseRoutes)) {
+  invariantFailures.push('Rendered release routes drifted from the canonical shard contract');
+}
+if (JSON.stringify(fullPublicRoutes) !== JSON.stringify(renderedQaFullPublicRoutes)) {
+  invariantFailures.push('Rendered full public routes drifted from the canonical shard contract');
+}
+if (JSON.stringify(viewports) !== JSON.stringify(renderedQaViewports)) {
+  invariantFailures.push('Rendered QA viewports drifted from the canonical shard contract');
+}
+if (JSON.stringify(colorSchemes) !== JSON.stringify(renderedQaColorSchemes)) {
+  invariantFailures.push('Rendered QA color schemes drifted from the canonical shard contract');
+}
 const requiredRouteCheckCount = publicRouteCoverage === 'full' ? 360 : 136;
-if (!interactionsOnly && expectedRouteCheckCount !== requiredRouteCheckCount) {
+if (!selectedShard && !interactionsOnly && expectedRouteCheckCount !== requiredRouteCheckCount) {
   invariantFailures.push(
     `Rendered ${publicRouteCoverage} matrix produced ${expectedRouteCheckCount} checks; expected exactly ${requiredRouteCheckCount}`,
   );
 }
-if (interactionJourneyCount !== 17) {
+if (!selectedShard && interactionJourneyCount !== 17) {
   invariantFailures.push(
     `Rendered release suite produced ${interactionJourneyCount} interaction journeys; expected exactly 17`,
   );
 }
-const expectedScreenshotCount = screenshotDir
-  ? expectedRouteCheckCount + 39
-  : null;
+if (routeChecks.length !== expectedRouteCheckCount) {
+  invariantFailures.push(
+    `Rendered QA completed ${routeChecks.length} route checks; expected ${expectedRouteCheckCount}`,
+  );
+}
+if (journeyChecks.length !== expectedInteractionJourneyCount) {
+  invariantFailures.push(
+    `Rendered QA completed ${journeyChecks.length} interaction journeys; expected ${expectedInteractionJourneyCount}`,
+  );
+}
+
+const routeTupleKeys = routeChecks.map(
+  ({ route, viewportName, colorScheme }) => `${colorScheme}\u0000${viewportName}\u0000${route}`,
+);
+if (new Set(routeTupleKeys).size !== routeTupleKeys.length) {
+  invariantFailures.push('Rendered QA recorded duplicate route/theme/viewport outcomes');
+}
+if (routeChecks.filter(({ result: outcome }) => outcome === 'failed').length !== failures.length) {
+  invariantFailures.push('Rendered QA route failure outcomes did not match route failure evidence');
+}
+if (journeyChecks.filter(({ result: outcome }) => outcome === 'failed').length !== interactionFailures.length) {
+  invariantFailures.push('Rendered QA journey failure outcomes did not match journey failure evidence');
+}
+
+if (selectedShard?.kind === 'routes') {
+  if (publicRouteCoverage !== 'full') {
+    invariantFailures.push('Rendered QA route shards require A11Y_PUBLIC_ROUTE_COVERAGE=full');
+  }
+  if (journeyChecks.length !== 0) {
+    invariantFailures.push(`Route shard ${selectedShard.id} executed interaction journeys`);
+  }
+  const unexpectedRouteOutcome = routeChecks.find(({ route, viewportName, colorScheme }) => (
+    !renderedQaFullPublicRoutes.includes(route)
+      || !selectedShard.viewportNames.includes(viewportName)
+      || !selectedShard.colorSchemes.includes(colorScheme)
+  ));
+  if (unexpectedRouteOutcome) {
+    invariantFailures.push(
+      `Route shard ${selectedShard.id} recorded an out-of-shard tuple: ${JSON.stringify(unexpectedRouteOutcome)}`,
+    );
+  }
+}
+
+if (selectedShard?.kind === 'interactions') {
+  if (routeChecks.length !== 0) {
+    invariantFailures.push(`Interaction shard ${selectedShard.id} executed route checks`);
+  }
+  const actualJourneyIds = journeyChecks.map(({ journeyId }) => journeyId);
+  if (JSON.stringify(actualJourneyIds) !== JSON.stringify(selectedShard.journeyIds)) {
+    invariantFailures.push(
+      `Interaction shard ${selectedShard.id} completed ${JSON.stringify(actualJourneyIds)}; expected ${JSON.stringify(selectedShard.journeyIds)}`,
+    );
+  }
+}
+
 if (
   screenshotDir
+  && !selectedShard
   && publicRouteCoverage === 'full'
   && expectedScreenshotCount !== 399
 ) {
@@ -2064,6 +2376,19 @@ if (screenshotDir && screenshotCount !== expectedScreenshotCount) {
     `Rendered QA wrote ${screenshotCount} screenshots; expected ${expectedScreenshotCount}`,
   );
 }
+if (screenshots.length !== screenshotCount) {
+  invariantFailures.push('Rendered QA screenshot metadata count did not match screenshot count');
+}
+if (new Set(screenshots.map(({ filename }) => filename)).size !== screenshots.length) {
+  invariantFailures.push('Rendered QA manifest contains duplicate screenshot filenames');
+}
+for (const screenshot of screenshots) {
+  if (!(screenshot.bytes > 0) || !/^[0-9a-f]{64}$/.test(screenshot.sha256)) {
+    invariantFailures.push(
+      `Rendered QA screenshot metadata is incomplete: ${JSON.stringify(screenshot)}`,
+    );
+  }
+}
 
 const result = failures.length
   || interactionFailures.length
@@ -2072,35 +2397,22 @@ const result = failures.length
   ? 'failed'
   : 'passed';
 
-if (screenshotDir) {
-  await writeFile(
-    path.join(screenshotDir, 'rendered-qa-manifest.json'),
-    `${JSON.stringify({
-      schemaVersion: 1,
-      result,
-      testedSourceSha,
-      prHeadSha,
-      prMergeSha,
-      githubEvent: process.env.RENDERED_QA_GITHUB_EVENT || null,
-      publicRouteCoverage,
-      routeCheckCount: expectedRouteCheckCount,
-      routeFailureCount: failures.length,
-      routes,
-      viewports: Object.fromEntries(viewports),
-      colorSchemes,
-      interactionJourneyCount,
-      interactionFailureCount: interactionFailures.length,
-      invariantFailureCount: invariantFailures.length,
-      invariantFailures,
-      fatalFailureCount: fatalFailure ? 1 : 0,
-      fatalFailure,
-      expectedScreenshotCount,
-      screenshotCount,
-      screenshotEvidenceEnabled: true,
-    }, null, 2)}\n`,
-    'utf8',
-  );
-}
+// Both the running and final state use the canonical rendered-qa-manifest.json artifact.
+const finalManifestCounts = {
+  routeFailureCount: failures.length,
+  interactionFailureCount: interactionFailures.length,
+  invariantFailureCount: invariantFailures.length,
+  fatalFailureCount: fatalFailure ? 1 : 0,
+};
+await writeManifest({
+  result,
+  routeFailures: failures,
+  journeyFailures: interactionFailures,
+  invariantFailures,
+  fatalFailure,
+  completedAt: new Date().toISOString(),
+  counts: finalManifestCounts,
+}, { final: true });
 
 if (result === 'failed') {
   console.error(JSON.stringify({
@@ -2113,9 +2425,15 @@ if (result === 'failed') {
   process.exit(1);
 }
 
-if (!interactionsOnly && publicRouteCoverage === 'full') {
+if (selectedShard?.kind === 'routes') {
+  console.log(`[a11y] PASS: ${selectedShard.id} (${routeChecks.length} rendered route checks)`);
+} else if (!interactionsOnly && publicRouteCoverage === 'full') {
   console.log('[a11y] PASS: 360 rendered route/viewport/theme checks');
 } else if (!interactionsOnly) {
   console.log('[a11y] PASS: 136 rendered route/viewport/theme checks');
 }
-console.log('[interaction] PASS: 17 rendered launch journeys');
+if (selectedShard?.kind === 'interactions') {
+  console.log(`[interaction] PASS: ${selectedShard.id} (${interactionJourneyCount} rendered launch journeys)`);
+} else if (!selectedShard) {
+  console.log('[interaction] PASS: 17 rendered launch journeys');
+}
