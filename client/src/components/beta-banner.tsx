@@ -63,6 +63,7 @@ export function BetaBanner({
               size="icon" 
               className="shrink-0 h-8 w-8"
               onClick={handleDismiss}
+              aria-label={`Dismiss ${section === 'marketflow' ? 'MarketFlow' : section} beta banner`}
               data-testid="button-dismiss-beta-banner"
             >
               <X className="w-4 h-4" />

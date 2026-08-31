@@ -38,8 +38,7 @@ export const NAV_PRIMARY: NavPrimaryItem[] = [
 ];
 
 export const NAV_MORE: NavMoreItem[] = [
-  // Learn — knowledge surfaces
-  { href: "/library", label: "Strategy Library", group: "learn" },
+  // Learn — live knowledge surfaces
   { href: "/faq", label: "FAQ", group: "learn" },
 
   // Network — the people side of the operating company
@@ -52,7 +51,6 @@ export const NAV_MORE: NavMoreItem[] = [
   // deep link though the primary entry point is /development.
   { href: "/about", label: "About", group: "company" },
   { href: "/projects", label: "Projects", group: "company" },
-  { href: "/connect", label: "Connect", group: "company" },
   { href: "/contact", label: "Contact", group: "company" },
   // Amendment 2 §D — Peggy public surface (positioning + safety).
   { href: "/peggy", label: "Peggy", group: "company" },

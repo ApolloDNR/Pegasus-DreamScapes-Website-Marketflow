@@ -1,6 +1,6 @@
 # Pegasus Dreamscapes Final Design Lock
 
-Last updated: 2026-06-22
+Last updated: 2026-08-06
 
 This document exists to stop the loop. The website is no longer in open-ended planning. The next phase is controlled visual refinement, route-by-route QA, and launch readiness.
 
@@ -92,6 +92,41 @@ Motion:
 - Micro-interactions should be quiet and consistent.
 - Respect reduced motion.
 - Do not animate every block on scroll just because the framework makes it easy.
+
+### Homepage arrival lock (supersedes July 28–29 hero guidance)
+
+The approved homepage is the composition shown in the owner's reference frame
+from the Pegasus design conversation. It is not open to reinterpretation.
+
+- Canonical image: `client/public/images/hero/pegasus-v6-arrival.webp`
+- Canonical dimensions: `1672 × 941`
+- Canonical SHA-256: `a1de24393eda3bf7ca0ece805a96b71554b7006aee0fcede5d7c41554d8409a3`
+- Git provenance: `cbdcb041feead3d4ba37b1cb107c548e12f21678`
+
+Composition:
+
+- Elevated East Bay/Bay panorama with a calm copy field on the left.
+- Slim, close, full-height limestone colonnade held to the right edge.
+- Columns, terrace, Bay, horizon, shadows, and perspective read as one photographed environment.
+- The viewer feels inside the architecture. Do not introduce center columns, ornate/heavy Corinthian replacements, a detached terrace, a drafting table, blueprints, a different camera, or a generic property image.
+- Keep one source image and one focal anchor across desktop, tablet, and mobile. Responsive layouts may crop from that source; they may not substitute a different architectural scene.
+
+Theme behavior:
+
+- Light and dark mode must use the same image bytes, camera, columns, terrace, horizon, crop bounds, and `object-position`.
+- Light mode uses the warmer golden-hour grade from the owner's daylight reference.
+- Dark mode uses the deeper blue-hour grade and restrained warm architectural light from the owner's night reference.
+- Theme switching may change only filters, overlays, illumination, and normal UI color tokens. It must not reflow copy/navigation, jump the crop, or swap architecture.
+- The visual regression gate must hold hero and content geometry within 2px at 1440, 1024, and 390 pixels wide.
+
+Homepage content and navigation:
+
+- Headline remains `Complex real estate,` / italic copper `made executable.`
+- Eyebrow remains `Real estate operating company` / `Contra Costa & Alameda`.
+- Hero actions remain, in order: `Bring an Opportunity`, `See How We Operate`, `Open Strategy Lab`.
+- Desktop primary navigation remains, in order: `How We Operate`, `Property Owners`, `Deal Partners`, `Our Work`, `About`; `Bring an Opportunity` is the sole primary header CTA.
+- Strategy Lab is a subordinate utility. MarketFlow stays out of the primary header and remains a private-pilot/footer path.
+- The proof rail remains a separate four-item DOM section: Founder-led, Nelson Drive, East Bay, Strategy First, in that order.
 
 ## One Signature Moment
 

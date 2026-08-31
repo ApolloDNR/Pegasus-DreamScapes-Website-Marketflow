@@ -10,14 +10,12 @@ import {
   Users, 
   Home,
   ArrowLeft,
-  Download,
-  RefreshCw,
-  Calendar
+  RefreshCw
 } from "lucide-react";
 import { Link } from "wouter";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { PrivateDataError } from "@/components/private-data-state";
 
 interface AnalyticsData {
   stats: {
@@ -25,10 +23,15 @@ interface AnalyticsData {
     totalVolume: number;
     activeProjects: number;
     totalUsers: number;
-    dealsChange: number;
-    volumeChange: number;
-    projectsChange: number;
-    usersChange: number;
+    dealsChange?: number;
+    volumeChange?: number;
+    projectsChange?: number;
+    usersChange?: number;
+  };
+  laneStats: {
+    wholesale: number;
+    capital: number;
+    listings: number;
   };
   dealVolumeData: Array<{ month: string; deals: number; volume: number }>;
   roleDistribution: Array<{ role: string; count: number; color: string }>;
@@ -36,69 +39,33 @@ interface AnalyticsData {
   dealStatus: Array<{ status: string; count: number; color: string }>;
 }
 
-const EMPTY_ANALYTICS_DATA: AnalyticsData = {
-  stats: {
-    totalDeals: 0,
-    totalVolume: 0,
-    activeProjects: 0,
-    totalUsers: 0,
-    dealsChange: 0,
-    volumeChange: 0,
-    projectsChange: 0,
-    usersChange: 0,
-  },
-  dealVolumeData: [],
-  roleDistribution: [],
-  fundingProgress: [],
-  dealStatus: [],
-};
+function isAnalyticsDataPayload(value: unknown): value is AnalyticsData {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const candidate = value as Partial<AnalyticsData>;
+  return Boolean(
+    candidate.stats &&
+    candidate.laneStats &&
+    Array.isArray(candidate.dealVolumeData) &&
+    Array.isArray(candidate.roleDistribution) &&
+    Array.isArray(candidate.fundingProgress) &&
+    Array.isArray(candidate.dealStatus),
+  );
+}
 
 export default function AnalyticsPage() {
   const { isAdmin, isAuthenticated, isLoading } = useSupabaseAuth();
-  const [timeRange, setTimeRange] = useState("30d");
-  const [laneFilter, setLaneFilter] = useState("all");
   
-  const { data: analyticsData, isLoading: isDataLoading, refetch, isRefetching } = useQuery<AnalyticsData>({
-    queryKey: ['/api/analytics/dashboard', timeRange, laneFilter],
+  const {
+    data: analyticsData,
+    isLoading: isDataLoading,
+    isError: isDataError,
+    refetch,
+    isRefetching,
+  } = useQuery<AnalyticsData>({
+    queryKey: ["/api/admin/analytics/dashboard"],
     enabled: isAuthenticated && isAdmin,
     staleTime: 60000,
   });
-  
-  const getFilteredData = (data: AnalyticsData): AnalyticsData => {
-    if (laneFilter === 'all') return data;
-    
-    const laneMultipliers: Record<string, number> = {
-      wholesale: 0.65,
-      capital: 0.20,
-      listings: 0.15,
-    };
-    
-    const multiplier = laneMultipliers[laneFilter] || 1;
-    
-    return {
-      stats: {
-        totalDeals: Math.round(data.stats.totalDeals * multiplier),
-        totalVolume: Math.round(data.stats.totalVolume * multiplier),
-        activeProjects: Math.round(data.stats.activeProjects * multiplier),
-        totalUsers: data.stats.totalUsers,
-        dealsChange: data.stats.dealsChange,
-        volumeChange: data.stats.volumeChange,
-        projectsChange: data.stats.projectsChange,
-        usersChange: data.stats.usersChange,
-      },
-      dealVolumeData: data.dealVolumeData.map(d => ({
-        ...d,
-        deals: Math.round(d.deals * multiplier),
-        volume: Math.round(d.volume * multiplier),
-      })),
-      roleDistribution: data.roleDistribution,
-      fundingProgress: data.fundingProgress,
-      dealStatus: data.dealStatus.map(d => ({
-        ...d,
-        count: Math.round(d.count * multiplier),
-      })),
-    };
-  };
 
   useEffect(() => {
     document.title = "Analytics Dashboard | Pegasus DreamScapes";
@@ -108,15 +75,7 @@ export default function AnalyticsPage() {
     refetch();
   };
   
-  const rawData = analyticsData || EMPTY_ANALYTICS_DATA;
-  const displayData = getFilteredData(rawData);
   const isRefreshing = isDataLoading || isRefetching;
-  const laneStats = {
-    wholesale: laneFilter === "wholesale" ? displayData.stats.totalDeals : 0,
-    capital: laneFilter === "capital" ? displayData.stats.activeProjects : 0,
-    listings: laneFilter === "listings" ? displayData.stats.totalDeals : 0,
-  };
-  const userRoles = new Map(displayData.roleDistribution.map((role) => [role.role.toLowerCase(), role.count]));
 
   if (isLoading) {
     return (
@@ -177,6 +136,45 @@ export default function AnalyticsPage() {
     );
   }
 
+  if (isDataLoading && !analyticsData) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center" role="status">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Loading verified analytics…</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (isDataError || !isAnalyticsDataPayload(analyticsData)) {
+    return (
+      <div className="min-h-screen bg-background">
+        <main className="container mx-auto max-w-3xl px-4 py-16">
+          <PrivateDataError
+            title="Analytics data unavailable"
+            description="Pegasus could not verify the admin analytics response. No zero totals or charts are shown while the source is unavailable."
+            onRetry={() => void refetch()}
+            isRetrying={isRefetching}
+            testId="state-admin-analytics-error"
+          />
+          <div className="mt-4 text-center">
+            <Button asChild variant="ghost">
+              <Link href="/marketflow">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Return to MarketFlow
+              </Link>
+            </Button>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  const displayData = analyticsData;
+  const laneStats = displayData.laneStats;
+  const userRoles = new Map(displayData.roleDistribution.map((role) => [role.role.toLowerCase(), role.count]));
+
   return (
     <div className="min-h-screen bg-background">
         <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -200,33 +198,6 @@ export default function AnalyticsPage() {
               </div>
 
               <div className="flex items-center gap-2 flex-wrap">
-                <Select value={laneFilter} onValueChange={setLaneFilter}>
-                  <SelectTrigger className="w-[160px]" data-testid="select-lane-filter">
-                    <Home className="w-4 h-4 mr-2" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Lanes</SelectItem>
-                    <SelectItem value="wholesale">Wholesale</SelectItem>
-                    <SelectItem value="capital">Capital Raises</SelectItem>
-                    <SelectItem value="listings">Listings</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                <Select value={timeRange} onValueChange={setTimeRange}>
-                  <SelectTrigger className="w-[140px]" data-testid="select-time-range">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="7d">Last 7 days</SelectItem>
-                    <SelectItem value="30d">Last 30 days</SelectItem>
-                    <SelectItem value="90d">Last 90 days</SelectItem>
-                    <SelectItem value="1y">Last year</SelectItem>
-                    <SelectItem value="all">All time</SelectItem>
-                  </SelectContent>
-                </Select>
-
                 <Button 
                   variant="outline" 
                   size="icon"
@@ -235,11 +206,6 @@ export default function AnalyticsPage() {
                   data-testid="button-refresh"
                 >
                   <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                </Button>
-
-                <Button variant="outline" data-testid="button-export">
-                  <Download className="w-4 h-4 mr-2" />
-                  Export
                 </Button>
               </div>
             </div>
@@ -320,52 +286,11 @@ export default function AnalyticsPage() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Views</span>
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-48 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full w-0 bg-primary rounded-full" />
-                        </div>
-                        <span className="text-sm font-medium w-16 text-right">0</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Saved</span>
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-48 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full w-0 bg-primary rounded-full" />
-                        </div>
-                        <span className="text-sm font-medium w-16 text-right">0</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Inquiries</span>
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-48 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full w-0 bg-primary rounded-full" />
-                        </div>
-                        <span className="text-sm font-medium w-16 text-right">0</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Offers</span>
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-48 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full w-0 bg-primary rounded-full" />
-                        </div>
-                        <span className="text-sm font-medium w-16 text-right">0</span>
-                      </div>
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm">Closed</span>
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-48 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full w-0 bg-emerald-500 rounded-full" />
-                        </div>
-                        <span className="text-sm font-medium w-16 text-right">0</span>
-                      </div>
-                    </div>
+                  <div className="rounded-lg border border-dashed p-6 text-center">
+                    <p className="font-medium">Conversion stages are not available from this data source.</p>
+                    <p className="mx-auto mt-1 max-w-xl text-sm leading-relaxed text-muted-foreground">
+                      The verified totals above are available. Views, saves, inquiries, offers, and closed-stage events will not be shown until those event sources are connected and audited.
+                    </p>
                   </div>
                 </CardContent>
               </Card>
@@ -430,11 +355,11 @@ export default function AnalyticsPage() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between py-2 border-b">
                       <span className="text-sm font-medium">Active users (last 7 days)</span>
-                      <span className="text-sm" data-testid="stat-active-7d">0</span>
+                      <span className="text-sm text-muted-foreground" data-testid="stat-active-7d">Not tracked here</span>
                     </div>
                     <div className="flex items-center justify-between py-2 border-b">
                       <span className="text-sm font-medium">New registrations (this month)</span>
-                      <span className="text-sm" data-testid="stat-new-registrations">0</span>
+                      <span className="text-sm text-muted-foreground" data-testid="stat-new-registrations">Not tracked here</span>
                     </div>
                     <div className="flex items-center justify-between py-2 border-b">
                       <span className="text-sm font-medium">Verified users</span>

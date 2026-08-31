@@ -14,7 +14,7 @@ import { PageLoader } from '@/components/error-boundary';
 import { seoFor, seoNameFor } from '@shared/seo-routes';
 
 const loadPages = () => import('./pages');
-const CategoryPage = lazy(() => loadPages().then((module) => ({ default: module.CategoryPage })));
+const CategoryPage = lazy(() => import('./category-page').then((module) => ({ default: module.CategoryPage })));
 const InvestmentsPage = lazy(() => loadPages().then((module) => ({ default: module.InvestmentsPage })));
 const DevelopmentPage = lazy(() => loadPages().then((module) => ({ default: module.DevelopmentPage })));
 const StrategyLabPage = lazy(() => loadPages().then((module) => ({ default: module.StrategyLabPage })));
@@ -24,7 +24,7 @@ const EcosystemPage = lazy(() => loadPages().then((module) => ({ default: module
 const PeggyPage = lazy(() => loadPages().then((module) => ({ default: module.PeggyPage })));
 const AboutPageV6 = lazy(() => import('./about-v6').then((module) => ({ default: module.AboutPageV6 })));
 const ContactPage = lazy(() => loadPages().then((module) => ({ default: module.ContactPage })));
-const CapitalPage = lazy(() => loadPages().then((module) => ({ default: module.CapitalPage })));
+const CapitalPage = lazy(() => import('./capital-page').then((module) => ({ default: module.CapitalPage })));
 const OurWorkPage = lazy(() => import('./our-work').then((module) => ({ default: module.OurWorkPage })));
 const HowWeOperatePage = lazy(() => import('./how-we-operate').then((module) => ({ default: module.HowWeOperatePage })));
 const PropertyOwnersPage = lazy(() => import('./property-owners').then((module) => ({ default: module.PropertyOwnersPage })));
@@ -38,7 +38,13 @@ export function Landing() {
   // with the server-side crawler injection). useSEO re-applies the brand, so we
   // pass the bare page name.
   const seo = seoFor(location);
-  useSEO({ title: seoNameFor(location), description: seo.description, image: seo.image, type: seo.type });
+  useSEO({
+    title: seoNameFor(location),
+    description: seo.description,
+    image: seo.image,
+    type: seo.type,
+    noIndex: seo.noIndex,
+  });
   // Theme is driven by the app-wide ThemeProvider so the chrome stays in sync
   // when navigating between the prototype shell and the standalone-shell pages
   // (which also consume the same provider). No local theme state.
@@ -47,6 +53,7 @@ export function Landing() {
   const [scrolled, setScrolled] = useState(false);
   const [peggyOpen, setPeggyOpen] = useState(false);
   const [peggyRole, setPeggyRole] = useState<string | null>(null);
+  const [peggyPrompt, setPeggyPrompt] = useState<string | null>(null);
   const [peggyHandoff, setPeggyHandoff] = useState<PeggyHandoff | null>(null);
   const progressRef = useRef<HTMLDivElement>(null);
   const parallaxRef = useRef<HTMLDivElement>(null);
@@ -58,15 +65,19 @@ export function Landing() {
   }, [setLocation]);
 
   const toggleTheme = useCallback(() => setTheme(theme === 'dark' ? 'light' : 'dark'), [setTheme, theme]);
-  const openPeggy = useCallback((role?: string) => {
+  const openPeggy = useCallback((role?: string, prompt?: string) => {
     // Keep this boundary defensive: a callback passed directly to onClick can
     // otherwise receive React's click event and mistake it for a visitor role.
     if (typeof role === 'string' && role) setPeggyRole(role);
+    if (typeof prompt === 'string' && prompt.trim()) setPeggyPrompt(prompt.trim());
     setPeggyOpen(true);
   }, []);
   const setPeggyPanel = useCallback((v: boolean) => {
     setPeggyOpen(v);
-    if (!v) setPeggyRole(null);
+    if (!v) {
+      setPeggyRole(null);
+      setPeggyPrompt(null);
+    }
   }, []);
   const toStrategyLab = useCallback(() => go('strategylab'), [go]);
   const toSubmit = useCallback((intent?: string) => {
@@ -168,7 +179,7 @@ export function Landing() {
 
       <Footer go={go} />
 
-      <Peggy open={peggyOpen} setOpen={setPeggyPanel} toStrategyLab={toStrategyLab} onHandoffToReview={onHandoffToReview} go={go} toSubmit={toSubmit} initialRole={peggyRole} />
+      <Peggy open={peggyOpen} setOpen={setPeggyPanel} toStrategyLab={toStrategyLab} onHandoffToReview={onHandoffToReview} go={go} toSubmit={toSubmit} initialRole={peggyRole} initialPrompt={peggyPrompt} />
     </div>
   );
 }

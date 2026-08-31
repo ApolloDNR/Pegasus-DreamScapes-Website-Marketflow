@@ -1,5 +1,12 @@
 import PDFDocument from "pdfkit";
 import { PassThrough } from "stream";
+import {
+  getPublicModelFitDisplayLabel,
+  projectPublicPropertyAnalysis,
+  projectPublicSavedAnalysis,
+  sanitizeCalculatorRecord,
+  sanitizePublicText,
+} from "./publicAnalysis";
 
 interface PDFColors {
   primary: string;
@@ -80,30 +87,59 @@ function addHeader(doc: PDFKit.PDFDocument, title: string, subtitle?: string): v
   }
 }
 
+function withoutBottomMargin(
+  doc: PDFKit.PDFDocument,
+  draw: () => void,
+): void {
+  const previousBottomMargin = doc.page.margins.bottom;
+  doc.page.margins.bottom = 0;
+  try {
+    draw();
+  } finally {
+    doc.page.margins.bottom = previousBottomMargin;
+  }
+}
+
 function addFooter(doc: PDFKit.PDFDocument): void {
   const pageHeight = doc.page.height;
 
-  doc
-    .fontSize(8)
-    .fillColor(BRAND_COLORS.textMuted)
-    .font("Helvetica")
-    .text(
-      `Generated ${new Date().toLocaleDateString()}  |  Pegasus DreamScapes Corp  |  apollo@pegasusdreamscapes.com`,
-      50,
-      pageHeight - 40,
-      { align: "center", width: doc.page.width - 100 }
-    );
+  // PDFKit treats text below the content margin as overflow and silently adds
+  // a page. Suspend only the bottom margin while drawing the fixed footer.
+  withoutBottomMargin(doc, () => {
+    doc
+      .fontSize(8)
+      .fillColor(BRAND_COLORS.textMuted)
+      .font("Helvetica")
+      .text(
+        `Generated ${new Date().toLocaleDateString()}  |  Pegasus DreamScapes Corp  |  apollo@pegasusdreamscapes.com`,
+        50,
+        pageHeight - 40,
+        { align: "center", width: doc.page.width - 100 }
+      );
 
-  doc
-    .fontSize(8)
-    .fillColor(BRAND_COLORS.accent)
-    .font("Helvetica-Oblique")
-    .text(
-      "Illustrative math only. Not investment advice and not an offer of guaranteed returns or principal protection.",
-      50,
-      pageHeight - 25,
-      { align: "center", width: doc.page.width - 100 }
-    );
+    doc
+      .fontSize(8)
+      .fillColor(BRAND_COLORS.accent)
+      .font("Helvetica-Oblique")
+      .text(
+        "User-entered inputs · Automated estimates · Not Pegasus-verified · Scenario analysis only · Not advice, an offer, or a guarantee.",
+        50,
+        pageHeight - 25,
+        { align: "center", width: doc.page.width - 100, lineBreak: false }
+      );
+  });
+}
+
+export function getSavedAnalysisDisclosureCopy(): string {
+  return "User-entered inputs and automated calculations are estimates, not independently verified by Pegasus. For scenario analysis only; not investment advice, an offer, or a guarantee.";
+}
+
+export function getStrategySnapshotDisclosureCopy(): string[] {
+  return [
+    "This Property Strategy Snapshot is a preliminary automated model generated from user-entered, unverified inputs and assumptions. It is informational scenario analysis, not an offer, valuation, appraisal, financing commitment, guarantee, or investment advice.",
+    "The shared model output does not represent a Pegasus review or recommendation. Any comp band, ARV, rent, rehab, timeline, capital-stack, risk, fit, or return figure is an illustrative estimate that requires independent human verification before any decision.",
+    "Submitting a property separately may create a private intake record for possible review. No review, response time, follow-up, offer, or outcome is promised by this snapshot.",
+  ];
 }
 
 function addMetricRow(
@@ -571,6 +607,9 @@ const CALCULATOR_TITLES: Record<string, string> = {
 export async function generateSavedAnalysisPDF(
   analysis: SavedAnalysisLike,
 ): Promise<Buffer> {
+  const projected = projectPublicSavedAnalysis(analysis);
+  if (!projected) throw new Error("Invalid saved analysis PDF payload");
+  analysis = projected;
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 50, size: "LETTER" });
     const buffers: Buffer[] = [];
@@ -582,15 +621,32 @@ export async function generateSavedAnalysisPDF(
     const calcLabel =
       CALCULATOR_TITLES[analysis.calculatorType] ?? "Strategy Analysis";
 
-    addHeader(doc, analysis.name, calcLabel);
+    addHeader(doc, analysis.name, `${calcLabel} · Automated calculator output`);
 
     let y = 180;
+    doc
+      .fontSize(8.5)
+      .fillColor(BRAND_COLORS.accent)
+      .font("Helvetica-Bold")
+      .text("USER-ENTERED INPUTS · AUTOMATED CALCULATIONS · UNVERIFIED", 50, y, {
+        characterSpacing: 1.2,
+      });
+    y = doc.y + 6;
+    doc
+      .fontSize(8.5)
+      .fillColor(BRAND_COLORS.textMuted)
+      .font("Helvetica")
+      .text(getSavedAnalysisDisclosureCopy(), 50, y, {
+        width: doc.page.width - 100,
+        lineGap: 1,
+      });
+    y = doc.y + 14;
 
     // Meta strip: address / scenario / grade / date
     const metaParts: string[] = [];
     if (analysis.propertyAddress) metaParts.push(analysis.propertyAddress);
-    if (analysis.scenarioLabel) metaParts.push(`Scenario: ${analysis.scenarioLabel}`);
-    if (analysis.dealGrade) metaParts.push(`Grade ${analysis.dealGrade}`);
+    if (analysis.scenarioLabel) metaParts.push(`User scenario: ${analysis.scenarioLabel}`);
+    if (analysis.dealGrade) metaParts.push(`Automated model grade ${analysis.dealGrade}`);
     const createdAtDate = toDateOrNull(analysis.createdAt);
     if (createdAtDate) {
       metaParts.push(createdAtDate.toLocaleDateString());
@@ -613,7 +669,7 @@ export async function generateSavedAnalysisPDF(
         .fontSize(9)
         .fillColor(BRAND_COLORS.textMuted)
         .font("Helvetica-Bold")
-        .text(analysis.primaryMetric.toUpperCase(), 60, y + 12, { characterSpacing: 1.5 });
+        .text(`AUTOMATED ESTIMATE · ${analysis.primaryMetric.toUpperCase()}`, 60, y + 12, { characterSpacing: 1.2 });
       doc
         .fontSize(26)
         .fillColor(BRAND_COLORS.accent)
@@ -648,13 +704,13 @@ export async function generateSavedAnalysisPDF(
         .fontSize(10)
         .fillColor(BRAND_COLORS.text)
         .font("Helvetica-Oblique")
-        .text(`"${analysis.notes}"`, 50, y, { width: doc.page.width - 100 });
+        .text(`User note: ${analysis.notes}`, 50, y, { width: doc.page.width - 100 });
       y = doc.y + 12;
     }
 
     // Inputs
     y = ensureSpace(doc, y, 60);
-    y = addSectionTitle(doc, "INPUT PARAMETERS", y);
+    y = addSectionTitle(doc, "USER-ENTERED INPUTS", y);
     for (const [key, value] of Object.entries(analysis.inputs ?? {})) {
       y = ensureSpace(doc, y, 26);
       y = addMetricRow(doc, humanLabel(key), formatValueForKey(key, value), y);
@@ -663,7 +719,7 @@ export async function generateSavedAnalysisPDF(
     // Results
     y += 14;
     y = ensureSpace(doc, y, 60);
-    y = addSectionTitle(doc, "ANALYSIS RESULTS", y);
+    y = addSectionTitle(doc, "AUTOMATED CALCULATION OUTPUTS", y);
     for (const [key, value] of Object.entries(analysis.results ?? {})) {
       // Skip metadata/structured fields (projections render as charts below).
       if (key.startsWith("__")) continue;
@@ -698,6 +754,9 @@ export async function generateCalculatorPDF(
   inputs: Record<string, number | string>,
   outputs: Record<string, number | string>
 ): Promise<Buffer> {
+  calculatorType = sanitizePublicText(calculatorType, 50) ?? "analysis";
+  inputs = sanitizeCalculatorRecord(inputs) as Record<string, number | string>;
+  outputs = sanitizeCalculatorRecord(outputs, true) as Record<string, number | string>;
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 50, size: "LETTER" });
     const buffers: Buffer[] = [];
@@ -715,11 +774,28 @@ export async function generateCalculatorPDF(
     };
 
     const title = calculatorTitles[calculatorType] || "Deal Analysis";
-    addHeader(doc, title, `Prepared for professional review`);
+    addHeader(doc, title, "Automated calculator output · user-entered inputs · unverified");
 
     let y = 180;
+    doc
+      .fontSize(8.5)
+      .fillColor(BRAND_COLORS.accent)
+      .font("Helvetica-Bold")
+      .text("USER-ENTERED INPUTS · AUTOMATED CALCULATIONS · UNVERIFIED", 50, y, {
+        characterSpacing: 1.2,
+      });
+    y = doc.y + 6;
+    doc
+      .fontSize(8.5)
+      .fillColor(BRAND_COLORS.textMuted)
+      .font("Helvetica")
+      .text(getSavedAnalysisDisclosureCopy(), 50, y, {
+        width: doc.page.width - 100,
+        lineGap: 1,
+      });
+    y = doc.y + 14;
 
-    y = addSectionTitle(doc, "INPUT PARAMETERS", y);
+    y = addSectionTitle(doc, "USER-ENTERED INPUTS", y);
     
     for (const [key, value] of Object.entries(inputs)) {
       const label = key
@@ -740,7 +816,7 @@ export async function generateCalculatorPDF(
     }
 
     y += 20;
-    y = addSectionTitle(doc, "ANALYSIS RESULTS", y);
+    y = addSectionTitle(doc, "AUTOMATED CALCULATION OUTPUTS", y);
 
     for (const [key, value] of Object.entries(outputs)) {
       if (key.startsWith("__")) continue;
@@ -1004,7 +1080,7 @@ export async function generateDealPacketPDF(deal: {
 // ============================================================================
 
 interface PropertyAnalysisLike {
-  id: number;
+  id?: number;
   address?: string | null;
   city?: string | null;
   state?: string | null;
@@ -1096,7 +1172,7 @@ function snapshotCoverPage(doc: PDFKit.PDFDocument, a: PropertyAnalysisLike): vo
     .text("PROPERTY STRATEGY SNAPSHOT", 50, titleY, { characterSpacing: 3 });
   doc.moveTo(50, titleY + 22).lineTo(150, titleY + 22).strokeColor(BRAND_COLORS.accent).lineWidth(1).stroke();
 
-  const addr = a.address || a.propertyInput?.address || "Property under review";
+  const addr = a.address || a.propertyInput?.address || "User-entered property";
   const sub = [a.city || a.propertyInput?.city, a.state || a.propertyInput?.state, a.zip || a.propertyInput?.zip]
     .filter(Boolean).join(", ");
   // Headline in Cormorant Garamond Semibold — editorial display tier.
@@ -1107,24 +1183,27 @@ function snapshotCoverPage(doc: PDFKit.PDFDocument, a: PropertyAnalysisLike): vo
       .text(sub, 50, doc.y + 6).fillOpacity(1);
   }
 
-  // Verdict band
+  // Automated model-output band. This does not imply a Pegasus review.
   const bandY = h - 240;
   doc.rect(0, bandY, w, 1).fill(BRAND_COLORS.accent);
   doc.fontSize(9).fillColor(BRAND_COLORS.accent).font(bf("sansBold"))
-    .text("RECOMMENDED PATH", 50, bandY + 18, { characterSpacing: 2.5 });
+    .text("MODELED PATH · USER INPUTS", 50, bandY + 18, { characterSpacing: 2.2 });
   doc.fontSize(30).fillColor("#F6EFE4").font(bf("serifBold"))
-    .text(topLane?.laneLabel ?? "Strategy review pending", 50, bandY + 38);
+    .text(topLane?.laneLabel ?? "Model path pending", 50, bandY + 38);
   doc.fontSize(12).fillColor("#F6EFE4").fillOpacity(0.85).font(bf("serifItalic"))
     .text(topLane?.headline ?? "", 50, doc.y + 4, { width: w - 100 }).fillOpacity(1);
   doc.fontSize(9).fillColor(BRAND_COLORS.accent).font(bf("sansBold"))
-    .text(`VERDICT · ${(topLane?.verdictLabel ?? "—").toUpperCase()}`, 50, bandY + 130, { characterSpacing: 2 });
+    .text(`AUTOMATED MODEL FIT · ${getPublicModelFitDisplayLabel(topLane?.verdictLabel).toUpperCase()}`, 50, bandY + 130, { characterSpacing: 1.5 });
 
-  // Footer mark
-  doc.fontSize(8).fillColor("#F6EFE4").fillOpacity(0.7).font(bf("sans"))
-    .text(`Engine v${snap.engineVersion ?? "—"} · Generated ${new Date().toLocaleDateString()}`,
-      50, h - 50, { width: w - 100 }).fillOpacity(1);
-  doc.fontSize(8).fillColor(BRAND_COLORS.accent).font(bf("sansBold"))
-    .text("apollo@pegasusdreamscapes.com · 925-744-8525", 50, h - 35, { width: w - 100, align: "right" });
+  // Footer mark. The cover also reaches below PDFKit's normal content margin,
+  // so keep these fixed-position marks from creating overflow pages.
+  withoutBottomMargin(doc, () => {
+    doc.fontSize(8).fillColor("#F6EFE4").fillOpacity(0.7).font(bf("sans"))
+      .text(`Automated model v${snap.engineVersion ?? "—"} · User-entered inputs · Unverified · ${new Date().toLocaleDateString()}`,
+        50, h - 50, { width: w - 100 }).fillOpacity(1);
+    doc.fontSize(8).fillColor(BRAND_COLORS.accent).font(bf("sansBold"))
+      .text("apollo@pegasusdreamscapes.com · 925-744-8525", 50, h - 35, { width: w - 100, align: "right" });
+  });
 }
 
 function snapshotPageHeader(doc: PDFKit.PDFDocument, kicker: string, title: string): number {
@@ -1143,19 +1222,21 @@ function snapshotPageHeader(doc: PDFKit.PDFDocument, kicker: string, title: stri
 // every page of the Strategy Snapshot PDF so the document is self-disclosing
 // even when a single page is shared in isolation.
 const SNAPSHOT_FOOTER =
-  "Preliminary Strategy Snapshot · Pegasus DreamScapes · For analysis only. Human review required before any offer or execution decision.";
+  "Automated model output from user-entered, unverified inputs · Not a Pegasus review or recommendation · Informational scenario analysis only.";
 
 function snapshotPageFooter(doc: PDFKit.PDFDocument, _legacyLabel?: string): void {
   void _legacyLabel; // legacy per-page label retired — footer is canonical now.
   const y = doc.page.height - 40;
-  // Hairline rule above the footer for visual quietness.
-  doc.moveTo(50, y - 6).lineTo(doc.page.width - 50, y - 6)
-    .strokeColor(BRAND_COLORS.accent).lineWidth(0.4).stroke();
-  doc.fontSize(7.5).fillColor(BRAND_COLORS.textMuted).font(bf("sans"))
-    .text(SNAPSHOT_FOOTER, 50, y, { width: doc.page.width - 200, align: "left" });
-  doc.fontSize(7.5).fillColor(BRAND_COLORS.textMuted).font(bf("sans"))
-    .text(new Date().toLocaleDateString(),
-      50, y, { width: doc.page.width - 100, align: "right" });
+  withoutBottomMargin(doc, () => {
+    // Hairline rule above the footer for visual quietness.
+    doc.moveTo(50, y - 6).lineTo(doc.page.width - 50, y - 6)
+      .strokeColor(BRAND_COLORS.accent).lineWidth(0.4).stroke();
+    doc.fontSize(7.5).fillColor(BRAND_COLORS.textMuted).font(bf("sans"))
+      .text(SNAPSHOT_FOOTER, 50, y, { width: doc.page.width - 200, align: "left" });
+    doc.fontSize(7.5).fillColor(BRAND_COLORS.textMuted).font(bf("sans"))
+      .text(new Date().toLocaleDateString(),
+        50, y - 18, { width: doc.page.width - 100, align: "right" });
+  });
 }
 
 function snapshotTwoCol(doc: PDFKit.PDFDocument, rows: [string, string][], y: number): number {
@@ -1173,6 +1254,12 @@ function snapshotTwoCol(doc: PDFKit.PDFDocument, rows: [string, string][], y: nu
 export async function generateStrategySnapshotPDF(
   analysis: PropertyAnalysisLike,
 ): Promise<Buffer> {
+  const projected = projectPublicPropertyAnalysis({
+    ...analysis,
+    visibility: analysis.visibility === "full" ? "full" : "summary",
+  });
+  if (!projected) throw new Error("Invalid Strategy Snapshot PDF payload");
+  analysis = projected as PropertyAnalysisLike;
   return new Promise((resolve, reject) => {
     const doc = new PDFDocument({ margin: 50, size: "LETTER", autoFirstPage: false });
     registerBrandFonts(doc);
@@ -1192,12 +1279,12 @@ export async function generateStrategySnapshotPDF(
     doc.addPage();
     snapshotCoverPage(doc, analysis);
 
-    // Page 2 — Numbers (full only) or Verdict expanded (summary)
+    // Page 2 — Inputs/model estimates (full) or model-output summary.
     doc.addPage();
     if (isFull) {
-      let y = snapshotPageHeader(doc, "Section 01", "The Numbers");
+      let y = snapshotPageHeader(doc, "Section 01", "User Inputs & Model Estimates");
       doc.fontSize(10).fillColor(BRAND_COLORS.text).font(bf("serifItalic"))
-        .text("Inputs that drive every lane verdict in this snapshot.", 50, y, { width: doc.page.width - 100 });
+        .text("User-entered inputs and automated estimates used by the model. None are independently verified by Pegasus.", 50, y, { width: doc.page.width - 100 });
       y = doc.y + 14;
       y = snapshotTwoCol(doc, [
         ["Asking / target price", fmtDollarsShort(prop.askingPrice)],
@@ -1213,34 +1300,34 @@ export async function generateStrategySnapshotPDF(
       // Top lane economics
       if (topLane?.economics) {
         doc.fontSize(10).fillColor(BRAND_COLORS.accent).font(bf("sansBold"))
-          .text(`${(topLane.laneLabel ?? "").toUpperCase()} · LANE ECONOMICS`, 50, y, { characterSpacing: 2 });
+          .text(`${(topLane.laneLabel ?? "").toUpperCase()} · AUTOMATED LANE ECONOMICS`, 50, y, { characterSpacing: 1.5 });
         y += 18;
         const econRows: [string, string][] = [[topLane.economics.primaryMetric, topLane.economics.primaryValue]];
         for (const m of topLane.economics.metrics ?? []) econRows.push([m.label, m.value]);
         y = snapshotTwoCol(doc, econRows, y);
       }
     } else {
-      let y = snapshotPageHeader(doc, "Section 01", "The Verdict");
+      let y = snapshotPageHeader(doc, "Section 01", "Automated Model Output");
       doc.fontSize(11).fillColor(BRAND_COLORS.text).font(bf("serif"))
-        .text(topLane?.headline ?? "Strategy review pending.", 50, y, { width: doc.page.width - 100, lineGap: 4 });
+        .text(topLane?.headline ?? "The model needs more user-entered inputs.", 50, y, { width: doc.page.width - 100, lineGap: 4 });
       y = doc.y + 16;
       doc.fontSize(10).fillColor(BRAND_COLORS.textMuted).font(bf("sans"))
         .text("This is a summary view. The full numerical breakdown, risk register, capital stack, and sensitivity grid are available in the full snapshot tier.",
           50, y, { width: doc.page.width - 100, lineGap: 2 });
     }
-    snapshotPageFooter(doc, "For analysis only. Human review required.");
+    snapshotPageFooter(doc);
 
     // Page 3 — Risk Register (full only)
     if (isFull) {
       doc.addPage();
-      let y = snapshotPageHeader(doc, "Section 02", "Risk Register");
+      let y = snapshotPageHeader(doc, "Section 02", "Automated Risk Flags");
       const risks = (snap.risks ?? []) as any[];
       if (risks.length === 0) {
         doc.fontSize(10).fillColor(BRAND_COLORS.textMuted).font(bf("serifItalic"))
-          .text("No risk flags fired with current inputs.", 50, y);
+          .text("No automated risk flags were produced from the current user-entered inputs. This is not confirmation that no risks exist.", 50, y, { width: doc.page.width - 100 });
       } else {
         for (const r of risks.slice(0, 14)) {
-          if (y > doc.page.height - 100) { doc.addPage(); y = snapshotPageHeader(doc, "Section 02", "Risk Register (continued)"); }
+          if (y > doc.page.height - 100) { doc.addPage(); y = snapshotPageHeader(doc, "Section 02", "Automated Risk Flags (continued)"); }
           const colorMap: Record<string, string> = { blocker: "#b91c1c", high: "#b91c1c", watch: BRAND_COLORS.accent, info: BRAND_COLORS.textMuted };
           const c = colorMap[r.severity] ?? BRAND_COLORS.textMuted;
           doc.rect(50, y, 3, 36).fill(c);
@@ -1256,7 +1343,7 @@ export async function generateStrategySnapshotPDF(
 
       // Page 4 — Capital Stack
       doc.addPage();
-      y = snapshotPageHeader(doc, "Section 03", "Capital Stack");
+      y = snapshotPageHeader(doc, "Section 03", "Illustrative Capital Model");
       const stack = (snap.capitalStack ?? []) as any[];
       if (stack.length === 0) {
         doc.fontSize(10).fillColor(BRAND_COLORS.textMuted).font(bf("serifItalic"))
@@ -1267,7 +1354,7 @@ export async function generateStrategySnapshotPDF(
           if (y > doc.page.height - 100) { doc.addPage(); y = snapshotPageHeader(doc, "Section 03", "Capital Stack (cont.)"); }
           const pct = ((e.amount ?? 0) / total) * 100;
           doc.fontSize(11).fillColor(BRAND_COLORS.text).font(bf("serifBold"))
-            .text(String(e.kind ?? "—").replace(/_/g, " "), 50, y);
+            .text(String(e.label ?? e.source ?? "—").replace(/_/g, " "), 50, y);
           doc.fontSize(11).fillColor(BRAND_COLORS.text).font(bf("sansBold"))
             .text(fmtDollarsShort(e.amount), 50, y, { width: doc.page.width - 100, align: "right" });
           y = doc.y + 4;
@@ -1292,7 +1379,7 @@ export async function generateStrategySnapshotPDF(
 
       // Page 5 — Sensitivity (top grid)
       doc.addPage();
-      y = snapshotPageHeader(doc, "Section 04", "Sensitivity");
+      y = snapshotPageHeader(doc, "Section 04", "Modeled Sensitivity");
       const grid = ((snap.sensitivities ?? []) as any[])[0];
       if (!grid) {
         doc.fontSize(10).fillColor(BRAND_COLORS.textMuted).font(bf("serifItalic"))
@@ -1333,32 +1420,26 @@ export async function generateStrategySnapshotPDF(
       snapshotPageFooter(doc, "Sensitivity is directional. Stress-test before committing capital.");
     }
 
-    // Page 6 — Decision Memo (always)
+    // Page 6 — Automated model summary (always)
     doc.addPage();
-    let y = snapshotPageHeader(doc, isFull ? "Section 05" : "Section 02", "Decision Memo");
+    let y = snapshotPageHeader(doc, isFull ? "Section 05" : "Section 02", "Automated Model Summary");
     doc.fontSize(13).fillColor(BRAND_COLORS.text).font(bf("serif"))
-      .text(snap.memo?.paragraph ?? "Memo pending engine output.", 50, y,
+      .text(snap.memo?.paragraph ?? "Automated model summary unavailable.", 50, y,
         { width: doc.page.width - 100, lineGap: 6 });
     y = doc.y + 18;
     doc.moveTo(50, y).lineTo(doc.page.width - 50, y).strokeColor(BRAND_COLORS.accent).lineWidth(0.5).stroke();
     y += 12;
     doc.fontSize(9).fillColor(BRAND_COLORS.accent).font(bf("sansBold"))
-      .text("RECOMMENDED NEXT STEP", 50, y, { characterSpacing: 2 });
+      .text("MODEL CONSIDERATION · NOT A PEGASUS RECOMMENDATION", 50, y, { characterSpacing: 1.2 });
     y += 16;
     doc.fontSize(12).fillColor(BRAND_COLORS.text).font(bf("serifItalic"))
-      .text(snap.memo?.nextStep ?? "Submit to Pegasus for human review.", 50, y, { width: doc.page.width - 100, lineGap: 4 });
-    snapshotPageFooter(doc, "Memo is preliminary. Submit for human review before any binding decision.");
+      .text(snap.memo?.nextStep ?? "Consider gathering the missing inputs before making a decision.", 50, y, { width: doc.page.width - 100, lineGap: 4 });
+    snapshotPageFooter(doc);
 
     // Page 7 — Disclosure (always)
     doc.addPage();
     y = snapshotPageHeader(doc, isFull ? "Section 06" : "Section 03", "Disclosure");
-    const disclaimer = [
-      "This Property Strategy Snapshot is a preliminary, directional read of structural paths and economics. It is not an offer, valuation, appraisal, financing commitment, or guarantee. It is not investment advice and not an offer of guaranteed returns or principal protection.",
-      "",
-      "Pegasus DreamScapes Corp reviews every property submitted through the Strategy Lab. Not every property results in an offer. Numbers are illustrative and depend on the inputs you provided. Comp bands, ARV, and rent estimates are indicative only and require human verification.",
-      "",
-      "No lead dies. Every property gets a serious review. Not every property gets an offer.",
-    ];
+    const disclaimer = getStrategySnapshotDisclosureCopy();
     for (const para of disclaimer) {
       if (para === "") { y += 6; continue; }
       doc.fontSize(10).fillColor(BRAND_COLORS.text).font(bf("serif"))
@@ -1373,7 +1454,7 @@ export async function generateStrategySnapshotPDF(
     y += 14;
     doc.fontSize(9).fillColor(BRAND_COLORS.textMuted).font(bf("sans"))
       .text("apollo@pegasusdreamscapes.com  ·  925-744-8525  ·  pegasusdreamscapes.com", 50, y);
-    snapshotPageFooter(doc, "For analysis only. Human review required before any offer or execution decision.");
+    snapshotPageFooter(doc);
 
     doc.end();
   });

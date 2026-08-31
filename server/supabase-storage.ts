@@ -1,4 +1,62 @@
 import { supabaseAdmin, isSupabaseReachable } from './lib/supabase';
+import type { SupabaseMarketplaceIdentity } from './supabase-marketplace-privacy';
+
+type MarketplaceIdentityInput = string | SupabaseMarketplaceIdentity;
+
+export type SupabaseInfrastructureFailureReason =
+  | 'unreachable'
+  | 'query_failed';
+
+/**
+ * A read/write could not establish authoritative Supabase truth. Callers must
+ * never convert this into an empty collection or a missing record.
+ */
+export class SupabaseInfrastructureError extends Error {
+  readonly code = 'SUPABASE_INFRASTRUCTURE_UNAVAILABLE';
+
+  constructor(
+    readonly operation: string,
+    readonly reason: SupabaseInfrastructureFailureReason,
+    readonly cause?: unknown,
+  ) {
+    super(`Supabase ${operation} failed: ${reason}`);
+    this.name = 'SupabaseInfrastructureError';
+  }
+}
+
+export function isSupabaseInfrastructureError(
+  error: unknown,
+): error is SupabaseInfrastructureError {
+  return (
+    error instanceof SupabaseInfrastructureError ||
+    (typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'SUPABASE_INFRASTRUCTURE_UNAVAILABLE')
+  );
+}
+
+async function requireSupabaseReachable(operation: string): Promise<void> {
+  if (!(await isSupabaseReachable())) {
+    throw new SupabaseInfrastructureError(operation, 'unreachable');
+  }
+}
+
+function throwSupabaseQueryFailure(
+  operation: string,
+  error: unknown,
+): never {
+  console.error(`Supabase ${operation} query failed:`, error);
+  throw new SupabaseInfrastructureError(operation, 'query_failed', error);
+}
+
+function normalizeMarketplaceIdentity(
+  identity: MarketplaceIdentityInput,
+): SupabaseMarketplaceIdentity {
+  return typeof identity === 'string'
+    ? { userId: identity, kind: 'supabase' }
+    : identity;
+}
 
 function snakeToCamel(str: string): string {
   return str.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
@@ -53,7 +111,8 @@ export interface SupabaseUserProfile {
 
 export interface SupabaseWholesaleDeal {
   id: string;
-  wholesaler_id: string;
+  wholesaler_id?: string | null;
+  external_wholesaler_id?: string | null;
   address: string;
   city?: string;
   state?: string;
@@ -76,7 +135,8 @@ export interface SupabaseWholesaleDeal {
 
 export interface SupabaseCapitalProject {
   id: string;
-  owner_id: string;
+  owner_id?: string | null;
+  external_owner_id?: string | null;
   title: string;
   description?: string;
   location?: string;
@@ -97,8 +157,10 @@ export interface SupabaseCapitalProject {
 export interface SupabaseJVRequest {
   id: string;
   deal_id: string;
-  requester_id: string;
-  wholesaler_id: string;
+  requester_id?: string | null;
+  external_requester_id?: string | null;
+  wholesaler_id?: string | null;
+  external_wholesaler_id?: string | null;
   strategy: string;
   funding_source?: string;
   proposed_fee?: number;
@@ -111,7 +173,8 @@ export interface SupabaseJVRequest {
 export interface SupabaseCapitalCommitment {
   id: string;
   project_id: string;
-  investor_id: string;
+  investor_id?: string | null;
+  external_investor_id?: string | null;
   amount: number;
   structure_preference?: string;
   notes?: string;
@@ -122,7 +185,8 @@ export interface SupabaseCapitalCommitment {
 
 export interface SupabaseListing {
   id: string;
-  owner_id?: string;
+  owner_id?: string | null;
+  external_owner_id?: string | null;
   title: string;
   address: string;
   city?: string;
@@ -148,7 +212,8 @@ export interface SupabaseListing {
 export interface SupabaseBuyerOffer {
   id: string;
   listing_id: string;
-  buyer_id: string;
+  buyer_id?: string | null;
+  external_buyer_id?: string | null;
   offer_amount: number;
   financing_type?: string;
   contingencies?: string[];
@@ -160,15 +225,22 @@ export interface SupabaseBuyerOffer {
 
 export interface SupabaseSavedItem {
   id: string;
-  user_id: string;
-  item_type: 'wholesale_deal' | 'capital_project' | 'listing' | 'article';
+  external_user_id: string;
+  item_type:
+    | 'wholesale_deal'
+    | 'capital_project'
+    | 'listing'
+    | 'retail'
+    | 'retail_listing'
+    | 'article';
   item_id: string;
   created_at: string;
 }
 
 export interface SupabaseNotification {
   id: string;
-  user_id: string;
+  user_id?: string | null;
+  external_user_id?: string | null;
   type: string;
   title: string;
   message?: string;
@@ -246,9 +318,8 @@ export class SupabaseStorage {
   }
 
   async getPublicWholesaleDeals(): Promise<SupabaseWholesaleDeal[]> {
-    if (!await isSupabaseReachable()) {
-      return [];
-    }
+    const operation = 'getPublicWholesaleDeals';
+    await requireSupabaseReachable(operation);
     
     const { data, error } = await supabaseAdmin
       .from('wholesale_deals')
@@ -257,16 +328,14 @@ export class SupabaseStorage {
       .order('created_at', { ascending: false });
     
     if (error) {
-      console.error('Error fetching wholesale deals:', error);
-      return [];
+      throwSupabaseQueryFailure(operation, error);
     }
     return data || [];
   }
 
   async getWholesaleDealsByUser(userId: string): Promise<SupabaseWholesaleDeal[]> {
-    if (!await isSupabaseReachable()) {
-      return [];
-    }
+    const operation = 'getWholesaleDealsByUser';
+    await requireSupabaseReachable(operation);
     
     const { data, error } = await supabaseAdmin
       .from('wholesale_deals')
@@ -275,16 +344,38 @@ export class SupabaseStorage {
       .order('created_at', { ascending: false });
     
     if (error) {
-      console.error('Error fetching user deals:', error);
-      return [];
+      throwSupabaseQueryFailure(operation, error);
+    }
+    return data || [];
+  }
+
+  async getPendingWholesaleDeals(): Promise<SupabaseWholesaleDeal[]> {
+    const operation = 'getPendingWholesaleDeals';
+    await requireSupabaseReachable(operation);
+
+    const { data, error } = await supabaseAdmin
+      .from('wholesale_deals')
+      .select('*')
+      .in('status', [
+        'Under Review',
+        'under_review',
+        'pending_review',
+        'submitted',
+        'SUBMITTED',
+        'PENDING',
+        'Pending',
+      ])
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throwSupabaseQueryFailure(operation, error);
     }
     return data || [];
   }
 
   async getWholesaleDeal(id: string): Promise<SupabaseWholesaleDeal | null> {
-    if (!await isSupabaseReachable()) {
-      return null;
-    }
+    const operation = 'getWholesaleDeal';
+    await requireSupabaseReachable(operation);
     
     const { data, error } = await supabaseAdmin
       .from('wholesale_deals')
@@ -292,9 +383,11 @@ export class SupabaseStorage {
       .eq('id', id)
       .single();
     
-    if (error) {
-      console.error('Error fetching wholesale deal:', error);
+    if (error?.code === 'PGRST116') {
       return null;
+    }
+    if (error) {
+      throwSupabaseQueryFailure(operation, error);
     }
     return data;
   }
@@ -318,9 +411,8 @@ export class SupabaseStorage {
   }
 
   async updateWholesaleDeal(id: string, updates: Partial<SupabaseWholesaleDeal>): Promise<SupabaseWholesaleDeal | null> {
-    if (!await isSupabaseReachable()) {
-      return null;
-    }
+    const operation = 'updateWholesaleDeal';
+    await requireSupabaseReachable(operation);
     
     const { data, error } = await supabaseAdmin
       .from('wholesale_deals')
@@ -329,17 +421,18 @@ export class SupabaseStorage {
       .select()
       .single();
     
-    if (error) {
-      console.error('Error updating wholesale deal:', error);
+    if (error?.code === 'PGRST116') {
       return null;
+    }
+    if (error) {
+      throwSupabaseQueryFailure(operation, error);
     }
     return data;
   }
 
   async getPublicCapitalProjects(): Promise<SupabaseCapitalProject[]> {
-    if (!await isSupabaseReachable()) {
-      return [];
-    }
+    const operation = 'getPublicCapitalProjects';
+    await requireSupabaseReachable(operation);
     
     const { data, error } = await supabaseAdmin
       .from('capital_projects')
@@ -349,16 +442,14 @@ export class SupabaseStorage {
       .order('created_at', { ascending: false });
     
     if (error) {
-      console.error('Error fetching capital projects:', error);
-      return [];
+      throwSupabaseQueryFailure(operation, error);
     }
     return data || [];
   }
 
   async getCapitalProjectsByUser(userId: string): Promise<SupabaseCapitalProject[]> {
-    if (!await isSupabaseReachable()) {
-      return [];
-    }
+    const operation = 'getCapitalProjectsByUser';
+    await requireSupabaseReachable(operation);
     
     const { data, error } = await supabaseAdmin
       .from('capital_projects')
@@ -367,16 +458,38 @@ export class SupabaseStorage {
       .order('created_at', { ascending: false });
     
     if (error) {
-      console.error('Error fetching user projects:', error);
-      return [];
+      throwSupabaseQueryFailure(operation, error);
+    }
+    return data || [];
+  }
+
+  async getPendingCapitalProjects(): Promise<SupabaseCapitalProject[]> {
+    const operation = 'getPendingCapitalProjects';
+    await requireSupabaseReachable(operation);
+
+    const { data, error } = await supabaseAdmin
+      .from('capital_projects')
+      .select('*')
+      .in('status', [
+        'Under Review',
+        'under_review',
+        'pending_approval',
+        'submitted',
+        'SUBMITTED',
+        'PENDING',
+        'Pending',
+      ])
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throwSupabaseQueryFailure(operation, error);
     }
     return data || [];
   }
 
   async getCapitalProject(id: string): Promise<SupabaseCapitalProject | null> {
-    if (!await isSupabaseReachable()) {
-      return null;
-    }
+    const operation = 'getCapitalProject';
+    await requireSupabaseReachable(operation);
     
     const { data, error } = await supabaseAdmin
       .from('capital_projects')
@@ -384,9 +497,34 @@ export class SupabaseStorage {
       .eq('id', id)
       .single();
     
-    if (error) {
-      console.error('Error fetching capital project:', error);
+    if (error?.code === 'PGRST116') {
       return null;
+    }
+    if (error) {
+      throwSupabaseQueryFailure(operation, error);
+    }
+    return data;
+  }
+
+  async updateCapitalProject(
+    id: string,
+    updates: Partial<SupabaseCapitalProject>,
+  ): Promise<SupabaseCapitalProject | null> {
+    const operation = 'updateCapitalProject';
+    await requireSupabaseReachable(operation);
+
+    const { data, error } = await supabaseAdmin
+      .from('capital_projects')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error?.code === 'PGRST116') {
+      return null;
+    }
+    if (error) {
+      throwSupabaseQueryFailure(operation, error);
     }
     return data;
   }
@@ -482,15 +620,18 @@ export class SupabaseStorage {
     return data;
   }
 
-  async getCapitalCommitmentsByUser(userId: string): Promise<SupabaseCapitalCommitment[]> {
+  async getCapitalCommitmentsByUser(identityInput: MarketplaceIdentityInput): Promise<SupabaseCapitalCommitment[]> {
     if (!await isSupabaseReachable()) {
       return [];
     }
+    const identity = normalizeMarketplaceIdentity(identityInput);
+    const identityColumn =
+      identity.kind === 'supabase' ? 'investor_id' : 'external_investor_id';
     
     const { data, error } = await supabaseAdmin
       .from('capital_commitments')
       .select('*')
-      .eq('external_investor_id', userId)
+      .eq(identityColumn, identity.userId)
       .order('created_at', { ascending: false });
     
     if (error) {
@@ -561,11 +702,14 @@ export class SupabaseStorage {
     return data;
   }
 
-  async getBuyerOffersByUser(userId: string): Promise<SupabaseBuyerOffer[]> {
+  async getBuyerOffersByUser(identityInput: MarketplaceIdentityInput): Promise<SupabaseBuyerOffer[]> {
+    const identity = normalizeMarketplaceIdentity(identityInput);
+    const identityColumn =
+      identity.kind === 'supabase' ? 'buyer_id' : 'external_buyer_id';
     const { data, error } = await supabaseAdmin
       .from('buyer_offers')
       .select('*')
-      .eq('external_buyer_id', userId)
+      .eq(identityColumn, identity.userId)
       .order('created_at', { ascending: false });
     
     if (error) {
@@ -706,6 +850,9 @@ export class SupabaseStorage {
 
   // Methods that query by external_user_id (Replit Auth ID)
   async getWholesaleDealsByExternalUser(externalUserId: string): Promise<SupabaseWholesaleDeal[]> {
+    const operation = 'getWholesaleDealsByExternalUser';
+    await requireSupabaseReachable(operation);
+
     const { data, error } = await supabaseAdmin
       .from('wholesale_deals')
       .select('*')
@@ -713,13 +860,15 @@ export class SupabaseStorage {
       .order('created_at', { ascending: false });
     
     if (error) {
-      console.error('Error fetching wholesale deals by external user:', error);
-      return [];
+      throwSupabaseQueryFailure(operation, error);
     }
     return data || [];
   }
 
   async getCapitalProjectsByExternalUser(externalUserId: string): Promise<SupabaseCapitalProject[]> {
+    const operation = 'getCapitalProjectsByExternalUser';
+    await requireSupabaseReachable(operation);
+
     const { data, error } = await supabaseAdmin
       .from('capital_projects')
       .select('*')
@@ -727,8 +876,7 @@ export class SupabaseStorage {
       .order('created_at', { ascending: false });
     
     if (error) {
-      console.error('Error fetching capital projects by external user:', error);
-      return [];
+      throwSupabaseQueryFailure(operation, error);
     }
     return data || [];
   }
@@ -868,6 +1016,50 @@ export class SupabaseStorage {
         message: offer.notes
       }
     }));
+  }
+
+  async getWholesaleDealNegotiationsByParticipant(
+    dealId: string,
+    userId: string,
+  ): Promise<any[]> {
+    const { data, error } = await supabaseAdmin
+      .from('wholesale_deal_offers')
+      .select('*')
+      .eq('deal_id', dealId)
+      .eq('external_buyer_id', userId)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching participant wholesale negotiations:', error);
+      return [];
+    }
+
+    return (data || []).map(offer => ({
+      id: offer.id,
+      type: offer.is_counter_offer ? 'counter' : 'offer',
+      timestamp: offer.created_at,
+      actor: 'User',
+      actorRole: 'Investor',
+      details: {
+        amount: offer.offer_amount,
+        equityPercent: offer.equity_percent,
+        profitSplit: offer.profit_split,
+        message: offer.notes
+      }
+    }));
+  }
+
+  async getWholesaleDealOffer(offerId: string): Promise<any> {
+    const { data, error } = await supabaseAdmin
+      .from('wholesale_deal_offers')
+      .select('*')
+      .eq('id', offerId)
+      .single();
+
+    if (error) {
+      return null;
+    }
+    return data;
   }
 
   async updateWholesaleOfferStatus(offerId: string, status: string): Promise<any> {

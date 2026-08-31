@@ -1,103 +1,122 @@
 import { Link, useSearch } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { useSEO } from "@/hooks/use-seo";
-import { CheckCircle2, ArrowRight, Clock } from "lucide-react";
+import { authenticatedRequest } from "@/lib/queryClient";
+import { ArrowRight, CircleCheck, Info } from "lucide-react";
 
 interface SubmissionRow {
   id: number;
   status: string;
-  slaDueAt: string | null;
-  reviewedAt: string | null;
   createdAt: string;
 }
 
+const POSITIVE_INTEGER = /^[1-9]\d*$/;
+
+function parseSubmissionId(value: string | null): number | null {
+  if (!value || !POSITIVE_INTEGER.test(value)) return null;
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) ? parsed : null;
+}
+
 export default function StrategyLabSubmittedPage() {
-  const search = useSearch();
-  const params = new URLSearchParams(search);
-  const id = params.get("id");
+  const params = new URLSearchParams(useSearch());
+  const submissionId = parseSubmissionId(params.get("id"));
 
   useSEO({
-    title: "Submission received. Pegasus DreamScapes.",
-    description: "Your Strategy Lab snapshot is in the review queue.",
+    title: "Submission Receipt · Pegasus Dreamscapes",
+    description: "Private receipt page for a Strategy Lab submission reference.",
     noIndex: true,
+    noCanonical: true,
   });
 
-  const { data } = useQuery<SubmissionRow>({
-    queryKey: ["/api/strategy-lab/submission", id],
+  const { data, isLoading, isError } = useQuery<SubmissionRow>({
+    queryKey: ["/api/strategy-lab/submission", submissionId],
     queryFn: async () => {
-      const res = await fetch(`/api/strategy-lab/submission/${id}`, { credentials: "include" });
-      if (!res.ok) throw new Error("Could not load submission");
-      return res.json();
+      if (submissionId === null) throw new Error("Missing submission reference");
+      const response = await authenticatedRequest(`/api/strategy-lab/submission/${submissionId}`);
+      if (!response.ok) throw new Error("Could not load submission receipt");
+      return response.json() as Promise<SubmissionRow>;
     },
-    enabled: !!id,
+    enabled: submissionId !== null,
   });
 
-  const slaText = data?.slaDueAt
-    ? new Date(data.slaDueAt).toLocaleString(undefined, {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-        hour: "numeric",
-        minute: "2-digit",
-      })
-    : "within 48 hours";
+  const isVerified = submissionId !== null && data?.id === submissionId;
+  const heading =
+    submissionId === null
+      ? "No verified submission receipt is available."
+      : isLoading
+        ? "Verifying submission receipt…"
+        : isError || !isVerified
+          ? "We could not verify this submission receipt."
+          : "Submission receipt verified.";
+  const description =
+    submissionId === null
+      ? "This link does not contain a valid submission reference. Return to Strategy Lab or use the private opportunity intake if you intended to submit property information."
+      : isLoading
+        ? "Checking the owner-scoped submission record before showing any receipt details."
+        : isError || !isVerified
+          ? "This link does not prove that Pegasus received a submission. Sign in with the account that created the record, check the link, or return to Strategy Lab."
+          : "The owner-scoped record exists. Keep this reference for your records; Pegasus may contact you only if it elects to consider the information or needs clarification.";
 
   return (
     <div className="min-h-screen bg-background text-foreground">
       <section className="max-w-3xl mx-auto px-6 lg:px-10 py-20">
         <div className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
-          Submission received
+          Submission receipt
         </div>
         <h1 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] leading-tight mb-6">
-          Your submission is in the review queue.
+          {heading}
         </h1>
         <p className="text-lg text-muted-foreground leading-relaxed mb-8">
-          The Pegasus team will read every input you submitted, run our own pass, and reach out with a structural read. Every property gets a serious review. Not every property gets an offer.
+          {description}
         </p>
 
-        <div className="border border-[hsl(var(--copper))] bg-[hsl(var(--copper)/0.05)] p-5 mb-6" data-testid="card-sla">
-          <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary mb-2">
-            <Clock className="w-3.5 h-3.5" /> Review window
+        {isVerified ? (
+          <div className="border border-[hsl(var(--copper))]/45 bg-[hsl(var(--copper)/0.05)] p-5 mb-6" data-testid="card-submission-receipt">
+            <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary mb-2">
+              <CircleCheck className="w-3.5 h-3.5" aria-hidden="true" /> Verified reference
+            </div>
+            <p className="font-mono text-lg">#{submissionId}</p>
+            {data?.status ? (
+              <p className="mt-2 text-sm text-muted-foreground">
+                Current system status: <span className="font-medium text-foreground">{data.status}</span>
+              </p>
+            ) : null}
           </div>
-          <p className="font-serif text-xl mb-1">First response by {slaText}.</p>
-          <p className="text-sm text-muted-foreground leading-relaxed">
-            That window is 48 hours from the moment we received your submission. If we miss it, your request is escalated for priority review. Your submission moves to the front of the queue for a faster read.
+        ) : null}
+
+        <div className="border border-border bg-card p-5 mb-8" data-testid="card-submission-boundary">
+          <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary mb-2">
+            <Info className="w-3.5 h-3.5" aria-hidden="true" /> What this means
+          </div>
+          <p className="text-sm leading-relaxed">
+            Receipt does not promise a review, response, route, offer, or timeline. It does not create representation, confidentiality, MarketFlow access, or a transaction relationship.
           </p>
         </div>
 
-        <ul className="space-y-3 mb-10">
-          <li className="flex gap-3 text-sm">
-            <CheckCircle2 className="w-4 h-4 text-[hsl(var(--copper))] shrink-0 mt-0.5" />
-            <span>You'll receive an email confirmation at the address you provided.</span>
-          </li>
-          <li className="flex gap-3 text-sm">
-            <CheckCircle2 className="w-4 h-4 text-[hsl(var(--copper))] shrink-0 mt-0.5" />
-            <span>The team may reply with clarifying questions before issuing a structural read.</span>
-          </li>
-          <li className="flex gap-3 text-sm">
-            <CheckCircle2 className="w-4 h-4 text-[hsl(var(--copper))] shrink-0 mt-0.5" />
-            <span>If your property fits a lane we're actively working, we'll route it to MarketFlow or to an operator partner.</span>
-          </li>
-        </ul>
-
-        <div className="border-l-2 border-[hsl(var(--copper))] pl-4 italic text-sm text-muted-foreground mb-10">
-          This is a strategy review, not an offer. Pegasus does not guarantee returns, principal protection, or a specific exit.
-        </div>
-
         <div className="flex flex-wrap gap-3">
+          {submissionId !== null && !isLoading && !isVerified ? (
+            <Link
+              href={`/login?returnTo=${encodeURIComponent(`/strategy-lab/submitted?id=${submissionId}`)}`}
+              className="bg-[hsl(var(--copper))] text-white px-5 py-3 text-sm font-supporting font-semibold inline-flex items-center gap-2"
+              data-testid="link-sign-in-to-verify"
+            >
+              Sign in to verify <ArrowRight className="w-4 h-4" aria-hidden="true" />
+            </Link>
+          ) : null}
           <Link
             href="/strategy-lab"
             className="border border-[hsl(var(--rule))] px-5 py-3 text-sm font-supporting font-semibold inline-flex items-center gap-2"
             data-testid="link-back-to-lab"
           >
-            Run another property
+            Return to Strategy Lab
           </Link>
           <Link
-            href="/strategy-lab/library"
-            className="bg-[hsl(var(--copper))] text-white px-5 py-3 text-sm font-supporting font-semibold inline-flex items-center gap-2"
-            data-testid="link-open-library"
+            href="/bring-an-opportunity"
+            className="border border-[hsl(var(--rule))] px-5 py-3 text-sm font-supporting font-semibold inline-flex items-center gap-2"
+            data-testid="link-open-intake"
           >
-            Open my library <ArrowRight className="w-4 h-4" />
+            Open private intake <ArrowRight className="w-4 h-4" aria-hidden="true" />
           </Link>
         </div>
       </section>

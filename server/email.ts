@@ -87,22 +87,17 @@ async function sendWithSendGrid(options: SendGridMailOptions): Promise<EmailResu
   }
 }
 
-function logEmailFallback(options: SendGridMailOptions): EmailResult {
-  console.log("=".repeat(60));
-  console.log("EMAIL NOTIFICATION (SendGrid not configured)");
-  console.log("=".repeat(60));
-  console.log(`To: ${Array.isArray(options.to) ? options.to.join(", ") : options.to}`);
-  console.log(`From: ${options.from}`);
-  console.log(`Subject: ${options.subject}`);
-  if (options.text) {
-    console.log(`Body (text):\n${options.text}`);
-  }
-  if (options.html) {
-    console.log(`Body (HTML - truncated):\n${options.html.substring(0, 500)}...`);
-  }
-  console.log("=".repeat(60));
-  
-  return { success: true, fallback: true };
+function logEmailFallback(_options: SendGridMailOptions): EmailResult {
+  // Never print recipients, subjects, or message bodies. Intake notifications
+  // routinely contain contact and property details, and platform logs are not
+  // an approved delivery channel.
+  console.warn("[email] delivery skipped: SendGrid is not configured");
+
+  return {
+    success: false,
+    fallback: true,
+    error: "Email delivery is not configured",
+  };
 }
 
 // Task #151 — Peggy daily inbound report + immediate human_required notification.
@@ -114,6 +109,22 @@ function escapeHtml(s: string): string {
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;");
+}
+
+interface ReusableLeadEmailDetails {
+  context?: string;
+  message?: string;
+}
+
+function reusableLeadEmailRows(details: ReusableLeadEmailDetails): string {
+  return [
+    details.context
+      ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Submitted Context</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(details.context)}</td></tr>`
+      : "",
+    details.message
+      ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Submitted Message</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(details.message)}</td></tr>`
+      : "",
+  ].join("");
 }
 
 export async function sendPeggyHumanRequired(args: {
@@ -233,20 +244,21 @@ export async function sendSellerLeadNotification(lead: {
   condition: string;
   timeline: string;
   notes?: string;
-}): Promise<EmailResult> {
+} & ReusableLeadEmailDetails): Promise<EmailResult> {
   const staffEmail = process.env.STAFF_NOTIFICATION_EMAIL || "leads@pegasusdreamscapes.com";
   
   const html = `
     <h2>New Seller Lead Received</h2>
     <table style="border-collapse: collapse; width: 100%; max-width: 600px;">
-      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Name</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.name}</td></tr>
-      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Email</strong></td><td style="padding: 8px; border: 1px solid #ddd;"><a href="mailto:${lead.email}">${lead.email}</a></td></tr>
-      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Phone</strong></td><td style="padding: 8px; border: 1px solid #ddd;"><a href="tel:${lead.phone}">${lead.phone}</a></td></tr>
-      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Property Address</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.address}</td></tr>
-      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Property Type</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.propertyType}</td></tr>
-      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Condition</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.condition}</td></tr>
-      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Timeline</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.timeline}</td></tr>
-      ${lead.notes ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Notes</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.notes}</td></tr>` : ''}
+      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Name</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.name)}</td></tr>
+      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Email</strong></td><td style="padding: 8px; border: 1px solid #ddd;"><a href="mailto:${escapeHtml(lead.email)}">${escapeHtml(lead.email)}</a></td></tr>
+      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Phone</strong></td><td style="padding: 8px; border: 1px solid #ddd;"><a href="tel:${escapeHtml(lead.phone)}">${escapeHtml(lead.phone)}</a></td></tr>
+      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Property Address</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.address)}</td></tr>
+      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Property Type</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.propertyType)}</td></tr>
+      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Condition</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.condition)}</td></tr>
+      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Timeline</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.timeline)}</td></tr>
+      ${reusableLeadEmailRows(lead)}
+      ${lead.notes ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Notes</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.notes)}</td></tr>` : ''}
     </table>
     <p style="margin-top: 20px; color: #666;">This lead was submitted through the Pegasus DreamScapes website.</p>
   `;
@@ -272,11 +284,11 @@ export async function sendDealSubmissionNotification(deal: {
   const html = `
     <h2>New Wholesale Deal Submitted</h2>
     <table style="border-collapse: collapse; width: 100%; max-width: 600px;">
-      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Property</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${deal.propertyAddress}, ${deal.city}, ${deal.state}</td></tr>
+      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Property</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(deal.propertyAddress)}, ${escapeHtml(deal.city)}, ${escapeHtml(deal.state)}</td></tr>
       <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Contract Price</strong></td><td style="padding: 8px; border: 1px solid #ddd;">$${deal.contractPrice.toLocaleString()}</td></tr>
       <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Assignment Fee</strong></td><td style="padding: 8px; border: 1px solid #ddd;">$${deal.assignmentFee.toLocaleString()}</td></tr>
       ${deal.arv ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>ARV</strong></td><td style="padding: 8px; border: 1px solid #ddd;">$${deal.arv.toLocaleString()}</td></tr>` : ''}
-      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Submitted By</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${deal.submittedBy}</td></tr>
+      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Submitted By</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(deal.submittedBy)}</td></tr>
     </table>
     <p style="margin-top: 20px;">
       <a href="${process.env.SITE_URL || 'https://pegasusdreamscapes.com'}/marketplace/admin" style="display: inline-block; padding: 10px 20px; background: #c77b30; color: white; text-decoration: none; border-radius: 4px;">View in Admin Dashboard</a>
@@ -297,18 +309,19 @@ export async function sendInvestorLeadNotification(lead: {
   investmentRange: string;
   strategy: string;
   notes?: string;
-}): Promise<EmailResult> {
+} & ReusableLeadEmailDetails): Promise<EmailResult> {
   const staffEmail = process.env.STAFF_NOTIFICATION_EMAIL || "investors@pegasusdreamscapes.com";
   
   const html = `
     <h2>New Investor Lead Received</h2>
     <table style="border-collapse: collapse; width: 100%; max-width: 600px;">
-      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Name</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.name}</td></tr>
-      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Email</strong></td><td style="padding: 8px; border: 1px solid #ddd;"><a href="mailto:${lead.email}">${lead.email}</a></td></tr>
-      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Phone</strong></td><td style="padding: 8px; border: 1px solid #ddd;"><a href="tel:${lead.phone}">${lead.phone}</a></td></tr>
-      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Investment Range</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.investmentRange}</td></tr>
-      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Strategy</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.strategy}</td></tr>
-      ${lead.notes ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Notes</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.notes}</td></tr>` : ''}
+      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Name</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.name)}</td></tr>
+      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Email</strong></td><td style="padding: 8px; border: 1px solid #ddd;"><a href="mailto:${escapeHtml(lead.email)}">${escapeHtml(lead.email)}</a></td></tr>
+      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Phone</strong></td><td style="padding: 8px; border: 1px solid #ddd;"><a href="tel:${escapeHtml(lead.phone)}">${escapeHtml(lead.phone)}</a></td></tr>
+      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Investment Range</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.investmentRange)}</td></tr>
+      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Strategy</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.strategy)}</td></tr>
+      ${reusableLeadEmailRows(lead)}
+      ${lead.notes ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Notes</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.notes)}</td></tr>` : ''}
     </table>
     <p style="margin-top: 20px; color: #666;">This lead was submitted through the Pegasus DreamScapes website.</p>
   `;
@@ -328,19 +341,20 @@ export async function sendBuyerLeadNotification(lead: {
   priceRange: string;
   locations?: string[];
   notes?: string;
-}): Promise<EmailResult> {
+} & ReusableLeadEmailDetails): Promise<EmailResult> {
   const staffEmail = process.env.STAFF_NOTIFICATION_EMAIL || "buyers@pegasusdreamscapes.com";
   
   const html = `
     <h2>New Buyer Lead Received</h2>
     <table style="border-collapse: collapse; width: 100%; max-width: 600px;">
-      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Name</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.name}</td></tr>
-      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Email</strong></td><td style="padding: 8px; border: 1px solid #ddd;"><a href="mailto:${lead.email}">${lead.email}</a></td></tr>
-      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Phone</strong></td><td style="padding: 8px; border: 1px solid #ddd;"><a href="tel:${lead.phone}">${lead.phone}</a></td></tr>
-      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Buyer Type</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.buyerType}</td></tr>
-      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Price Range</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.priceRange}</td></tr>
-      ${lead.locations ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Target Locations</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.locations.join(", ")}</td></tr>` : ''}
-      ${lead.notes ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Notes</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.notes}</td></tr>` : ''}
+      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Name</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.name)}</td></tr>
+      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Email</strong></td><td style="padding: 8px; border: 1px solid #ddd;"><a href="mailto:${escapeHtml(lead.email)}">${escapeHtml(lead.email)}</a></td></tr>
+      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Phone</strong></td><td style="padding: 8px; border: 1px solid #ddd;"><a href="tel:${escapeHtml(lead.phone)}">${escapeHtml(lead.phone)}</a></td></tr>
+      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Buyer Type</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.buyerType)}</td></tr>
+      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Price Range</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.priceRange)}</td></tr>
+      ${lead.locations ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Target Locations</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.locations.map(escapeHtml).join(", ")}</td></tr>` : ''}
+      ${reusableLeadEmailRows(lead)}
+      ${lead.notes ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Notes</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.notes)}</td></tr>` : ''}
     </table>
     <p style="margin-top: 20px; color: #666;">This lead was submitted through the Pegasus DreamScapes website.</p>
   `;
@@ -361,20 +375,21 @@ export async function sendVendorLeadNotification(lead: {
   license?: string;
   serviceArea?: string;
   notes?: string;
-}): Promise<EmailResult> {
+} & ReusableLeadEmailDetails): Promise<EmailResult> {
   const staffEmail = process.env.STAFF_NOTIFICATION_EMAIL || "apollo@pegasusdreamscapes.com";
 
   const html = `
     <h2>New Vendor Network Application</h2>
     <table style="border-collapse: collapse; width: 100%; max-width: 600px;">
-      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Name</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.name}</td></tr>
-      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Email</strong></td><td style="padding: 8px; border: 1px solid #ddd;"><a href="mailto:${lead.email}">${lead.email}</a></td></tr>
-      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Phone</strong></td><td style="padding: 8px; border: 1px solid #ddd;"><a href="tel:${lead.phone}">${lead.phone}</a></td></tr>
-      ${lead.company ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Company</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.company}</td></tr>` : ''}
-      ${lead.trade ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Trade</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.trade}</td></tr>` : ''}
-      ${lead.license ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>License</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.license}</td></tr>` : ''}
-      ${lead.serviceArea ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Service Area</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.serviceArea}</td></tr>` : ''}
-      ${lead.notes ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Notes</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${lead.notes}</td></tr>` : ''}
+      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Name</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.name)}</td></tr>
+      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Email</strong></td><td style="padding: 8px; border: 1px solid #ddd;"><a href="mailto:${escapeHtml(lead.email)}">${escapeHtml(lead.email)}</a></td></tr>
+      <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Phone</strong></td><td style="padding: 8px; border: 1px solid #ddd;"><a href="tel:${escapeHtml(lead.phone)}">${escapeHtml(lead.phone)}</a></td></tr>
+      ${lead.company ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Company</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.company)}</td></tr>` : ''}
+      ${lead.trade ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Trade</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.trade)}</td></tr>` : ''}
+      ${lead.license ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>License</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.license)}</td></tr>` : ''}
+      ${lead.serviceArea ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Service Area</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.serviceArea)}</td></tr>` : ''}
+      ${reusableLeadEmailRows(lead)}
+      ${lead.notes ? `<tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Notes</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(lead.notes)}</td></tr>` : ''}
     </table>
     <p style="margin-top: 20px;">
       <a href="${process.env.SITE_URL || 'https://pegasusdreamscapes.com'}/admin/vendors" style="display: inline-block; padding: 10px 20px; background: #c77b30; color: white; text-decoration: none; border-radius: 4px;">Review in Vendor HQ</a>
@@ -394,20 +409,42 @@ export async function sendWelcomeEmail(user: {
   name: string;
   role: string;
 }): Promise<EmailResult> {
-  const roleDescriptions: Record<string, string> = {
-    investor: "access our exclusive investment opportunities and capital raising projects",
-    wholesaler: "list and market your wholesale deals to our network of buyers",
-    pegasus_wholesaler: "access premium wholesaling features and priority deal placement",
-    dreamscaper: "manage projects and collaborate with our investment community",
-    pegasus_dreamscaper: "access premium project management and community features",
-    buyer_retail: "browse our curated selection of renovated properties",
-    buyer_investment: "discover investment-grade properties and wholesale deals",
-    admin: "manage the platform, users, and content",
-  };
+  const html = buildPreviewAccountWelcomeHtml({
+    name: user.name,
+    role: user.role,
+    siteUrl: process.env.SITE_URL || "https://pegasusdreamscapes.com",
+  });
 
-  const roleDescription = roleDescriptions[user.role] || "access our real estate marketplace";
+  return sendEmail({
+    to: user.email,
+    subject: `Welcome to Pegasus DreamScapes, ${user.name}!`,
+    html,
+  });
+}
 
-  const html = `
+const DECLARED_INTEREST_LABELS: Record<string, string> = {
+  investor: "capital relationships",
+  wholesaler: "deal sourcing",
+  pegasus_wholesaler: "deal sourcing",
+  dreamscaper: "renovation and operations",
+  pegasus_dreamscaper: "renovation and operations",
+  buyer_retail: "home buying",
+  buyer_investment: "investment-property buying",
+  admin: "platform operations",
+};
+
+export function buildPreviewAccountWelcomeHtml(input: {
+  name: string;
+  role: string;
+  siteUrl: string;
+}): string {
+  const name = escapeHtml(input.name);
+  const declaredInterest = escapeHtml(
+    DECLARED_INTEREST_LABELS[input.role] || "Pegasus services",
+  );
+  const siteUrl = input.siteUrl.replace(/\/$/, "");
+
+  return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
       <div style="background: linear-gradient(135deg, #c77b30 0%, #a65c1a 100%); padding: 40px 20px; text-align: center;">
         <h1 style="color: white; margin: 0; font-size: 28px;">Welcome to Pegasus DreamScapes</h1>
@@ -415,15 +452,18 @@ export async function sendWelcomeEmail(user: {
       </div>
       
       <div style="padding: 40px 20px; background: #f8f8f6;">
-        <h2 style="color: #1a1a1a; margin-top: 0;">Hello, ${user.name}!</h2>
+        <h2 style="color: #1a1a1a; margin-top: 0;">Hello, ${name}!</h2>
         <p style="color: #555; line-height: 1.6;">
-          Thank you for joining Pegasus DreamScapes. Your account has been created successfully, and you're now ready to ${roleDescription}.
+          Your general preview account has been created. Your selection records declared interest in ${declaredInterest}; it is not a credential or an access decision.
+        </p>
+        <p style="color: #555; line-height: 1.6;">
+          This does not grant MarketFlow access, inventory, approval, verification, or submission privileges. MarketFlow remains a separate, invitation-led controlled pilot.
         </p>
         
         <div style="margin: 30px 0;">
-          <a href="${process.env.SITE_URL || 'https://pegasusdreamscapes.com'}/marketplace" 
+          <a href="${siteUrl}/marketflow"
              style="display: inline-block; padding: 15px 30px; background: #c77b30; color: white; text-decoration: none; border-radius: 4px; font-weight: bold;">
-            Go to Your Dashboard
+            Review MarketFlow boundaries
           </a>
         </div>
         
@@ -443,12 +483,6 @@ export async function sendWelcomeEmail(user: {
       </div>
     </div>
   `;
-
-  return sendEmail({
-    to: user.email,
-    subject: `Welcome to Pegasus DreamScapes, ${user.name}!`,
-    html,
-  });
 }
 
 export async function sendOfferNotification(offer: {

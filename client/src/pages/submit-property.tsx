@@ -27,8 +27,8 @@ const VISITOR_TYPES = [
   { value: "deal_finder", label: "A lead or opportunity", desc: "You found it; the contract is not signed yet." },
   { value: "deal_finder_contract", label: "A property under contract", desc: "You hold the agreement and need the next piece." },
   { value: "strategy_only", label: "A project or development plan", desc: "A scope, a lot, or a plan that needs a straight read." },
-  { value: "capital_partner", label: "An operating partnership", desc: "Co-GP, JV, capital, or an operating seat on a deal." },
-  { value: "buyer", label: "A licensed representation need", desc: "Buying or selling with representation through the Keller Williams lane." },
+  { value: "capital_partner", label: "An existing capital relationship or personal introduction", desc: "Use this only if Apollo already knows you or someone personally introduced you." },
+  { value: "buyer", label: "An investor-interest request", desc: "A property mandate for possible consideration, not a request for licensed representation or MarketFlow access." },
   { value: "vendor_operator", label: "A specialist relationship", desc: "GC, trade, lender, title, design, or another service." },
   { value: "other", label: "Something else", desc: "Tell us in the notes; we route it to the right desk." },
 ] as const;
@@ -59,6 +59,7 @@ const INTENT_TO_VISITOR: Record<string, string> = {
   explore: "strategy_only",
   blueprint: "strategy_only",
   partnership: "capital_partner",
+  buyer: "buyer",
 };
 
 const OWNER_SITUATION_TO_INTAKE: Record<string, string> = {
@@ -156,8 +157,7 @@ const CONSENT_COPY =
   "No agency relationship, offer, or agreement is created by submitting this form.";
 
 const CONFIRMATION_COPY =
-  "Your submission has been received. Pegasus will review the property and route it to the appropriate lane: " +
-  "acquisition, development, disposition, asset management, licensed representation, referral, or pass/no-fit.";
+  "Your submission has been recorded. This receipt does not promise review, routing, a response, an offer, representation, referral, or any other service.";
 
 type FormState = {
   visitorType: string;
@@ -194,9 +194,9 @@ const EMPTY: FormState = {
 };
 
 const field =
-  "w-full rounded-md border border-[#d8cdbc] dark:border-[#2a3a4e] bg-white dark:bg-[#0d1b2a] " +
-  "px-4 py-3 text-[15px] text-[#171f2a] dark:text-[#f4efe6] outline-none " +
-  "focus:border-[#b47645] focus:ring-1 focus:ring-[#b47645] transition-colors";
+  "w-full rounded-none border-0 border-b border-[#bdb09d] dark:border-[#415066] bg-transparent " +
+  "px-0 py-3 text-[15px] text-[#171f2a] dark:text-[#f4efe6] outline-none " +
+  "focus:border-[#9c5a24] focus:ring-0 transition-colors disabled:cursor-not-allowed disabled:opacity-60";
 
 function Label({ children, htmlFor }: { children: React.ReactNode; htmlFor?: string }) {
   return (
@@ -219,10 +219,10 @@ function ChoiceGrid({ options, value, onPick, cols = 2 }:
         const active = value === label;
         return (
           <button key={label} type="button" onClick={() => onPick(label)} aria-pressed={active}
-            className={`group relative rounded-md border px-4 py-3.5 text-left transition-all duration-200 ${
+            className={`group relative border-x-0 border-t-0 border-b px-0 py-4 pr-9 text-left transition-colors duration-200 ${
               active
-                ? "border-[#b47645] bg-[#9c5a24]/[0.08] shadow-[0_10px_28px_-18px_rgba(139,90,54,0.55)]"
-                : "border-[#d8cdbc] bg-white/60 hover:-translate-y-px hover:border-[#b47645]/60 hover:shadow-[0_10px_24px_-20px_rgba(23,31,42,0.45)] dark:border-[#2a3a4e] dark:bg-[#0d1b2a]/60"
+                ? "border-[#9c5a24] bg-transparent"
+                : "border-[#c9bead] bg-transparent hover:border-[#9c5a24] dark:border-[#35455a] dark:hover:border-[#c88a5d]"
             }`}>
             <span className={`block text-[15px] leading-snug ${active ? "font-medium text-[#171f2a] dark:text-[#f4efe6]" : "text-[#454b55] dark:text-[#cfc5b4]"}`}>
               {label}
@@ -233,7 +233,7 @@ function ChoiceGrid({ options, value, onPick, cols = 2 }:
               </span>
             )}
             <span aria-hidden="true"
-              className={`absolute right-3 top-3 flex h-5 w-5 items-center justify-center rounded-full border transition-all duration-200 ${
+              className={`absolute right-0 top-4 flex h-5 w-5 items-center justify-center rounded-full border transition-all duration-200 ${
                 active ? "border-[#b47645] bg-[#9c5a24] opacity-100" : "border-[#d8cdbc] opacity-0 group-hover:opacity-60 dark:border-[#2a3a4e]"
               }`}>
               <Check className="h-3 w-3 text-white" strokeWidth={3} />
@@ -248,7 +248,7 @@ function ChoiceGrid({ options, value, onPick, cols = 2 }:
 export default function SubmitPropertyPage() {
   useSEO({
     title: "Bring an Opportunity",
-    description: "Bring the property, contract, project, or plan. Pegasus reads the situation and routes the right next step.",
+    description: "Record a property, contract, project, or plan for possible consideration. Submission does not promise review, routing, service, or response timing.",
     image: "/og/submit.png",
   });
 
@@ -260,9 +260,6 @@ export default function SubmitPropertyPage() {
       intent,
       address: (p.get("address") ?? "").slice(0, 500),
       referralReference: (p.get("ref") ?? "").slice(0, 160),
-      utmSource: p.get("utm_source") ?? undefined,
-      utmMedium: p.get("utm_medium") ?? undefined,
-      utmCampaign: p.get("utm_campaign") ?? undefined,
       preVisitor: INTENT_TO_VISITOR[intent] ?? "",
       ownerSituation: ownerSituation.situation,
       ownerSituationLabel: ownerSituation.sourceLabel,
@@ -297,8 +294,20 @@ export default function SubmitPropertyPage() {
   const [result, setResult] = useState<{ id: string } | null>(null);
   const [contactErrors, setContactErrors] = useState<ContactErrors>({});
   const [contactValidationMessage, setContactValidationMessage] = useState("");
+  const [retrying, setRetrying] = useState(false);
+  const [announcement, setAnnouncement] = useState(
+    `Step ${utm.preVisitor ? 2 : 1} of ${STEPS.length}: ${STEPS[utm.preVisitor ? 1 : 0]}`,
+  );
   const startedAt = useRef(Date.now());
   const startedTracked = useRef(false);
+  const stepPromptRef = useRef<HTMLLegendElement>(null);
+  const errorRef = useRef<HTMLDivElement>(null);
+  const successRef = useRef<HTMLHeadingElement>(null);
+
+  const moveToStep = (nextStep: number) => {
+    setStep(nextStep);
+    setAnnouncement(`Step ${nextStep + 1} of ${STEPS.length}: ${STEPS[nextStep]}`);
+  };
 
   const set = (patch: Partial<FormState>) => {
     if (!startedTracked.current) {
@@ -345,7 +354,7 @@ export default function SubmitPropertyPage() {
             topLaneVerdict: labFactsChanged ? undefined : strategyLabBrief.topLaneVerdict,
             primaryMetric: labFactsChanged ? undefined : strategyLabBrief.primaryMetric,
             memoNextStep: labFactsChanged
-              ? "Intake facts changed after the Strategy Lab read; Pegasus must rerun the path comparison."
+              ? "Intake facts changed after the Strategy Lab read; rerun the automated path comparison with the updated inputs before relying on it."
               : strategyLabBrief.memoNextStep,
           })
         : undefined;
@@ -386,19 +395,48 @@ export default function SubmitPropertyPage() {
           form.notes,
         ].filter(Boolean).join(" — ") || undefined,
         consentAccepted: form.consentAccepted,
-        utmSource: utm.utmSource,
-        utmMedium: utm.utmMedium,
-        utmCampaign: utm.utmCampaign,
-        referrer: document.referrer || undefined,
       });
       return res.json();
     },
     onSuccess: (data: { id: string }) => {
       trackEvent("submit_property_completed", { visitor_type: form.visitorType });
+      setRetrying(false);
+      setAnnouncement(`Submission received. Reference ${data.id}.`);
       setResult(data);
       window.scrollTo({ top: 0, behavior: "auto" });
     },
+    onError: () => {
+      setRetrying(false);
+      setAnnouncement(
+        "Submission could not be recorded. Your information is still here; retry when ready.",
+      );
+    },
   });
+
+  useEffect(() => {
+    if (result) return;
+    stepPromptRef.current?.focus();
+  }, [result, step]);
+
+  useEffect(() => {
+    if (submit.isError && !retrying) errorRef.current?.focus();
+  }, [retrying, submit.isError]);
+
+  useEffect(() => {
+    if (result) successRef.current?.focus();
+  }, [result]);
+
+  const beginSubmission = () => {
+    setRetrying(false);
+    setAnnouncement("Recording your opportunity for possible consideration.");
+    submit.mutate();
+  };
+
+  const retrySubmission = () => {
+    setRetrying(true);
+    setAnnouncement("Retrying your submission.");
+    submit.mutate();
+  };
 
   const validateContact = () => {
     const nextErrors: ContactErrors = {};
@@ -439,37 +477,50 @@ export default function SubmitPropertyPage() {
     !!form.contactName && /.+@.+\..+/.test(form.email) && form.consentAccepted,
   ][step];
 
-  if (result) {
-    return (
+  return (
+    <>
+      <p
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+        data-testid="intake-live-status"
+      >
+        {announcement}
+      </p>
+      {result ? (
       <div className="min-h-screen bg-[#f4efe6] dark:bg-[#091421] pt-32 pb-24 px-6">
         <div className="mx-auto max-w-2xl text-center">
           <div className="mx-auto mb-8 flex h-16 w-16 items-center justify-center rounded-full border-2 border-[#b47645]">
-            <Check className="h-7 w-7 text-[#8b5a36]" strokeWidth={2.4} />
+            <Check className="h-7 w-7 text-[#8b5a36] dark:text-[#c88a5d]" strokeWidth={2.4} />
           </div>
-          <h1 className="font-serif text-4xl text-[#171f2a] dark:text-[#f4efe6] mb-6">Received.</h1>
+          <h1
+            ref={successRef}
+            tabIndex={-1}
+            className="font-serif text-4xl text-[#171f2a] dark:text-[#f4efe6] mb-6"
+          >
+            Received.
+          </h1>
           <p className="text-[17px] leading-relaxed text-[#454b55] dark:text-[#cfc5b4]">{CONFIRMATION_COPY}</p>
           <p className="mt-6 text-sm text-[#6b5f4d] dark:text-[#b9a888]">Reference: {result.id}</p>
-          <a href="/" className="mt-10 inline-block rounded-md bg-[#9c5a24] px-8 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-white hover:bg-[#8b5a36] transition-colors">
+          <a href="/" className="mt-10 inline-block border border-[#9c5a24] bg-[#9c5a24] px-8 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-white hover:bg-[#8b5a36] transition-colors">
             Back to Pegasus
           </a>
         </div>
       </div>
-    );
-  }
-
-  return (
+      ) : (
     <div className="min-h-screen bg-[#f4efe6] dark:bg-[#091421] pt-28 pb-24 px-6">
       <div className="mx-auto max-w-5xl">
         <div className="mb-10 max-w-3xl">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#8b5a36] mb-3">
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#8b5a36] dark:text-[#c88a5d]">
             Bring an Opportunity
           </p>
           <h1 className="font-serif text-4xl sm:text-5xl leading-tight text-[#171f2a] dark:text-[#f4efe6]">
             Bring the property, the contract, the project, or the plan.
           </h1>
           <p className="mt-4 max-w-2xl text-[16px] leading-relaxed text-[#454b55] dark:text-[#cfc5b4]">
-            We begin by determining what is missing and whether Pegasus is the right participant.
-            Share what you know; partial information is fine.
+            This intake records what you know for possible consideration. Partial information is fine;
+            review and response are not promised.
           </p>
         </div>
 
@@ -479,14 +530,14 @@ export default function SubmitPropertyPage() {
         <ol className="mb-10 flex items-center gap-2" aria-label="Form progress">
           {STEPS.map((s, i) => (
             <li key={s} className="flex-1">
-              <button type="button" disabled={i >= step} onClick={() => setStep(i)}
+              <button type="button" disabled={submit.isPending || i >= step} onClick={() => moveToStep(i)}
                 className="block w-full text-left disabled:cursor-default"
                 aria-label={i < step ? `Return to ${s}` : s}
                 aria-current={i === step ? "step" : undefined}>
                 <div className={`h-1 rounded-full transition-colors ${i <= step ? "bg-[#9c5a24]" : "bg-[#d8cdbc] dark:bg-[#2a3a4e]"}`} />
                 <span className={`mt-2 hidden items-center gap-1 sm:inline-flex text-[10px] font-semibold uppercase tracking-[0.16em] ${
-                  i === step ? "text-[#8b5a36]" : i < step ? "text-[#6b5f4d] hover:text-[#8b5a36] dark:text-[#b9a888]" : "text-[#6e6455] dark:text-[#7d8ba0]"}`}>
-                  {i < step && <Check className="h-3 w-3 text-[#8b5a36]" strokeWidth={3} />}{s}
+                  i === step ? "text-[#8b5a36] dark:text-[#c88a5d]" : i < step ? "text-[#6b5f4d] hover:text-[#8b5a36] dark:text-[#b9a888] dark:hover:text-[#c88a5d]" : "text-[#6e6455] dark:text-[#7d8ba0]"}`}>
+                  {i < step && <Check className="h-3 w-3 text-[#8b5a36] dark:text-[#c88a5d]" strokeWidth={3} />}{s}
                 </span>
               </button>
             </li>
@@ -495,14 +546,17 @@ export default function SubmitPropertyPage() {
 
         <form
           noValidate
-          className="rounded-md border border-[#d8cdbc] dark:border-[#2a3a4e] bg-white/70 dark:bg-[#0d1b2a]/70 p-6 sm:p-10 backdrop-blur"
+          data-testid="opportunity-intake-form"
+          aria-busy={submit.isPending}
+          className="border-y border-[#c9bead] bg-transparent py-8 dark:border-[#35455a] sm:py-10"
           onSubmit={(e) => {
             e.preventDefault();
+            if (submit.isPending) return;
             if (step < 4) {
-              setStep(step + 1);
+              moveToStep(step + 1);
               return;
             }
-            if (validateContact()) submit.mutate();
+            if (validateContact()) beginSubmission();
           }}>
           {/* honeypot */}
           <input type="text" name="hp_company" value={hp} onChange={(e) => setHp(e.target.value)}
@@ -510,7 +564,14 @@ export default function SubmitPropertyPage() {
 
           {step === 0 && (
             <fieldset>
-              <legend className="font-serif text-2xl text-[#171f2a] dark:text-[#f4efe6] mb-6">What are you bringing to Pegasus?</legend>
+              <legend
+                ref={stepPromptRef}
+                tabIndex={-1}
+                data-testid="intake-step-heading"
+                className="font-serif text-2xl text-[#171f2a] dark:text-[#f4efe6] mb-6"
+              >
+                What are you bringing to Pegasus?
+              </legend>
               <ChoiceGrid options={VISITOR_TYPES}
                 value={VISITOR_TYPES.find((v) => v.value === form.visitorType)?.label ?? ""}
                 onPick={(labelPicked) => set({ visitorType: VISITOR_TYPES.find((v) => v.label === labelPicked)!.value })} />
@@ -519,7 +580,14 @@ export default function SubmitPropertyPage() {
 
           {step === 1 && (
             <fieldset className="space-y-6">
-              <legend className="font-serif text-2xl text-[#171f2a] dark:text-[#f4efe6] mb-2">The property.</legend>
+              <legend
+                ref={stepPromptRef}
+                tabIndex={-1}
+                data-testid="intake-step-heading"
+                className="font-serif text-2xl text-[#171f2a] dark:text-[#f4efe6] mb-2"
+              >
+                The property.
+              </legend>
               <p className="text-sm text-[#6b5f4d] dark:text-[#b9a888]">Share what you know — partial information is fine.</p>
               <div>
                 <Label htmlFor="sp-address">Property address</Label>
@@ -564,27 +632,48 @@ export default function SubmitPropertyPage() {
 
           {step === 2 && (
             <fieldset>
-              <legend className="font-serif text-2xl text-[#171f2a] dark:text-[#f4efe6] mb-6">The situation.</legend>
+              <legend
+                ref={stepPromptRef}
+                tabIndex={-1}
+                data-testid="intake-step-heading"
+                className="font-serif text-2xl text-[#171f2a] dark:text-[#f4efe6] mb-6"
+              >
+                The situation.
+              </legend>
               <ChoiceGrid options={SITUATIONS} value={form.situation} onPick={(v) => set({ situation: v })} cols={3} />
             </fieldset>
           )}
 
           {step === 3 && (
             <fieldset>
-              <legend className="font-serif text-2xl text-[#171f2a] dark:text-[#f4efe6] mb-6">The goal.</legend>
+              <legend
+                ref={stepPromptRef}
+                tabIndex={-1}
+                data-testid="intake-step-heading"
+                className="font-serif text-2xl text-[#171f2a] dark:text-[#f4efe6] mb-6"
+              >
+                The goal.
+              </legend>
               <ChoiceGrid options={GOALS} value={form.goal} onPick={(v) => set({ goal: v })} />
             </fieldset>
           )}
 
           {step === 4 && (
             <fieldset className="space-y-6" aria-describedby="sp-contact-requirements">
-              <legend className="font-serif text-2xl text-[#171f2a] dark:text-[#f4efe6] mb-2">How do we reach you?</legend>
+              <legend
+                ref={stepPromptRef}
+                tabIndex={-1}
+                data-testid="intake-step-heading"
+                className="font-serif text-2xl text-[#171f2a] dark:text-[#f4efe6] mb-2"
+              >
+                How do we reach you?
+              </legend>
               <p id="sp-contact-requirements" className="text-sm leading-relaxed text-[#6b5f4d] dark:text-[#b9a888]">
                 Full name, email, and contact consent are required. Phone and scheduling details are optional.
               </p>
               <p
                 id="sp-contact-validation"
-                role="alert"
+                role={contactValidationMessage ? "alert" : undefined}
                 aria-live="assertive"
                 aria-atomic="true"
                 className="text-sm text-red-600 dark:text-red-400 empty:hidden"
@@ -603,6 +692,7 @@ export default function SubmitPropertyPage() {
                     }}
                     autoComplete="name"
                     required
+                    disabled={submit.isPending}
                     aria-invalid={!!contactErrors.contactName}
                     aria-describedby={contactErrors.contactName ? "sp-name-error" : undefined}
                   />
@@ -613,7 +703,7 @@ export default function SubmitPropertyPage() {
                   )}
                 </div>
                 <div><Label htmlFor="sp-phone">Phone (optional)</Label>
-                  <input id="sp-phone" className={field} value={form.phone} onChange={(e) => set({ phone: e.target.value })} autoComplete="tel" inputMode="tel" /></div>
+                  <input id="sp-phone" className={field} value={form.phone} onChange={(e) => set({ phone: e.target.value })} autoComplete="tel" inputMode="tel" disabled={submit.isPending} /></div>
               </div>
               <div><Label htmlFor="sp-email">Email (required)</Label>
                 <input
@@ -627,6 +717,7 @@ export default function SubmitPropertyPage() {
                   }}
                   autoComplete="email"
                   required
+                  disabled={submit.isPending}
                   aria-invalid={!!contactErrors.email}
                   aria-describedby={contactErrors.email ? "sp-email-error" : undefined}
                 />
@@ -638,15 +729,15 @@ export default function SubmitPropertyPage() {
               </div>
               <div className="grid gap-4 sm:grid-cols-2">
                 <div><Label htmlFor="sp-method">Preferred contact method</Label>
-                  <select id="sp-method" className={field} value={form.preferredContactMethod} onChange={(e) => set({ preferredContactMethod: e.target.value })}>
+                  <select id="sp-method" className={field} value={form.preferredContactMethod} onChange={(e) => set({ preferredContactMethod: e.target.value })} disabled={submit.isPending}>
                     <option value="">Select…</option>{CONTACT_METHODS.map((o) => <option key={o}>{o}</option>)}
                   </select></div>
                 <div><Label htmlFor="sp-time">Best time to contact</Label>
-                  <input id="sp-time" className={field} value={form.bestTimeToContact} onChange={(e) => set({ bestTimeToContact: e.target.value })} placeholder="Weekday mornings…" /></div>
+                  <input id="sp-time" className={field} value={form.bestTimeToContact} onChange={(e) => set({ bestTimeToContact: e.target.value })} placeholder="Weekday mornings…" disabled={submit.isPending} /></div>
               </div>
               <div>
                 <Label htmlFor="sp-notes">Anything else we should know?</Label>
-                <textarea id="sp-notes" className={`${field} min-h-[110px]`} value={form.notes} onChange={(e) => set({ notes: e.target.value })} />
+                <textarea id="sp-notes" className={`${field} min-h-[110px]`} value={form.notes} onChange={(e) => set({ notes: e.target.value })} disabled={submit.isPending} />
               </div>
               <label className="flex items-start gap-3 text-sm leading-relaxed text-[#454b55] dark:text-[#cfc5b4] cursor-pointer">
                 <input id="sp-consent" type="checkbox" checked={form.consentAccepted}
@@ -655,6 +746,7 @@ export default function SubmitPropertyPage() {
                     clearContactError("consentAccepted");
                   }}
                   className="mt-1 h-4 w-4 accent-[#b47645]" required
+                  disabled={submit.isPending}
                   aria-invalid={!!contactErrors.consentAccepted}
                   aria-describedby={`sp-privacy-notice${contactErrors.consentAccepted ? " sp-consent-error" : ""}`} />
                 <span>{CONSENT_COPY}</span>
@@ -665,62 +757,89 @@ export default function SubmitPropertyPage() {
                 </p>
               )}
               <p id="sp-privacy-notice" className="text-xs leading-relaxed text-[#6e6455] dark:text-[#9aa6b7]">
-                Pegasus uses this information to evaluate and route the request and may share it
-                with service providers or qualified professionals involved in that review. The{' '}
+                Pegasus may use this information to consider the request and may share it
+                with service providers as described in the privacy notice. The{' '}
                 <a className="underline underline-offset-2" href="/privacy">Privacy Policy</a>{' '}
                 explains retention and your rights. To request access or deletion, email{' '}
                 <a className="underline underline-offset-2" href="mailto:apollo@pegasusdreamscapes.com">
                   apollo@pegasusdreamscapes.com
                 </a>.
               </p>
-              {submit.isError && (
-                <p role="alert" className="text-sm text-red-600 dark:text-red-400">
-                  Something went wrong recording the submission. Please try again, or email
-                  {" "}<a className="underline" href="mailto:apollo@pegasusdreamscapes.com">apollo@pegasusdreamscapes.com</a>.
-                </p>
+              {(submit.isError || retrying) && (
+                <div
+                  ref={errorRef}
+                  role="alert"
+                  tabIndex={-1}
+                  className="border-l-2 border-red-700 py-1 pl-4 text-sm text-red-800 dark:border-red-400 dark:text-red-300"
+                >
+                  <p className="leading-relaxed">
+                    {retrying
+                      ? "Trying the secure submission again. Keep this page open."
+                      : "We could not record your submission. Your information is still here; retry now, or email "}
+                    {!retrying && (
+                      <a className="underline" href="mailto:apollo@pegasusdreamscapes.com">
+                        apollo@pegasusdreamscapes.com
+                      </a>
+                    )}
+                    {!retrying && "."}
+                  </p>
+                  <button
+                    type="button"
+                    aria-disabled={retrying || undefined}
+                    aria-busy={retrying || undefined}
+                    onClick={() => {
+                      if (!retrying) retrySubmission();
+                    }}
+                    className="mt-3 border-b border-current pb-0.5 font-semibold uppercase tracking-[0.12em] aria-disabled:cursor-wait aria-disabled:opacity-65"
+                  >
+                    {retrying ? "Retrying…" : "Retry submission"}
+                  </button>
+                </div>
               )}
             </fieldset>
           )}
 
           <div className="mt-10 flex items-center justify-between gap-4">
-            <button type="button" onClick={() => setStep(Math.max(0, step - 1))}
-              className={`inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.14em] text-[#6b5f4d] dark:text-[#b9a888] hover:text-[#8b5a36] transition-colors ${step === 0 ? "invisible" : ""}`}>
+            <button type="button" disabled={submit.isPending} onClick={() => moveToStep(Math.max(0, step - 1))}
+              className={`inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.14em] text-[#6b5f4d] transition-colors hover:text-[#8b5a36] disabled:cursor-not-allowed disabled:opacity-45 dark:text-[#b9a888] dark:hover:text-[#c88a5d] ${step === 0 ? "invisible" : ""}`}>
               <ArrowLeft className="h-4 w-4" /> Back
             </button>
             <button type="submit" disabled={(step < 4 && !canNext) || submit.isPending}
+              aria-busy={submit.isPending || undefined}
               aria-describedby={step === 4 ? "sp-contact-requirements sp-contact-validation" : undefined}
-              className="inline-flex items-center gap-2 rounded-md bg-[#9c5a24] px-8 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-white shadow-[0_14px_30px_-16px_rgba(139,90,54,0.7)] transition-all hover:bg-[#8b5a36] disabled:cursor-not-allowed disabled:opacity-35 disabled:shadow-none">
-              {submit.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              {step < 4 ? "Continue" : "Submit for Review"}
-              {step < 4 && <ArrowRight className="h-4 w-4" />}
+              className="inline-flex items-center gap-2 border border-[#9c5a24] bg-[#9c5a24] px-8 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-[#8b5a36] disabled:cursor-not-allowed disabled:opacity-45">
+              {submit.isPending ? <Loader2 className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" /> : null}
+              {submit.isPending ? "Recording…" : step < 4 ? "Continue" : "Record Opportunity"}
+              {step < 4 && !submit.isPending && <ArrowRight className="h-4 w-4" aria-hidden="true" />}
             </button>
           </div>
           <p className="mt-5 text-center text-[12px] text-[#6e6455] dark:text-[#7d8ba0] lg:hidden">
-            Reviewed by a person within 48 hours. No agency created by submitting.
+            Receipt is immediate. Review and response timing are not promised. No agency is created by submitting.
           </p>
         </form>
 
         <p className="mt-8 text-xs leading-relaxed text-[#6e6455] dark:text-[#7d8ba0]">
           Pegasus Dreamscapes Corp. is a real estate investment, development, and strategy company.
-          Pegasus Dreamscapes Corp. is not a real estate brokerage. Licensed real estate representation,
-          when applicable, is provided by Paolo “Apollo” Duran through Keller Williams East Bay.
-          CA DRE #02333658. No agency relationship is created without a written agreement.
+          Pegasus Dreamscapes Corp. is not a real estate brokerage. This site uses Paolo “Apollo”
+          Duran as a public-facing name. For license verification, CA DRE #02333658 is listed under
+          Duran Ramirez, Paolo Ariel, with responsible broker BMP Realty Inc DBA Keller Williams
+          Realty-East Bay. Verify current status. No agency relationship exists without a written agreement.
         </p>
         </div>
 
         {/* The desk's promise, kept in view while the visitor works. */}
         <aside className="mt-10 hidden lg:sticky lg:top-28 lg:mt-0 lg:block" aria-label="What happens next">
-          <div className="rounded-md border border-[#d8cdbc] bg-white/60 p-6 dark:border-[#2a3a4e] dark:bg-[#0d1b2a]/60">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#8b5a36]">What happens next</p>
+          <div className="border-l border-[#bdb09d] bg-transparent py-1 pl-6 dark:border-[#415066]">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#8b5a36] dark:text-[#c88a5d]">What happens next</p>
             <ol className="mt-5 space-y-5">
               {[
                 ["Received", "Your submission creates a private record — never a public listing."],
-                ["Read", "A person reviews it. Numbers first, adjectives second."],
-                ["Routed", "It goes to the right lane: acquisition, development, disposition, asset management, representation, or referral."],
-                ["Your call", "We lay out the options; you choose. If there is no fit, we say so plainly."],
+                ["Possible consideration", "Pegasus may assess fit, information needs, and current capacity."],
+                ["Possible next step", "If Pegasus elects to proceed, it may request information or discuss a lane."],
+                ["Separate terms", "Any analysis, offer, service, representation, referral, or transaction requires its own terms."],
               ].map(([t, d], i) => (
                 <li key={t} className="flex gap-3">
-                  <span className="mt-px font-serif text-[15px] leading-none text-[#8b5a36]">{`0${i + 1}`}</span>
+                  <span className="mt-px font-serif text-[15px] leading-none text-[#8b5a36] dark:text-[#c88a5d]">{`0${i + 1}`}</span>
                   <span className="min-w-0">
                     <span className="block text-[13px] font-semibold text-[#171f2a] dark:text-[#f4efe6]">{t}</span>
                     <span className="mt-0.5 block text-[12.5px] leading-relaxed text-[#6b5f4d] dark:text-[#b9a888]">{d}</span>
@@ -730,9 +849,9 @@ export default function SubmitPropertyPage() {
             </ol>
             <div className="mt-6 border-t border-[#d8cdbc] pt-5 dark:border-[#2a3a4e]">
               <ul className="space-y-2 text-[12px] leading-relaxed text-[#6b5f4d] dark:text-[#b9a888]">
-                <li className="flex gap-2"><span aria-hidden="true" className="mt-1.5 h-1 w-1 rounded-full bg-[#9c5a24]" />Response within 48 hours</li>
+                <li className="flex gap-2"><span aria-hidden="true" className="mt-1.5 h-1 w-1 rounded-full bg-[#9c5a24]" />No review or response-time commitment</li>
                 <li className="flex gap-2"><span aria-hidden="true" className="mt-1.5 h-1 w-1 rounded-full bg-[#9c5a24]" />No agency created by submitting</li>
-                <li className="flex gap-2"><span aria-hidden="true" className="mt-1.5 h-1 w-1 rounded-full bg-[#9c5a24]" />Nothing shared without written agreement</li>
+                <li className="flex gap-2"><span aria-hidden="true" className="mt-1.5 h-1 w-1 rounded-full bg-[#9c5a24]" />Data use follows the privacy notice</li>
               </ul>
             </div>
           </div>
@@ -740,5 +859,7 @@ export default function SubmitPropertyPage() {
         </div>
       </div>
     </div>
+      )}
+    </>
   );
 }

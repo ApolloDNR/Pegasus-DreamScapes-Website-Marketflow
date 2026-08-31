@@ -1,6 +1,6 @@
 import React from "react";
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { render, cleanup, fireEvent, waitFor } from "@testing-library/react";
+import { render, cleanup, waitFor } from "@testing-library/react";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -78,37 +78,37 @@ afterEach(() => cleanup());
 const LANES: [string, string[], string, string | null][] = [
   [
     "/property-owners",
-    ["A difficult property does not always need a conventional solution."],
-    "Pegasus acquires selected properties directly and reviews situations involving condition",
+    ["A complex property starts with accurate facts, not a promised outcome."],
+    "Use the private intake to document condition, timing, ownership, occupancy",
     null,
   ],
   [
     "/deal-partners",
-    ["You found the opportunity. We help make it executable."],
-    "deal finders, wholesalers, agents, and operating sponsors",
-    "Source attribution is recorded at submission. Any JV, assignment, referral, or compensation structure must be agreed in writing before distribution.",
+    ["A credible deal submission makes the facts and the proposed role clear."],
+    "Deal finders, wholesalers, agents, and operating sponsors",
+    "Any joint venture, assignment, referral, distribution, representation, or compensation arrangement would require a separate written agreement before anyone relies on it.",
   ],
   [
     "/buyers",
     ["Buy with a strategy,", "not just a search."],
-    "Licensed buyer representation is provided through Keller Williams East Bay when applicable.",
+    "licensed buyer representation, investor-interest intake, or discretionary access to the controlled MarketFlow pilot",
     null,
   ],
   [
     "/capital",
     ["Capital should", "follow discipline."],
-    "Pegasus reviews capital relationships project-by-project.",
-    "No public offering, no guaranteed returns, no pooled fund.",
+    "Pegasus begins these conversations only through an existing relationship or a personal introduction.",
+    "This page records relationship context; it does not present project terms or create access, eligibility, or an agreement.",
   ],
   [
     "/operators",
-    ["Join the Pegasus", "operator bench."],
-    "contractors, trades, designers, architects, photographers, inspectors, lenders, escrow/title partners",
+    ["Know the standard", "before the scope."],
+    "Formal applications are accepted only through the Vendor Network.",
     null,
   ],
   [
     "/referral",
-    ["Send the situation.", "Pegasus will handle it carefully."],
+    ["Share an introduction.", "Set boundaries first."],
     "For professionals and trusted contacts who know a property owner, investor, or situation",
     "Referral compensation, JV participation, or professional coordination is handled only where lawful, permitted, and agreed in writing.",
   ],
@@ -118,38 +118,33 @@ describe("Lane pages PRD v1 contract (issue #22)", () => {
   for (const [url, heroParts, subtext, note] of LANES) {
     it(`locks the ${url} hero${note ? " + required compliance note" : ""}`, async () => {
       const { container } = renderAt(url);
-      await waitFor(() => {
-        const text = container.textContent!;
-        for (const part of heroParts) {
-          expect(text, `missing hero fragment on ${url}`).toContain(part);
-        }
-        expect(text, `missing locked subtext on ${url}`).toContain(subtext);
-        if (note) {
-          expect(text, `missing required note on ${url}`).toContain(note);
-        }
-      });
+      await waitFor(
+        () => {
+          const text = container.textContent!;
+          for (const part of heroParts) {
+            expect(text, `missing hero fragment on ${url}`).toContain(part);
+          }
+          expect(text, `missing locked subtext on ${url}`).toContain(subtext);
+          if (note) {
+            expect(text, `missing required note on ${url}`).toContain(note);
+          }
+        },
+        { timeout: 5000 },
+      );
     });
   }
 
-  it("locks the premium top navigation, product access, and More directory", () => {
+  it("locks the approved calm top navigation and subordinate product access", () => {
     const { container } = renderAt("/");
     const nav = container.querySelector("nav")!;
-    // Premium navigation keeps the core audience routes and the two product
-    // surfaces one click away. Supporting firm/lane pages remain reachable
-    // through the explicit More directory.
-    for (const label of ["How We Operate", "Property Owners", "Deal Partners", "Strategy Lab", "MarketFlow"]) {
+    for (const label of ["How We Operate", "Property Owners", "Deal Partners", "Our Work", "About"]) {
       expect(nav.textContent, `missing primary nav item: ${label}`).toContain(label);
     }
-    expect(nav.textContent).toContain("Private pilot");
     expect(nav.textContent).toContain("Bring an Opportunity");
-
-    const moreButton = Array.from(nav.querySelectorAll("button")).find((button) => button.textContent?.includes("More"));
-    expect(moreButton).toBeTruthy();
-    fireEvent.click(moreButton!);
-    expect(nav.querySelector('[role="region"][aria-label="More Pegasus pages"]')).toBeTruthy();
-    for (const label of ["Our Work", "About", "Investments", "Development", "Capital Partners", "Buyers", "Operators & Vendors", "Referral Partners"]) {
-      expect(nav.textContent, `missing More directory item: ${label}`).toContain(label);
-    }
+    expect(nav.querySelector('a[href="/marketflow"]')).toBeNull();
+    expect(nav.querySelector('a[href="/strategy-lab"]')).toBeNull();
+    expect(container.querySelector("main")?.textContent).toContain("Open Strategy Lab");
+    expect(container.querySelector('footer a[href="/marketflow"]')).toHaveTextContent("MarketFlow");
   });
 
   it("locks the footer page map (v5.1 contextual routes)", () => {
@@ -181,7 +176,9 @@ describe("Lane pages PRD v1 contract (issue #22)", () => {
     );
     expect(footer.querySelectorAll("button")).toHaveLength(0);
     // The site-wide locked disclosure paragraph stays intact.
-    expect(footer.textContent).toContain("Pegasus Dreamscapes Corp. is not a real estate brokerage.");
+    expect(footer.textContent).toContain("Pegasus Dreamscapes Corp. is a real estate investment, development, and strategy company, not a real estate brokerage.");
+    expect(footer.textContent).toContain("Duran Ramirez, Paolo Ariel");
+    expect(footer.textContent).toContain("BMP Realty Inc DBA Keller Williams Realty-East Bay");
     expect(footer.textContent).toContain("CA DRE #02333658");
     expect(footer.textContent).toContain("Equal Housing Opportunity");
   });

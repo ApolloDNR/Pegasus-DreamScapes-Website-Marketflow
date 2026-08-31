@@ -63,7 +63,7 @@ export default function FAQ() {
       <section className="relative overflow-hidden bg-[hsl(var(--charcoal))] text-cream">
         <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[70%] text-primary opacity-[0.12] pointer-events-none" />
         <div className="relative max-w-3xl mx-auto px-6 lg:px-12 pt-32 pb-16">
-          <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-6">
+          <p className="text-[11px] uppercase tracking-[0.32em] text-[hsl(var(--warm-glow))] font-supporting font-semibold mb-6">
             Questions &amp; Answers
           </p>
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-semibold tracking-[-0.02em] text-white leading-tight mb-6">

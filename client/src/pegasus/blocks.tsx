@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
+import { Link } from 'wouter';
 import {
   ArrowRight, ArrowUpRight, Check, Minus, ChevronDown, Plus,
   Compass, Home, Target, Calculator, Layers, Hammer, Route as RouteIcon, Shield,
   ConciergeBell, Key, Search, Handshake,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import type { Nav, Theme, Pillar, FaqItem, Route } from './theme';
+import type { Nav, Theme, Pillar, FaqItem, Route, SplitPath } from './theme';
 import { IMG, SectionHead, ContourLines, BrandMark } from './primitives';
 import { DealEngineSchematic } from './deal-engine';
 import {
@@ -31,16 +32,16 @@ export type StartAction = 'contact' | 'strategylab' | 'peggy';
 
 const HERO_SIGNALS = [
   { icon: 'compass', label: 'Disciplined strategy' },
-  { icon: 'calculator', label: 'Real underwriting' },
+  { icon: 'calculator', label: 'Input-based modeling' },
   { icon: 'shield', label: 'Operator integrity' },
   { icon: 'route', label: 'Aligned next step' },
 ];
 
 const HERO_LANES = [
-  { key: 'list', title: 'Represent', desc: 'For sellers and buyers when the right answer is licensed agency through Apollo at KW East Bay.' },
+  { key: 'list', title: 'Representation request', desc: 'Ask about current licensed-representation availability; agency requires a separate written brokerage agreement.' },
   { key: 'buy', title: 'Acquire', desc: 'For as-is, time-sensitive, or complex properties when the numbers support written purchase terms.' },
   { key: 'partner', title: 'Structure', desc: 'For JV, reposition, development, capital, or participation paths that need a disciplined plan.' },
-  { key: 'route', title: 'Route', desc: 'For opportunities better matched to a vetted buyer, referral partner, or private MarketFlow lane.' },
+  { key: 'route', title: 'Possible introduction', desc: 'Any buyer, referral, or MarketFlow path depends on availability, authorization, and separate written terms.' },
 ];
 
 const HERO_READ_ROWS = [
@@ -113,7 +114,7 @@ function HeroWorkboard({ go }: { go: Nav }) {
         <div className="hero-review-note">
           <span>No blind offer</span>
           <span>No public securities offering</span>
-          <span>Agency through KW East Bay when applicable</span>
+          <span>Agency only by separate written brokerage agreement</span>
         </div>
 
         <button type="button" onClick={() => go('strategylab')} className="hero-workboard-link group">
@@ -168,7 +169,7 @@ export function LegacyHero({ go, theme, parallaxRef, openPeggy }:
           <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-10 reveal delay-200">
             <div className="max-w-xl">
               <p className="font-serif-display italic text-2xl md:text-3xl text-[var(--cream)]/90 leading-snug">
-                A real estate investment, development, and systems company. We read the situation, underwrite the numbers, and tell you what the deal actually is.
+                A founder-led real estate strategy company with educational tools and structured request paths. Human review, advice, and transactions are not promised.
               </p>
               <div className="pg-label !text-[9px] !tracking-[0.26em] text-[var(--cream)]/55 mt-6">
                 East Bay · Value-add &amp; repositioning · Contra Costa &amp; Alameda County
@@ -233,7 +234,7 @@ export function Hero({ go, theme, parallaxRef, openPeggy }:
               <em className="hero-title-accent block">Structured opportunity.</em>
             </h1>
             <p className="hero-rise hero-rise-d3 mx-auto mt-7 max-w-2xl text-[1.02rem] leading-[1.75] text-[rgba(245,230,211,0.85)] text-on-photo md:text-[1.12rem]">
-              Pegasus Dreamscapes reviews real estate situations and routes them into the right path — acquisition, development, disposition, representation, partnership, or long-term asset strategy.
+              Pegasus Dreamscapes provides educational frameworks and a structured intake for possible acquisition, development, disposition, representation, partnership, or long-term asset discussions. No path or review is promised.
             </p>
             <div className="hero-rise hero-rise-d3 mt-9 flex flex-wrap items-center justify-center gap-4">
               <a href="/bring-an-opportunity" className="btn-primary inline-flex w-full items-center justify-between gap-3 px-8 py-4 pg-label !text-[11px] !tracking-[0.14em] group sm:w-auto sm:justify-center">
@@ -247,8 +248,8 @@ export function Hero({ go, theme, parallaxRef, openPeggy }:
               Based in the East Bay. Founder-led real estate investment, development, and strategy.
             </p>
             <div className="hero-rise hero-rise-d4 hero-proof-strip justify-center" aria-label="Public compliance and operating notes">
-              <span>DRE #02333658</span>
-              <span>KW East Bay for representation</span>
+              <span>DRE #02333658 · record name: Duran Ramirez, Paolo Ariel</span>
+              <span>Responsible broker: BMP Realty Inc DBA Keller Williams Realty-East Bay</span>
               <span>Equal Housing</span>
               <span>No guaranteed offer or return</span>
             </div>
@@ -274,12 +275,12 @@ export function LegacyHomeIntro() {
           <div className="pg-label text-[var(--accent)]">What Pegasus is</div>
           <div className="pg-rule mt-6 mb-6 max-w-[3rem] !bg-[var(--accent)] draw-x" />
           <p className="font-serif-display italic text-xl text-[var(--muted)] leading-snug">
-            An East Bay investment and development firm. We take on the property and the numbers other buyers walk away from.
+            An East Bay founder-led real estate strategy company. Property and project participation is considered only case by case.
           </p>
         </div>
         <div className="lg:col-span-8 reveal delay-100">
           <p className="font-serif-display text-3xl md:text-[2.7rem] leading-[1.25] text-[var(--text)] tracking-normal">
-            We <span className="text-[var(--accent)]">invest</span> in property other buyers pass on. Our Development team <span className="text-[var(--accent)]">builds</span> it with licensed contractors who have run real jobsites. And we run the <span className="text-[var(--accent)]">systems</span> that hold underwriting, intake, and the marketplace to the same read.
+            Pegasus describes possible <span className="text-[var(--accent)]">investment</span>, <span className="text-[var(--accent)]">development</span>, and <span className="text-[var(--accent)]">systems</span> lanes. Each actual role depends on facts, qualified providers, capacity, and separate written terms.
           </p>
         </div>
       </div>
@@ -321,7 +322,7 @@ export function HomeIntro({ go }: { go: Nav }) {
               What brings you here?
             </h3>
             <p className="mt-7 max-w-md text-[var(--muted)] leading-relaxed">
-              A distressed property, a found deal, a buyer search, capital, and an unsure owner do not belong in the same script. Choose the lane and Pegasus routes the rest.
+              A distressed property, found deal, buyer search, capital question, and unsure owner do not belong in the same script. Choose the closest request path; routing and response are not promised.
             </p>
           </div>
           <div className="reveal delay-100 lg:col-span-7">
@@ -339,7 +340,7 @@ export function HomeIntro({ go }: { go: Nav }) {
               ))}
             </div>
             <p className="mt-8 max-w-2xl text-[var(--muted)] leading-relaxed">
-              Sellers and buyers can request licensed representation through Apollo at Keller Williams Realty East Bay. Complex owners, deal finders, vendors, and partners enter Pegasus operating lanes. The role changes by lane; the standard stays disciplined.
+              Sellers and buyers may ask about current licensed-representation availability. The public-facing name, license record, responsible broker, and any agency duties remain distinct from Pegasus operating requests.
             </p>
           </div>
         </div>
@@ -367,10 +368,10 @@ export function HowADealMovesBlock() {
         <div className="reveal max-w-3xl">
           <div className="pg-label mb-6 text-[var(--accent-bright)]">The Pegasus Deal Engine</div>
           <h2 className="font-serif-display max-w-[12ch] text-5xl leading-[1.02] tracking-[0em] text-[var(--cream)] md:text-7xl [text-wrap:balance]">
-            One property. Four departments. One routed path.
+            One property. Four possible functions. Separate responsibilities.
           </h2>
           <p className="mt-7 max-w-md text-[rgba(245,230,211,0.7)] leading-relaxed">
-            Pegasus does not force every property into one answer. Each opportunity is reviewed, structured, and routed through the departments it actually needs.
+            These functions explain an operating model, not separate headcount or promised work. An opportunity may receive no review, structure, route, or service.
           </p>
         </div>
 
@@ -497,8 +498,8 @@ export function ParticipationLanesBlock() {
     <section className="relative py-24 lg:py-32 overflow-hidden">
       <div aria-hidden="true" className="section-numeral absolute top-0 right-4 lg:right-12 text-[var(--line-soft)]">LANES</div>
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
-        <SectionHead eyebrow="Four doors into the firm" title="Start in the lane that actually fits."
-          copy="Pegasus is not one product trying to fit every property. The first job is to identify the right lane: representation, review, buyer guidance, or a protected deal submission." />
+        <SectionHead eyebrow="Four request paths" title="Start with the closest public lane."
+          copy="These paths explain possible requests: representation availability, property consideration, buyer context, or a deal submission. None promises service or outcome." />
         <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-5">
           {PARTICIPATION_LANES.map((lane, i) => (
             <a key={lane.key} href={lane.href}
@@ -527,7 +528,7 @@ export function ParticipationLanesBlock() {
           ))}
         </div>
         <p className="mt-7 max-w-3xl text-[0.82rem] leading-relaxed text-[var(--muted)]">
-          Brokerage services are provided by Apollo through Keller Williams Realty East Bay. Pegasus Dreamscapes is not a licensed brokerage; complex property reviews, acquisitions, JV routes, and MarketFlow participation are separate from agency representation and subject to written terms.
+          This site uses Paolo “Apollo” Duran as a public-facing name. CA DRE #02333658 is listed under Duran Ramirez, Paolo Ariel, with responsible broker BMP Realty Inc DBA Keller Williams Realty-East Bay. Verify current status. Pegasus is not a brokerage; agency requires a separate written agreement.
         </p>
       </div>
     </section>
@@ -541,8 +542,8 @@ export function LaneCardsBlock({ go }: { go: Nav }) {
   return (
     <section className="relative py-24 lg:py-28 bg-[var(--bg-2)] border-y border-[var(--line)] overflow-hidden">
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
-        <SectionHead eyebrow="Where do you fit?" title="Pick your situation."
-          copy="Choose the one that matches where you are. Each goes straight to the right next step." />
+        <SectionHead eyebrow="Where do you fit?" title="Pick the closest request path."
+          copy="Each card opens relevant public information. It does not promise routing, review, a response, or a transaction." />
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {LANE_CARDS.map((c, i) => (
             <button key={c.key} type="button" onClick={() => go(c.key)}
@@ -573,10 +574,10 @@ export function LaneCardsBlock({ go }: { go: Nav }) {
 export function ThreePillarsBlock({ go }: { go: Nav }) {
   return (
     <section className="relative py-24 lg:py-32 overflow-hidden">
-      <div aria-hidden="true" className="section-numeral absolute top-0 right-4 lg:right-12 text-[var(--line-soft)]">FIRM</div>
+      <div aria-hidden="true" className="section-numeral absolute top-0 right-4 lg:right-12 text-[var(--decorative-ink)]">FIRM</div>
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
-        <SectionHead eyebrow="What we do" title="Acquisition, development, and the tools behind them."
-          copy="Investments find and reposition the asset. Development builds it. Systems carry that underwriting into the next deal." />
+        <SectionHead eyebrow="Operating model" title="Possible acquisition, development, and supporting tools."
+          copy="The lanes describe a framework. Current inventory, staff, service availability, project work, and transactions are not implied." />
         <div className="grid lg:grid-cols-3 gap-6">
           {PILLARS3.map((p, i) => (
             <div key={p.eyebrow} className="surface-card reveal flex flex-col overflow-hidden" style={{ animationDelay: `${i * 90}ms` }}>
@@ -618,11 +619,11 @@ export function PillarSection({ p, go, flip = false, dark = false, numeral }:
   const sectionCls = dark
     ? 'relative py-24 lg:py-32 overflow-hidden bg-[var(--navy)] text-[var(--cream)]'
     : 'relative py-24 lg:py-32 overflow-hidden';
-  const eyebrowCls = dark ? 'text-[var(--accent-bright)]' : 'text-[var(--accent)]';
+  const eyebrowCls = dark ? 'text-[var(--accent-bright)]' : 'text-[var(--accent-ink)]';
   const titleCls = dark ? '' : 'text-[var(--text)]';
   const leadCls = dark ? 'text-[var(--cream)]/75' : 'text-[var(--muted)]';
   const pointCls = dark ? 'text-[var(--cream)]/85' : 'text-[var(--text-2)]';
-  const checkCls = dark ? 'text-[var(--accent-bright)]' : 'text-[var(--accent)]';
+  const checkCls = dark ? 'text-[var(--accent-bright)]' : 'text-[var(--accent-ink)]';
   const btnCls = dark ? 'btn-solid-light' : 'btn-primary';
 
   return (
@@ -638,7 +639,7 @@ export function PillarSection({ p, go, flip = false, dark = false, numeral }:
           <div className={`lg:col-span-6 reveal delay-100 ${flip ? 'lg:order-1' : ''}`}>
             <div className="flex items-center gap-3 mb-5">
               <span className={`pg-label ${eyebrowCls}`}>{p.eyebrow}</span>
-              {p.tag && <span className="pg-label !text-[8px] !tracking-[0.16em] px-2.5 py-1 rounded-full border border-[var(--accent)]/40 text-[var(--accent)]">{p.tag}</span>}
+              {p.tag && <span className="pg-label !text-[8px] !tracking-[0.16em] px-2.5 py-1 rounded-full border border-[var(--accent)]/40 text-[var(--accent-ink)]">{p.tag}</span>}
             </div>
             <h2 className={`font-serif-display text-4xl md:text-[3.3rem] leading-[1.04] tracking-normal mb-6 ${titleCls}`}>{p.title}</h2>
             <p className={`${leadCls} leading-relaxed mb-8 max-w-xl`}>{p.lead}</p>
@@ -811,7 +812,7 @@ export function DoorsBlock({ go, openPeggy }: { go: Nav; openPeggy: () => void }
   const run = (a: StartAction) => { if (a === 'peggy') openPeggy(); else go(a); };
   return (
     <section className="relative py-24 lg:py-32 overflow-hidden">
-      <div aria-hidden="true" className="section-numeral absolute top-0 left-4 lg:left-12 text-[var(--line-soft)]">START</div>
+      <div aria-hidden="true" className="section-numeral absolute top-0 left-4 lg:left-12 text-[var(--decorative-ink)]">START</div>
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
         <SectionHead eyebrow="Getting started" title="Choose how to start."
           copy="Three ways in, no wrong door. Talk to a person, run the numbers yourself, or just ask in plain language." />
@@ -819,7 +820,7 @@ export function DoorsBlock({ go, openPeggy }: { go: Nav; openPeggy: () => void }
           {DOORS3.map((d, i) => (
             <div key={d.key} className="surface-card reveal flex flex-col h-full p-8 lg:p-10" style={{ animationDelay: `${i * 90}ms` }}>
               <div className="door-icon mb-7"><Ico name={d.icon} className="w-5 h-5" /></div>
-              <div className="pg-label !text-[9px] text-[var(--accent)] mb-3">{d.kicker}</div>
+              <div className="pg-label !text-[9px] text-[var(--accent-ink)] mb-3">{d.kicker}</div>
               <h3 className="font-serif-display text-2xl text-[var(--text)] mb-4 leading-tight">{d.title}</h3>
               <p className="text-[var(--muted)] text-[0.95rem] leading-relaxed mb-5">{d.desc}</p>
               <p className="text-[var(--text-2)] text-[0.85rem] italic leading-relaxed mb-8">{d.best}</p>
@@ -879,12 +880,12 @@ export function MarketFlowBlock({ go, dark = false, enter }: { go: Nav; dark?: b
     <section className={`relative py-24 lg:py-32 overflow-hidden ${dark ? 'bg-[var(--navy)] text-[var(--cream)]' : ''}`}>
       {dark && <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[60%] text-[var(--accent-2)] opacity-[0.1] float-slow" />}
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
-        <SectionHead dark={dark} eyebrow="MarketFlow · Private routing"
-          title="Where reviewed opportunities move."
-          copy="Three lanes, one network. Deals come in, capital is matched to real projects, and finished product lands with buyers, each step reviewed before it moves." />
+        <SectionHead dark={dark} eyebrow="MarketFlow · Controlled pilot"
+          title="A private workspace with bounded claims."
+          copy="Access, inventory, participant verification, review, matching, introductions, and transactions are discretionary and not promised." />
         <div className="reveal mb-12 lg:mb-14" aria-hidden="true">
           <div className="flex items-center justify-center gap-3 sm:gap-5 flex-wrap">
-            {['Deals flow in', 'Capital matches up', 'Product lands'].map((s, i) => (
+            {['Opportunity records', 'Private capital context', 'Authorized inventory'].map((s, i) => (
               <span key={s} className="contents">
                 <div className="flex items-center gap-2.5">
                   <span className={`mf-step ${dark ? 'is-dark' : ''}`}>{i + 1}</span>
@@ -903,7 +904,7 @@ export function MarketFlowBlock({ go, dark = false, enter }: { go: Nav; dark?: b
           {MARKETFLOW.map((m, i) => (
             <div key={m.key} className={`reveal flex flex-col h-full pt-8 border-t ${dark ? 'border-[rgba(239,231,218,0.22)]' : 'border-[var(--line)]'}`} style={{ animationDelay: `${i * 90}ms` }}>
               <div className="mb-6">
-                <span className={`font-serif-display text-5xl leading-none ${dark ? 'text-[var(--cream)]/22' : 'text-[var(--line)]'}`}>0{i + 1}</span>
+                <span className="font-serif-display text-5xl leading-none text-[var(--decorative-ink)]">0{i + 1}</span>
               </div>
               <div className={`pg-label !text-[9px] mb-3 ${dark ? 'text-[var(--accent-bright)]' : 'text-[var(--accent)]'}`}>{m.tag}</div>
               <h3 className={`font-serif-display text-2xl mb-4 leading-tight ${dark ? 'text-[var(--cream)]' : 'text-[var(--text)]'}`}>{m.name}</h3>
@@ -944,8 +945,8 @@ export function EcosystemBlock({ go, openPeggy }: { go: Nav; openPeggy: () => vo
   return (
     <section className="relative py-24 lg:py-28 overflow-hidden">
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
-        <SectionHead eyebrow="The Pegasus Ecosystem" title="Six parts. One deal flow."
-          copy="The same firm reads the deal, builds it, funds it, and brings it to market, so nothing gets handed off to a stranger or lost in translation. The read that starts a deal is the read that closes it." />
+        <SectionHead eyebrow="The Pegasus Ecosystem" title="Six distinct public concepts."
+          copy="Each part has its own status, permissions, qualifications, and written terms. The page does not claim that one firm performs every professional role." />
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {ECOSYSTEM.map((s, i) => {
             const clickable = !!s.route;
@@ -978,7 +979,59 @@ export function EcosystemBlock({ go, openPeggy }: { go: Nav; openPeggy: () => vo
 /* ----------------------------------------------------------------
    Apollo block
 ---------------------------------------------------------------- */
-export function ApolloBlock({ go, showCta = true, portrait = true }: { go: Nav; showCta?: boolean; portrait?: boolean }) {
+export function ApolloBlock({
+  go,
+  showCta = true,
+  portrait = true,
+  variant = 'default',
+}: {
+  go: Nav;
+  showCta?: boolean;
+  portrait?: boolean;
+  variant?: 'default' | 'work';
+}) {
+  if (variant === 'work') {
+    return (
+      <section className="apollo-work-intro" aria-labelledby="apollo-work-title">
+        <div className="apollo-work-intro__inner">
+          <figure className="apollo-work-intro__portrait reveal">
+            <img
+              src={IMG('founder/apollo-1200.jpg')}
+              alt={APOLLO.name}
+              loading="eager"
+              className="w-full h-full object-cover"
+            />
+            <figcaption>
+              <span>{APOLLO.name}</span>
+              <span>{APOLLO.role}</span>
+            </figcaption>
+          </figure>
+          <div className="apollo-work-intro__copy reveal delay-100">
+            <div className="pg-label text-[var(--accent-ink)]">Work With Apollo</div>
+            <h1 id="apollo-work-title" className="font-serif-display">
+              Founder-led company. <em>Licensed representation is a separate relationship.</em>
+            </h1>
+            <p className="apollo-work-intro__lead">{APOLLO.lead}</p>
+            <dl className="apollo-work-intro__credentials">
+              <div>
+                <dt>Pegasus role</dt>
+                <dd>{APOLLO.role}</dd>
+              </div>
+              <div>
+                <dt>License verification</dt>
+                <dd>{APOLLO.license}</dd>
+              </div>
+              <div>
+                <dt>Responsible broker</dt>
+                <dd>{APOLLO.broker}</dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="relative py-24 lg:py-32 overflow-hidden">
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-12 lg:gap-16 items-center">
@@ -999,7 +1052,7 @@ export function ApolloBlock({ go, showCta = true, portrait = true }: { go: Nav; 
           )}
         </div>
         <div className="lg:col-span-7 reveal delay-100">
-          <div className="pg-label text-[var(--accent-ink)] mb-5">Represent with Apollo</div>
+          <div className="pg-label text-[var(--accent-ink)] mb-5">Founder and license record</div>
           <h2 className="font-serif-display text-5xl md:text-6xl leading-[1.02] tracking-normal text-[var(--text)] mb-7">{APOLLO.name}</h2>
           <p className="text-[var(--muted)] leading-relaxed mb-9 max-w-xl">{APOLLO.lead}</p>
           <div className="grid sm:grid-cols-3 gap-5 mb-10">
@@ -1011,11 +1064,11 @@ export function ApolloBlock({ go, showCta = true, portrait = true }: { go: Nav; 
             ))}
           </div>
           <div className="flex flex-wrap items-center gap-x-8 gap-y-3 pg-label !text-[10px] text-[var(--muted)] mb-9">
-            <span>Licensed REALTOR</span><span>{APOLLO.license}</span><span>NAR · CAR</span><span>Backed by licensed contractors under project agreements</span>
+            <span>{APOLLO.license}</span><span>{APOLLO.broker}</span><span>Verify current DRE and broker status</span>
           </div>
           {showCta && (
             <button type="button" onClick={() => go('apollo')} className="btn-primary px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
-              Represent with Apollo <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+              Ask about representation <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
             </button>
           )}
         </div>
@@ -1031,8 +1084,8 @@ export function ProofStats() {
   return (
     <section className="py-24 lg:py-28 bg-[var(--bg-2)] border-y border-[var(--line)]">
       <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
-        <SectionHead eyebrow="Proof" title="A track record, not a pitch."
-          copy="Disciplined underwriting, executed value-add, and reads returned on time. These are the operating standards behind the firm." />
+        <SectionHead eyebrow="Public record" title="Facts and boundaries, not volume claims."
+          copy="The page publishes one evidence-bounded case study and labels self-service tools, request paths, and future concepts by their actual status." />
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-x-8 gap-y-12">
           {STATS.map((s, i) => (
             <div key={i} className={`reveal ${i > 0 ? 'lg:border-l lg:border-[var(--line)] lg:pl-8' : ''}`} style={{ animationDelay: `${i * 100}ms` }}>
@@ -1056,7 +1109,7 @@ export function NelsonProof({ go }: { go: Nav }) {
           <div className="lg:col-span-6 reveal">
             <div className="pg-label text-[var(--accent-ink)] mb-5">The work · {NELSON.name}</div>
             <h2 className="font-serif-display text-5xl md:text-6xl leading-[1.02] tracking-normal text-[var(--text)] mb-7">
-              Acquired and repositioned. Delivered move-in ready.
+              One documented transformation. Fixed figures and stated limits.
             </h2>
             <p className="text-[var(--muted)] leading-relaxed mb-10 max-w-md">{NELSON.blurb}</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-8 mb-10">
@@ -1100,8 +1153,8 @@ export function DoctrineBlock({ dark = false }: { dark?: boolean }) {
     <section className={`relative py-24 lg:py-28 overflow-hidden ${dark ? 'bg-[var(--navy)] text-[var(--cream)]' : 'bg-[var(--bg-2)]'}`}>
       {dark && <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[60%] text-[var(--accent-2)] opacity-[0.1] float-slow" />}
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
-        <SectionHead dark={dark} eyebrow="The Dreamscaper Standard" title="What we will not trade away."
-          copy="Four commitments that govern every read, every build, and every conversation." />
+        <SectionHead dark={dark} eyebrow="The Dreamscaper Standard" title="Four published operating principles."
+          copy="These principles guide public framing; they are not a service, staffing, timing, or outcome guarantee." />
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {DOCTRINE.map((d, i) => (
             <div key={d.t} className={`reveal p-8 rounded-[3px] border ${dark ? 'border-[rgba(239,231,218,0.16)] bg-[rgba(239,231,218,0.04)]' : 'surface-card'}`} style={{ animationDelay: `${i * 80}ms` }}>
@@ -1171,13 +1224,13 @@ export function Qualifier({ forYou, notFit }: { forYou: string[]; notFit: string
           copy="We say no early and often. Here is who this lane serves, and who it likely does not." />
         <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
           <div className="surface-card p-8 lg:p-10 reveal">
-            <div className="pg-label text-[var(--accent)] mb-7 flex items-center gap-2.5">
+            <div className="pg-label text-[var(--accent-ink)] mb-7 flex items-center gap-2.5">
               <Check className="w-4 h-4" strokeWidth={2} /> This is for you if
             </div>
             <ul className="space-y-5">
               {forYou.map((t, i) => (
                 <li key={i} className="flex gap-3.5 text-[var(--text-2)] leading-relaxed">
-                  <Check className="w-4 h-4 text-[var(--accent)] mt-1 shrink-0" strokeWidth={2} /><span>{t}</span>
+                  <Check className="w-4 h-4 text-[var(--accent-ink)] mt-1 shrink-0" strokeWidth={2} /><span>{t}</span>
                 </li>
               ))}
             </ul>
@@ -1204,7 +1257,7 @@ export function Qualifier({ forYou, notFit }: { forYou: string[]; notFit: string
    Split paths (e.g. three ways to sell)
 ---------------------------------------------------------------- */
 export function SplitPaths({ go, openPeggy, heading, copy, paths, founderPhoto = false, peggyHint = false }:
-  { go: Nav; openPeggy: () => void; heading: string; copy: string; paths: { name: string; desc: string; cta: string; route: Route }[]; founderPhoto?: boolean; peggyHint?: boolean }) {
+  { go: Nav; openPeggy: () => void; heading: string; copy: string; paths: SplitPath[]; founderPhoto?: boolean; peggyHint?: boolean }) {
   const run = (r: Route) => { if (r === 'peggy') openPeggy(); else go(r); };
   const gridCols = paths.length === 2 ? 'lg:grid-cols-2 max-w-[920px] mx-auto' : 'lg:grid-cols-3';
   return (
@@ -1213,7 +1266,7 @@ export function SplitPaths({ go, openPeggy, heading, copy, paths, founderPhoto =
         <SectionHead eyebrow="Your options" title={heading} copy={copy} />
         {founderPhoto && (
           <p className="-mt-4 mb-12 text-center text-[var(--muted)] text-[0.88rem] leading-relaxed max-w-md mx-auto reveal">
-            When representation is the lane, Apollo is your agent through Keller Williams Realty East Bay. DRE&nbsp;#02333658.
+            This site uses Paolo “Apollo” Duran as a public-facing name. CA DRE&nbsp;#02333658 is listed under Duran Ramirez, Paolo Ariel; verify current status and responsible broker before any separate agency agreement.
           </p>
         )}
         <div className={`grid ${gridCols} gap-6`}>
@@ -1222,10 +1275,17 @@ export function SplitPaths({ go, openPeggy, heading, copy, paths, founderPhoto =
               <div className="font-serif-display text-3xl text-[var(--accent)] mb-5 leading-none">{String(i + 1).padStart(2, '0')}</div>
               <h3 className="font-serif-display text-2xl text-[var(--text)] mb-3 leading-tight">{p.name}</h3>
               <p className="text-[var(--muted)] text-[0.92rem] leading-relaxed mb-8">{p.desc}</p>
-              <button type="button" onClick={() => run(p.route)}
-                className="mt-auto btn-line px-7 py-3.5 pg-label !text-[10px] inline-flex items-center gap-3 group self-start">
-                {p.cta} <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-              </button>
+              {'href' in p ? (
+                <Link href={p.href}
+                  className="mt-auto btn-line px-7 py-3.5 pg-label !text-[10px] inline-flex items-center gap-3 group self-start">
+                  {p.cta} <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </Link>
+              ) : (
+                <button type="button" onClick={() => run(p.route)}
+                  className="mt-auto btn-line px-7 py-3.5 pg-label !text-[10px] inline-flex items-center gap-3 group self-start">
+                  {p.cta} <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -1256,15 +1316,15 @@ const BUYBOX = [
 ];
 
 const PROTECTION = [
-  { icon: Shield, t: 'Submit once, in writing', d: 'Every deal you bring is logged with a timestamp and your source attribution. Your submission is documented before anything moves.' },
-  { icon: Handshake, t: 'Written terms first', d: 'Your assignment fee or JV split is agreed in a written agreement before your deal is shared with any buyer.' },
-  { icon: Check, t: 'We protect your position', d: 'We do not shop your deal around the county or go around you to your seller. Bring it once and deal with one buyer who closes.' },
+  { icon: Shield, t: 'Submit once, in writing', d: 'The intake records submitted source information and issues a receipt. It is not an NDA, exclusivity, non-circumvention, or protection agreement.' },
+  { icon: Handshake, t: 'Separate written terms', d: 'Any lawful assignment, JV, distribution, confidentiality, or compensation rights require a signed agreement before the applicable action.' },
+  { icon: Check, t: 'No buyer promise', d: 'Submission does not promise review, confidentiality, a buyer, distribution, closing, compensation, or a transaction.' },
 ];
 
 const JV_PATHS = [
-  { name: 'Direct buy', desc: 'We purchase as principal on agreed terms when the deal fits the Buy Box. Fast, certain, and clean.', cta: 'Send the deal', route: 'contact' as Route },
-  { name: 'Assignment', desc: 'Hold an assignable contract? Assign it to us for a spread agreed in writing up front. What we agree is what you get at close.', cta: 'Send assignment terms', route: 'contact' as Route },
-  { name: 'JV / disposition', desc: 'Bigger or more complex? We can partner on the project or place it through MarketFlow on documented JV terms after the facts are clear.', cta: 'Start JV terms', route: 'contact' as Route },
+  { name: 'Possible direct buy', desc: 'A principal purchase may be considered after diligence and accepted written terms. Speed, certainty, and closing are not promised.', cta: 'Share the deal', route: 'contact' as Route },
+  { name: 'Possible assignment', desc: 'An assignment requires an assignable contract, buyer interest, diligence, and signed terms. Spread and closing are not promised.', cta: 'Share assignment context', route: 'contact' as Route },
+  { name: 'Possible JV or distribution', desc: 'A JV or MarketFlow path requires authorization, diligence, capacity, and separate written terms. No match or transaction is promised.', cta: 'Share JV context', route: 'contact' as Route },
 ];
 
 export function DealFindersExtras({ go }: { go: Nav }) {
@@ -1273,9 +1333,9 @@ export function DealFindersExtras({ go }: { go: Nav }) {
       <section className="py-24 lg:py-28 bg-[var(--navy)] text-[var(--cream)] relative overflow-hidden">
         <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[60%] text-[var(--accent-2)] opacity-[0.1] float-slow" />
         <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
-          <SectionHead dark eyebrow="Your deal, protected"
-            title={<>Bring it once.<br />Keep your position.</>}
-            copy="Sourcing is real work. We treat your deal, and your relationship with the seller, with the respect they deserve. No commitment that every deal is purchased; only an honest, documented process." />
+          <SectionHead dark eyebrow="Deal-source boundaries"
+            title={<>Bring it once.<br />Document rights separately.</>}
+            copy="The intake preserves submitted source information but does not create confidentiality, exclusivity, protection, compensation, distribution, or purchase rights." />
           <div className="grid md:grid-cols-3 gap-6">
             {PROTECTION.map((p, i) => (
               <div key={p.t} className="reveal rounded-[3px] border border-[rgba(239,231,218,0.16)] bg-[rgba(239,231,218,0.04)] p-8" style={{ animationDelay: `${i * 80}ms` }}>
@@ -1290,9 +1350,9 @@ export function DealFindersExtras({ go }: { go: Nav }) {
 
       <section className="py-24 lg:py-28">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
-          <SectionHead eyebrow="The Pegasus Buy Box"
-            title="What we are buying right now."
-            copy="A guide, not a guarantee. If your deal lines up with most of this, send it. If it does not, send it anyway and we will tell you straight. Every deal is reviewed and subject to underwriting." />
+          <SectionHead eyebrow="Illustrative Buy Box"
+            title="Orientation criteria, not current demand."
+            copy="These criteria may help frame a submission. They do not establish a current buyer, inventory mandate, review, price, or response commitment." />
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {BUYBOX.map((b, i) => (
               <div key={b.label} className="surface-card reveal p-7" style={{ animationDelay: `${i * 70}ms` }}>
@@ -1302,14 +1362,14 @@ export function DealFindersExtras({ go }: { go: Nav }) {
             ))}
           </div>
           <p className="mt-7 text-[0.82rem] leading-relaxed text-[var(--muted)] max-w-2xl">
-            The Buy Box is orientation criteria and may change at any time. It is not an offer to purchase. Every submission is reviewed by a person and any purchase is subject to underwriting and a written agreement.
+            The Buy Box may change at any time. It is not an offer to purchase or evidence of current capacity. A submission may receive no review or response; any purchase requires diligence and an accepted written agreement.
           </p>
         </div>
       </section>
 
       <SplitPaths go={go} openPeggy={() => go('contact')}
         heading="Three ways to work the deal"
-        copy="Direct buy, assignment, or a JV. We pick the structure that fits the deal and put the terms in writing before anything moves."
+        copy="A direct purchase, assignment, or JV may be considered. No structure, buyer, distribution, compensation, or transaction is promised."
         paths={JV_PATHS} />
     </>
   );
@@ -1323,7 +1383,7 @@ export function NextStep({ go, label, route }: { go: Nav; label: string; route: 
     <section className="py-12 border-b border-[var(--line)]">
       <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
         <button type="button" onClick={() => go(route)}
-          className="link-underline pg-label !text-[10px] !tracking-[0.18em] text-[var(--accent)] inline-flex items-center gap-3 group">
+          className="link-underline pg-label !text-[10px] !tracking-[0.18em] text-[var(--accent-ink)] inline-flex items-center gap-3 group">
           {label} <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
         </button>
       </div>

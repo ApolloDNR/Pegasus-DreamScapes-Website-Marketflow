@@ -24,40 +24,40 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useSEO } from "@/hooks/use-seo";
-import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { trackEvent } from "@/lib/analytics";
-import { ArrowRight, FileCheck2, Loader2, LockKeyhole, ShieldCheck } from "lucide-react";
+import { AlertCircle, ArrowRight, FileCheck2, Loader2, LockKeyhole, ShieldCheck } from "lucide-react";
 import { SuccessView } from "@/components/success-view";
 
 function WhatYouGet() {
   const perks = [
-    { title: "Reviewed fit", desc: "Pegasus reviews each request against the needs of the controlled pilot." },
-    { title: "Role-based profile", desc: "Share your market, mandate, and capacity without publishing them publicly." },
-    { title: "Controlled introductions", desc: "When a real fit appears, Pegasus may make a direct introduction under written terms." },
-    { title: "Pilot updates", desc: "Approved participants receive relevant updates; access never guarantees inventory or placement." },
+    { title: "Private record", desc: "The site records the identity, role interest, introduction context, and note you provide." },
+    { title: "Possible consideration", desc: "Pegasus may consider the record if pilot capacity and a responsible fit exist." },
+    { title: "Possible follow-up", desc: "Pegasus may contact you for clarification, but no human review or response is promised." },
+    { title: "Separate invitation", desc: "Only a separate, direct approval can create pilot access; this request creates none." },
   ];
   return (
     <section className="mf-access-perks" data-testid="marketflow-what-you-get">
-      <p>What a reviewed relationship provides</p>
-      <ol>
-        {perks.map((perk, index) => (
+      <p>What this request does</p>
+      <ul>
+        {perks.map((perk) => (
           <li key={perk.title}>
-            <span>{String(index + 1).padStart(2, "0")}</span>
-            <div><strong>{perk.title}</strong><small>{perk.desc}</small></div>
+            <strong>{perk.title}</strong>
+            <small>{perk.desc}</small>
           </li>
         ))}
-      </ol>
+      </ul>
     </section>
   );
 }
 
 const accessSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
+  name: z.string().trim().min(2, "Enter your full name").max(120, "Keep your name under 120 characters"),
+  email: z.string().trim().email("Enter a valid email address").max(254, "Keep your email under 254 characters"),
   role: z.enum(["operator", "wholesaler", "buyer", "capital", "broker", "other"]),
-  introducedBy: z.string().min(2, "Tell us who introduced you"),
-  notes: z.string().optional().default(""),
+  introducedBy: z.string().trim().min(2, "Tell us who introduced you").max(200, "Keep this introduction under 200 characters"),
+  notes: z.string().trim().max(2000, "Keep your note under 2,000 characters").optional().default(""),
+  hp_company: z.string().max(0, "Leave this field blank").default(""),
   consentContact: z.boolean().refine((value) => value, {
     message: "Required to request access",
   }),
@@ -95,7 +95,7 @@ export default function MarketflowAccessPage() {
   useSEO({
     title: "Request MarketFlow Access",
     description:
-      "Request access to MarketFlow, the private routing layer of Pegasus Dreamscapes. Access is by introduction.",
+      "Record interest in the invitation-led MarketFlow controlled pilot. Review, response, approval, inventory, and access are not promised.",
     image: "/og/marketflow.png",
   });
 
@@ -104,10 +104,11 @@ export default function MarketflowAccessPage() {
     trackEvent("marketflow_access_opened");
   }, []);
 
-  const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   // Server-side anti-spam parity with /submit: include honeypot + time-on-form.
   const formMountedAt = useRef<number>(Date.now());
+  const focusNameAfterReset = useRef(false);
   useEffect(() => {
     formMountedAt.current = Date.now();
   }, []);
@@ -120,10 +121,18 @@ export default function MarketflowAccessPage() {
       role: requestedRole,
       introducedBy: "",
       notes: "",
+      hp_company: "",
       consentContact: false,
     },
   });
   const selectedRole = form.watch("role");
+
+  useEffect(() => {
+    if (!submitted && focusNameAfterReset.current) {
+      focusNameAfterReset.current = false;
+      form.setFocus("name");
+    }
+  }, [form, submitted]);
 
   const mutation = useMutation({
     mutationFn: async (data: AccessValues) => {
@@ -131,7 +140,7 @@ export default function MarketflowAccessPage() {
       if (elapsedMs < 3000) {
         throw new Error("Form submitted too fast. Please try again.");
       }
-      const [first, ...rest] = data.name.split(" ");
+      const [first, ...rest] = data.name.trim().split(/\s+/);
       return apiRequest("POST", "/api/leads", {
         leadType: "marketflow_access",
         source: "marketflow_access_page",
@@ -145,7 +154,7 @@ export default function MarketflowAccessPage() {
           introducedBy: data.introducedBy,
           notes: data.notes,
           consentContact: data.consentContact,
-          hp_company: "",
+          hp_company: data.hp_company || "",
           ts_mounted_at: formMountedAt.current,
           ts_elapsed_ms: elapsedMs,
         },
@@ -153,18 +162,32 @@ export default function MarketflowAccessPage() {
     },
     onSuccess: () => {
       trackEvent("marketflow_access_requested");
+      setSubmitError(null);
+      const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+      window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
       setSubmitted(true);
     },
-    onError: (e: Error) =>
-      toast({ title: "Could not send request", description: e.message, variant: "destructive" }),
+    onError: (error: Error) => {
+      setSubmitError(
+        error.message.startsWith("Form submitted too fast")
+          ? "Please spend a little more time with the form, then send your request again."
+          : "We could not send your request. Your entries are still here; check your connection and try again.",
+      );
+    },
   });
+
+  const submitRequest = (data: AccessValues) => {
+    setSubmitError(null);
+    mutation.mutate(data);
+  };
 
   if (submitted) {
     return (
-      <div className="min-h-screen bg-background pt-28 pb-20">
+      <div className="mf-access-success min-h-screen bg-background pt-28 pb-20">
         <div className="max-w-4xl mx-auto px-6 lg:px-12">
           <SuccessView
             formType="marketflow_access"
+            headingLevel={1}
             onAddAnother={() => {
               form.reset({
                 name: "",
@@ -172,11 +195,16 @@ export default function MarketflowAccessPage() {
                 role: requestedRole,
                 introducedBy: "",
                 notes: "",
+                hp_company: "",
                 consentContact: false,
               });
+              mutation.reset();
+              setSubmitError(null);
               formMountedAt.current = Date.now();
+              focusNameAfterReset.current = true;
               setSubmitted(false);
-              window.scrollTo({ top: 0, behavior: "smooth" });
+              const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
+              window.scrollTo({ top: 0, behavior: reduceMotion ? "auto" : "smooth" });
             }}
           />
         </div>
@@ -190,26 +218,27 @@ export default function MarketflowAccessPage() {
         <div className="mf-access-intro-inner">
           <div>
             <p className="mf-access-kicker">MarketFlow · Controlled pilot</p>
-            <h1>Request a place in the relationship room.</h1>
-            <p>MarketFlow is reviewed access for professionals with a clear role, credible mandate, and enough context for a deliberate introduction. It is not an open signup or public marketplace.</p>
+            <h1>Record your interest in the controlled pilot.</h1>
+            <p>MarketFlow is private and invitation-led. This form records the context for possible consideration; it is not an open signup, application decision, or public marketplace.</p>
           </div>
           <aside className="mf-access-protocol" aria-label="Current access protocol">
-            <div><span>Access record</span><strong>MF · Request</strong></div>
+            <h2>Request boundary</h2>
             <dl>
               <div><dt>Relationship</dt><dd>{ACCESS_ROLE_LABEL[selectedRole]}</dd></div>
-              <div><dt>Review</dt><dd>Case by case</dd></div>
-              <div><dt>Distribution</dt><dd>Permissioned</dd></div>
+              <div><dt>Human review</dt><dd>Not promised</dd></div>
+              <div><dt>Access created</dt><dd>None</dd></div>
             </dl>
-            <p><LockKeyhole aria-hidden="true" /> No inventory, placement, compensation, or approval is promised by this request.</p>
+            <p><LockKeyhole aria-hidden="true" /> This request does not guarantee human review, a response, approval, an invitation, inventory, or access.</p>
           </aside>
         </div>
+        <p className="mf-access-public-boundary">MarketFlow is not a public marketplace. It is not a securities or investment platform, and no securities are offered through this request.</p>
       </section>
 
       <section className="mf-access-body">
         <aside className="mf-access-review">
           <p className="mf-access-kicker">Before you request access</p>
-          <h2>One concise record. A Pegasus fit review.</h2>
-          <p>Tell Pegasus who you are, how you entered the relationship, and what role you can responsibly fill.</p>
+          <h2>One concise record for possible consideration.</h2>
+          <p>Tell Pegasus who you are, how the relationship began, and the role that interests you. The site records the request; Pegasus may or may not review or answer it.</p>
           <WhatYouGet />
           <div className="mf-access-boundary" data-testid="marketflow-private-access-note">
             <ShieldCheck aria-hidden="true" />
@@ -218,14 +247,24 @@ export default function MarketflowAccessPage() {
         </aside>
 
         <div className="mf-access-form-card">
-          <div className="mf-access-form-head">
-            <div><span>Private access dossier</span><strong>Applicant record</strong></div>
-            <p>{ACCESS_ROLE_LABEL[selectedRole]}</p>
+          <div className="mf-access-form-head" role="status" aria-live="polite" aria-atomic="true">
+            <span>Selected relationship</span>
+            <strong>{ACCESS_ROLE_LABEL[selectedRole]}</strong>
           </div>
-          <h2>Provide the facts required for a real review.</h2>
-          <p className="mf-access-form-lede">Fields remain private to the access review and the service providers supporting it.</p>
+          <h2>Provide enough context to identify the request.</h2>
+          <p className="mf-access-form-lede">Fields are recorded privately and may be handled by service providers that operate this intake.</p>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit((d) => mutation.mutate(d))} className="mf-access-form">
+            <form onSubmit={form.handleSubmit(submitRequest)} className="mf-access-form">
+              <div className="mf-access-honeypot" aria-hidden="true">
+                <label htmlFor="marketflow-hp-company">Company website</label>
+                <input
+                  id="marketflow-hp-company"
+                  type="text"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  {...form.register("hp_company")}
+                />
+              </div>
               <div className="mf-access-form-grid">
             <FormField
               control={form.control}
@@ -320,12 +359,13 @@ export default function MarketflowAccessPage() {
                     </FormControl>
                     <div className="space-y-1 leading-none">
                       <FormLabel className="text-sm font-normal leading-relaxed cursor-pointer">
-                        I agree Pegasus Dreamscapes may email me about this MarketFlow access
-                        request. Pegasus uses the information to review fit for the controlled
-                        pilot and may share it with service providers supporting that review. See
+                        I agree Pegasus Dreamscapes may email me about this MarketFlow interest
+                        record. Pegasus may use the information for possible consideration and may
+                        share it with service providers that operate this intake. See
                         the <a className="underline underline-offset-2" href="/privacy">Privacy Policy</a>{' '}
                         for retention, rights, and deletion requests. Requesting access does not
-                        guarantee approval, inventory, or placement.
+                        guarantee human review, a response, approval, an invitation, inventory,
+                        access, or placement.
                       </FormLabel>
                       <FormMessage />
                     </div>
@@ -334,16 +374,28 @@ export default function MarketflowAccessPage() {
               )}
             />
 
+            {submitError ? (
+              <div className="mf-access-error" role="alert" aria-live="assertive" aria-atomic="true">
+                <AlertCircle aria-hidden="true" />
+                <div>
+                  <p>{submitError}</p>
+                  <button type="button" onClick={form.handleSubmit(submitRequest)}>Try sending again</button>
+                </div>
+              </div>
+            ) : null}
+
             <Button
               type="submit"
               disabled={mutation.isPending}
+              aria-busy={mutation.isPending}
               className="mf-access-submit"
               data-testid="button-access-submit"
             >
-              {mutation.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-              Send for review <ArrowRight aria-hidden="true" />
+              {mutation.isPending ? <Loader2 aria-hidden="true" className="w-4 h-4 mr-2 animate-spin" /> : null}
+              {mutation.isPending ? "Recording request…" : "Record access interest"}
+              {!mutation.isPending ? <ArrowRight aria-hidden="true" /> : null}
             </Button>
-            <p className="mf-access-form-foot"><FileCheck2 aria-hidden="true" /> Pegasus reviews identity, role, mandate, introduction context, and current network fit before responding.</p>
+            <p className="mf-access-form-foot"><FileCheck2 aria-hidden="true" /> Receipt confirms only that the site recorded the request. Review, response, invitation, and access remain discretionary and are not promised.</p>
             </form>
           </Form>
         </div>

@@ -9,6 +9,66 @@ anything.
 
 ---
 
+## BRANCH STATUS — `codex/launch-recovery-v2`
+
+**Updated 2026-08-16. Dependency repair + full launch verification.**
+
+### Dependency repair summary
+
+The branch's lock file was stale (several packages installed below their
+`package.json` ranges) and the production dependency audit was failing with
+7 vulnerabilities. All production CVEs are now resolved without any forced
+breaking upgrade and without suppressing the audit gate:
+
+| Package | Before | After | Fix method |
+|---|---|---|---|
+| `dompurify` | 3.3.1 (stale; XSS, CVE moderate) | 3.4.13 | bumped range to `^3.4.13` |
+| `nanoid` | 3.3.8 (stale; infinite-loop, CVE high) | 3.3.18 | bumped range to `^3.3.18` |
+| `uuid` (transitive via `gaxios`/`teeny-request`) | 9.0.1 (buf-overread, CVE moderate) | 11.1.1 | `overrides.uuid = "11.1.1"` — safe on Node 22.22 which supports `require(esm)` natively since 22.12 |
+| `@google-cloud/storage` | 7.18.0 (stale) | 7.21.0 | resolved by `npm install` |
+| `@uppy` nanoid@5 chain | 5.1.6 (infinite-loop, CVE high) | 5.1.16 | resolved by `npm audit fix` |
+| `vitest` | 2.1.9 (MISSING; Critical path-traversal CVE, blocked by security firewall) | 3.2.7 | bumped range to `^3.2.6` (minimum safe; 3.x is wire-compatible with 2.x for this test suite) |
+
+Remaining 5 vulnerabilities reported by `npm audit` (full) are all in
+**dev dependencies only** (`esbuild`/`vite`/`drizzle-kit`); they do not
+appear in `npm audit --omit=dev` and do not affect the production audit gate.
+
+### Launch verification result — 2026-08-16
+
+Run against commit on `codex/launch-recovery-v2`:
+
+| Gate | Command | Result |
+|---|---|---|
+| Production dependency audit | `npm audit --omit=dev --audit-level=moderate` | ✅ **0 vulnerabilities** |
+| TypeScript | `npm run check` | ✅ **PASS** |
+| Production build + bundle budget | `npm run build` | ✅ **PASS** (entry 161 kB raw / 51 kB gzip, well under limits) |
+| Launch environment contract | `node scripts/launch-intake-smoke.mjs --example` | ✅ **PASS** (10/10 required env vars present in .env.example) |
+| Rendered accessibility gate — routes | `npm run check:a11y` (108 route checks) | ✅ **108/108 PASS** (6 themes × 18 routes × 3 viewports) |
+| Rendered accessibility gate — interactions | `npm run check:a11y` (12 interaction checks) | ⚠️ **10/12 PASS** — 2 pre-existing failures (see below) |
+| Full test suite | `npm test` | ✅ **1700/1700 tests PASS** (119 test files, vitest 3.2.7) |
+
+### Pre-existing a11y interaction failures (NOT caused by dep repair)
+
+These two failures existed before the dependency changes. The
+`check-visual-accessibility.mjs` script is itself new to this branch and
+is now catching application-level issues that were already present:
+
+1. **`mobile navigation destination` FAIL** — browser requests
+   `/images/pegasus-architecture.png` during the mobile nav interaction
+   test and receives `net::ERR_ABORTED`. The file does not exist anywhere
+   in `public/`. A placeholder or the real asset must be committed.
+
+2. **`theme toggle persistence` FAIL** — toggling the theme causes a
+   measurable height change on `[data-testid="approved-home-hero-image"]`
+   at the 1024 px breakpoint. The hero image container needs explicit
+   `min-height` or `aspect-ratio` locking so light↔dark toggling does not
+   shift layout.
+
+These must be resolved before this branch can be considered fully
+launch-gate green. They are unrelated to the dependency repair.
+
+---
+
 ## 0. TL;DR — where everything stands
 
 | Project | Repo | State | Next action |
@@ -47,7 +107,7 @@ MarketFlow). It just needs to be deployed. Steps in §3.
   - `server/supabaseAuth.ts`: token verification falls back to the anon
     client when the service-role key is absent.
   - `render.yaml` (repo root) + `docs/deploy/RENDER_DEPLOY.md` (the
-    deploy runbook) + `package.json` engines pinned to Node 20.x.
+    deploy runbook) + `package.json` engines pinned to Node 22.x.
   - Verified: `tsc` clean, **798/798 tests pass**, and a full staging
     boot WITHOUT `REPL_ID` against the real Supabase project (public
     routes 200, protected routes fail closed 401).
@@ -102,9 +162,11 @@ Full runbook is in the repo: **`docs/deploy/RENDER_DEPLOY.md`**. Summary:
    project. Code already uses the Neon driver — zero code change either way.
 3. **Supabase** (project ref `knfmdyufodbnqsgkzhqw`): Authentication → URL
    Configuration → Site URL `https://pegasusdreamscapes.com`; copy the
-   `anon` and `service_role` keys for step 4. Run
-   `supabase-migration-opportunities.sql` (repo root) in the SQL editor if
-   not yet applied (adds the deal-routing opportunities tables).
+   `anon` and `service_role` keys for step 4. Verify and harden the live
+   Supabase RLS, grants, views, and privileged functions before staging.
+   The canonical `opportunities` and `hq_outbox` tables belong in the
+   Postgres database referenced by `DATABASE_URL`; apply the reviewed files
+   in `migrations/` there, not in the Supabase SQL editor.
 4. **Render**: render.com → New → Blueprint → select the repo → it reads
    `render.yaml`. Fill the env vars (table below). Deploy (~5–8 min).
 5. **Domain**: Render → Custom Domains → add apex + www → it shows an A
@@ -210,10 +272,16 @@ not depend on it. Ship the site first; fold this in later only if desired.
   — article pages `/library/:slug` still work; add an index only if wanted).
 - `/case-study` Nelson images total ~5.9 MB — a compression pass is
   recommended before broad traffic (not a blocker).
-- Supabase security advisor flags: 32 admin `SECURITY DEFINER` functions
-  callable by signed-in users + 2 auth-hardening toggles (leaked-password
-  protection, MFA options). These are HQ-backend hardening items, not
-  website launch blockers — address after launch.
+- Supabase security advisor previously reported 32 admin `SECURITY DEFINER`
+  functions callable by signed-in users. Because this website issues users
+  authenticated tokens for the same project, those function grants are a
+  launch blocker until the live catalog is rechecked and every privileged
+  function rejects ordinary users or has its effective `EXECUTE` grant revoked,
+  including grants inherited through `PUBLIC`. Any deliberately client-callable
+  privileged function needs an explicit internal authorization check and a
+  normal-user RPC denial test for unauthorized actions.
+  Leaked-password protection and MFA settings must also be reviewed before
+  broad account traffic.
 - Email: SendGrid sender not yet verified. Leads save without it; wire it
   up post-launch for notifications.
 - Housekeeping: the `pegasus-hq-replit` GitHub PAT was noted as expiring

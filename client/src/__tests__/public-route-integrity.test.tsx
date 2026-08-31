@@ -8,7 +8,7 @@ import { memoryLocation } from "wouter/memory-location";
 import Projects from "@/pages/projects";
 import MarketflowBuyboxes from "@/pages/marketflow-buyboxes";
 import { StrategyLabPage } from "@/pegasus/pages";
-import { BUYBOXES } from "@/config/buyboxes";
+import { PUBLIC_BUYBOXES } from "@/config/buyboxes";
 import { seoFor } from "@shared/seo-routes";
 
 vi.mock("@/components/strategy-lab/calculator-tools-panel", () => ({
@@ -111,28 +111,29 @@ describe("Strategy Lab documented calculator deep link", () => {
 });
 
 describe("MarketFlow controlled-pilot public truth", () => {
-  const publicBuyboxCount = BUYBOXES.filter((buybox) => buybox.publicReady !== false).length;
-
-  it("matches the public card count and controlled-pilot status on the Buyboxes page", () => {
+  it("fails closed while no buybox profile or notification program is published", () => {
     renderRoute(<MarketflowBuyboxes />, { path: "/marketflow/buyboxes" });
 
-    expect(screen.getAllByTestId(/^buybox-card-/)).toHaveLength(publicBuyboxCount);
-    expect(
-      screen.getByText(new RegExp(`${publicBuyboxCount} public buybox profiles are available in MarketFlow's controlled pilot`, "i")),
-    ).toBeInTheDocument();
+    expect(PUBLIC_BUYBOXES).toHaveLength(0);
+    expect(screen.queryAllByTestId(/^buybox-card-/)).toHaveLength(0);
+    expect(screen.getByText(/No public buybox profiles are active today/i)).toBeInTheDocument();
+    expect(screen.getByText(/notifications have not been activated/i)).toBeInTheDocument();
     expect(screen.getByText(/Controlled pilot · reviewed access/i)).toBeInTheDocument();
-    expect(screen.queryByText(/Four named buyboxes/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Private beta · invite only/i)).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /Request pilot access/i })).toHaveAttribute(
+      "href",
+      "/marketflow/access",
+    );
+    expect(screen.queryByRole("button", { name: /Request Notification/i })).not.toBeInTheDocument();
   });
 
-  it("keeps MarketFlow SEO aligned with controlled-pilot status and the public count", () => {
+  it("keeps MarketFlow SEO aligned with the unpublished state", () => {
     const marketflowDescription = seoFor("/marketflow").description;
-    const buyboxDescription = seoFor("/marketflow/buyboxes").description;
+    const buyboxSeo = seoFor("/marketflow/buyboxes");
 
     expect(marketflowDescription).toMatch(/controlled pilot/i);
     expect(marketflowDescription).not.toMatch(/verified end to end/i);
-    expect(buyboxDescription).toContain(`${publicBuyboxCount} public buybox profiles`);
-    expect(buyboxDescription).toMatch(/controlled pilot/i);
-    expect(buyboxDescription).not.toMatch(/Four named/i);
+    expect(buyboxSeo.description).toMatch(/No public Buybox profiles/i);
+    expect(buyboxSeo.description).not.toMatch(/are available|subscribe to|request notification/i);
+    expect(buyboxSeo.noIndex).toBe(true);
   });
 });

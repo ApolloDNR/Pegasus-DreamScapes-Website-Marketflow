@@ -25,7 +25,6 @@ import {
   Sparkles,
   LogIn,
   MessageSquare,
-  Bell,
   LogOut,
   Shield,
   ArrowRight,
@@ -40,9 +39,14 @@ import {
 } from "lucide-react";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import logoImage from "@/assets/brand/pegasus-emblem.png";
-import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
+import {
+  getRoleDashboardPath,
+  useSupabaseAuth,
+} from "@/contexts/supabase-auth-context";
+import { hasGovernedMarketflowAccess } from "@/lib/marketflow-access";
 import { trackCtaClick } from "@/lib/analytics";
 import { CommandPalette } from "./command-palette";
+import { NotificationDropdown } from "./notification-dropdown";
 import {
   NAV_PRIMARY,
   NAV_MORE,
@@ -66,10 +70,6 @@ const MORE_ITEMS = NAV_MORE;
 // Tested separately by `nav-parity.test.tsx` which only asserts label presence,
 // so adding icons + taglines stays within guardrails.
 const MORE_META: Record<string, { icon: LucideIcon; tagline: string }> = {
-  "/library": {
-    icon: BookOpen,
-    tagline: "Frameworks, lane reads, and the operating doctrine.",
-  },
   "/strategy-lab": {
     icon: Calculator,
     tagline: "Run a property through the Pegasus lens. Fourteen strategies, one verdict.",
@@ -81,10 +81,6 @@ const MORE_META: Record<string, { icon: LucideIcon; tagline: string }> = {
   "/capital": {
     icon: ClipboardCheck,
     tagline: "Conversations, not pitches. Written agreement on every deal.",
-  },
-  "/connect": {
-    icon: Layers,
-    tagline: "Six routes to Apollo. Pick the lane that fits.",
   },
   "/disclosures": {
     icon: BookOpen,
@@ -114,44 +110,21 @@ function isItemActive(item: NavItem, location: string): boolean {
   return location === prefix || location.startsWith(prefix + "/");
 }
 
-function NotificationBell({ onLightSurface }: { onLightSurface: boolean }) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <button
-          className={`relative p-2 rounded-md transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2 ${
-            onLightSurface
-              ? "text-[hsl(var(--muted-text))] hover:text-[hsl(var(--ink))] hover:bg-[hsl(var(--ink)/0.04)]"
-              : "text-white/80 hover:text-white hover:bg-white/10"
-          }`}
-          data-testid="button-notifications"
-          aria-label="Open notifications"
-        >
-          <Bell className="w-5 h-5" />
-        </button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-72">
-        <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem className="text-sm text-muted-foreground cursor-default">
-          You're all caught up.
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-}
-
 function UserMenu({
   profile,
   userEmail,
   onLightSurface,
   isAdmin,
+  hasMarketflowAccess,
+  dashboardHref,
   onSignOut,
 }: {
   profile: any;
   userEmail: string;
   onLightSurface: boolean;
   isAdmin: boolean;
+  hasMarketflowAccess: boolean;
+  dashboardHref: string;
   onSignOut: () => void;
 }) {
   const initials = (profile?.display_name || userEmail || "U")
@@ -196,18 +169,29 @@ function UserMenu({
             MarketFlow
           </DropdownMenuItem>
         </Link>
-        <Link href="/marketflow/dashboard">
-          <DropdownMenuItem className="cursor-pointer gap-2">
-            <BarChart3 className="w-4 h-4" aria-hidden="true" />
-            My Dashboard
-          </DropdownMenuItem>
-        </Link>
-        <Link href="/marketflow/messages">
-          <DropdownMenuItem className="cursor-pointer gap-2">
-            <MessageSquare className="w-4 h-4" aria-hidden="true" />
-            Messages
-          </DropdownMenuItem>
-        </Link>
+        {hasMarketflowAccess ? (
+          <>
+            <Link href={dashboardHref}>
+              <DropdownMenuItem className="cursor-pointer gap-2">
+                <BarChart3 className="w-4 h-4" aria-hidden="true" />
+                My Dashboard
+              </DropdownMenuItem>
+            </Link>
+            <Link href="/marketflow/messages">
+              <DropdownMenuItem className="cursor-pointer gap-2">
+                <MessageSquare className="w-4 h-4" aria-hidden="true" />
+                Messages
+              </DropdownMenuItem>
+            </Link>
+          </>
+        ) : (
+          <Link href="/marketflow/access">
+            <DropdownMenuItem className="cursor-pointer gap-2">
+              <Shield className="w-4 h-4" aria-hidden="true" />
+              Record access interest
+            </DropdownMenuItem>
+          </Link>
+        )}
         {isAdmin && (
           <>
             <DropdownMenuSeparator />
@@ -241,7 +225,27 @@ export function Navigation() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [location, navigate] = useLocation();
-  const { user, profile, isAuthenticated, isAdmin, signOut } = useSupabaseAuth();
+  const {
+    user,
+    profile,
+    isAuthenticated,
+    isAdmin,
+    isGuestMode,
+    userRole,
+    signOut,
+  } = useSupabaseAuth();
+  const hasMarketflowAccess = hasGovernedMarketflowAccess({
+    isAuthenticated,
+    isGuestMode,
+    isAdmin,
+    profile,
+    userRole,
+  });
+  const roleDashboardHref = getRoleDashboardPath(userRole);
+  const dashboardHref =
+    roleDashboardHref === "/marketflow"
+      ? "/marketflow/dashboard"
+      : roleDashboardHref;
 
   const handleSignOut = async () => {
     // Clear the SPA's Supabase session first, then hand off to the
@@ -432,7 +436,13 @@ export function Navigation() {
                   aria-current={active ? "page" : undefined}
                 >
                   MarketFlow
-                  <span className="px-1.5 py-0.5 text-[9px] font-semibold tracking-wider bg-[hsl(var(--bronze)/0.15)] text-[hsl(var(--bronze))] rounded">
+                  <span
+                    className={`px-1.5 py-0.5 text-[9px] font-semibold tracking-wider rounded ${
+                      onLightSurface
+                        ? "bg-[hsl(var(--bronze)/0.15)] text-[hsl(var(--ink))]"
+                        : "bg-white/10 text-white"
+                    }`}
+                  >
                     BETA
                   </span>
                   {active && (
@@ -559,12 +569,22 @@ export function Navigation() {
           <div className="flex items-center gap-2">
             {isAuthenticated ? (
               <>
-                <NotificationBell onLightSurface={onLightSurface} />
+                {hasMarketflowAccess ? (
+                  <NotificationDropdown
+                    triggerClassName={
+                      onLightSurface
+                        ? "text-[hsl(var(--muted-text))] hover:text-[hsl(var(--ink))] hover:bg-[hsl(var(--ink)/0.04)]"
+                        : "text-white/80 hover:text-white hover:bg-white/10"
+                    }
+                  />
+                ) : null}
                 <UserMenu
                   profile={profile}
                   userEmail={user?.email || ""}
                   onLightSurface={onLightSurface}
                   isAdmin={isAdmin}
+                  hasMarketflowAccess={hasMarketflowAccess}
+                  dashboardHref={dashboardHref}
                   onSignOut={handleSignOut}
                 />
               </>
@@ -576,7 +596,7 @@ export function Navigation() {
               >
                 <Button
                   size="sm"
-                  className="bg-[hsl(var(--bronze))] hover:bg-[hsl(var(--bronze))]/90 text-white text-[12px] uppercase tracking-[0.14em] font-semibold px-5 h-10 rounded-sm shadow-sm shadow-black/10 focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2"
+                  className="bg-[hsl(var(--bronze))] hover:bg-[hsl(var(--bronze))] text-[hsl(var(--copper-foreground))] text-[12px] uppercase tracking-[0.14em] font-semibold px-5 h-10 rounded-sm shadow-sm shadow-black/10 focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2"
                   data-testid="button-nav-cta"
                 >
                   {PRIMARY_CTA.label}
@@ -628,18 +648,16 @@ export function Navigation() {
                     {NAV_ITEMS.map((item) => (
                       <li key={item.label}>{renderNavLink(item, true)}</li>
                     ))}
-                    {/* Empire Doctrine v1.0.2 Part C.7 — Connect is
-                        un-buried on mobile: surfaced in the primary list
-                        in addition to its persistent placement in the
-                        More accordion (mobile/footer parity). */}
+                    {/* Keep the canonical Contact chooser easy to reach on
+                        mobile in addition to its More-menu placement. */}
                     <li>
                       <Link
-                        href="/connect"
+                        href="/contact"
                         onClick={() => setMobileOpen(false)}
                         className="block py-3 text-base font-medium text-[hsl(var(--ink))] hover:text-[hsl(var(--bronze))] transition-colors"
-                        data-testid="link-nav-connect"
+                        data-testid="link-nav-contact"
                       >
-                        Connect
+                        Contact
                       </Link>
                     </li>
                   </ul>
@@ -706,7 +724,7 @@ export function Navigation() {
                     }}
                   >
                     <Button
-                      className="w-full bg-[hsl(var(--bronze))] hover:bg-[hsl(var(--bronze))]/90 text-white text-[12px] uppercase tracking-[0.14em] font-semibold h-11 rounded-sm"
+                      className="w-full bg-[hsl(var(--bronze))] hover:bg-[hsl(var(--bronze))] text-[hsl(var(--copper-foreground))] text-[12px] uppercase tracking-[0.14em] font-semibold h-11 rounded-sm"
                       data-testid="button-mobile-cta"
                     >
                       {PRIMARY_CTA.label}

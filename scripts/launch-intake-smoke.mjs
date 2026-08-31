@@ -17,6 +17,25 @@ const REQUIRED_ENV = [
 
 const args = process.argv.slice(2);
 
+function isProductionEnvironment(environment = process.env) {
+  if (environment.APP_ENV) {
+    return environment.APP_ENV === "production";
+  }
+  return environment.NODE_ENV === "production";
+}
+
+function isValidHqUrl(raw, production) {
+  if (!raw?.trim()) return false;
+  try {
+    const url = new URL(raw);
+    if (url.username || url.password) return false;
+    if (production) return url.protocol === "https:";
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
 function has(flag) {
   return args.includes(flag);
 }
@@ -56,12 +75,31 @@ async function checkExample() {
 }
 
 function checkRuntimeEnv() {
-  const missing = REQUIRED_ENV.filter((name) => !process.env[name]);
+  const production = isProductionEnvironment();
+  const required = production
+    ? REQUIRED_ENV
+    : REQUIRED_ENV.filter(
+        (name) => name !== "PEGASUS_HQ_PUBLIC_INTAKE_URL",
+      );
+  const missing = required.filter((name) => !process.env[name]);
   if (missing.length) {
     fail(`[launch-smoke] runtime env is missing: ${missing.join(", ")}`);
     return false;
   }
-  console.log(`[launch-smoke] runtime env has ${REQUIRED_ENV.length} required production variables.`);
+
+  const hqEndpoint = process.env.PEGASUS_HQ_PUBLIC_INTAKE_URL;
+  if (hqEndpoint && !isValidHqUrl(hqEndpoint, production)) {
+    fail(
+      production
+        ? "[launch-smoke] PEGASUS_HQ_PUBLIC_INTAKE_URL must be a valid HTTPS URL in production."
+        : "[launch-smoke] PEGASUS_HQ_PUBLIC_INTAKE_URL must be a valid http(s) URL.",
+    );
+    return false;
+  }
+
+  console.log(
+    `[launch-smoke] runtime env has ${required.length} required variables.`,
+  );
   return true;
 }
 

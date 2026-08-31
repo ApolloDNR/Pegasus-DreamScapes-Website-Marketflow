@@ -14,6 +14,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Landing } from "@/pegasus/Landing";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ROUTE_TO_URL } from "@/pegasus/routes";
+import { PEGGY_CONVERSATION_ACCESS_HEADER } from "@shared/peggy-access";
 
 // Peggy quick-action net (Task #214).
 //
@@ -21,7 +22,7 @@ import { ROUTE_TO_URL } from "@/pegasus/routes";
 // navigation CTAs that Task #201's cta-routing net never sees: the "Or go
 // straight to" chips (Strategy Lab / Submit a Property / Work With Apollo /
 // MarketFlow) and the streamed handoff buttons ("Open Strategy Lab" /
-// "Start my Review"). They navigate through the toStrategyLab / toSubmit /
+// "Share for Consideration"). They navigate through the toStrategyLab / toSubmit /
 // onHandoffToReview / go callbacks wired in Landing.tsx — none of which the
 // page-body harness exercises. Task #210 covered the ApolloSelector and
 // StrategyTierStrip programmatic CTAs but explicitly not Peggy's.
@@ -190,13 +191,13 @@ describe("Peggy 'Or go straight to' chips navigate to real routes (Task #214)", 
 // actually navigates.
 describe("Peggy handoff action buttons navigate to real routes (Task #214)", () => {
   function mockPeggyChat(response: string) {
-    const fetchMock = vi.fn(async (input: RequestInfo | URL) => {
+    const fetchMock = vi.fn(async (input: RequestInfo | URL, _init?: RequestInit) => {
       const url = String(input);
       if (url.includes("/api/peggy/conversations")) {
         return {
           ok: true,
           status: 200,
-          json: async () => ({ id: 1 }),
+          json: async () => ({ id: 1, accessToken: "v1.scoped-token" }),
         } as Response;
       }
       if (url.includes("/api/peggy/chat")) {
@@ -209,6 +210,7 @@ describe("Peggy handoff action buttons navigate to real routes (Task #214)", () 
       return { ok: true, status: 200, json: async () => ({}) } as Response;
     });
     vi.stubGlobal("fetch", fetchMock);
+    return fetchMock;
   }
 
   async function sendMessageAndWaitForAction(
@@ -241,11 +243,20 @@ describe("Peggy handoff action buttons navigate to real routes (Task #214)", () 
   }
 
   it('strategylab handoff → "Open Strategy Lab" routes to the Strategy Lab', async () => {
-    mockPeggyChat('Let me set you up. [[HANDOFF]]{"action":"strategylab"}[[/HANDOFF]]');
+    const fetchMock = mockPeggyChat('Let me set you up. [[HANDOFF]]{"action":"strategylab"}[[/HANDOFF]]');
     const { container, history } = renderLanding("/");
     const panel = openPeggy(container);
 
     const action = await sendMessageAndWaitForAction(panel, "Open Strategy Lab");
+    const chatCall = fetchMock.mock.calls.find(([input]) =>
+      String(input).includes("/api/peggy/chat"),
+    );
+    expect(chatCall).toBeTruthy();
+    expect(
+      new Headers(chatCall?.[1]?.headers).get(
+        PEGGY_CONVERSATION_ACCESS_HEADER,
+      ),
+    ).toBe("v1.scoped-token");
     const before = history.length;
     fireEvent.click(action);
 
@@ -255,14 +266,14 @@ describe("Peggy handoff action buttons navigate to real routes (Task #214)", () 
     expectValidNavTarget(target, "Peggy strategylab handoff");
   });
 
-  it('review handoff → "Start my Review" routes to a real surface', async () => {
+  it('review handoff → "Share for Consideration" routes to a real surface', async () => {
     mockPeggyChat(
       'I will hand this to a person. [[HANDOFF]]{"action":"review","role":"seller","area":"east-bay","situation":"probate"}[[/HANDOFF]]',
     );
     const { container, history } = renderLanding("/");
     const panel = openPeggy(container);
 
-    const action = await sendMessageAndWaitForAction(panel, "Start my Review");
+    const action = await sendMessageAndWaitForAction(panel, "Share for Consideration");
     const before = history.length;
     fireEvent.click(action);
 
@@ -273,7 +284,7 @@ describe("Peggy handoff action buttons navigate to real routes (Task #214)", () 
   });
 
   it("chat-error fallback offers Review + Strategy Lab that both route to real surfaces", async () => {
-    // When the chat endpoint fails, Peggy shows recovery CTAs ("Start a Review"
+    // When the chat endpoint fails, Peggy shows recovery CTAs ("Share for Consideration"
     // / "Open Strategy Lab"). They use the same wiring and must stay real.
     const fetchMock = vi.fn(async () => {
       throw new Error("network down");
@@ -292,7 +303,7 @@ describe("Peggy handoff action buttons navigate to real routes (Task #214)", () 
     const review = await waitFor(() => {
       const btn = within(panel)
         .getAllByRole("button")
-        .find((b) => (b.textContent || "").trim().startsWith("Start a Review")) as
+        .find((b) => (b.textContent || "").trim().startsWith("Share for Consideration")) as
         | HTMLButtonElement
         | undefined;
       expect(btn, "error fallback did not offer a Review CTA").toBeTruthy();

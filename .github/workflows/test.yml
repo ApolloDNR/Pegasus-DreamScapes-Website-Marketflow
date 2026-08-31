@@ -4,25 +4,60 @@ on:
   push:
   pull_request:
 
+concurrency:
+  group: launch-verification-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     name: launch verification
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     env:
       AI_INTEGRATIONS_OPENAI_API_KEY: ci-test-key
       DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      TESTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || '' }}
+      PR_MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha || '' }}
     steps:
-      - name: Check out repository
+      - name: Check out exact source head
         uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TESTED_SOURCE_SHA }}
+
+      - name: Verify exact-head provenance
+        id: provenance
+        shell: bash
+        run: |
+          actual_sha="$(git rev-parse HEAD)"
+          test "$actual_sha" = "$TESTED_SOURCE_SHA"
+          echo "tested_sha=$actual_sha" >> "$GITHUB_OUTPUT"
+          echo "artifact_name=pegasus-rendered-qa-$actual_sha" >> "$GITHUB_OUTPUT"
 
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22.23.2'
           cache: 'npm'
+
+      - name: Pin npm for reproducible CI
+        run: npm install --global npm@10.9.2
+
+      - name: Verify portable package lock registry URLs
+        run: node scripts/check-package-lock-registry.mjs
 
       - name: Install dependencies
         run: npm ci
+
+      - name: Install matching Chromium
+        if: github.event_name != 'pull_request' && github.ref != 'refs/heads/codex/launch-recovery-v2'
+        run: npx playwright-core install --with-deps chromium
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Verify launch environment contract
+        run: npm run smoke:launch -- --example
 
       - name: Run TypeScript check
         run: npm run check
@@ -30,5 +65,425 @@ jobs:
       - name: Run production build
         run: npm run build
 
+      - name: Run rendered accessibility gate
+        if: github.event_name != 'pull_request' && github.ref != 'refs/heads/codex/launch-recovery-v2'
+        run: npm run check:a11y
+        env:
+          A11Y_SCREENSHOT_DIR: artifacts/rendered-qa
+          RENDERED_QA_TESTED_SHA: ${{ steps.provenance.outputs.tested_sha }}
+          RENDERED_QA_PR_HEAD_SHA: ${{ env.PR_HEAD_SHA }}
+          RENDERED_QA_PR_MERGE_SHA: ${{ env.PR_MERGE_SHA }}
+          RENDERED_QA_GITHUB_EVENT: ${{ github.event_name }}
+
       - name: Run test suite
         run: npm test
+
+      - name: Upload rendered QA evidence
+        if: always() && github.event_name != 'pull_request' && github.ref != 'refs/heads/codex/launch-recovery-v2'
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.provenance.outputs.artifact_name }}
+          path: artifacts/rendered-qa
+          retention-days: 14
+          if-no-files-found: error
+
+  rendered-qa-build:
+    name: rendered QA exact build
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    outputs:
+      artifact_name: ${{ steps.provenance.outputs.artifact_name }}
+      build_sha256: ${{ steps.build-digest.outputs.build_sha256 }}
+    env:
+      AI_INTEGRATIONS_OPENAI_API_KEY: ci-test-key
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      TESTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha }}
+    steps:
+      - name: Check out exact source head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TESTED_SOURCE_SHA }}
+
+      - name: Verify exact-head provenance
+        id: provenance
+        shell: bash
+        run: |
+          actual_sha="$(git rev-parse HEAD)"
+          test "$actual_sha" = "$TESTED_SOURCE_SHA"
+          echo "artifact_name=pegasus-rendered-qa-build-$actual_sha-$GITHUB_RUN_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.2'
+          cache: 'npm'
+
+      - name: Pin npm for reproducible CI
+        run: npm install --global npm@10.9.2
+
+      - name: Verify portable package lock registry URLs
+        run: node scripts/check-package-lock-registry.mjs
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build exact rendered QA client once
+        run: npm run build
+
+      - name: Record exact rendered QA build digest
+        id: build-digest
+        shell: bash
+        run: |
+          mkdir -p artifacts/rendered-qa-build
+          node scripts/rendered-qa-build-digest.mjs \
+            --root dist/public \
+            --output artifacts/rendered-qa-build/rendered-qa-build-digest.json \
+            > /dev/null
+          build_sha256="$(node -e "const manifest = require('./artifacts/rendered-qa-build/rendered-qa-build-digest.json'); process.stdout.write(manifest.digest)")"
+          case "$build_sha256" in
+            ''|*[!0-9a-f]*) exit 1 ;;
+          esac
+          test "${#build_sha256}" -eq 64
+          echo "build_sha256=$build_sha256" >> "$GITHUB_OUTPUT"
+
+      - name: Upload exact rendered QA client build
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.provenance.outputs.artifact_name }}
+          path: dist/public
+          retention-days: 14
+          if-no-files-found: error
+          include-hidden-files: true
+          overwrite: true
+
+  rendered-qa-shards:
+    name: rendered QA shard (${{ matrix.shard_id }})
+    needs: rendered-qa-build
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard_id: routes-dark-desktop-1440
+            qa_timeout: 30m
+          - shard_id: routes-dark-tablet-1024
+            qa_timeout: 30m
+          - shard_id: routes-dark-tablet-768
+            qa_timeout: 30m
+          - shard_id: routes-dark-mobile-390
+            qa_timeout: 30m
+          - shard_id: routes-light-desktop-1440
+            qa_timeout: 30m
+          - shard_id: routes-light-tablet-1024
+            qa_timeout: 30m
+          - shard_id: routes-light-tablet-768
+            qa_timeout: 30m
+          - shard_id: routes-light-mobile-390
+            qa_timeout: 30m
+          - shard_id: interactions-core
+            qa_timeout: 30m
+          - shard_id: interactions-intake-wide
+            qa_timeout: 30m
+          - shard_id: interactions-intake-narrow
+            qa_timeout: 30m
+          - shard_id: interactions-marketflow
+            qa_timeout: 35m
+    env:
+      TESTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || '' }}
+      PR_MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha || '' }}
+      A11Y_QA_SHARD_ID: ${{ matrix.shard_id }}
+      A11Y_PUBLIC_ROUTE_COVERAGE: full
+      A11Y_SCREENSHOT_DIR: artifacts/rendered-qa-shards/${{ matrix.shard_id }}
+      RENDERED_QA_GITHUB_RUN_ID: ${{ github.run_id }}
+      RENDERED_QA_GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+      RENDERED_QA_GITHUB_EVENT: ${{ github.event_name }}
+      RENDERED_QA_BUILD_SHA256: ${{ needs.rendered-qa-build.outputs.build_sha256 }}
+    steps:
+      - name: Check out exact source head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TESTED_SOURCE_SHA }}
+
+      - name: Verify exact-head provenance
+        id: provenance
+        shell: bash
+        run: |
+          actual_sha="$(git rev-parse HEAD)"
+          test "$actual_sha" = "$TESTED_SOURCE_SHA"
+          echo "tested_sha=$actual_sha" >> "$GITHUB_OUTPUT"
+          echo "artifact_name=pegasus-rendered-qa-shard-$actual_sha-$GITHUB_RUN_ID-$A11Y_QA_SHARD_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.2'
+          cache: 'npm'
+
+      - name: Pin npm for reproducible CI
+        run: npm install --global npm@10.9.2
+
+      - name: Verify portable package lock registry URLs
+        run: node scripts/check-package-lock-registry.mjs
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Initialize shard evidence directory
+        shell: bash
+        run: |
+          mkdir -p "$A11Y_SCREENSHOT_DIR"
+          printf '{"shardId":"%s","runId":"%s","runAttempt":"%s"}\n' \
+            "$A11Y_QA_SHARD_ID" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" \
+            > "$A11Y_SCREENSHOT_DIR/shard-started.json"
+
+      - name: Download exact rendered QA client build
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ needs.rendered-qa-build.outputs.artifact_name }}
+          path: dist/public
+
+      - name: Verify exact rendered QA client build
+        run: >-
+          node scripts/rendered-qa-build-digest.mjs
+          --root dist/public
+          --expect "$RENDERED_QA_BUILD_SHA256"
+          --output "$A11Y_SCREENSHOT_DIR/rendered-qa-build-digest.json"
+          > /dev/null
+
+      - name: Install matching Chromium
+        run: npx playwright-core install --with-deps chromium
+
+      - name: Run exhaustive rendered accessibility shard
+        shell: bash
+        env:
+          RENDERED_QA_TESTED_SHA: ${{ steps.provenance.outputs.tested_sha }}
+          RENDERED_QA_PR_HEAD_SHA: ${{ env.PR_HEAD_SHA }}
+          RENDERED_QA_PR_MERGE_SHA: ${{ env.PR_MERGE_SHA }}
+        run: timeout --signal=TERM --kill-after=1m ${{ matrix.qa_timeout }} npm run check:a11y:full
+
+      - name: Upload rendered QA shard evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.provenance.outputs.artifact_name }}
+          path: artifacts/rendered-qa-shards/${{ matrix.shard_id }}
+          retention-days: 14
+          if-no-files-found: error
+          overwrite: true
+
+  rendered-qa-full:
+    name: exhaustive rendered public-route QA
+    needs: [rendered-qa-build, rendered-qa-shards]
+    if: ${{ always() && github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      TESTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || '' }}
+      PR_MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha || '' }}
+      RENDERED_QA_TESTED_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      RENDERED_QA_PR_HEAD_SHA: ${{ github.event.pull_request.head.sha || '' }}
+      RENDERED_QA_PR_MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha || '' }}
+      RENDERED_QA_GITHUB_RUN_ID: ${{ github.run_id }}
+      RENDERED_QA_GITHUB_RUN_ATTEMPT: ${{ github.run_attempt }}
+      RENDERED_QA_GITHUB_EVENT: ${{ github.event_name }}
+      RENDERED_QA_BUILD_SHA256: ${{ needs.rendered-qa-build.outputs.build_sha256 }}
+      ARTIFACT_PREFIX: pegasus-rendered-qa-shard-${{ github.event.pull_request.head.sha || github.sha }}-${{ github.run_id }}
+    steps:
+      - name: Check out exact source head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TESTED_SOURCE_SHA }}
+
+      - name: Verify exact-head provenance
+        shell: bash
+        run: test "$(git rev-parse HEAD)" = "$TESTED_SOURCE_SHA"
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.2'
+
+      - name: Initialize aggregate evidence directory
+        if: always()
+        run: mkdir -p artifacts/rendered-qa-shards artifacts/rendered-qa-aggregate
+
+      - name: Download routes-dark-desktop-1440 evidence
+        if: always()
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_PREFIX }}-routes-dark-desktop-1440
+          path: artifacts/rendered-qa-shards/routes-dark-desktop-1440
+
+      - name: Download routes-dark-tablet-1024 evidence
+        if: always()
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_PREFIX }}-routes-dark-tablet-1024
+          path: artifacts/rendered-qa-shards/routes-dark-tablet-1024
+
+      - name: Download routes-dark-tablet-768 evidence
+        if: always()
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_PREFIX }}-routes-dark-tablet-768
+          path: artifacts/rendered-qa-shards/routes-dark-tablet-768
+
+      - name: Download routes-dark-mobile-390 evidence
+        if: always()
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_PREFIX }}-routes-dark-mobile-390
+          path: artifacts/rendered-qa-shards/routes-dark-mobile-390
+
+      - name: Download routes-light-desktop-1440 evidence
+        if: always()
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_PREFIX }}-routes-light-desktop-1440
+          path: artifacts/rendered-qa-shards/routes-light-desktop-1440
+
+      - name: Download routes-light-tablet-1024 evidence
+        if: always()
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_PREFIX }}-routes-light-tablet-1024
+          path: artifacts/rendered-qa-shards/routes-light-tablet-1024
+
+      - name: Download routes-light-tablet-768 evidence
+        if: always()
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_PREFIX }}-routes-light-tablet-768
+          path: artifacts/rendered-qa-shards/routes-light-tablet-768
+
+      - name: Download routes-light-mobile-390 evidence
+        if: always()
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_PREFIX }}-routes-light-mobile-390
+          path: artifacts/rendered-qa-shards/routes-light-mobile-390
+
+      - name: Download interactions-core evidence
+        if: always()
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_PREFIX }}-interactions-core
+          path: artifacts/rendered-qa-shards/interactions-core
+
+      - name: Download interactions-intake-wide evidence
+        if: always()
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_PREFIX }}-interactions-intake-wide
+          path: artifacts/rendered-qa-shards/interactions-intake-wide
+
+      - name: Download interactions-intake-narrow evidence
+        if: always()
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_PREFIX }}-interactions-intake-narrow
+          path: artifacts/rendered-qa-shards/interactions-intake-narrow
+
+      - name: Download interactions-marketflow evidence
+        if: always()
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_PREFIX }}-interactions-marketflow
+          path: artifacts/rendered-qa-shards/interactions-marketflow
+
+      - name: Aggregate rendered QA evidence
+        id: aggregate
+        if: always()
+        continue-on-error: true
+        run: >-
+          node scripts/aggregate-rendered-qa.mjs
+          --root artifacts/rendered-qa-shards
+          --output artifacts/rendered-qa-aggregate/rendered-qa-manifest.json
+
+      - name: Upload aggregate rendered QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pegasus-rendered-qa-${{ env.TESTED_SOURCE_SHA }}-${{ github.run_id }}-attempt-${{ github.run_attempt }}
+          path: |
+            artifacts/rendered-qa-aggregate
+            artifacts/rendered-qa-shards
+          retention-days: 14
+          if-no-files-found: error
+
+      - name: Enforce exhaustive rendered QA gate
+        if: always()
+        shell: bash
+        env:
+          BUILD_RESULT: ${{ needs.rendered-qa-build.result }}
+          MATRIX_RESULT: ${{ needs.rendered-qa-shards.result }}
+          AGGREGATE_RESULT: ${{ steps.aggregate.outcome }}
+        run: |
+          test "$BUILD_RESULT" = "success"
+          test "$MATRIX_RESULT" = "success"
+          test "$AGGREGATE_RESULT" = "success"
+
+  merge-compatibility:
+    name: pull-request merge compatibility
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      AI_INTEGRATIONS_OPENAI_API_KEY: ci-test-key
+      DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+      EXPECTED_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      EXPECTED_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      EXPECTED_MERGE_SHA: ${{ github.event.pull_request.merge_commit_sha }}
+    steps:
+      - name: Check out synthetic pull-request merge
+        uses: actions/checkout@v4
+        with:
+          ref: refs/pull/${{ github.event.pull_request.number }}/merge
+          fetch-depth: 2
+
+      - name: Verify synthetic merge provenance
+        run: node scripts/verify-merge-provenance.mjs
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.2'
+          cache: 'npm'
+
+      - name: Pin npm for reproducible CI
+        run: npm install --global npm@10.9.2
+
+      - name: Verify portable package lock registry URLs
+        run: node scripts/check-package-lock-registry.mjs
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
+      - name: Verify launch environment contract
+        run: npm run smoke:launch -- --example
+
+      - name: Run TypeScript check
+        run: npm run check
+
+      - name: Run production build
+        run: npm run build

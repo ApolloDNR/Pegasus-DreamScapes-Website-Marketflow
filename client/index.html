@@ -31,11 +31,10 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
-    <!-- The homepage arrival photograph is the LCP element; preload with the
-         same srcset the <img> uses so first paint is instant on any device. -->
-    <link rel="preload" as="image" href="/images/hero/pegasus-v6-arrival.webp"
-      imagesrcset="/images/hero/pegasus-v6-arrival-m.webp 1080w, /images/hero/pegasus-v6-arrival.webp 2752w"
-      imagesizes="100vw" fetchpriority="high" />
+    <!-- The route-aware server inserts the approved Bay-colonnade LCP preload
+         here only for the homepage. The image itself also carries high fetch
+         priority for static-shell and client-navigation fallbacks. -->
+    <!-- pegasus-homepage-lcp-preload -->
     <script type="application/ld+json">
       {
         "@context": "https://schema.org",
@@ -45,7 +44,7 @@
         "url": "https://pegasusdreamscapes.com",
         "logo": "https://pegasusdreamscapes.com/icon-512.png",
         "image": "https://pegasusdreamscapes.com/og/default.png",
-        "description": "A real estate operating company and operating partner for complex opportunities in Contra Costa and Alameda County, California. Complex real estate, made executable.",
+        "description": "A real estate operating company and operating partner for complex opportunities in Contra Costa and Alameda County, California. Pegasus Dreamscapes Corp. is not a real estate brokerage. Complex real estate, made executable.",
         "email": "apollo@pegasusdreamscapes.com",
         "telephone": "+1-925-744-8525",
         "contactPoint": {
@@ -64,13 +63,16 @@
         },
         "founder": {
           "@type": "Person",
-          "name": "Paolo \"Apollo\" Duran",
+          "name": "Paolo Ariel Duran Ramirez",
+          "alternateName": "Paolo \"Apollo\" Duran",
           "jobTitle": "Founder",
           "identifier": "CA DRE #02333658",
           "affiliation": {
             "@type": "Organization",
-            "name": "Keller Williams East Bay",
-            "description": "Licensed real estate representation is provided by Paolo \"Apollo\" Duran through Keller Williams East Bay. Each office is independently owned and operated."
+            "name": "BMP Realty Inc.",
+            "alternateName": "Keller Williams Realty-East Bay",
+            "identifier": "CA DRE #01277896",
+            "description": "BMP Realty Inc. is the responsible broker; Keller Williams Realty-East Bay is its active DBA. Each Keller Williams office is independently owned and operated."
           }
         },
         "slogan": "Dream it. Build it. Live it."

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useState } from "react";
 
 type Theme = "dark" | "light" | "system";
 
@@ -14,6 +14,12 @@ interface ThemeProviderProps {
   children: React.ReactNode;
   defaultTheme?: Theme;
   storageKey?: string;
+}
+
+function resolveTheme(theme: Theme): "dark" | "light" {
+  if (theme !== "system") return theme;
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return "light";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
 export function ThemeProvider({
@@ -34,19 +40,14 @@ export function ThemeProvider({
     return defaultTheme;
   });
 
-  const [resolvedTheme, setResolvedTheme] = useState<"dark" | "light">("light");
+  const [resolvedTheme, setResolvedTheme] = useState<"dark" | "light">(
+    () => resolveTheme(theme),
+  );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove("light", "dark");
-
-    let effectiveTheme: "dark" | "light";
-    if (theme === "system") {
-      effectiveTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    } else {
-      effectiveTheme = theme;
-    }
-
+    const effectiveTheme = resolveTheme(theme);
     root.classList.add(effectiveTheme);
     setResolvedTheme(effectiveTheme);
   }, [theme]);

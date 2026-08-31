@@ -4,22 +4,22 @@ import { cleanup, fireEvent, render, screen, within } from "@testing-library/rea
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 
-import ConnectPage from "@/pages/connect";
+import { ConnectChooser } from "@/pages/connect";
 
-function renderConnect() {
-  const { hook } = memoryLocation({ path: "/connect", static: true });
+function renderContactChooser() {
+  const { hook } = memoryLocation({ path: "/contact", static: true });
   return render(
     <Router hook={hook}>
-      <ConnectPage />
+      <ConnectChooser />
     </Router>,
   );
 }
 
 afterEach(() => cleanup());
 
-describe("Connect page route card", () => {
+describe("Contact chooser route card", () => {
   it("starts on the property route and updates when a lane is selected", () => {
-    renderConnect();
+    renderContactChooser();
 
     const activeLane = screen.getByTestId("connect-active-lane");
     expect(within(activeLane).getByText("PROPERTY READ")).toBeInTheDocument();

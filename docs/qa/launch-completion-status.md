@@ -1,0 +1,49 @@
+# Pegasus Security Launch Recovery Status
+
+Program: `docs/superpowers/plans/2026-08-13-pegasus-security-launch-recovery.md`
+
+Branch: `codex/launch-recovery-v2`
+
+Approved source: `4487bec1378c701cc77a6cef421b9921ddf522d4`
+
+Successor pull request: Not created; Task 15 owns creation.
+
+Historical review source: PR #25 only.
+
+## Evidence boundary
+
+Every commit, check, screenshot, route matrix, and workflow run recorded in the previous launch-completion status—including Launch Verification run #205—is historical evidence from an older candidate. It explains findings but does not prove the current recovery head. Only evidence rerun on the exact final `codex/launch-recovery-v2` head may support launch completion.
+
+The durable per-task record is `docs/qa/security-launch-recovery-ledger.md`. The ignored plan-scoped SDD ledgers are orchestration aids, not remote recovery evidence.
+
+## Recovery baseline — 2026-08-13
+
+- Durable program checkpoint before Task 1 implementation: `7b98d7d8c7bbeeb9b14217446016062db66472a9`.
+- Node `22.23.2` TypeScript: PASS.
+- Production build and bundle budget: PASS; Vite built 3,821 modules.
+- Full Vitest baseline: 110 files, 1,250 passed, one failed.
+- Focused timing evidence: two fresh `lane-pages-prd-v1` processes produced one `/buyers` failure at 1,045ms and one pass at 930ms against the 1,000ms default. The failing process passed all seven later cases. Task 1 fixes the lazy boundary rather than relaxing timeouts.
+- Review inventory: 46 actionable PR #25 findings reviewed; 5 already fixed at the approved source, 41 still applicable, including 8 unresolved inline threads.
+
+## Recovery task status
+
+| Task | Status | Durable evidence |
+| --- | --- | --- |
+| Program checkpoint | Complete | `7b98d7d8c7bbeeb9b14217446016062db66472a9`; program and tracked ledger match the remote successor branch. |
+| Task 1 — recovery foundation | Complete | Implementation `962551ca5c5d2371b876c819babd0328b60997e1`; `SPEC APPROVED`; `QUALITY APPROVED`; 4 focused files / 77 tests, TypeScript, managed-sandbox same-entrypoint build/bundle budget, manifest topology, and diff hygiene passed. |
+| Task 1 follow-up — Capital lane boundary | Complete | Canonical implementation `7a9fe88fd4f7f05f10632fc7b93abea90d1cb7c7`; `SPEC APPROVED`; `QUALITY APPROVED`; 18 cold-route processes, focused 4 files / 78 tests, full 113 files / 1,277 tests, TypeScript, production build, bundle budget, and manifest topology passed without changing the lane timeout. |
+| Task 2 — listing inquiry contract | Complete | Canonical implementation `81f2b7cbe9026b5946303dd97deb5b1afab8dc6e`; `SPEC APPROVED`; `QUALITY APPROVED`; focused 5 files / 37 tests, exact-head full 113 files / 1,277 tests, TypeScript, exact scope, and diff hygiene passed. |
+| Task 3 — wholesale offer terms | Complete | Canonical primary `9240e365a108aba28f9a41e88ee43ef78d780bdf` plus quality fix `ab289e6900524361467a1132c7eb16cecf6af61f`; `SPEC APPROVED`; `QUALITY APPROVED`; focused 3 files / 73 tests, full 114 files / 1,338 tests, TypeScript, production build/budget, exact scope, and complete no-findings security coverage passed. |
+| Tasks 4–18 | Pending | Execute only from preflighted, committed child plans in program order. |
+
+## External gates
+
+- No production, DNS, live database, payment, or Render production mutation is approved.
+- No staging migration, staging write, marked test lead, or preview publication is approved until its program gate is recorded.
+- Supabase and Render staging control access remains unverified.
+- Public distribution remains blocked on qualified legal/compliance and Keller Williams/broker review.
+- The CodeRabbit CLI is not installed; Task 15 uses the successor GitHub pull request and CodeRabbit app review unless installation is separately approved.
+
+## Resume rule
+
+Reconcile the program plan, this status, the tracked recovery ledger, `git log`, and the successor remote head. Resume at the first task without a remote accepted checkpoint. Task 4A is next: create and commit its executable child plan using `superpowers:writing-plans`, preflight it, and dispatch only after the reviewer reports no blocking or major ambiguity.

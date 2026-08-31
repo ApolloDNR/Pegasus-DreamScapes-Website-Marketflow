@@ -65,8 +65,8 @@ function HeroSection() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.55 }}
         >
-          A Deal Blueprint is a written memo on a specific property, prepared by
-          the Pegasus team. Not auto-generated. Not a template.
+          A Deal Blueprint is a possible separately scoped written analysis for a
+          specific property. Availability is reviewed case by case.
         </motion.p>
         <motion.p
           className="text-base text-cream/75 max-w-3xl mb-12 leading-relaxed"
@@ -74,8 +74,8 @@ function HeroSection() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.8, delay: 0.7 }}
         >
-          A real read from real operators on whether the deal works, what would
-          have to be true for it to work, and how to actually structure it.
+          If Pegasus offers an engagement, the written scope identifies the
+          author, included analysis, fee, timing, assumptions, and limitations.
         </motion.p>
 
         <motion.div
@@ -117,25 +117,25 @@ function WhatsInside() {
       icon: FileText,
       tag: "01 · Underwriting",
       title: "The real numbers.",
-      desc: "Acquisition, scope, holding, exit. Stress-tested. Not the optimistic version. The version that survives.",
+      desc: "Possible acquisition, improvement, holding, and exit assumptions, with stated limits and sensitivity where scoped.",
     },
     {
       icon: Layers,
       tag: "02 · Structure",
-      title: "How to acquire it.",
-      desc: "Direct, JV, subject-to, seller-carry, assignment. The argument for why one fits and the others don't.",
+      title: "Possible structures.",
+      desc: "A comparison of relevant structures may be included when supported by the facts and written scope.",
     },
     {
       icon: ShieldCheck,
       tag: "03 · Risk Register",
-      title: "What kills this deal.",
-      desc: "Title issues, scope creep, market exposure, partner exposure. Each one with a mitigation, not just a flag.",
+      title: "Material risks.",
+      desc: "Known title, scope, market, or counterparty risks may be identified, without replacing legal or specialist diligence.",
     },
     {
       icon: MessageSquareQuote,
       tag: "04 · Outreach Scripts",
-      title: "If the deal needs a conversation.",
-      desc: "With the seller, an heir, a lender, a city. We write the script. You walk in with the argument already framed.",
+      title: "Optional communication notes.",
+      desc: "A scope may include non-legal discussion prompts for a seller, lender, or other counterparty.",
     },
   ];
 
@@ -150,10 +150,10 @@ function WhatsInside() {
             </p>
           </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
-            Four sections. Every time.
+            Possible sections, set by scope.
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            Written, signed, and timestamped. Yours to act on or set aside.
+            The final contents and delivery format exist only if confirmed in a written engagement.
           </p>
         </ScrollReveal>
 
@@ -208,12 +208,12 @@ function WhenItsRight() {
               Most deals don't need a Blueprint.
             </h2>
             <p className="text-lg text-muted-foreground leading-relaxed mb-5">
-              A Strategy Snapshot run is usually enough. We will
-              tell you when it isn't.
+              Start with the public Strategy Snapshot. A separate Blueprint may be
+              considered when the facts call for deeper work.
             </p>
             <p className="text-base text-muted-foreground/85 leading-relaxed italic border-l-2 border-primary/40 pl-5">
-              If a free tier solves it, we route you there. A Blueprint is
-              reserved for situations that earn it.
+              A request is not an order or acceptance. Pegasus may decline, request
+              more information, or suggest a public self-service tool.
             </p>
           </ScrollReveal>
 
@@ -252,20 +252,20 @@ function HowItWorks() {
     {
       tag: "Step 02",
       icon: ShieldCheck,
-      title: "We confirm the right tier.",
-      desc: "Pegasus reviews the intake. If a Strategy Snapshot is enough, we say so and route you there.",
+      title: "Possible fit review.",
+      desc: "Pegasus may review the intake for fit, information needs, and current capacity.",
     },
     {
       tag: "Step 03",
       icon: FileText,
-      title: "Scope, fee, timeline.",
-      desc: "We scope the Blueprint, quote the fee, and the timeline. You approve before we start.",
+      title: "Written terms, if offered.",
+      desc: "Any offered engagement identifies the scope, author, fee, timing, and limitations before work begins.",
     },
     {
       tag: "Step 04",
       icon: CheckCircle2,
-      title: "Blueprint delivered.",
-      desc: "Written memo, signed and timestamped. One round of clarification included.",
+      title: "Work under the agreed scope.",
+      desc: "Deliverables and any clarification period are limited to the signed terms; none are promised by this page.",
     },
   ];
 
@@ -280,11 +280,11 @@ function HowItWorks() {
             </p>
           </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
-            From intake to delivered memo.
+            From request to a possible engagement.
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            Most Blueprints are delivered within 7–10 business days from
-            approval. Complex situations may take longer; we tell you up front.
+            There is no public turnaround commitment. Timing begins only after a
+            written scope is accepted and required information is received.
           </p>
         </ScrollReveal>
 
@@ -297,7 +297,7 @@ function HowItWorks() {
                   data-testid={`blueprint-step-${i}`}
                 >
                   <div className="flex items-baseline justify-between mb-6">
-                    <span className="font-serif text-3xl text-primary/30 group-hover:text-primary/60 transition-colors">
+                    <span className="font-serif text-3xl text-primary transition-colors">
                       0{i + 1}
                     </span>
                     <s.icon className="w-5 h-5 text-primary/55 group-hover:text-primary transition-colors" />
@@ -336,13 +336,12 @@ function PricingSection() {
             Quoted per property.
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed mb-6">
-            Every Blueprint is scoped before it is priced. The fee reflects the
-            depth of the read: the structure work required, the complexity of
-            the chain-of-title, and the urgency of the decision.
+            No public price is advertised. If Pegasus offers a Blueprint, the
+            written proposal sets the fee and explains the work included.
           </p>
           <p className="text-base text-muted-foreground/85 leading-relaxed italic border-l-2 border-primary/40 pl-5">
-            No Blueprint is started without a written scope and an approved
-            fee. You know the number before any work begins.
+            A request does not create a service obligation. Do not rely on a
+            Blueprint until both parties accept the written terms.
           </p>
         </ScrollReveal>
       </div>
@@ -365,9 +364,9 @@ function CTASection() {
             Have a deal that earns a Blueprint?
           </h2>
           <p className="text-lg text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
-            Bring us the address and the situation. We confirm the right tier
-            before any fee is quoted. If a free tier solves it, you'll hear that
-            first.
+            Share the address and situation for possible review. Pegasus may
+            decline or offer a separately documented scope; no work is promised
+            by submitting the form.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/bring-an-opportunity?intent=blueprint">
@@ -392,10 +391,9 @@ function CTASection() {
             </Link>
           </div>
           <p className="text-xs text-muted-foreground/80 mt-12 max-w-2xl mx-auto leading-relaxed">
-            A Deal Blueprint is an analytical product, not an offer of
-            securities or a solicitation to invest. The Blueprint memo does not
-            constitute a fiduciary relationship beyond the scope of the
-            engagement. Investment decisions are yours.
+            A Blueprint request is not an offer of securities, an appraisal, a
+            valuation, or legal, tax, engineering, lending, or investment advice.
+            Use qualified professionals for decisions within their disciplines.
           </p>
         </ScrollReveal>
       </div>
@@ -407,7 +405,7 @@ export default function DealBlueprintPage() {
   useSEO({
     title: "Pegasus Deal Blueprint",
     description:
-      "A human-prepared underwriting and structure memo for a specific property. Written by the Pegasus team. Not auto-generated. Reserved for deals that earn it.",
+      "Request consideration for a separately scoped property analysis. Availability, author, fee, timing, contents, and limits require written agreement.",
     image: "/og/default.png",
   });
 

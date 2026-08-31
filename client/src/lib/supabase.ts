@@ -84,7 +84,7 @@ export interface WholesaleDeal {
 
 export interface SavedItem {
   id: string;
-  user_id: string;
+  external_user_id: string;
   item_type: string;
   item_id: string;
   created_at: string;
@@ -195,9 +195,15 @@ export async function provisionAuthenticatedUserProfile(input: {
 
 export async function ensureAuthenticatedUserProfile(
   session: Pick<Session, 'access_token' | 'user'>,
-  fetchProfile: (userId: string) => Promise<UserProfile | null>,
+  fetchProfile: (
+    userId: string,
+    accessToken?: string,
+  ) => Promise<UserProfile | null>,
 ): Promise<UserProfile | null> {
-  const existingProfile = await fetchProfile(session.user.id);
+  const existingProfile = await fetchProfile(
+    session.user.id,
+    session.access_token,
+  );
   if (existingProfile) {
     return existingProfile;
   }
@@ -215,7 +221,7 @@ export async function ensureAuthenticatedUserProfile(
     accessToken: session.access_token,
   });
 
-  return fetchProfile(session.user.id);
+  return fetchProfile(session.user.id, session.access_token);
 }
 
 export { supabaseInstance as supabase };

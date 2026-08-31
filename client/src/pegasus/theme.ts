@@ -20,8 +20,7 @@ export type Route =
   | 'contact'
   | 'peggy'
   | 'saved'
-  | 'submit'
-  | 'connect';
+  | 'submit';
 
 export type AudienceKey = 'sellers' | 'buyers' | 'dealfinders' | 'capital' | 'operators' | 'referral';
 
@@ -62,17 +61,30 @@ export type FormCfg = {
   heading: React.ReactNode;
   lead: string;
   submit: string;
-  third: { label: string; placeholder: string } | null;
+  third: {
+    label: string;
+    placeholder: string;
+    kind?: 'context' | 'property-address';
+  } | null;
+  thirdRequired?: boolean;
   messageLabel: string;
   messagePlaceholder: string;
+  messageRequired?: boolean;
   roleOptions?: string[];
 };
 
-export type SplitPath = { name: string; desc: string; cta: string; route: Route };
+export type SplitPath = {
+  name: string;
+  desc: string;
+  cta: string;
+} & (
+  | { route: Route }
+  | { href: string }
+);
 
 export type FaqItem = { q: string; a: string };
 
-export type Category = {
+type CategoryBase = {
   eyebrow: string;
   title: React.ReactNode;
   image: string;
@@ -89,5 +101,17 @@ export type Category = {
   faq?: FaqItem[];
   faqAnchor?: string;
   heroScrimTop?: boolean;
-  form: FormCfg;
 };
+
+export type CategoryTerminal = {
+  eyebrow: string;
+  title: React.ReactNode;
+  copy: string;
+  href: string;
+  label: string;
+};
+
+export type Category = CategoryBase & (
+  | { form: FormCfg; terminal?: never }
+  | { form?: never; terminal: CategoryTerminal }
+);

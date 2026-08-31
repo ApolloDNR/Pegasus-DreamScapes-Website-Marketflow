@@ -1,12 +1,16 @@
 import { useState } from "react";
 import { Link } from "wouter";
-import { Mail, MapPin, ArrowUpRight, Phone, LogIn, BarChart3, Linkedin } from "lucide-react";
+import { Mail, MapPin, ArrowUpRight, Phone, LogIn, BarChart3, Linkedin, Shield } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { trackEvent } from "@/lib/analytics";
 import { apiRequest } from "@/lib/queryClient";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
+import {
+  getRoleDashboardPath,
+  useSupabaseAuth,
+} from "@/contexts/supabase-auth-context";
+import { hasGovernedMarketflowAccess } from "@/lib/marketflow-access";
 import logoImage from "@/assets/brand/pegasus-emblem.png";
 import wordmarkImage from "@/assets/brand/pegasus-wordmark.svg";
 import { ThemeToggle } from "./theme-toggle";
@@ -46,8 +50,6 @@ const COLUMNS: { heading: string; links: FooterLink[] }[] = [
     heading: "Company",
     links: [
       navMore("/about"),
-      navMore("/library"),
-      navMore("/connect"),
       navMore("/contact"),
       navMore("/faq"),
       navMore("/peggy"),
@@ -87,6 +89,7 @@ const COLUMNS: { heading: string; links: FooterLink[] }[] = [
 function FooterEmailCapture() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+  const [marketingConsent, setMarketingConsent] = useState(false);
 
   const mutation = useMutation({
     mutationFn: async () => {
@@ -95,6 +98,8 @@ function FooterEmailCapture() {
         source: "footer_email_capture",
         firstName: name,
         email,
+        consentContact: marketingConsent,
+        consentCcpaAcknowledged: marketingConsent,
       });
     },
     onSuccess: () => {
@@ -104,7 +109,7 @@ function FooterEmailCapture() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || mutation.isPending) return;
+    if (!email || !marketingConsent || mutation.isPending) return;
     mutation.mutate();
   };
 
@@ -140,11 +145,28 @@ function FooterEmailCapture() {
             aria-label="First name (optional)"
             data-testid="input-footer-name"
           />
+          <label className="flex items-start gap-2.5 text-xs leading-relaxed text-muted-foreground">
+            <input
+              type="checkbox"
+              checked={marketingConsent}
+              onChange={(event) => setMarketingConsent(event.target.checked)}
+              required
+              className="mt-0.5 h-4 w-4 rounded border-border accent-primary"
+              data-testid="input-footer-consent"
+            />
+            <span>
+              I agree Pegasus may email me strategy updates and acknowledge the{" "}
+              <Link href="/privacy" className="underline underline-offset-2 hover:text-primary">
+                Privacy Notice
+              </Link>
+              . I can unsubscribe at any time.
+            </span>
+          </label>
           <Button
             type="submit"
             variant="ghost"
             size="sm"
-            disabled={mutation.isPending}
+            disabled={mutation.isPending || !email || !marketingConsent}
             className="px-0 h-auto text-[11px] uppercase tracking-[0.18em] text-primary hover:text-primary/80 hover:bg-transparent font-supporting font-semibold inline-flex items-center gap-1.5"
             data-testid="button-footer-subscribe"
           >
@@ -158,7 +180,25 @@ function FooterEmailCapture() {
 }
 
 export function Footer() {
-  const { isAuthenticated } = useSupabaseAuth();
+  const {
+    isAuthenticated,
+    isGuestMode,
+    isAdmin,
+    profile,
+    userRole,
+  } = useSupabaseAuth();
+  const hasMarketflowAccess = hasGovernedMarketflowAccess({
+    isAuthenticated,
+    isGuestMode,
+    isAdmin,
+    profile,
+    userRole,
+  });
+  const roleDashboardHref = getRoleDashboardPath(userRole);
+  const dashboardHref =
+    roleDashboardHref === "/marketflow"
+      ? "/marketflow/dashboard"
+      : roleDashboardHref;
   return (
     <footer className="bg-card border-t border-border/60">
       <div className="max-w-7xl mx-auto px-6 lg:px-12 py-16 lg:py-20">
@@ -175,7 +215,7 @@ export function Footer() {
             </Link>
             <div>
               <p className="font-display text-xl text-foreground tracking-[0.18em]">Pegasus Dreamscapes</p>
-              <p className="text-xs uppercase tracking-[0.3em] text-primary/80 mt-2 font-medium font-supporting">
+              <p className="text-xs uppercase tracking-[0.3em] text-primary mt-2 font-medium font-supporting">
                 Read the property. Underwrite the numbers. Design the route.
               </p>
             </div>
@@ -206,7 +246,7 @@ export function Footer() {
                 East Bay, California
               </div>
               <p className="text-xs text-muted-foreground/85 pt-2 leading-relaxed" data-testid="text-footer-response">
-                We respond to every serious submission within 48 hours, Monday through Friday.
+                Submission receipt does not promise review, follow-up, or response timing.
               </p>
             </div>
 
@@ -223,7 +263,7 @@ export function Footer() {
               >
                 <Linkedin className="w-3.5 h-3.5" />
               </a>
-              <span className="text-xs text-muted-foreground/50">Find us on LinkedIn</span>
+              <span className="text-xs text-muted-foreground">Find us on LinkedIn</span>
             </div>
 
             <FooterEmailCapture />
@@ -270,11 +310,18 @@ export function Footer() {
                 </span>
               </Link>
               <span className="text-border">&middot;</span>
-              {isAuthenticated ? (
-                <Link href="/marketflow/dashboard">
+              {hasMarketflowAccess ? (
+                <Link href={dashboardHref}>
                   <span className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer" data-testid="link-footer-dashboard">
                     <BarChart3 className="w-3 h-3" aria-hidden="true" />
                     Dashboard
+                  </span>
+                </Link>
+              ) : isAuthenticated ? (
+                <Link href="/marketflow/access">
+                  <span className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer" data-testid="link-footer-marketflow-access">
+                    <Shield className="w-3 h-3" aria-hidden="true" />
+                    Record access interest
                   </span>
                 </Link>
               ) : (

@@ -32,7 +32,7 @@ import {
 import { useSEO } from "@/hooks/use-seo";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, authenticatedRequest } from "@/lib/queryClient";
 import { trackEvent } from "@/lib/analytics";
 import { tierRangeFor, NOT_A_VALUATION_DISCLOSURE } from "@/lib/strategy-tier-ranges";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
@@ -910,6 +910,14 @@ export default function StrategyLabPage() {
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState<string | null>(null);
   const [runsLeft, setRunsLeft] = useState<number>(() => freeRunsRemaining());
 
+  useEffect(() => {
+    return () => {
+      if (pdfPreviewUrl) {
+        window.URL.revokeObjectURL(pdfPreviewUrl);
+      }
+    };
+  }, [pdfPreviewUrl]);
+
   // Stable signature of every engine input that materially affects the
   // analysis. Bumping the run counter on this signature (rather than on
   // topLane shifts) means each meaningful scenario the user runs counts
@@ -1286,11 +1294,17 @@ export default function StrategyLabPage() {
       }
       fireTouchpoint("pdf", { analysisId: id, tone: effectiveLens });
       const url = `/api/pdf/strategy-snapshot/by-id/${id}?tone=${effectiveLens}`;
+      const response = await authenticatedRequest(url);
+      if (!response.ok) {
+        const message = await response.text().catch(() => "");
+        throw new Error(message || `HTTP ${response.status}`);
+      }
+      const objectUrl = window.URL.createObjectURL(await response.blob());
       // Mobile-friendly: show an in-page preview first so the user can review
       // the PDF before saving / printing instead of triggering an immediate
-      // cross-tab download. Desktop users see the same preview and can open
-      // the raw PDF from the dialog.
-      setPdfPreviewUrl(url);
+      // cross-tab download. Fetching first is also required on Render because
+      // owner-only PDF routes authenticate with the Supabase bearer token.
+      setPdfPreviewUrl(objectUrl);
     } catch (err: any) {
       toast({ title: "Could not export PDF", description: err?.message ?? "Try again.", variant: "destructive" });
     }
@@ -2300,7 +2314,7 @@ export default function StrategyLabPage() {
                 </a>
                 <a
                   href={pdfPreviewUrl}
-                  download
+                  download={`pegasus-strategy-snapshot-${analysisId ?? "analysis"}.pdf`}
                   className="bg-[hsl(var(--copper))] text-primary-foreground px-4 py-2 text-sm font-supporting font-semibold inline-flex items-center gap-1.5"
                   data-testid="link-pdf-download"
                 >

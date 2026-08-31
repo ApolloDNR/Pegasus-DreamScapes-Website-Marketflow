@@ -14,6 +14,11 @@ import {
   Building,
 } from "lucide-react";
 import type { Project } from "@shared/schema";
+import {
+  NELSON_FACTS,
+  NELSON_PUBLIC_DESCRIPTION,
+  NELSON_PUBLIC_HIGHLIGHTS,
+} from "@shared/nelson-facts";
 import { HeroPicture } from "@/components/hero-picture";
 import { CardSurface } from "@/components/ui/card-primitives";
 import { SkeletonLine } from "@/components/skeleton-primitives";
@@ -32,10 +37,38 @@ const STATUS_LABEL: Record<string, string> = {
   "planning": "In Planning",
 };
 
+function isNelsonProject(project: Project): boolean {
+  return project.slug === NELSON_FACTS.slug;
+}
+
+function toPublicNelsonProject(project: Project): Project {
+  return {
+    ...project,
+    slug: NELSON_FACTS.slug,
+    name: `${NELSON_FACTS.name} · ${NELSON_FACTS.areaLabel}`,
+    address: NELSON_FACTS.address,
+    city: NELSON_FACTS.areaLabel,
+    state: NELSON_FACTS.state,
+    strategy: "fix-flip",
+    status: "completed",
+    purchasePrice: NELSON_FACTS.acquired,
+    rehabCost: NELSON_FACTS.improvementBudget,
+    arv: null,
+    salePrice: NELSON_FACTS.salePrice,
+    profit: null,
+    roi: null,
+    holdTime: null,
+    description: NELSON_PUBLIC_DESCRIPTION,
+    beforeImages: ["/images/nelson/nelson-before-exterior-front-1280.jpg"],
+    afterImages: ["/images/nelson/nelson-hero-1280.jpg"],
+    highlights: [...NELSON_PUBLIC_HIGHLIGHTS],
+  };
+}
+
 export default function Projects() {
   useSEO({
     title: "Projects",
-    description: "Documented real estate case studies from Pegasus DreamScapes Corp. Strategy, structure, and execution recorded for every project.",
+    description: "One published East Bay residential case study with approximate acquisition, improvement-budget, and sale figures plus clear cost limits.",
     image: "/og/projects.png",
   });
 
@@ -86,8 +119,8 @@ function HeroSection() {
             transition={{ duration: 0.7, delay: 0.3 }}
             data-testid="text-projects-hero"
           >
-            Every project<br />
-            <span className="bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">documented.</span>
+            Published work,<br />
+            <span className="bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">fact by fact.</span>
           </motion.h1>
 
           <motion.p
@@ -96,7 +129,7 @@ function HeroSection() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.55 }}
           >
-            A growing record of the real estate situations we've taken on, from forced-value rehabs to small-scale development. Strategy, structure, and execution recorded for every property.
+            Nelson Drive is the one case study currently ready for public review. Additional work will appear only when its facts, permissions, and limitations are documented.
           </motion.p>
         </div>
       </div>
@@ -106,33 +139,35 @@ function HeroSection() {
 }
 
 function ProjectsGrid() {
-  const { data: projects, isLoading, error } = useQuery<Project[]>({
+  const { data: projects, isLoading } = useQuery<Project[]>({
     queryKey: ["/api/projects"],
   });
 
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [strategyFilter, setStrategyFilter] = useState<string>("all");
 
+  const publicProjects = useMemo(
+    () => (projects ?? []).filter(isNelsonProject).map(toPublicNelsonProject),
+    [projects],
+  );
+
   const statuses = useMemo(() => {
-    if (!projects) return [];
-    return Array.from(new Set(projects.map((p) => p.status)));
-  }, [projects]);
+    return Array.from(new Set(publicProjects.map((p) => p.status)));
+  }, [publicProjects]);
 
   const strategies = useMemo(() => {
-    if (!projects) return [];
-    return Array.from(new Set(projects.map((p) => p.strategy)));
-  }, [projects]);
+    return Array.from(new Set(publicProjects.map((p) => p.strategy)));
+  }, [publicProjects]);
 
   const filtered = useMemo(() => {
-    if (!projects) return [];
-    return projects.filter((p) =>
+    return publicProjects.filter((p) =>
       (statusFilter === "all" || p.status === statusFilter) &&
       (strategyFilter === "all" || p.strategy === strategyFilter)
     );
-  }, [projects, statusFilter, strategyFilter]);
+  }, [publicProjects, statusFilter, strategyFilter]);
 
   const showingNelsonFallback =
-    projects?.length === 0 && statusFilter === "all" && strategyFilter === "all";
+    publicProjects.length === 0 && statusFilter === "all" && strategyFilter === "all";
 
   if (isLoading) {
     return (
@@ -171,37 +206,6 @@ function ProjectsGrid() {
               </div>
             ))}
           </div>
-        </div>
-      </section>
-    );
-  }
-
-  if (error || !projects) {
-    return (
-      <section className="py-24 lg:py-32 bg-background">
-        <div className="max-w-xl mx-auto text-center px-6">
-          <div className="inline-flex w-14 h-14 rounded-full border border-primary/30 items-center justify-center mb-7">
-            <Building className="w-6 h-6 text-primary/70" />
-          </div>
-          <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
-            The Record · Loading
-          </p>
-          <h3 className="font-serif text-3xl sm:text-4xl font-semibold mb-5 leading-tight tracking-tight">
-            We can't reach the project record right now.
-          </h3>
-          <p className="text-base text-muted-foreground leading-relaxed mb-8">
-            Refresh in a moment. If it persists, the team has been notified.
-          </p>
-          <Link href="/submit">
-            <Button
-              size="lg"
-              className="min-h-[44px] px-8 text-sm uppercase tracking-[0.15em] font-semibold"
-              data-testid="button-projects-error-cta"
-            >
-              Start a Strategy Review
-              <ArrowRight className="ml-2 w-4 h-4" />
-            </Button>
-          </Link>
         </div>
       </section>
     );
@@ -260,7 +264,7 @@ function ProjectsGrid() {
                       <MapPin className="w-3.5 h-3.5" />
                       <span>Richmond / El Sobrante Area, CA</span>
                     </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed mb-4">A completed East Bay residential transformation documented from acquisition through renovation and sale.</p>
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-4">{NELSON_PUBLIC_DESCRIPTION}</p>
                     <div className="flex items-center justify-between pt-4 border-t border-border/40">
                       <span className="text-xs uppercase tracking-[0.18em] text-primary font-semibold">View case study</span>
                       <ArrowRight className="w-4 h-4 text-primary group-hover:translate-x-1 transition-transform" />
@@ -287,12 +291,12 @@ function ProjectsGrid() {
             <p className="text-base text-muted-foreground mb-8 leading-relaxed">
               {showingNelsonFallback
                 ? "Start with the completed Nelson Drive case study. Additional projects will be added when their records are ready for public review."
-                : "Clear the filters to see the full set, or start a Strategy Review and we will route your situation to the right lane."}
+                : "Clear the filters to return to the published case study, or share a situation for possible review."}
             </p>
             <div className="flex justify-center">
               {showingNelsonFallback ? (
                 <a
-                  href="/submit"
+                  href="/bring-an-opportunity"
                   className="inline-flex items-center justify-center min-h-[44px] px-8 text-sm uppercase tracking-[0.15em] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 rounded-md shadow-lg transition-all duration-300 hover:-translate-y-0.5"
                   data-testid="link-projects-strategy-review"
                 >
@@ -463,10 +467,10 @@ function CTASection() {
             Have one to add to the record?
           </h2>
           <p className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto mb-10">
-            Whether you have a property to submit, capital to deploy, or a partnership to discuss, every conversation starts the same way: with a real, structural review.
+            Share a property, capital question, or possible partnership for consideration. A submission is a request, not a promise of review, service, funding, or transaction.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/submit">
+            <Link href="/bring-an-opportunity">
               <Button size="lg" className="w-full sm:w-auto px-10 py-7 text-sm uppercase tracking-[0.15em] font-semibold" data-testid="button-projects-sell">
                 Submit a Property
                 <ArrowRight className="ml-3 w-4 h-4" />

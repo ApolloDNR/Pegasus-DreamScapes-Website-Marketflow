@@ -53,6 +53,18 @@ const vendorFormSchema = z.object({
   references: z.string().optional(),
   portfolio: z.string().optional(),
   notes: z.string().optional(),
+  consentContact: z.boolean().refine((value) => value, {
+    message: "Please agree before submitting.",
+  }),
+  referenceAuthorization: z.boolean(),
+}).superRefine((data, ctx) => {
+  if (data.references?.trim() && !data.referenceAuthorization) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["referenceAuthorization"],
+      message: "Confirm you are authorized to share reference information.",
+    });
+  }
 });
 
 type VendorFormValues = z.infer<typeof vendorFormSchema>;
@@ -61,7 +73,7 @@ export default function VendorNetwork() {
   useSEO({
     title: "Vendor Network",
     description:
-      "Apply to the Pegasus DreamScapes Corp. private vendor network. Vetted contractors, lenders, agents, and operators routed to active deal flow.",
+      "Submit a vendor profile for possible future project consideration. Application does not promise review, approval, placement, work, volume, or compensation.",
     image: "/og/default.png",
   });
 
@@ -116,9 +128,9 @@ function HeroSection() {
             transition={{ duration: 0.7, delay: 0.3 }}
             data-testid="text-vendor-hero"
           >
-            Operators we trust.<br />
+            Vendor applications.<br />
             <span className="bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">
-              Routed to real work.
+              Considered case by case.
             </span>
           </motion.h1>
 
@@ -128,7 +140,7 @@ function HeroSection() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.55 }}
           >
-            The Pegasus Vendor Network is how we line up the contractors, lenders, agents, and specialists behind every project. Vetted intake, real references, and a private list. Not a public marketplace.
+            This page collects vendor profiles that may be considered for a future scope. It is not a directory, roster of approved vendors, employment portal, or promise of active work.
           </motion.p>
         </div>
       </div>
@@ -141,7 +153,7 @@ const VENDOR_CATEGORIES = [
   {
     icon: HardHat,
     title: "General Contractors",
-    desc: "Full-scope GCs for ADUs, flips, and ground-up. License + insurance required.",
+    desc: "General-contractor profiles for possible future scopes; applicable licenses and insurance may be requested.",
   },
   {
     icon: Wrench,
@@ -177,14 +189,14 @@ function CategoriesSection() {
         <ScrollReveal className="text-center max-w-2xl mx-auto mb-16">
           <div className="flex items-center justify-center gap-4 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
-            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Trades We Work With</p>
+            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Profile Categories</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
-            Six lanes. Real standards.
+            Six possible vendor lanes.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed">
-            We keep a short list per trade. Every vendor is referenced, insured where required, and matched to projects we're actively running.
+            These categories describe profiles Pegasus may consider. They are not an approved roster, evidence of current project demand, or a promise of matching or work.
           </p>
         </ScrollReveal>
 
@@ -221,14 +233,14 @@ const JOIN_STEPS = [
   {
     icon: ShieldCheck,
     step: "02",
-    title: "Vetting & references",
-    desc: "We review credentials, call references, and look at past work. Vendors are flagged Submitted, Under Review, Approved, or Preferred internally.",
+    title: "Possible diligence",
+    desc: "For a specific future scope, Pegasus may request credentials, licenses, insurance, references, and work samples.",
   },
   {
     icon: Handshake,
     step: "03",
-    title: "Routed to active work",
-    desc: "Approved vendors get matched to scopes inside live Pegasus projects. Preferred vendors are first call on the lanes they fit.",
+    title: "Separate scope, if offered",
+    desc: "Any invitation, diligence, scope, schedule, payment, or relationship exists only in later written terms.",
   },
 ];
 
@@ -238,20 +250,20 @@ const PEGASUS_STANDARDS = [
     desc: "Current GL coverage, workers' comp where applicable, and an active license on file for any trade that requires one.",
   },
   {
-    title: "Real references, recently checked",
-    desc: "We call 2–3 recent references: clients, GCs, or capital partners who can speak to scope, schedule, and behavior on site.",
+    title: "References may be checked",
+    desc: "A future scope may require recent references who can speak to work quality, schedule, and site conduct.",
   },
   {
     title: "Clear scope, written change orders",
     desc: "Quotes are itemized. Change orders are written, not verbal. Surprise invoices break trust and end the relationship.",
   },
   {
-    title: "Communication on a project clock",
-    desc: "Same-day acknowledgement, next-day answers. If a date is going to slip, we want to hear it before the date, not after.",
+    title: "Communication terms in writing",
+    desc: "A future scope can set acknowledgement, update, escalation, and delay-notice expectations in writing.",
   },
   {
     title: "Safe sites, clean handoffs",
-    desc: "PPE, lien waivers, permits where required, and a broom-clean handoff. We document the standard with photos at each milestone.",
+    desc: "A future scope may require PPE, lien waivers, permits, site records, milestone photos, and handoff criteria.",
   },
   {
     title: "Aligned with the doctrine",
@@ -271,10 +283,10 @@ function PegasusStandardSection() {
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
           <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5 text-white">
-            The bar we hold every vendor to.
+            Criteria a future scope may require.
           </h2>
           <p className="text-base text-cream/85 leading-relaxed">
-            Scope it right, price it straight, finish what you start. Vendors who hold that bar get routed to real work, repeatedly.
+            These are example expectations, not evidence of an approved bench or a promise of work. The signed project agreement controls.
           </p>
         </ScrollReveal>
 
@@ -310,7 +322,7 @@ function HowToJoinSection() {
             Three steps. No pay-to-play.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed">
-            We don't sell directory listings. The list is short on purpose so we can keep the bar high.
+            The application creates a profile only. Pegasus may decline, request more information, or take no action.
           </p>
         </ScrollReveal>
 
@@ -321,7 +333,7 @@ function HowToJoinSection() {
               className="relative p-8 bg-background border-border/40"
               data-testid={`vendor-step-${i}`}
             >
-              <p className="font-serif text-6xl text-primary/15 absolute top-4 right-6 leading-none">{s.step}</p>
+              <p className="font-serif text-6xl text-primary absolute top-4 right-6 leading-none">{s.step}</p>
               <s.icon className="w-7 h-7 text-primary mb-5" />
               <h3 className="font-serif text-xl font-semibold mb-3 tracking-tight">{s.title}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
@@ -330,7 +342,7 @@ function HowToJoinSection() {
         </div>
 
         <p className="mt-12 text-center text-xs text-muted-foreground/80 max-w-2xl mx-auto leading-relaxed">
-          Submitting an application doesn't guarantee approval, placement, or volume. Vendor status is reviewed on an ongoing basis.
+          Submitting does not guarantee review, approval, placement, work, volume, compensation, or a future response.
         </p>
       </div>
     </section>
@@ -357,6 +369,8 @@ function VendorFormSection() {
       references: "",
       portfolio: "",
       notes: "",
+      consentContact: false,
+      referenceAuthorization: false,
     },
   });
 
@@ -366,7 +380,10 @@ function VendorFormSection() {
       const firstName = nameParts[0] || "";
       const lastName = nameParts.slice(1).join(" ") || "";
 
-      const payload: Partial<InsertLead> = {
+      const payload: Partial<InsertLead> & {
+        consentContact: boolean;
+        consentCcpaAcknowledged: boolean;
+      } = {
         leadType: "vendor",
         source: "vendor_network_page",
         firstName,
@@ -383,8 +400,11 @@ function VendorFormSection() {
           availability: data.availability,
           references: data.references,
           portfolio: data.portfolio,
+          referenceAuthorization: data.referenceAuthorization,
         },
         notes: data.notes,
+        consentContact: data.consentContact,
+        consentCcpaAcknowledged: data.consentContact,
       };
 
       return await apiRequest("POST", "/api/leads", payload);
@@ -402,7 +422,12 @@ function VendorFormSection() {
   });
 
   return (
-    <section id="vendor-form" className="py-28 lg:py-36 bg-background scroll-mt-24">
+    <section
+      id="vendor-form"
+      aria-labelledby="vendor-form-title"
+      className="py-28 lg:py-36 bg-background scroll-mt-24"
+      data-testid="vendor-form"
+    >
       <div className="max-w-4xl mx-auto px-6 lg:px-12">
         <ScrollReveal className="text-center max-w-2xl mx-auto mb-12">
           <div className="flex items-center justify-center gap-4 mb-4">
@@ -410,11 +435,11 @@ function VendorFormSection() {
             <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Vendor Intake</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+          <h2 id="vendor-form-title" className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
             Apply to be considered.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed">
-            Real numbers, real references, real availability. The more specific, the faster we can route you.
+            Vendor Network is the only formal application of record for operators and vendors. Share accurate credentials, references, and availability; completeness does not create review or routing priority.
           </p>
         </ScrollReveal>
 
@@ -524,7 +549,7 @@ function VendorFormSection() {
                     <FormLabel>References (optional)</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="2–3 recent client / GC references with phone or email."
+                        placeholder="Names and professional relationship. Add contact details only with permission."
                         className="min-h-24 resize-none"
                         {...field}
                         value={field.value ?? ""}
@@ -559,6 +584,51 @@ function VendorFormSection() {
                   </FormItem>
                 )} />
 
+                <FormField control={form.control} name="consentContact" render={({ field }) => (
+                  <FormItem className="rounded-md border border-border/60 bg-muted/20 p-4">
+                    <div className="flex items-start gap-3">
+                      <FormControl>
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={(event) => field.onChange(event.target.checked)}
+                          className="mt-1 h-4 w-4 shrink-0 accent-primary"
+                          data-testid="checkbox-vendor-consent"
+                        />
+                      </FormControl>
+                      <FormLabel className="text-sm font-normal leading-relaxed">
+                        I agree Pegasus Dreamscapes may contact me about this vendor application.
+                        Pegasus may use the submitted profile and share it with service providers
+                        that operate the site as described in the <a className="underline underline-offset-2" href="/privacy">Privacy Policy</a>.
+                        Submission does not promise review, approval, placement, work, or payment.
+                      </FormLabel>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <FormField control={form.control} name="referenceAuthorization" render={({ field }) => (
+                  <FormItem className="rounded-md border border-border/60 bg-muted/20 p-4">
+                    <div className="flex items-start gap-3">
+                      <FormControl>
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={(event) => field.onChange(event.target.checked)}
+                          className="mt-1 h-4 w-4 shrink-0 accent-primary"
+                          data-testid="checkbox-vendor-reference-authorization"
+                        />
+                      </FormControl>
+                      <FormLabel className="text-sm font-normal leading-relaxed">
+                        If I included another person's reference information, I confirm I am
+                        authorized to share it for this application and understand Pegasus may
+                        contact that person only if it considers the profile for a specific scope.
+                      </FormLabel>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
                 <Button
                   type="submit"
                   size="lg"
@@ -574,7 +644,7 @@ function VendorFormSection() {
                 </Button>
 
                 <p className="pt-2 text-[11px] leading-relaxed text-muted-foreground/80 text-center">
-                  Vendor Network intake follows the v1.3.1 blueprint, section 14. This is not a hiring guarantee and not an offer of work.
+                  Submitting creates an application record only. It is not a hiring guarantee, approval, placement, or offer of work.
                 </p>
               </form>
             </Form>

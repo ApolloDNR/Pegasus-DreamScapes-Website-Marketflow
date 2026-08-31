@@ -18,6 +18,14 @@ Codex should choose the highest-impact unfinished launch slice from `docs/ROADMA
 
 Do not wait for Apollo to pick small tasks unless blocked by production secrets, legal/compliance review, destructive risk, deployment approval, or contradictory source docs.
 
+## Canonical Completion Plan
+
+Resume from `docs/superpowers/plans/2026-08-13-pegasus-security-launch-recovery.md` on branch `codex/launch-recovery-v2`. Use that program, its committed executable child plans, tracked `docs/qa/security-launch-recovery-ledger.md`, and their plan-scoped SDD ledgers as the durable sources of progress.
+
+PR #25 is historical review evidence only. A successor pull request has not yet been created; record it in the recovery plan and ledger when Task 15 opens it. A status-only message is never a completed milestone. Continue through the first unchecked safe task, record accepted work in Git and remote evidence, and do not restart completed tasks after temporary workspace cleanup.
+
+Stop only for a verified external-access blocker, destructive data risk, legal/compliance decision, production or deployment approval, source-of-truth contradiction, or a repeated verification failure that cannot be resolved safely. When stopped, report one exact action needed from Apollo and the first resume check.
+
 ## Build Bias
 
 Prioritize:

@@ -26,8 +26,17 @@
 ## Data, Privacy, And Security
 
 - Production env vars verified without exposing values.
+- Reviewed launch migrations have been applied to a backed-up database; `/api/ready` verifies required launch columns plus production email/HQ configuration and returns 200.
+- Live Supabase `pg_policies`, table/column grants, views, default privileges,
+  and `SECURITY DEFINER` functions have been inventoried across every exposed
+  Data API schema. Normal signed-in users cannot call privileged admin
+  functions or read another user's raw profile. Any deliberately client-callable
+  `SECURITY DEFINER` function has an explicit authorization check and a negative
+  test using a normal signed-in token.
 - Form payloads are validated and routed.
-- `/api/leads` creates a database row, queues HQ forwarding in `hq_outbox`, and sends the staff notification in the deployed environment.
+- `/api/leads` creates a database row, queues HTTPS HQ forwarding in `hq_outbox`, recovers stale forwarding leases after a restart, and sends the staff notification in the deployed environment.
+- API and email fallback logs contain no contact, property, message-body, or outbox payload data.
+- Public intake quotas, security headers, and unsupported-storage fail-closed behavior are verified.
 - Peggy boundaries are enforced.
 - No fixture content is presented as live inventory or real case status.
 
@@ -39,5 +48,7 @@
 
 ## Deployment
 
+- Render production deploys only from `main` after the `launch verification` check passes.
+- The `onrender.com` release candidate passes the full launch smoke before any DNS change.
 - Production domain, SSL, robots, sitemap, OG image, favicon, and canonical URLs are verified.
 - Real production `/api/opportunities` smoke verifies the canonical intake, database, Pegasus HQ outbox, and staff/customer notifications. Use a marked test opportunity and delete/archive it after proof is captured.

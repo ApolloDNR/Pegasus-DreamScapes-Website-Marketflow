@@ -2,50 +2,49 @@
 import { describe, it, expect } from "vitest";
 import { PEGGY_SYSTEM_PROMPT } from "../../../server/peggy";
 
-describe("Peggy system prompt: tool surface enumeration", () => {
-  it("enumerates Strategy Lab Quick Read and Full Path modes", () => {
-    expect(PEGGY_SYSTEM_PROMPT).toContain("/strategy-lab");
-    expect(PEGGY_SYSTEM_PROMPT).toContain("Quick Read");
-    expect(PEGGY_SYSTEM_PROMPT).toContain("Full Path");
+describe("Peggy system prompt: bounded public tool guidance", () => {
+  it("describes Strategy Lab without promising controls the visitor cannot see", () => {
+    expect(PEGGY_SYSTEM_PROMPT).toContain(
+      "**Strategy Lab — public modeling surface.** /strategy-lab",
+    );
+    expect(PEGGY_SYSTEM_PROMPT).toContain("visitor-entered assumptions");
+    expect(PEGGY_SYSTEM_PROMPT).toContain(
+      "Explain only controls and outputs that the visitor says are visible",
+    );
   });
 
-  it("names all 8 Quick Tools calculators by name", () => {
-    for (const name of [
-      "ARV",
-      "ROI",
-      "BRRRR",
-      "Cash Flow",
-      "Wholesale MAO",
-      "PITI",
-      "Own vs Rent",
-      "Hard Money",
-    ]) {
-      expect(PEGGY_SYSTEM_PROMPT).toContain(name);
-    }
-    // The classic suite is retired; the calculators now live in-page in the
-    // unified Lab, deep-linkable via the Quick Tools query param.
-    expect(PEGGY_SYSTEM_PROMPT).toContain("/strategy-lab?tool=calculators");
+  it("routes calculator questions to the visible Strategy Lab work area", () => {
+    expect(PEGGY_SYSTEM_PROMPT).toContain(
+      "Point to the right calculator or educational work area in /strategy-lab",
+    );
+    expect(PEGGY_SYSTEM_PROMPT).not.toContain("three free runs before sign-in");
   });
 
-  it("names the Strategy Snapshot PDF and route family", () => {
+  it("describes an offered Strategy Snapshot PDF without exposing an API route", () => {
     expect(PEGGY_SYSTEM_PROMPT).toContain("Strategy Snapshot PDF");
-    expect(PEGGY_SYSTEM_PROMPT).toContain("/api/pdf/strategy-snapshot/by-id/:id");
+    expect(PEGGY_SYSTEM_PROMPT).toContain("When the interface offers a PDF action");
+    expect(PEGGY_SYSTEM_PROMPT).toContain(
+      "visitor-entered assumptions and remains directional, not a valuation or advice",
+    );
+    expect(PEGGY_SYSTEM_PROMPT).not.toContain("/api/pdf/strategy-snapshot/");
   });
 
-  it("presents the Deal Blueprint as a by-review engagement, not a fixed-price product", () => {
+  it("presents Deal Blueprint as a possible separately scoped request", () => {
     expect(PEGGY_SYSTEM_PROMPT).toContain("/deal-blueprint");
     const lower = PEGGY_SYSTEM_PROMPT.toLowerCase();
-    expect(lower).toContain("by review");
-    expect(lower).toContain("do not quote a fixed price");
+    expect(lower).toContain("request for possible separately scoped work");
+    expect(lower).toContain(
+      "no purchase, acceptance, fee, turnaround, or delivery is promised",
+    );
     // The retired fixed public prices must never reappear in the prompt.
     expect(PEGGY_SYSTEM_PROMPT).not.toContain("$497");
     expect(PEGGY_SYSTEM_PROMPT).not.toContain("$897");
     expect(PEGGY_SYSTEM_PROMPT).not.toContain("$1,497");
   });
 
-  it("names Strategy Library, Vendor Network, MarketFlow, Submit, Capital, Contact routes", () => {
+  it("routes education only to Strategy Lab while retaining live public routes", () => {
     for (const route of [
-      "/resources",
+      "/strategy-lab",
       "/vendor-network",
       "/marketflow",
       "/bring-an-opportunity",
@@ -54,6 +53,8 @@ describe("Peggy system prompt: tool surface enumeration", () => {
     ]) {
       expect(PEGGY_SYSTEM_PROMPT).toContain(route);
     }
+    expect(PEGGY_SYSTEM_PROMPT).not.toContain("/library");
+    expect(PEGGY_SYSTEM_PROMPT).not.toContain("/resources");
   });
 
   it("includes the direct line (Apollo email and phone)", () => {

@@ -7,6 +7,7 @@ import userEvent from "@testing-library/user-event";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { SEO_ROUTES, sitemapEntries } from "@shared/seo-routes";
 
 // Empire Doctrine v1.0.1 — Keyboard accessibility regression net (Task #143).
 //
@@ -26,7 +27,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 //       `focus-visible:outline-none` without supplying a replacement
 //       focus state.
 //
-//   (2) COMPONENT TAB ORDER — Navigation, Footer, and /connect render
+//   (2) COMPONENT TAB ORDER — Navigation, Footer, and the /contact chooser render
 //       their focusable elements in expected reading order; userEvent.tab()
 //       can actually walk through every navigation testid in DOM order.
 //
@@ -161,7 +162,7 @@ if (typeof window !== "undefined" && !(window as unknown as { scrollTo?: unknown
 
 import { Navigation } from "@/components/navigation";
 import { Footer } from "@/components/footer";
-import ConnectPage from "@/pages/connect";
+import { ConnectChooser } from "@/pages/connect";
 
 const FOCUSABLE_SELECTOR = [
   "a[href]",
@@ -241,19 +242,23 @@ describe("Global focus-visible baseline (Empire Doctrine v1.0.1, Task #143)", ()
   });
 
   it("preserves the skip link and delegates the Pegasus main landmark to Landing", () => {
-    const app = fs.readFileSync(
-      path.join(process.cwd(), "client/src/App.tsx"),
+    const publicApp = fs.readFileSync(
+      path.join(process.cwd(), "client/src/PublicApp.tsx"),
+      "utf-8",
+    );
+    const legacyApp = fs.readFileSync(
+      path.join(process.cwd(), "client/src/LegacyApp.tsx"),
       "utf-8",
     );
     const landing = fs.readFileSync(
       path.join(process.cwd(), "client/src/pegasus/Landing.tsx"),
       "utf-8",
     );
-    expect(app.includes('className="skip-to-content"')).toBe(true);
-    expect(app.includes('href="#main-content"')).toBe(true);
+    expect(publicApp.includes('className="skip-to-content"')).toBe(true);
+    expect(publicApp.includes('href="#main-content"')).toBe(true);
     expect(landing.includes('<main id="main-content"')).toBe(true);
 
-    const pegasusBranch = app.match(
+    const pegasusBranch = legacyApp.match(
       /\{pegasus \? \(\s*([\s\S]*?)\s*\) : standalone \? \(/,
     )?.[1];
     expect(pegasusBranch).toBeTruthy();
@@ -309,7 +314,7 @@ const FOCUS_RING_SOURCES = [
   // Task #144: extend the "no focus-visible:outline-none without a
   // replacement" static guard to every v1 public page file, so a
   // regression on any page-level custom button / tab / accordion / form
-  // control fails CI the same way the navigation, footer, and /connect
+  // control fails CI the same way the navigation, footer, and Contact chooser
   // surfaces already do.
   "client/src/pages/home.tsx",
   "client/src/pages/about.tsx",
@@ -317,7 +322,6 @@ const FOCUS_RING_SOURCES = [
   "client/src/pages/submit-property.tsx",
   "client/src/pages/capital.tsx",
   "client/src/pages/connect.tsx",
-  "client/src/pages/library.tsx",
   "client/src/pages/projects.tsx",
   "client/src/pages/project-nelson-dr.tsx",
   "client/src/pages/vendor-network.tsx",
@@ -325,7 +329,7 @@ const FOCUS_RING_SOURCES = [
   "client/src/pages/disclosures.tsx",
   "client/src/pages/privacy.tsx",
   "client/src/pages/terms.tsx",
-  "client/src/pages/marketplace.tsx",
+  "client/src/pegasus/marketflow-experience.tsx",
   "client/src/pages/marketflow-access.tsx",
   "client/src/pages/strategy-lab.tsx",
   // Task #145 — admin / HQ page files Apollo uses every day must
@@ -405,7 +409,6 @@ describe("Tab order matches reading order (Task #143)", () => {
       "link-footer-phone",
       "heading-footer-company",
       "link-footer-more-about",
-      "link-footer-more-connect",
       "link-footer-more-contact",
       "heading-footer-tools",
       "link-footer-deal-strategy",
@@ -426,8 +429,8 @@ describe("Tab order matches reading order (Task #143)", () => {
     ]);
   });
 
-  it("/connect: eight routing buttons appear in DOM order with visible focus treatment", () => {
-    const { container } = renderWithRouter(<ConnectPage />, "/connect");
+  it("/contact: eight routing buttons appear in DOM order with visible focus treatment", () => {
+    const { container } = renderWithRouter(<ConnectChooser />, "/contact");
     const connectLinks = Array.from(
       container.querySelectorAll<HTMLElement>("[data-testid^='link-connect-']"),
     ).filter((el) => {
@@ -512,17 +515,27 @@ import AboutPage from "@/pages/about";
 import DevelopmentPage from "@/pages/development";
 import SubmitPropertyPage from "@/pages/submit-property";
 import CapitalPage from "@/pages/capital";
-import LibraryPage from "@/pages/library";
 import ProjectsPage from "@/pages/projects";
 import NelsonDrPage from "@/pages/project-nelson-dr";
 import VendorNetworkPage from "@/pages/vendor-network";
-import ContactPage from "@/pages/contact";
 import DisclosuresPage from "@/pages/disclosures";
 import PrivacyPage from "@/pages/privacy";
 import TermsPage from "@/pages/terms";
-import MarketplacePage from "@/pages/marketplace";
 import MarketflowAccessPage from "@/pages/marketflow-access";
 import StrategyLabPage from "@/pages/strategy-lab";
+import DepartmentsPage from "@/pages/departments";
+import CaseStudyPage from "@/pages/case-study";
+import PegasusStandardPage from "@/pages/pegasus-standard";
+import DealBlueprintPage from "@/pages/deal-blueprint";
+import FAQPage from "@/pages/faq";
+import { PremiumMarketFlow } from "@/pegasus/marketflow-experience";
+import { CategoryPage } from "@/pegasus/category-page";
+import { CATEGORIES } from "@/pegasus/data";
+import { PropertyOwnersPage } from "@/pegasus/property-owners";
+import { DealPartnersPage } from "@/pegasus/deal-partners";
+import { HowWeOperatePage } from "@/pegasus/how-we-operate";
+import { OurWorkPage } from "@/pegasus/our-work";
+import { ContactPage, EcosystemPage, PeggyPage, WorkWithApolloPage } from "@/pegasus/pages";
 // Task #145 — admin / HQ surfaces.
 import AdminCtaEventsPage from "@/pages/admin-cta-events";
 import AdminVendorsPage from "@/pages/admin-vendors";
@@ -541,25 +554,131 @@ type RouteSpec = {
   Page: React.ComponentType<unknown>;
 };
 
+function MarketFlowPublicPage() {
+  return <PremiumMarketFlow go={vi.fn()} />;
+}
+
+const publicNav = vi.fn();
+const openPublicPeggy = vi.fn();
+
+function PropertyOwnersPublicPage() {
+  return <PropertyOwnersPage go={publicNav} />;
+}
+
+function BuyersPublicPage() {
+  return (
+    <CategoryPage
+      cat={CATEGORIES.buyers}
+      go={publicNav}
+      openPeggy={openPublicPeggy}
+    />
+  );
+}
+
+function DealPartnersPublicPage() {
+  return <DealPartnersPage go={publicNav} />;
+}
+
+function OperatorsPublicPage() {
+  return (
+    <CategoryPage
+      cat={CATEGORIES.operators}
+      go={publicNav}
+      openPeggy={openPublicPeggy}
+    />
+  );
+}
+
+function ReferralPublicPage() {
+  return (
+    <CategoryPage
+      cat={CATEGORIES.referral}
+      go={publicNav}
+      openPeggy={openPublicPeggy}
+    />
+  );
+}
+
+function HowWeOperatePublicPage() {
+  return <HowWeOperatePage go={publicNav} />;
+}
+
+function OurWorkPublicPage() {
+  return <OurWorkPage go={publicNav} />;
+}
+
+function WorkWithApolloPublicPage() {
+  return <WorkWithApolloPage go={publicNav} />;
+}
+
+function EcosystemPublicPage() {
+  return <EcosystemPage go={publicNav} openPeggy={openPublicPeggy} />;
+}
+
+function PeggyPublicPage() {
+  return <PeggyPage go={publicNav} openPeggy={openPublicPeggy} />;
+}
+
+function ContactPublicPage() {
+  return <ContactPage />;
+}
+
 const PUBLIC_ROUTES: RouteSpec[] = [
   { path: "/", Page: HomePage },
+  { path: "/property-owners", Page: PropertyOwnersPublicPage },
+  { path: "/buyers", Page: BuyersPublicPage },
+  { path: "/deal-partners", Page: DealPartnersPublicPage },
+  { path: "/operators", Page: OperatorsPublicPage },
+  { path: "/referral", Page: ReferralPublicPage },
+  { path: "/how-we-operate", Page: HowWeOperatePublicPage },
+  { path: "/our-work", Page: OurWorkPublicPage },
   { path: "/about", Page: AboutPage },
   { path: "/development", Page: DevelopmentPage },
   { path: "/bring-an-opportunity", Page: SubmitPropertyPage },
   { path: "/capital", Page: CapitalPage },
-  { path: "/connect", Page: ConnectPage },
-  { path: "/library", Page: LibraryPage },
   { path: "/projects", Page: ProjectsPage },
   { path: "/projects/nelson-dr", Page: NelsonDrPage },
   { path: "/vendor-network", Page: VendorNetworkPage },
-  { path: "/contact", Page: ContactPage },
+  { path: "/contact", Page: ContactPublicPage },
   { path: "/disclosures", Page: DisclosuresPage },
   { path: "/privacy", Page: PrivacyPage },
   { path: "/terms", Page: TermsPage },
-  { path: "/marketflow", Page: MarketplacePage },
+  { path: "/marketflow", Page: MarketFlowPublicPage },
   { path: "/marketflow/access", Page: MarketflowAccessPage },
   { path: "/strategy-lab", Page: StrategyLabPage },
+  { path: "/ecosystem", Page: EcosystemPublicPage },
+  { path: "/work-with-apollo", Page: WorkWithApolloPublicPage },
+  { path: "/peggy", Page: PeggyPublicPage },
+  { path: "/departments", Page: DepartmentsPage },
+  { path: "/case-study", Page: CaseStudyPage },
+  { path: "/pegasus-standard", Page: PegasusStandardPage },
+  { path: "/deal-blueprint", Page: DealBlueprintPage },
+  { path: "/faq", Page: FAQPage },
 ];
+
+describe("public keyboard route inventory", () => {
+  it("covers every sitemap route exactly once and retains noindex legal-page coverage", () => {
+    const coveredPaths = PUBLIC_ROUTES.map(({ path: routePath }) => routePath);
+    const sitemapPaths = sitemapEntries().map(({ path: routePath }) => routePath).sort();
+    const coverageCount = new Map<string, number>();
+    for (const routePath of coveredPaths) {
+      coverageCount.set(routePath, (coverageCount.get(routePath) ?? 0) + 1);
+    }
+
+    expect(
+      sitemapPaths.filter((routePath) => coverageCount.get(routePath) !== 1),
+    ).toEqual([]);
+
+    const noindexCoverage = coveredPaths
+      .filter((routePath) => !sitemapPaths.includes(routePath))
+      .sort();
+    expect(noindexCoverage).toEqual(["/disclosures", "/privacy", "/terms"]);
+    for (const routePath of noindexCoverage) {
+      expect(SEO_ROUTES[routePath]?.noIndex, routePath).toBe(true);
+      expect(coverageCount.get(routePath), routePath).toBe(1);
+    }
+  });
+});
 
 function makeQueryClient() {
   return new QueryClient({
@@ -688,9 +807,10 @@ describe("Per-page keyboard accessibility (every v1 public route)", () => {
     describe(`${route.path}`, () => {
       it("renders header → main → footer landmarks in DOM order", () => {
         const { container } = renderRoute(route);
+        const main = container.querySelector("main#main-content");
         const all = Array.from(
           container.querySelectorAll<HTMLElement>("header, main#main-content, footer"),
-        );
+        ).filter((element) => element === main || !main?.contains(element));
         expect(
           all.map((el) => el.tagName.toLowerCase()),
           `${route.path} must render <header>, <main id="main-content">, <footer> in that DOM order`,
@@ -810,7 +930,7 @@ describe("Per-page keyboard accessibility (every v1 public route)", () => {
             `${route.path}: a main tab stop must come before any footer tab stop. Visited regions: [${visitedRegions.join(", ")}]`,
           ).toBeLessThan(footerIdx);
         }
-      });
+      }, 15_000);
     });
   }
 });
