@@ -4630,10 +4630,10 @@ select.pg-field option { color: #1b1712; }
 .pg-section-nav .hv-wrap { display:flex; flex-wrap:wrap; align-items:center; gap:0 2rem; }
 .pg-section-nav .hv-wrap > span { font-size:.65rem; text-transform:uppercase; letter-spacing:.12em; color:var(--muted); margin-right:auto; }
 .pg-section-nav a { display:inline-flex; align-items:center; gap:.55rem; min-height:60px; color:var(--text); font-size:.8rem; border-bottom:2px solid transparent; }
-.pg-section-nav small { font-size:.6rem; color:var(--accent); }
+.pg-section-nav small { font-size:.6rem; color:var(--accent-ink); }
 .pg-section-nav a:hover { border-bottom-color:var(--accent); }
 .pg-root :is(#project-record,#project-gallery,#project-lessons,#operating-sequence,#operating-roles,#strategy-structure) { scroll-margin-top:6.5rem; }
-.pg-root .hv-plan-head .hv-h2 { max-width:14ch; font-size:clamp(2.5rem,3.6vw,3.4rem); }
+.pg-root .hv-plan-head .hv-h2 { max-width:100%; font-size:clamp(2.4rem,3.2vw,2.8rem); }
 .pg-root .hv-plan-legal { margin-top:2rem; }
 .pg-development-plan,.pg-capital-context { padding-block:clamp(3.5rem,6vw,6rem); }
 .pg-development-grid,.pg-capital-context-grid { display:grid; grid-template-columns:.9fr 1.1fr; gap:clamp(2rem,7vw,6rem); align-items:start; }
@@ -4643,7 +4643,7 @@ select.pg-field option { color: #1b1712; }
 .pg-development-controls { padding:0; margin:0; list-style:none; }
 .pg-development-controls li { display:grid; grid-template-columns:2rem 1fr; gap:1.1rem; padding-block:1.6rem; border-top:1px solid var(--line); }
 .pg-development-controls li:first-child { padding-top:0; border-top:0; }
-.pg-development-controls li > span { color:var(--accent); font-size:.75rem; padding-top:.35rem; }
+.pg-development-controls li > span { color:var(--accent-ink); font-size:.75rem; padding-top:.35rem; }
 .pg-development-controls h3 { font-family:var(--pg-font-display,Georgia); font-size:1.5rem; line-height:1.2; color:var(--text); margin-bottom:.65rem; }
 .pg-development-controls p { font-size:.95rem; line-height:1.75; color:var(--muted); }
 .pg-development-boundary { margin-top:3rem; padding-top:2.5rem; border-top:1px solid var(--line); display:flex; align-items:center; gap:3rem; }

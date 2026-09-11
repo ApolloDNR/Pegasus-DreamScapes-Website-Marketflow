@@ -1401,12 +1401,17 @@ async function exercisePublicDesign(page, route, viewport) {
     await page.getByRole('button', { name: 'Clear search' }).click();
   }
   if (route === '/our-work') {
-    await page.getByRole('button', { name: 'Enlarge the kitchen, before' }).click();
-    const viewer = page.getByRole('dialog');
-    await viewer.getByRole('button', { name: 'Next photograph' }).click();
+    console.log('[design] gallery: open photograph');
+    await page.getByRole('button', { name: 'Enlarge the kitchen, before' }).click({ timeout: 5_000 });
+    const viewer = page.locator('.ow-gallery-viewer');
+    const nextPhoto = viewer.getByRole('button', { name: 'Next photograph' });
+    console.log('[design] gallery: next photograph');
+    await nextPhoto.click({ timeout: 5_000 });
     assert((await viewer.getByRole('img').getAttribute('src')).endsWith('/kitchen-after.webp'), 'Gallery did not show the next documented photograph');
-    await page.keyboard.press('Escape');
-    await viewer.waitFor({ state: 'detached' });
+    console.log('[design] gallery: dismiss from focused control');
+    await nextPhoto.press('Escape');
+    await viewer.waitFor({ state: 'detached', timeout: 5_000 });
+    console.log('[design] gallery: dismissed');
   }
   if (route === '/contact' && viewport.width <= 980) {
     await page.getByLabel('Choose your starting point').selectOption('deal-finder');
