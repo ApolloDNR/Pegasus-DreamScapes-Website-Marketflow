@@ -1,4 +1,10 @@
-# Pegasus DreamScapes — Engineering Handoff
+# Pegasus Dreamscapes continuation
+
+Current checkpoint: 2026-09-11. Start with `docs/WEBSITE_EXECUTION_BRIEF.md` and `docs/qa/launch-completion-status.md`. The active branch is `codex/launch-recovery-v2`, draft PR #26. Current unpublished changes repair preview startup and restore the public operating-company narrative. Publication and hosted acceptance remain incomplete.
+
+The handoff below is historical. It is not the current task queue or proof of current deployment.
+
+# Historical engineering handoff
 
 Prepared 2026-07-12 for continuation by Codex / ChatGPT (or any engineer).
 Owner: Apollo Duran (apollosynd@gmail.com). GitHub org: `ApolloDNR`.

@@ -3,6 +3,8 @@
 ## Overview
 Public website for Pegasus Dreamscapes (Development • Investments • Systems) plus MarketFlow private beta workflows.
 
+For the current continuation, read `docs/WEBSITE_EXECUTION_BRIEF.md` and `docs/qa/launch-completion-status.md` first. They reconcile the recovered owner plan, existing PR #26, unpublished repairs, and remaining acceptance gates.
+
 ## Local setup
 1. Use Node `22.23.2`.
 2. Install the locked dependency graph with `npm ci`.

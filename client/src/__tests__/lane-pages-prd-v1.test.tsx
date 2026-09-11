@@ -78,14 +78,14 @@ afterEach(() => cleanup());
 const LANES: [string, string[], string, string | null][] = [
   [
     "/property-owners",
-    ["A complex property starts with accurate facts, not a promised outcome."],
-    "Use the private intake to document condition, timing, ownership, occupancy",
+    ["A complex property needs a clear plan."],
+    "Repairs, inherited ownership, unfinished work, or a difficult timeline",
     null,
   ],
   [
     "/deal-partners",
-    ["A credible deal submission makes the facts and the proposed role clear."],
-    "Deal finders, wholesalers, agents, and operating sponsors",
+    ["Bring the deal. Define the role that moves it forward."],
+    "A property, contract, or project may need a clearer strategy",
     "Any joint venture, assignment, referral, distribution, representation, or compensation arrangement would require a separate written agreement before anyone relies on it.",
   ],
   [

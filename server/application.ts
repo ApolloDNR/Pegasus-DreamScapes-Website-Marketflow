@@ -100,8 +100,14 @@ const defaultDependencies: ApplicationDependencies = {
   },
 
   async setupVite(httpServer, app) {
-    const { setupVite } = await import("./vite");
-    await setupVite(httpServer, app);
+    // The production build replaces this literal check and removes the whole
+    // development graph, including Vite's otherwise hoisted Rollup imports.
+    if (process.env.NODE_ENV !== "production") {
+      const { setupVite } = await import("./vite");
+      await setupVite(httpServer, app);
+      return;
+    }
+    throw new Error("The production server requires the built client");
   },
 };
 

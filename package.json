@@ -5,8 +5,9 @@
   "license": "MIT",
   "scripts": {
     "dev": "NODE_ENV=development tsx server/index.ts",
-    "build": "tsx script/build.ts && npm run check:bundle",
+    "build": "tsx script/build.ts && npm run check:bundle && npm run check:serverless",
     "check:bundle": "node scripts/check-client-bundle-budget.mjs",
+    "check:serverless": "node scripts/check-serverless-runtime.mjs",
     "check:a11y": "node scripts/check-visual-accessibility.mjs",
     "check:a11y:full": "A11Y_PUBLIC_ROUTE_COVERAGE=full node scripts/check-visual-accessibility.mjs",
     "start": "NODE_ENV=production node dist/index.cjs",
@@ -147,6 +148,7 @@
   },
   "overrides": {
     "@tootallnate/once": "2.0.1",
+    "qs": "6.16.0",
     "sucrase": "3.35.1",
     "uuid": "11.1.1"
   },

@@ -56,12 +56,13 @@ export function PropertyOwnersPage({ go }: { go: Nav }) {
           <div className="hv-rule" />
           <div className="pg-label hv-eyebrow">Property Owners</div>
           <h1 className="hwo-h1 font-serif-display">
-            A complex property starts with accurate facts, not a promised outcome.
+            A complex property needs a clear plan.
           </h1>
           <p className="hv-lead">
-            Use the private intake to document condition, timing, ownership, occupancy, unfinished
-            work, title questions, or development assumptions. Submission may be considered, but no
-            written review, response, route, or offer is promised.
+            Repairs, inherited ownership, unfinished work, or a difficult timeline can change the
+            right path for a property. Start with your situation and objective. Pegasus considers
+            opportunities case by case, with any acquisition, project role, or licensed representation
+            defined separately.
           </p>
           <div className="hv-cta-row">
             <a href="/bring-an-opportunity" onClick={toIntake}
@@ -79,8 +80,8 @@ export function PropertyOwnersPage({ go }: { go: Nav }) {
       {/* Signature: situation → path stepper */}
       <section className="po-stepper hv-pad" data-testid="situation-stepper">
         <div className="hv-wrap">
-          <div className="pg-label hv-eyebrow-copper">Start with the known facts</div>
-          <h2 className="hv-h2 font-serif-display">Choose the situation you need to document.</h2>
+          <div className="pg-label hv-eyebrow-copper">Start with your situation</div>
+          <h2 className="hv-h2 font-serif-display">What is standing between you and the next step?</h2>
           <div className="po-step-grid reveal">
             <div className="po-situations" role="group" aria-label="Common owner situations">
               {SITUATIONS.map((s, i) => (
@@ -92,7 +93,7 @@ export function PropertyOwnersPage({ go }: { go: Nav }) {
               ))}
             </div>
             <div className="po-path" key={SITUATIONS[idx].label} aria-live="polite">
-              <div className="pg-label hv-eyebrow-copper">A bounded starting point</div>
+              <div className="pg-label hv-eyebrow-copper">Where to start</div>
               <p className="po-path-copy font-serif-display">{SITUATIONS[idx].path}</p>
               <a href={selectedSituationHref} onClick={toIntake} className="hv-proof-link hv-link-ink">
                 Start with this situation <ArrowRight className="inline h-3.5 w-3.5" />

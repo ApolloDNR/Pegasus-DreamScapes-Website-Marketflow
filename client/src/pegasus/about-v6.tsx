@@ -31,7 +31,7 @@ const BOUNDARIES = [
   {
     label: 'Pegasus Dreamscapes Corp.',
     title: 'Investment, development, and strategy',
-    copy: 'Pegasus Dreamscapes Corp. is a real estate investment, development, and strategy company. It is not a licensed real estate brokerage.',
+    copy: 'Pegasus Dreamscapes Corp. is a real estate operating company focused on investment and development. It is not a licensed real estate brokerage.',
   },
   {
     label: 'Licensed representation',
@@ -55,7 +55,7 @@ export function AboutPageV6({ go }: { go: Nav }) {
             <div className="ab6-kicker ab6-kicker-on-dark">About Pegasus Dreamscapes</div>
             <h1>A single, accountable point of view.</h1>
             <p className="ab6-arrival-lead">
-              Pegasus is a founder-led real estate strategy company for consequential property decisions—organizing assumptions, roles, constraints, and possible paths in one line of sight.
+              Pegasus is a founder-led real estate operating company built around property strategy, deal structure, and execution. The work starts with the property and a clear plan for acquisition, improvement, sale, or long-term ownership.
             </p>
             <div className="ab6-actions">
               <a className="ab6-button ab6-button-light" href="/bring-an-opportunity">
@@ -129,11 +129,11 @@ export function AboutPageV6({ go }: { go: Nav }) {
             <div className="ab6-kicker">The founder</div>
             <h2 id="ab6-founder-title">The work stays personal by design.</h2>
             <p className="ab6-founder-deck">
-              Apollo founded Pegasus to publish a disciplined way to frame complicated real estate opportunities—one grounded in basis, scope, timing, and the intended outcome.
+              Apollo founded Pegasus to connect real estate opportunities with an executable property plan, grounded in acquisition basis, scope, timing, and the intended outcome.
             </p>
             <div className="ab6-founder-body">
               <p>
-                He sets the company&apos;s published strategy framework. Whether he or Pegasus participates in a specific opportunity is determined case by case and requires the applicable written agreement.
+                He sets the company&apos;s operating direction. Pegasus&apos;s participation, authority, responsibilities, and compensation are defined for each accepted opportunity in the applicable written agreement.
               </p>
               <p>
                 Licensed representation may be available separately. The public-facing name used here is not itself the license record: CA DRE #02333658 is listed under Duran Ramirez, Paolo Ariel, with responsible broker BMP Realty Inc DBA Keller Williams Realty-East Bay.

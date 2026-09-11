@@ -181,7 +181,7 @@ const SIGNATURE_ROUTES: SignatureRoute[] = [
   },
   {
     path: "/property-owners",
-    pageHeading: /A complex property starts with accurate facts, not a promised outcome/i,
+    pageHeading: /A complex property needs a clear plan/i,
     groupName: "Common owner situations",
     initialChoice: "Significant repairs",
     nextChoice: "Inherited property",
@@ -190,7 +190,7 @@ const SIGNATURE_ROUTES: SignatureRoute[] = [
   },
   {
     path: "/deal-partners",
-    pageHeading: /A credible deal submission makes the facts and the proposed role clear/i,
+    pageHeading: /Bring the deal. Define the role that moves it forward/i,
     groupName: "What the deal is missing",
     initialChoice: "Seller access or negotiation",
     nextChoice: "Underwriting",
@@ -204,7 +204,7 @@ describe("Pegasus public-shell navigation accessibility", () => {
     const { container } = renderLanding("/");
 
     await screen.findByRole("heading", {
-      name: /Complex real estate, structured clearly/i,
+      name: /Complex real estate, made executable/i,
     });
 
     const nav = container.querySelector("nav");

@@ -152,12 +152,12 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
           <div className="hv-wrap hv-hero-inner">
             <div className="hv-eyebrow-row">
               <span className="pg-label hv-eyebrow">
-                <span>Real estate strategy company</span>
+                <span>Real estate operating company</span>
                 <span>Contra Costa &amp; Alameda</span>
               </span>
             </div>
             <h1 className="hv-h1 font-serif-display">
-              Complex real estate,<br className="hv-h1-break" /> <em>structured clearly.</em>
+              Complex real estate,<br className="hv-h1-break" /> <em>made executable.</em>
             </h1>
             <div className="hv-cta-row">
               <a href="/bring-an-opportunity" onClick={toIntake}
@@ -179,7 +179,7 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
               <span className="hv-fact-ic"><UserRound aria-hidden="true" /></span>
               <span className="hv-fact-txt">
                 <span className="hv-fact-k font-serif-display">Founder-led</span>
-                <span className="hv-fact-v">A defined point of view, published with boundaries.</span>
+                <span className="hv-fact-v">Led by Paolo “Apollo” Duran.</span>
               </span>
             </li>
             <li className="hv-fact">
@@ -215,8 +215,8 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
             <div className="pg-label hv-eyebrow-copper">Start with what you have</div>
             <h2 className="hv-h2 font-serif-display">What are you bringing to Pegasus?</h2>
             <p className="hv-muted">
-              The first question is not which service to buy. It is what you have, what is missing,
-              and what a controlled next step should look like.
+              Pegasus connects property strategy, deal structure, and execution. Start with the
+              property, opportunity, or expertise you bring, then identify the path and role that fit.
             </p>
             <button type="button" className="hv-text-link" onClick={() => openPeggy()}>
               Talk to Peggy <ArrowRight className="h-3.5 w-3.5" />
@@ -297,7 +297,7 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
         <div className="hv-method-content">
           <div className="pg-label hv-eyebrow-copper">How we work</div>
           <h2 className="hv-h2 font-serif-display">A method, not a script.</h2>
-          <p className="hv-muted">The framework keeps roles, assumptions, decision points, and economics visible without promising a service or outcome.</p>
+          <p className="hv-muted">Start with the property and its economics. Define the strategy, agree the roles and terms, and carry an accepted project through execution and its intended exit.</p>
           <ol className="hv-steps reveal" aria-label="The Pegasus method">
             {([
               ['Originate', 'Find, receive, or develop the opportunity.'],
@@ -348,7 +348,7 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
         <div className="hv-wrap hv-partner-shell reveal">
           <div className="hv-partner-copy">
             <div className="pg-label hv-eyebrow-copper">Partners</div>
-            <h2 className="hv-h2 font-serif-display">Bring what you do well. Map the missing role before proposing a partnership.</h2>
+            <h2 className="hv-h2 font-serif-display">Bring the opportunity. Define the partnership.</h2>
             <p className="hv-muted">Describe the opportunity, your role, and the unresolved constraint. Any Pegasus participation depends on diligence, availability, alignment, and separate written terms.</p>
             <dl className="hv-relationships">
               <div><dt>Deal finder</dt><dd>Possible operating discussion</dd></div>
@@ -377,10 +377,10 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
           />
           </figure>
           <h2 className="font-serif-display">Paolo &ldquo;Apollo&rdquo; Duran</h2>
-          <p className="hv-founder-title">Founder, Pegasus DreamScapes</p>
-          <p className="hv-founder-statement">Apollo founded Pegasus and sets its published strategy framework. Participation in any property, project, or representation request is determined separately and documented in writing.</p>
+          <p className="hv-founder-title">Founder, Pegasus Dreamscapes</p>
+          <p className="hv-founder-statement">Apollo founded Pegasus to connect property strategy with the work required to carry it out. The company’s role, responsibilities, and economics are agreed for each accepted project.</p>
           <dl className="hv-founder-roles">
-            <div><dt>Pegasus</dt><dd>Founder, Pegasus DreamScapes</dd></div>
+            <div><dt>Pegasus</dt><dd>Founder, Pegasus Dreamscapes</dd></div>
             <div><dt>Public-facing name</dt><dd>Paolo &ldquo;Apollo&rdquo; Duran</dd></div>
             <div><dt>License record</dt><dd>Duran Ramirez, Paolo Ariel<br />CA DRE #02333658</dd></div>
             <div><dt>Responsible broker</dt><dd>BMP Realty Inc DBA Keller Williams Realty-East Bay</dd></div>

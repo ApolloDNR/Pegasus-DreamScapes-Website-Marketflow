@@ -4,6 +4,7 @@ This file is the standard Codex decision entrypoint for the website repo. Keep d
 
 ## Current Controlling Decisions
 
+- The recovered owner direction and continuation scope are consolidated in `docs/WEBSITE_EXECUTION_BRIEF.md` (2026-09-11). Pegasus remains a real estate operating company. The locked homepage identity and “made executable” headline take precedence over the later “strategy company” / “structured clearly” copy drift.
 - Public brand casing is `Pegasus Dreamscapes`.
 - Current positioning is `Pegasus Dreamscapes - Deal Strategy & Real Estate Execution`.
 - Avoid public-facing `Deal Architect` / `architecture` language unless counsel clears the metaphor.

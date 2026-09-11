@@ -44,17 +44,8 @@ describe("protected Vercel Express preview configuration", () => {
     expect(config).not.toHaveProperty("target");
   });
 
-  it("exports the built serverless app and pins Node 22", () => {
-    const rootAdapter = readFileSync(resolve(repoRoot, "server.mjs"), "utf8");
-    const buildScript = readFileSync(resolve(repoRoot, "script/build.ts"), "utf8");
+  it("pins the supported Node runtime", () => {
     const packageJson = readJson("package.json");
-
-    expect(rootAdapter.trim()).toBe(
-      'export { default } from "./dist/vercel-server.mjs";',
-    );
-    expect(buildScript).toContain('entryPoints: ["server/vercel-entry.ts"]');
-    expect(buildScript).toContain('outfile: "dist/vercel-server.mjs"');
-    expect(buildScript).toContain("__pegasusCreateRequire(import.meta.url)");
     expect(packageJson.engines).toEqual({ node: "22.x" });
   });
 });

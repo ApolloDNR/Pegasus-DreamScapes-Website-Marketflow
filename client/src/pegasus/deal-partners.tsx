@@ -43,12 +43,12 @@ export function DealPartnersPage({ go }: { go: Nav }) {
           <div className="hv-rule" />
           <div className="pg-label hv-eyebrow">Deal Partners</div>
           <h1 className="hwo-h1 font-serif-display">
-            A credible deal submission makes the facts and the proposed role clear.
+            Bring the deal. Define the role that moves it forward.
           </h1>
           <p className="hv-lead">
-            Deal finders, wholesalers, agents, and operating sponsors can document an opportunity and
-            proposed structure for possible private review. No response, buyer, written terms,
-            distribution, funding, or closing is promised.
+            A property, contract, or project may need a clearer strategy, operating role, or transaction
+            structure. Share the opportunity, what you bring, and what is missing. Pegasus considers
+            project participation case by case, subject to diligence, capacity, and written terms.
           </p>
           <div className="hv-cta-row">
             <a href="/bring-an-opportunity?intent=deal-jv" onClick={toDeal}
@@ -67,7 +67,7 @@ export function DealPartnersPage({ go }: { go: Nav }) {
       <section className="dp-composer hv-pad" data-testid="missing-composer">
         <div className="hv-wrap">
           <div className="pg-label hv-eyebrow-copper">Define the unresolved piece</div>
-          <h2 className="hv-h2 font-serif-display">What does the submission need to explain?</h2>
+          <h2 className="hv-h2 font-serif-display">What does the deal need next?</h2>
           <div className="dp-composer-grid reveal">
             <div className="dp-missing" role="group" aria-label="What the deal is missing">
               {MISSING.map((m, i) => (
@@ -134,7 +134,7 @@ export function DealPartnersPage({ go }: { go: Nav }) {
       {/* Boundary + close */}
       <section className="dp-close hv-pad-lg hv-grain">
         <div className="hv-wrap">
-          <h2 className="hv-h2-cream font-serif-display">Document the opportunity without assuming the outcome.</h2>
+          <h2 className="hv-h2-cream font-serif-display">Start with the opportunity and the proposed partnership.</h2>
           <p className="hv-lead-dim">
             No response, buyer, written terms, distribution, funding, or closing is promised.
             Brokerage activity, if any, requires the appropriate separately documented licensed relationship.

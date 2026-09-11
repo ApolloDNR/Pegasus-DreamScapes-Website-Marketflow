@@ -70,7 +70,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/": {
     title: "Pegasus Dreamscapes — Complex Real Estate, Made Executable",
     description:
-      "An East Bay real estate operating company. Share a property, deal, or project for possible review; no response, route, or transaction is promised.",
+      "A founder-led East Bay real estate operating company connecting property strategy and execution. Share a property, deal, or project for possible review.",
     image: `${SITE_URL}/og/home.png`,
   },
 
@@ -78,7 +78,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/property-owners": {
     title: tag("Property Owners"),
     description:
-      "Private intake for owners with a complex property situation. Submission may be considered, but no written review, response, route, or offer is promised.",
+      "A starting point for repairs, inherited property, unfinished work, or a difficult sale. Share your situation for possible private review.",
     image: `${SITE_URL}/og/sellers.png`,
   },
   "/buyers": {
@@ -90,7 +90,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/deal-partners": {
     title: tag("Deal Partners"),
     description:
-      "Share a deal or proposed structure for possible private review. No response, buyer, written terms, distribution, funding, or closing is promised.",
+      "Bring a property, contract, or project. Define your role, the missing piece, and a proposed partnership for possible private review.",
     image: `${SITE_URL}/og/dealfinders.png`,
   },
   "/operators": {
@@ -117,7 +117,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/how-we-operate": {
     title: tag("How We Operate"),
     description:
-      "A public framework for considering property facts, economics, and possible paths. It does not promise review, advice, a route, or execution.",
+      "How Pegasus connects property strategy, deal structure, and execution, with possible project roles subject to diligence and written terms.",
     image: `${SITE_URL}/og/deal-strategy.png`,
   },
   "/our-work": {
@@ -195,7 +195,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/about": {
     title: tag("About"),
     description:
-      "Background on Apollo Duran and the operating principles presented by Pegasus. This page does not promise review, services, execution, or results.",
+      "Meet Apollo Duran and Pegasus Dreamscapes, an East Bay real estate operating company. Possible project participation is considered case by case.",
     image: `${SITE_URL}/og/about.png`,
   },
   "/projects": {

@@ -20,6 +20,8 @@ Do not wait for Apollo to pick small tasks unless blocked by production secrets,
 
 ## Canonical Completion Plan
 
+Continuation update (2026-09-11): read `docs/WEBSITE_EXECUTION_BRIEF.md` and `docs/qa/launch-completion-status.md` before using the historical program below. Draft PR #26 already exists on `codex/launch-recovery-v2`. Reconcile actual remote commits and evidence; do not restart tasks from this older queue.
+
 Resume from `docs/superpowers/plans/2026-08-13-pegasus-security-launch-recovery.md` on branch `codex/launch-recovery-v2`. Use that program, its committed executable child plans, tracked `docs/qa/security-launch-recovery-ledger.md`, and their plan-scoped SDD ledgers as the durable sources of progress.
 
 PR #25 is historical review evidence only. A successor pull request has not yet been created; record it in the recovery plan and ledger when Task 15 opens it. A status-only message is never a completed milestone. Continue through the first unchecked safe task, record accepted work in Git and remote evidence, and do not restart completed tasks after temporary workspace cleanup.

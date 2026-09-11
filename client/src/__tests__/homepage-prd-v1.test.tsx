@@ -16,7 +16,7 @@ import { Landing } from "@/pegasus/Landing";
 //   1. Arrival  2. Visitor Router  3. Proof (Nelson Drive)  4. Pegasus Method
 //   5. Opportunity Plan (signature)  6. Partner Proposition
 //   7. Founder Trust + Final Invitation
-// It also locks the public positioning ("Complex real estate, structured clearly."),
+// It also locks the public positioning ("Complex real estate, made executable."),
 // the primary CTA ("Bring an Opportunity" → /bring-an-opportunity), and the
 // evidence-bounded framing of the canonical Nelson figures (never "profit"
 // and never an unsupported attribution of project or brokerage roles).
@@ -105,7 +105,7 @@ describe("Homepage premium editorial contract", () => {
     const { container } = renderHome();
     const arrival = container.querySelector<HTMLElement>('[data-hv="arrival"]')!;
     const text = arrival.textContent!;
-    expect(text).toContain("Complex real estate, structured clearly.");
+    expect(text).toContain("Complex real estate, made executable.");
     expect(text).toContain("Bring an Opportunity");
     expect(text).toContain("See How We Operate");
     expect(text).toContain("Open Strategy Lab");
@@ -120,7 +120,7 @@ describe("Homepage premium editorial contract", () => {
   it("locks the approved four-part proof rail", () => {
     const { container } = renderHome();
     const rail = container.querySelector(".hv-hero-statbar")!;
-    expect(rail.textContent).toContain("Founder-ledA defined point of view, published with boundaries.");
+    expect(rail.textContent).toContain("Founder-ledLed by Paolo “Apollo” Duran.");
     expect(rail.textContent).toContain("Nelson DriveDocumented $600K acquisition to $840K sale.");
     expect(rail.textContent).toContain("East BayContra Costa & Alameda County.");
     expect(rail.textContent).toContain("Strategy firstStart with facts, constraints, roles, and written terms.");
@@ -188,7 +188,7 @@ describe("Homepage premium editorial contract", () => {
   it("locks the Partner Proposition and Founder Trust movements (§7.7–§7.8)", () => {
     const { container } = renderHome();
     const text = container.querySelector("main")!.textContent!;
-    expect(text).toContain("Bring what you do well.");
+    expect(text).toContain("Bring the opportunity. Define the partnership.");
     expect(text).toContain("Paolo");
     expect(text).toContain("Duran Ramirez, Paolo Ariel");
     expect(text).toContain("BMP Realty Inc DBA Keller Williams Realty-East Bay");

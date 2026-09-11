@@ -33,13 +33,13 @@ describe("Pegasus mounted v5.1 homepage design contract", () => {
     expect(
       within(arrival!).getByRole("heading", { level: 1 }).textContent?.replace(/\s+/g, " ").trim(),
     ).toBe(
-      "Complex real estate, structured clearly.",
+      "Complex real estate, made executable.",
     );
     expect(
       Array.from(arrival!.querySelectorAll(".hv-eyebrow-row .hv-eyebrow > span"), (item) =>
         item.textContent?.replace(/\s+/g, " ").trim(),
       ),
-    ).toEqual(["Real estate strategy company", "Contra Costa & Alameda"]);
+    ).toEqual(["Real estate operating company", "Contra Costa & Alameda"]);
     expect(
       Array.from(arrival!.querySelectorAll(".hv-cta-row > a, .hv-cta-row > button"), (item) =>
         item.textContent?.replace(/\s+/g, " ").trim(),
@@ -194,7 +194,7 @@ describe("Pegasus mounted v5.1 homepage design contract", () => {
     ).toBe(false);
 
     const founderCopy = founder!.textContent?.replace(/\s+/g, " ") ?? "";
-    expect(founderCopy).toContain("Founder, Pegasus DreamScapes");
+    expect(founderCopy).toContain("Founder, Pegasus Dreamscapes");
     expect(founderCopy).toContain("Duran Ramirez, Paolo Ariel");
     expect(founderCopy).toContain("BMP Realty Inc DBA Keller Williams Realty-East Bay");
     expect(founderCopy).toContain("CA DRE #02333658");

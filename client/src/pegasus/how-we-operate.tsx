@@ -24,8 +24,8 @@ type Stage = {
 const STAGES: Stage[] = [
   {
     num: '01', name: 'Originate',
-    claim: 'Record the opportunity and its source.',
-    detail: 'An owner, deal source, or prospective partner can submit known facts and constraints. The intake creates a record; it does not promise review, confidentiality, source protection, or a response.',
+    claim: 'Start with the property, source, and objective.',
+    detail: 'Owners, deal sources, and prospective partners bring opportunities with different constraints. Identify the property facts, who controls the next decision, and the outcome being considered. Submission records context; a review or response is not guaranteed.',
     decided: ['Source information to verify', 'Known parties and permissions', 'Property facts and constraints'],
   },
   {
@@ -36,14 +36,14 @@ const STAGES: Stage[] = [
   },
   {
     num: '03', name: 'Operate',
-    claim: 'Define required capabilities before work begins.',
-    detail: 'A possible project may require acquisition, development, disposition, asset operations, capital, finance, or licensed representation. This map describes responsibilities—not current staff, a contractor bench, available capital, or promised services.',
+    claim: 'Carry out the agreed project role.',
+    detail: 'For an accepted project, execution follows the agreed scope, authority, budget, schedule, and reporting. Acquisition, renovation, development, and property operations each require qualified providers and project-specific agreements. The role map does not imply a standing team or available capacity.',
     decided: ['Capabilities the scenario would require', 'Budget and schedule assumptions', 'Roles requiring qualified providers'],
   },
   {
     num: '04', name: 'Realize',
-    claim: 'Model a possible sale, hold, refinance, or pass.',
-    detail: 'Each exit scenario has different evidence, professional roles, costs, risks, approvals, and written terms. The framework compares those questions; it does not choose or execute an exit for the visitor.',
+    claim: 'Work toward the agreed sale, hold, or refinance.',
+    detail: 'The property strategy sets the intended exit and the conditions for changing course. On an accepted project, the responsible parties act within their agreed authority and required approvals. Costs, market conditions, and financing can change the outcome.',
     decided: ['Exit assumptions to test', 'Economics to verify', 'Approvals and agreements required'],
   },
   {
@@ -95,9 +95,9 @@ export function HowWeOperatePage({ go }: { go: Nav }) {
             Complex opportunities fail when the pieces are fragmented.
           </h1>
           <p className="hv-lead">
-            Sourcing, strategy, capital, construction, disposition, and ownership usually live in
-            different hands. This page maps the questions and responsibilities that a possible path may
-            require. It does not claim one team performs them or promise review, participation, or execution.
+            Pegasus connects property strategy, deal structure, and execution in one operating plan.
+            Start with the asset and its economics, choose the appropriate role, agree the terms,
+            and organize the work required to carry an accepted project forward.
           </p>
           <p className="hwo-hero-caption">Architectural vision &middot; Not property inventory</p>
         </div>
@@ -142,8 +142,9 @@ export function HowWeOperatePage({ go }: { go: Nav }) {
           <div className="pg-label hv-eyebrow">Role selection</div>
           <h2 className="hv-h2-cream font-serif-display">The role is chosen, not assumed.</h2>
           <p className="hv-lead-dim">
-            These are possible role structures, not current service or capacity claims. Any Pegasus role
-            would depend on fit, diligence, availability, qualification, and a separate written agreement.
+            A direct acquisition, joint venture, or defined operating role creates different responsibilities.
+            Any Pegasus participation depends on fit, diligence, availability, qualification, and a
+            separate written agreement.
           </p>
           <dl className="hwo-role-list reveal">
             {ROLES.map(([name, desc]) => (
@@ -168,8 +169,9 @@ export function HowWeOperatePage({ go }: { go: Nav }) {
             <div className="pg-label hv-eyebrow-copper">Structure</div>
             <h2 className="hwo-svss-q font-serif-display">How is it controlled, funded, and shared?</h2>
             <p className="hv-muted">
-              Purchase, option, JV agreement, listing, project entity. Debt, equity, seller terms.
-              Who signs, who funds, who earns what. Structure is how the strategy becomes enforceable.
+              Keep four decisions explicit: Pegasus&apos;s role, the agreement that controls the property,
+              the source and terms of funding, and each party&apos;s compensation. A purchase, option,
+              joint venture, or separately licensed listing needs its own authority and written terms.
             </p>
           </div>
         </div>
@@ -194,7 +196,7 @@ export function HowWeOperatePage({ go }: { go: Nav }) {
       {/* Close */}
       <section className="hwo-close hv-pad-lg">
         <div className="hv-wrap">
-          <h2 className="hv-h2 font-serif-display">Bring the context. Explore the applicable questions.</h2>
+          <h2 className="hv-h2 font-serif-display">Start with the property and the outcome you have in mind.</h2>
           <div className="ow-close-ctas">
             <a href="/bring-an-opportunity" onClick={toIntake}
               className="btn-primary inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px] group">
