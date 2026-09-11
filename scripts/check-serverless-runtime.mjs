@@ -81,14 +81,16 @@ async function checkRuntime() {
 if (process.argv.includes("--runtime-child")) {
   await checkRuntime();
 } else {
-  for (const profile of ["configured-preview", "unconfigured-preview", "unconfigured-production"]) {
+  for (const profile of ["configured-preview", "unconfigured-preview", "file-preview", "unconfigured-production"]) {
     const result = spawnSync(process.execPath, [fileURLToPath(import.meta.url), "--runtime-child"], {
       cwd: fileURLToPath(new URL("../", import.meta.url)),
       env: {
         PATH: process.env.PATH,
         NODE_ENV: "production",
-        APP_ENV: profile === "unconfigured-production" ? "production" : "preview",
-        SITE_INDEXABLE: "false",
+        ...(profile === "file-preview" ? {} : {
+          APP_ENV: profile === "unconfigured-production" ? "production" : "preview",
+          SITE_INDEXABLE: "false",
+        }),
         ...(profile === "configured-preview" ? {
           SESSION_SECRET: "isolated-runtime-smoke-session-secret",
           DATABASE_URL: "postgresql://runtime:runtime@127.0.0.1:1/runtime",

@@ -10,7 +10,9 @@ The authenticated GitHub app published `b47d96a4cd888d2ccb017c42cc033f1e72bf390f
 
 Vercel deployment `dpl_8PHSKYXSdj8rPKHw6wfXhcpMboH6` built and passed the deployment-entry smoke check, but a real browser request exposed missing preview `DATABASE_URL` configuration. The original Rollup startup failure is repaired; database provisioning is a separate remaining operational dependency.
 
-The next repair lets only an explicitly designated preview with no database render public pages. Its backend APIs return HTTP 503 with an explicit browsing-preview message, no writes, and no successful submission receipts. Production retains its normal backend requirement. The real-entry smoke now covers configured preview, unconfigured preview with blocked intake/auth/readiness, and unconfigured production rejection. TypeScript, build, bundle budgets, and all three startup cases passed locally; final test/deployment evidence belongs to the candidate's PR checks and preview.
+Commit `e5b1e1ce7de471fcc2495c21d10f1fb9b64730a1` lets only an explicitly designated preview with no database render public pages. Its backend APIs return HTTP 503 with an explicit browsing-preview message, no writes, and no successful submission receipts. Production retains its normal backend requirement. All 2,403 tests and the build passed locally. In GitHub run 332, launch verification and the interaction shards passed, but the light 1024px route shard timed out during post-accessibility settlement on About, so that aggregate gate did not pass.
+
+Deployment `dpl_H1MRmUhx4MiUwM1xfFDXYhnAaUS3` exposed a second startup difference: the file-deployment runtime did not apply the non-secret preview environment defaults before importing the server. The root Express entry now reads those defaults from `vercel.json` before initialization and preserves any explicitly supplied environment values. The real-entry smoke adds the exact file-preview case, with no injected `APP_ENV` or `SITE_INDEXABLE`, alongside configured preview, unconfigured preview with blocked intake/auth/readiness, and unconfigured production rejection. All four cases pass locally. Final source, CI, hosted review, and remaining operational acceptance are recorded on PR #26.
 
 The Vercel file-deployment tool stages an immutable public GitHub source archive for the selected commit during installation, validates the archive's commit prefix, then runs the repository's normal install and build. Only the deployment's non-secret `PEGASUS_SOURCE_SHA` setting is added to identify the source at `/api/version`.
 
@@ -24,7 +26,7 @@ The sections below retain the evidence from the earlier unpublished checkpoint. 
 - Branch: `codex/launch-recovery-v2`; existing draft PR #26.
 - Remote baseline checked for this continuation: `59b71ee7d224a3aec2dfd2f8836934db94ed15bd`.
 - The previous temporary checkout and unpublished commit disappeared between sessions. The startup repair was reconstructed in the fresh checkout, together with the copy corrections below. Do not assume the earlier local commit `51a38fbb3dbdeb2006346858e9a493788b492233` is on GitHub or available locally.
-- No continuation push or deployment has succeeded. The older protected preview is not evidence for these changes.
+- This earlier checkpoint preceded the successful publications described above. The older protected previews are not evidence of a working current candidate.
 
 ## Alignment with the recovered owner plan
 
@@ -67,12 +69,12 @@ Browser-rendered acceptance has not been completed for this candidate. The earli
 
 [Launch Verification run 33352346833](https://github.com/ApolloDNR/Pegasus-DreamScapes-Website-Marketflow/actions/runs/33352346833) passed all 16 jobs for the older remote baseline. Its route/interaction results do not certify this unpublished candidate. Older August task queues in the historical recovery ledger must not be mistaken for the current remote progress.
 
-## Publication blocker and next step
+## Historical publication blocker and next step
 
 Automatic approval review rejected the previous GitHub push because it treated the destination/source publication as not explicitly authorized. It also rejected the Vercel deployment because the destination was not explicitly authorized. No alternative publishing mechanism was used to bypass either rejection.
 
 The intended existing preview destination is `pegasus-dreamscapes-preview`, project `prj_xqZDdr0YWRY3dstXga5caY8RmkeC`, team `team_peFANIMRrkMuCUtV1U52oyOb`. The older deployment `dpl_NaYgV1gEuGf9wosbRRPuJ8vruyKw` had a startup crash; a READY provider status did not prove functioning runtime.
 
-Once publication is authorized: compare the current local commit and remote branch; update the existing PR; run fresh CI; publish to that existing protected preview; verify `/api/version` identifies the candidate and noindex remains enforced; then inspect the actual preview and complete the hosted customer journeys. Repeatedly regenerating share tokens is not a substitute for a working deployment.
+Publication was subsequently authorized and completed as described above. Continue by verifying `/api/version` identifies the current candidate and noindex remains enforced, then inspecting the actual preview and completing the hosted customer journeys. Repeatedly regenerating share tokens is not a substitute for a working deployment.
 
 Production/DNS changes, live-data mutation, paid activation, and broad public distribution remain outside this continuation's completed work. Finish environment-specific intake/HQ/email proof and the required launch reviews before public launch.
