@@ -47,4 +47,4 @@ These steps describe scope, not completion. Current evidence and blockers are in
 
 Continue `codex/launch-recovery-v2` and existing draft PR #26 in `ApolloDNR/Pegasus-DreamScapes-Website-Marketflow`. Do not restart PR #25's old task sequence, create a competing PR, change production DNS, or claim the broken old preview is current.
 
-Remote publication of this continuation has not succeeded. Automatic approval review rejected the earlier GitHub push and Vercel deployment. Preserve a recoverable unpublished patch until that block is resolved; the previous temporary checkout disappeared between sessions.
+The owner subsequently approved publication to existing PR #26 and the existing protected Vercel preview. The authenticated GitHub app published the verified candidate, and Vercel accepted a deployment. That permission remains valid. Continue from the latest PR/deployment evidence in `docs/qa/launch-completion-status.md`; do not repeat the earlier approval request. The preview's database connection is still unconfigured, so production intake/HQ/email readiness remains unproven.

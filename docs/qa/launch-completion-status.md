@@ -2,6 +2,22 @@
 
 Updated 2026-09-11. Scope: `docs/WEBSITE_EXECUTION_BRIEF.md`.
 
+## Publication continuation
+
+The owner explicitly approved updating existing PR #26 and deploying to the existing protected `pegasus-dreamscapes-preview` project. That approval persists. Do not ask for it again.
+
+The authenticated GitHub app published `b47d96a4cd888d2ccb017c42cc033f1e72bf390f`, whose tree exactly matches the locally verified `f3c24bf` candidate. [Launch Verification run 330](https://github.com/ApolloDNR/Pegasus-DreamScapes-Website-Marketflow/actions/runs/34566488841) passed all 16 jobs, including all desktop/mobile light/dark route shards and interaction groups.
+
+Vercel deployment `dpl_8PHSKYXSdj8rPKHw6wfXhcpMboH6` built and passed the deployment-entry smoke check, but a real browser request exposed missing preview `DATABASE_URL` configuration. The original Rollup startup failure is repaired; database provisioning is a separate remaining operational dependency.
+
+The next repair lets only an explicitly designated preview with no database render public pages. Its backend APIs return HTTP 503 with an explicit browsing-preview message, no writes, and no successful submission receipts. Production retains its normal backend requirement. The real-entry smoke now covers configured preview, unconfigured preview with blocked intake/auth/readiness, and unconfigured production rejection. TypeScript, build, bundle budgets, and all three startup cases passed locally; final test/deployment evidence belongs to the candidate's PR checks and preview.
+
+The Vercel file-deployment tool stages an immutable public GitHub source archive for the selected commit during installation, validates the archive's commit prefix, then runs the repository's normal install and build. Only the deployment's non-secret `PEGASUS_SOURCE_SHA` setting is added to identify the source at `/api/version`.
+
+Use one share link after deployment reaches READY and reuse its browser session for subsequent route checks. Serial access succeeded; earlier concurrent share/fetch helper requests redirected to SSO. Do not regenerate access links for every route.
+
+The sections below retain the evidence from the earlier unpublished checkpoint. They are historical where superseded by this continuation and the latest PR/deployment evidence.
+
 ## Current source and publication
 
 - Repository: `ApolloDNR/Pegasus-DreamScapes-Website-Marketflow`.

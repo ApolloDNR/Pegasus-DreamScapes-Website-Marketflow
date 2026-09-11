@@ -4,8 +4,8 @@ import { request } from "node:http";
 import { registerHooks } from "node:module";
 import { fileURLToPath } from "node:url";
 
-// Exercise the real deployment entry in an isolated process. Dummy local
-// configuration prevents the check from contacting a database or live service.
+// Exercise the real entry both before and after preview backend configuration.
+// Dummy local configuration prevents contact with a database or live service.
 async function checkRuntime() {
   registerHooks({
     resolve(specifier, context, nextResolve) {
@@ -15,6 +15,12 @@ async function checkRuntime() {
       return nextResolve(specifier, context);
     },
   });
+
+  if (process.env.APP_ENV === "production") {
+    await assert.rejects(import("../server.mjs"), /DATABASE_URL must be set/);
+    console.log("[serverless-runtime] PASS: production refuses an unconfigured backend");
+    return;
+  }
 
   const { default: app } = await import("../server.mjs");
   assert.equal(typeof app, "function", "Deployment entry must export an Express app");
@@ -26,8 +32,8 @@ async function checkRuntime() {
     server.once("error", reject);
   });
   const port = server.address().port;
-  const get = (path) => new Promise((resolve, reject) => {
-    const req = request({ hostname: "127.0.0.1", port, path }, (res) => {
+  const sendRequest = (path, method = "GET") => new Promise((resolve, reject) => {
+    const req = request({ hostname: "127.0.0.1", port, path, method }, (res) => {
       let body = "";
       res.setEncoding("utf8");
       res.on("data", (chunk) => { body += chunk; });
@@ -39,20 +45,34 @@ async function checkRuntime() {
   });
 
   try {
-    const version = await get("/api/version");
+    const version = await sendRequest("/api/version");
     assert.equal(version.status, 200);
     assert.equal(JSON.parse(version.body).environment, "preview");
     assert.equal(JSON.parse(version.body).indexable, false);
     for (const path of ["/", "/property-owners", "/strategy-lab", "/bring-an-opportunity"]) {
-      const page = await get(path);
+      const page = await sendRequest(path);
       assert.equal(page.status, 200, path);
       assert.match(page.body, /id="root"/, path);
       assert.match(page.headers["x-robots-tag"], /noindex/, path);
     }
-    const robots = await get("/robots.txt");
+    const robots = await sendRequest("/robots.txt");
     assert.equal(robots.status, 200);
     assert.match(robots.body, /Disallow: \//);
-    console.log("[serverless-runtime] PASS: real deployment entry serves preview routes without build tools");
+    if (!process.env.DATABASE_URL) {
+      for (const [path, method] of [
+        ["/api/ready", "GET"],
+        ["/api/auth/user", "GET"],
+        ["/api/opportunities", "POST"],
+        ["/api/leads", "POST"],
+      ]) {
+        const unavailable = await sendRequest(path, method);
+        assert.equal(unavailable.status, 503, path);
+        assert.equal(unavailable.headers["cache-control"], "no-store");
+        assert.equal(JSON.parse(unavailable.body).ready, false, path);
+        assert.equal(JSON.parse(unavailable.body).code, "preview_backend_unavailable", path);
+      }
+    }
+    console.log("[serverless-runtime] PASS: " + (process.env.DATABASE_URL ? "configured" : "unconfigured") + " preview serves pages without build tools; unavailable APIs stay closed");
   } finally {
     await new Promise((resolve) => server.close(resolve));
   }
@@ -61,22 +81,26 @@ async function checkRuntime() {
 if (process.argv.includes("--runtime-child")) {
   await checkRuntime();
 } else {
-  const result = spawnSync(process.execPath, [fileURLToPath(import.meta.url), "--runtime-child"], {
-    cwd: fileURLToPath(new URL("../", import.meta.url)),
-    env: {
-      PATH: process.env.PATH,
-      NODE_ENV: "production",
-      APP_ENV: "preview",
-      SITE_INDEXABLE: "false",
-      SESSION_SECRET: "isolated-runtime-smoke-session-secret",
-      DATABASE_URL: "postgresql://runtime:runtime@127.0.0.1:1/runtime",
-      AI_INTEGRATIONS_OPENAI_API_KEY: "runtime-smoke-only",
-    },
-    encoding: "utf8",
-    timeout: 30000,
-  });
-  if (result.stdout) process.stdout.write(result.stdout);
-  if (result.stderr) process.stderr.write(result.stderr);
-  if (result.error) console.error(result.error.message);
-  process.exit(result.status ?? 1);
+  for (const profile of ["configured-preview", "unconfigured-preview", "unconfigured-production"]) {
+    const result = spawnSync(process.execPath, [fileURLToPath(import.meta.url), "--runtime-child"], {
+      cwd: fileURLToPath(new URL("../", import.meta.url)),
+      env: {
+        PATH: process.env.PATH,
+        NODE_ENV: "production",
+        APP_ENV: profile === "unconfigured-production" ? "production" : "preview",
+        SITE_INDEXABLE: "false",
+        ...(profile === "configured-preview" ? {
+          SESSION_SECRET: "isolated-runtime-smoke-session-secret",
+          DATABASE_URL: "postgresql://runtime:runtime@127.0.0.1:1/runtime",
+          AI_INTEGRATIONS_OPENAI_API_KEY: "runtime-smoke-only",
+        } : {}),
+      },
+      encoding: "utf8",
+      timeout: 30000,
+    });
+    if (result.stdout) process.stdout.write(result.stdout);
+    if (result.stderr) process.stderr.write(result.stderr);
+    if (result.error) console.error(result.error.message);
+    if (result.status !== 0) process.exit(result.status ?? 1);
+  }
 }
