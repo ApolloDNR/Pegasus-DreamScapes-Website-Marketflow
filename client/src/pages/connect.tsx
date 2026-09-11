@@ -158,29 +158,6 @@ const ROUTING_STANDARDS = [
   "Plain answer if it is not a fit",
 ];
 
-function RouteIllustration() {
-  return (
-    <svg
-      className="connect-route-illustration"
-      viewBox="0 0 560 260"
-      role="img"
-      aria-label="Pegasus routing linework from property situation to the right path"
-    >
-      <path className="connect-svg-muted" d="M62 214H498" />
-      <path className="connect-svg-muted" d="M102 186H458" />
-      <path className="connect-svg-muted" d="M146 78L280 28L414 78" />
-      <path className="connect-svg-copper" d="M118 116L280 82L442 116" />
-      <path className="connect-svg-soft" d="M146 142L280 116L414 142" />
-      <path className="connect-svg-soft" d="M180 184V128" />
-      <path className="connect-svg-soft" d="M280 184V104" />
-      <path className="connect-svg-soft" d="M380 184V128" />
-      <circle className="connect-svg-node" cx="118" cy="116" r="5" />
-      <circle className="connect-svg-node" cx="280" cy="82" r="5" />
-      <circle className="connect-svg-node" cx="442" cy="116" r="5" />
-      <path className="connect-svg-copper" d="M84 226C150 210 190 210 250 226C316 244 360 244 476 216" />
-    </svg>
-  );
-}
 
 function ContactRail() {
   return (
@@ -225,8 +202,8 @@ function LaneButton({
       type="button"
       className={active ? "connect-lane-button is-active" : "connect-lane-button"}
       aria-pressed={active}
+      aria-controls="connect-selected-lane"
       onClick={() => onSelect(lane)}
-      onMouseEnter={() => onSelect(lane)}
       data-testid={`button-connect-lane-${lane.id}`}
     >
       <Icon className="h-4 w-4" aria-hidden="true" />
@@ -239,7 +216,7 @@ function ActiveLanePanel({ lane }: { lane: ConnectLane }) {
   const Icon = lane.icon;
 
   return (
-    <aside className="connect-panel" data-testid="connect-active-lane">
+    <aside className="connect-panel" id="connect-selected-lane" data-testid="connect-active-lane" aria-live="polite" aria-atomic="true">
       <div className="connect-panel-kicker">
         <span>{lane.routeCode}</span>
         <small>Route card</small>
@@ -253,8 +230,6 @@ function ActiveLanePanel({ lane }: { lane: ConnectLane }) {
           <Icon className="h-5 w-5" aria-hidden="true" />
         </span>
       </div>
-
-      <RouteIllustration />
 
       <p className="connect-panel-detail">{lane.detail}</p>
 
@@ -334,6 +309,15 @@ function Hero({
             ))}
           </div>
 
+          <div className="connect-mobile-choice">
+            <label htmlFor="connect-lane">Choose your starting point</label>
+            <select id="connect-lane" value={activeLane.id} aria-controls="connect-selected-lane" onChange={(event) => {
+              const lane = LANES.find((item) => item.id === event.target.value);
+              if (lane) setActiveLane(lane);
+            }}>
+              {LANES.map((lane) => <option key={lane.id} value={lane.id}>{lane.audience}</option>)}
+            </select>
+          </div>
           <div className="connect-quick-lanes" aria-label="Choose a primary lane">
             {PRIMARY_LANES.map((lane) => (
               <LaneButton

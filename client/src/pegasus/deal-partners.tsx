@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLocation } from 'wouter';
 import { ArrowRight } from 'lucide-react';
 import type { Nav } from './theme';
+import { ResponsiveChoiceList } from './responsive-choice-list';
 
 /* ================================================================
    DEAL PARTNERS — Master Blueprint v5.1 (§10, §32.3)
@@ -69,16 +70,10 @@ export function DealPartnersPage({ go }: { go: Nav }) {
           <div className="pg-label hv-eyebrow-copper">Define the unresolved piece</div>
           <h2 className="hv-h2 font-serif-display">What does the deal need next?</h2>
           <div className="dp-composer-grid reveal">
-            <div className="dp-missing" role="group" aria-label="What the deal is missing">
-              {MISSING.map((m, i) => (
-                <button key={m.label} type="button" aria-pressed={i === idx}
-                  className="dp-missing-item" data-on={i === idx || undefined}
-                  onClick={() => setIdx(i)}>
-                  {m.label}
-                </button>
-              ))}
-            </div>
-            <div className="dp-answer" key={pick.label} aria-live="polite">
+            <ResponsiveChoiceList id="partner-need" label="What the deal is missing" options={MISSING}
+              value={idx} onChange={setIdx} controls="partner-answer" className="dp-missing" itemClassName="dp-missing-item" />
+            <div className="dp-answer" id="partner-answer" aria-live="polite" aria-atomic="true">
+              <h3 className="pg-choice-title font-serif-display">{pick.label}</h3>
               <div className="dp-answer-block">
                 <div className="pg-label hv-eyebrow-copper">What to document</div>
                 <p>{pick.records}</p>
@@ -87,6 +82,9 @@ export function DealPartnersPage({ go }: { go: Nav }) {
                 <div className="pg-label hv-eyebrow-copper">What this does not establish</div>
                 <p>{pick.limit}</p>
               </div>
+              <a href="/bring-an-opportunity?intent=deal-jv" onClick={toDeal} className="hv-proof-link">
+                Bring this opportunity <ArrowRight className="inline h-3.5 w-3.5" />
+              </a>
             </div>
           </div>
         </div>

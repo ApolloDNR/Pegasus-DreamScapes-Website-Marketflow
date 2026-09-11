@@ -27,7 +27,7 @@ function WhatYouGet({ cat }: { cat: Category }) {
 
   if (layout === 'grid') {
     return (
-      <section className="py-24 lg:py-28">
+      <section className="pg-category-points py-24 lg:py-28">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
           <div className="max-w-2xl mx-auto text-center mb-14 reveal">
             <div className="pg-label text-[var(--accent)] mb-5">{label}</div>
@@ -51,7 +51,7 @@ function WhatYouGet({ cat }: { cat: Category }) {
 
   if (layout === 'ledger') {
     return (
-      <section className="py-24 lg:py-28">
+      <section className="pg-category-points py-24 lg:py-28">
         <div className="max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-10 lg:gap-16 items-start">
           <div className="lg:col-span-5 reveal lg:sticky lg:top-28">
             <div className="pg-label text-[var(--accent)]">{label}</div>
@@ -75,7 +75,7 @@ function WhatYouGet({ cat }: { cat: Category }) {
   }
 
   return (
-    <section className="py-24 lg:py-28">
+    <section className="pg-category-points py-24 lg:py-28">
       <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
         <div className="grid lg:grid-cols-12 gap-10 lg:gap-16 items-start">
           <div className="lg:col-span-4 reveal">

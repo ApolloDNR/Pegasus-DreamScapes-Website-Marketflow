@@ -89,7 +89,7 @@ export function Landing() {
     go('contact');
   }, [go]);
 
-  // Reveal observer - re-run on route change so new page elements animate in
+  // Only decorative line work waits for visibility. Content and controls remain readable.
   useEffect(() => {
     observerRef.current?.disconnect();
     const obs = new IntersectionObserver((entries) => {
@@ -106,8 +106,7 @@ export function Landing() {
     }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
     observerRef.current = obs;
     const id = requestAnimationFrame(() => {
-      document.querySelectorAll('.reveal, .draw-on-view').forEach((el) => {
-        if (el.classList.contains('reveal') && !el.classList.contains('animate-fade-in-up')) el.classList.add('reveal-pending');
+      document.querySelectorAll('.draw-on-view').forEach((el) => {
         obs.observe(el);
       });
     });

@@ -3,7 +3,7 @@ import { describe, it, expect, afterEach, vi } from "vitest";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import { render, cleanup, fireEvent } from "@testing-library/react";
+import { render, cleanup, fireEvent, within } from "@testing-library/react";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -212,13 +212,13 @@ describe("Homepage premium editorial contract", () => {
     ]);
   });
 
-  it("selecting an Opportunity Plan need reveals what Pegasus brings", () => {
+  it("selecting an Opportunity Plan need reveals connected planning questions", () => {
     const { container } = renderHome();
-    const chip = Array.from(container.querySelectorAll<HTMLButtonElement>("button")).find(
-      (b) => b.textContent?.trim() === "Underwriting" && b.className.includes("hv-chip"),
-    );
-    expect(chip, "Opportunity Plan chip row must render").toBeTruthy();
-    fireEvent.click(chip!);
-    expect(chip!.getAttribute("aria-pressed")).toBe("true");
+    const plan = container.querySelector<HTMLElement>('[data-testid="opportunity-plan"]')!;
+    const choice = within(plan).getByRole('button', { name: 'Underwriting' });
+    fireEvent.click(choice);
+    expect(choice).toHaveAttribute('aria-pressed', 'true');
+    expect(within(plan).getByRole('link', { name: 'Work through the numbers' })).toHaveAttribute('href', '/strategy-lab');
+    expect(plan.querySelector('.op-map-node:not(.op-map-focus)')).toHaveTextContent('Capital');
   });
 });

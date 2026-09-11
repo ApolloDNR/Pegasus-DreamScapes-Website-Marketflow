@@ -11,7 +11,7 @@ import { CAPITAL_RELATIONSHIP_FORM, LeadForm } from './forms';
 export function CapitalPage({ go: _go }: { go: Nav }) {
   const scrollToIntroduction = () => {
     document.getElementById('capital-introduction')?.scrollIntoView({
-      behavior: 'smooth',
+      behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
       block: 'start',
     });
   };
@@ -22,8 +22,13 @@ export function CapitalPage({ go: _go }: { go: Nav }) {
         title={<>Capital should <span className="italic text-[var(--accent-bright)]">follow discipline.</span></>}
         image={IMG('pegasus-closing.png')}
         lead="Pegasus begins these conversations only through an existing relationship or a personal introduction. This page records relationship context; it does not present project terms or create access, eligibility, or an agreement." />
-      <section className="py-24 lg:py-28">
-        <div className="max-w-[760px] mx-auto px-6 lg:px-12 text-center">
+      <section className="pg-capital-context">
+        <div className="hv-wrap pg-capital-context-grid">
+          <div>
+            <div className="pg-label text-[var(--accent)] mb-5">Start with the relationship</div>
+            <h2 className="font-serif-display">An existing connection. A private conversation.</h2>
+          </div>
+          <div>
           <p className="text-[var(--muted)] leading-relaxed text-lg mb-6">
             If Apollo already knows you or someone personally connected you, use the introduction
             form below to identify that relationship. Do not send account details, tax identifiers,
@@ -42,9 +47,10 @@ export function CapitalPage({ go: _go }: { go: Nav }) {
               apollo@pegasusdreamscapes.com
             </a>
           </div>
+          </div>
         </div>
       </section>
-      <section id="capital-introduction" className="scroll-mt-24 py-24 lg:py-28 bg-[var(--bg-2)] border-y border-[var(--line)]">
+      <section id="capital-introduction" className="pg-capital-introduction scroll-mt-24 py-24 lg:py-28 bg-[var(--bg-2)] border-y border-[var(--line)]">
         <div className="max-w-[1120px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-12 lg:gap-16 items-start">
           <div className="lg:col-span-5">
             <div className="pg-label text-[var(--accent)] mb-5">Existing relationship or personal introduction</div>

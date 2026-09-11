@@ -140,13 +140,28 @@ export function DevelopmentPage({ go }: { go: Nav }) {
         title={<>Define project work <span className="italic text-[var(--accent-bright)]">before it begins.</span></>}
         image={IMG('nelson/nelson-kitchen-1280.jpg')}
         lead="A framework for renovation or ground-up scopes: budget, schedule, qualified providers, permits, change control, and written completion criteria." />
-      <section className="py-24 lg:py-28">
-        <div className="max-w-[760px] mx-auto px-6 lg:px-12 text-center">
-          <p className="text-[var(--muted)] leading-relaxed text-lg">
+      <section className="pg-development-plan">
+        <div className="hv-wrap pg-development-grid">
+          <div className="pg-development-intro">
+            <div className="pg-label text-[var(--accent)]">Before a project starts</div>
+            <h2 className="font-serif-display">Make the scope clear. Make the responsibilities explicit.</h2>
+            <p className="text-[var(--muted)] leading-relaxed">
+              Use these four areas to organize the project conversation, from the first assumptions to the final handoff.
+            </p>
+          </div>
+          <ol className="pg-development-controls">
+            <li><span>01</span><div><h3>Scope &amp; budget</h3><p>Identify the proposed work, exclusions, available plans, cost assumptions, and decisions that would change the budget.</p></div></li>
+            <li><span>02</span><div><h3>Providers &amp; permissions</h3><p>Document the roles, applicable licenses, permit status, and qualifications that the specific property and scope require.</p></div></li>
+            <li><span>03</span><div><h3>Schedule &amp; change control</h3><p>Separate target dates from verified dependencies. Define who approves changes, how they are priced, and how they are recorded.</p></div></li>
+            <li><span>04</span><div><h3>Completion &amp; handoff</h3><p>Agree the acceptance criteria, inspections, outstanding items, handoff records, and remedies in the project documents.</p></div></li>
+          </ol>
+        </div>
+        <div className="hv-wrap pg-development-boundary">
+          <p className="text-[var(--muted)] leading-relaxed">
             This page does not claim an in-house construction team or guaranteed capacity. A future project would require property-specific diligence, qualified providers, applicable licenses and permits, and a signed agreement defining scope, budget, schedule, changes, completion, and remedies.
           </p>
           <button type="button" onClick={() => go('contact')} data-testid="button-development-connect"
-            className="btn-primary mt-9 px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
+            className="btn-primary px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
             Start a build conversation <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </button>
         </div>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLocation } from 'wouter';
 import { ArrowRight } from 'lucide-react';
 import type { Nav } from './theme';
+import { ResponsiveChoiceList } from './responsive-choice-list';
 
 /* ================================================================
    PROPERTY OWNERS — Master Blueprint v5.1 (§9, §32.3)
@@ -83,18 +84,12 @@ export function PropertyOwnersPage({ go }: { go: Nav }) {
           <div className="pg-label hv-eyebrow-copper">Start with your situation</div>
           <h2 className="hv-h2 font-serif-display">What is standing between you and the next step?</h2>
           <div className="po-step-grid reveal">
-            <div className="po-situations" role="group" aria-label="Common owner situations">
-              {SITUATIONS.map((s, i) => (
-                <button key={s.label} type="button" aria-pressed={i === idx}
-                  className="po-situation" data-on={i === idx || undefined}
-                  onClick={() => setIdx(i)}>
-                  {s.label}
-                </button>
-              ))}
-            </div>
-            <div className="po-path" key={SITUATIONS[idx].label} aria-live="polite">
+            <ResponsiveChoiceList id="owner-situation" label="Common owner situations" options={SITUATIONS}
+              value={idx} onChange={setIdx} controls="owner-path" className="po-situations" itemClassName="po-situation" />
+            <div className="po-path" id="owner-path" aria-live="polite" aria-atomic="true">
               <div className="pg-label hv-eyebrow-copper">Where to start</div>
-              <p className="po-path-copy font-serif-display">{SITUATIONS[idx].path}</p>
+              <h3 className="pg-choice-title font-serif-display">{SITUATIONS[idx].label}</h3>
+              <p className="po-path-copy">{SITUATIONS[idx].path}</p>
               <a href={selectedSituationHref} onClick={toIntake} className="hv-proof-link hv-link-ink">
                 Start with this situation <ArrowRight className="inline h-3.5 w-3.5" />
               </a>

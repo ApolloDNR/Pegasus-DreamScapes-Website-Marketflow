@@ -2,6 +2,8 @@ import React from 'react';
 import { useLocation } from 'wouter';
 import { ArrowRight } from 'lucide-react';
 import type { Nav } from './theme';
+import { ProjectGallery } from './project-gallery';
+import { SectionNav } from './section-nav';
 import {
   NELSON_COST_DISCLOSURE,
   NELSON_EXECUTION_DISCLOSURE,
@@ -74,8 +76,10 @@ export function OurWorkPage({ go }: { go: Nav }) {
         </div>
       </section>
 
+      <SectionNav items={[['project-record', 'The figures'], ['project-gallery', 'The photographs'], ['project-lessons', 'The takeaway']]} />
+
       {/* Thesis + numbers */}
-      <section className="ow-numbers hv-pad">
+      <section className="ow-numbers hv-pad" id="project-record">
         <div className="hv-wrap ow-numbers-grid reveal">
           <div>
             <div className="pg-label hv-eyebrow-copper">The public record</div>
@@ -120,40 +124,16 @@ export function OurWorkPage({ go }: { go: Nav }) {
       </section>
 
       {/* Transformation */}
-      <section className="ow-transform hv-pad-lg">
+      <section className="ow-transform hv-pad-lg" id="project-gallery">
         <div className="hv-wrap">
           <div className="pg-label hv-eyebrow-copper">The transformation</div>
           <h2 className="hv-h2 font-serif-display">Room by room, honestly shown.</h2>
-          <div className="ow-pairs reveal">
-            {PAIRS.map((p) => (
-              <figure key={p.title} className="ow-pair">
-                <div className="ow-pair-media">
-                  <span className="ow-shot">
-                    <img src={p.before} alt={p.beforeAlt} loading="lazy" />
-                    <i>Before{p.tag ? ` · ${p.tag}` : ''}</i>
-                  </span>
-                  <span className="ow-shot ow-shot-after">
-                    <img src={p.after} alt={p.afterAlt} loading="lazy" />
-                    <i>After</i>
-                  </span>
-                </div>
-                <figcaption>
-                  <strong className="font-serif-display">{p.title}</strong>
-                  <span>{p.note}</span>
-                </figcaption>
-              </figure>
-            ))}
-          </div>
-          <div className="ow-strip reveal">
-            {FINISH_STRIP.map(([src, alt]) => (
-              <img key={src} src={src} alt={alt} loading="lazy" />
-            ))}
-          </div>
+          <ProjectGallery pairs={PAIRS} finishes={FINISH_STRIP} />
         </div>
       </section>
 
       {/* Lessons */}
-      <section className="ow-lessons">
+      <section className="ow-lessons" id="project-lessons">
         <div className="hv-wrap">
           <div className="pg-label hv-eyebrow-copper">Carried forward</div>
           <p className="ow-lesson font-serif-display">

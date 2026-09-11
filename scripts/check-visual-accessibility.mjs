@@ -1360,6 +1360,60 @@ async function captureInventoryState(
 }
 
 let fatalFailure = null;
+// Exercise the redesigned public controls before the existing route scan and
+// screenshot. Every viewport/theme therefore checks the meaningful selected
+// state, including the mobile diagram that originally lost its labels.
+async function exercisePublicDesign(page, route, viewport) {
+  if (route === '/') {
+    const plan = page.getByTestId('opportunity-plan');
+    await plan.getByRole('button', { name: 'Development', exact: true }).click();
+    assert(await plan.getByRole('link', { name: 'Explore project planning' }).getAttribute('href') === '/development', 'Development map lost its next step');
+    const controls = await plan.locator('.op-choices button, .op-map-node strong').evaluateAll((elements) => elements.map((element) => ({
+      label: element.textContent,
+      width: element.clientWidth,
+      overflow: element.scrollWidth > element.clientWidth + 2,
+      height: element.getBoundingClientRect().height,
+      button: element.tagName === 'BUTTON',
+    })));
+    assert(controls.filter((control) => control.button).length === 8, 'Opportunity Plan lost a planning need');
+    assert(controls.every((control) => control.width > 0 && !control.overflow && (!control.button || control.height >= 44)), `Diagram labels or touch targets failed: ${JSON.stringify(controls)}`);
+  }
+  if (route === '/property-owners') {
+    if (viewport.width <= 900) await page.getByRole('combobox', { name: 'Common owner situations' }).selectOption('2');
+    else await page.getByRole('group', { name: 'Common owner situations' }).getByRole('button', { name: 'Inherited property' }).click();
+    assert(await page.locator('#owner-path').getByRole('heading', { name: 'Inherited property' }).count() === 1, 'Owner answer did not update');
+    assert((await page.getByRole('link', { name: 'Start with this situation' }).getAttribute('href')).includes('owner_situation=Inherited%20property'), 'Owner selection lost the intake prefill');
+  }
+  if (route === '/deal-partners') {
+    if (viewport.width <= 900) await page.getByRole('combobox', { name: 'What the deal is missing' }).selectOption('2');
+    else await page.getByRole('group', { name: 'What the deal is missing' }).getByRole('button', { name: 'Underwriting', exact: true }).click();
+    assert(await page.locator('#partner-answer').getByRole('heading', { name: 'Underwriting', exact: true }).count() === 1, 'Partner answer did not update');
+  }
+  if (route === '/how-we-operate') {
+    const rail = page.getByRole('group', { name: 'The five operating stages' });
+    await rail.getByRole('button', { name: /03.*Operate/ }).click();
+    assert(await page.getByRole('heading', { name: 'Carry out the agreed project role.' }).count() === 1, 'Operating stage did not update');
+    assert(await rail.evaluate((element) => element.scrollWidth <= element.clientWidth + 2), 'Operating stages require hidden horizontal scrolling');
+  }
+  if (route === '/faq') {
+    await page.getByRole('searchbox', { name: 'Search the answers' }).fill('diligence');
+    assert(await page.getByTestId('faq-q-submitting-a-property-3').count() === 1, 'FAQ answer search lost stable question identity');
+    await page.getByRole('button', { name: 'Clear search' }).click();
+  }
+  if (route === '/our-work') {
+    await page.getByRole('button', { name: 'Enlarge the kitchen, before' }).click();
+    const viewer = page.getByRole('dialog');
+    await viewer.getByRole('button', { name: 'Next photograph' }).click();
+    assert((await viewer.getByRole('img').getAttribute('src')).endsWith('/kitchen-after.webp'), 'Gallery did not show the next documented photograph');
+    await page.keyboard.press('Escape');
+    await viewer.waitFor({ state: 'detached' });
+  }
+  if (route === '/contact' && viewport.width <= 980) {
+    await page.getByLabel('Choose your starting point').selectOption('deal-finder');
+    assert(await page.getByTestId('link-connect-active-deal-finder').getAttribute('href') === '/deal-partners', 'Mobile contact selection lost its destination');
+  }
+}
+
 try {
   // Unsharded behavior remains equivalent to: for (const colorScheme of interactionsOnly ? [] : colorSchemes)
   for (const colorScheme of selectedRouteColorSchemes) {
@@ -1388,6 +1442,7 @@ try {
                   );
                   await page.locator('h1').first().waitFor({ state: 'attached', timeout: 10_000 });
                   await settleRenderedPage(page, 'route pre-axe');
+                  await exercisePublicDesign(page, route, viewport);
                   const firstRequestState = await waitForActiveRequestCount(health, 0);
                   await page.addScriptTag({ content: axeSource });
 

@@ -4755,3 +4755,30 @@ body:has(.connect-premium) .peggy-fab {
   .mf-access-page *,
   .mf-access-success * { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }
+
+
+/* Public quality sweep: readable working pages and a direct contact chooser. */
+.connect-hero-grid { align-items:start; gap:clamp(2rem,5vw,4rem); }
+.connect-hero-copy h1 { max-width:17ch; font-size:clamp(2.8rem,4.8vw,4.3rem); line-height:1.06; }
+.connect-panel-head h2 { font-size:clamp(1.55rem,2.4vw,2rem); line-height:1.2; }
+.connect-panel { box-shadow:none; }
+.connect-panel::before { display:none; }
+.connect-panel-detail { line-height:1.75; }
+.connect-mobile-choice { display:none; }
+.px-lab-masthead h1 { max-width:21ch; line-height:1.08; }
+.px-lab-step-heading h2 { font-size:clamp(1.8rem,3vw,2.7rem); line-height:1.15; max-width:28ch; }
+@media(max-width:980px) {
+  .connect-mobile-choice { display:block; margin-top:1.6rem; }
+  .connect-mobile-choice label { display:block; font-size:.8rem; color:var(--connect-cream); margin-bottom:.6rem; }
+  .connect-mobile-choice select { width:100%; min-height:50px; padding:.8rem; font-size:1rem; border:1px solid var(--connect-copper-bright); background:#102331; color:var(--connect-cream); }
+  .connect-mobile-choice select:focus-visible { outline:2px solid var(--connect-copper-bright); outline-offset:3px; }
+  .connect-quick-lanes { display:none; }
+  .connect-hero-grid { gap:1.25rem; }
+}
+@media(max-width:640px) {
+  .connect-shell { width:calc(100% - 3rem); }
+  .connect-hero-copy h1 { font-size:2.6rem; }
+  .connect-proof-row { display:none; }
+  .px-lab-masthead h1 { font-size:clamp(2.3rem,10vw,3.2rem); }
+  .px-lab-step-heading h2 { font-size:1.9rem; }
+}

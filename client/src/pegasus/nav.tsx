@@ -102,7 +102,7 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
     };
   }, [menuOpen]);
 
-  const overHero = !scrolled && !menuOpen;
+  const overHero = !scrolled && !menuOpen && route !== 'apollo';
   const text = overHero ? 'text-[var(--cream)]' : 'text-[var(--text)]';
   const activeTone = overHero ? 'text-[var(--accent-bright)]' : 'text-[var(--accent-ink)]';
   const desktopMoreActive = PREMIUM_NAVIGATION.more.some((group) =>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useLocation } from 'wouter';
 import { ArrowRight } from 'lucide-react';
 import type { Nav } from './theme';
+import { SectionNav } from './section-nav';
 
 /* ================================================================
    HOW WE OPERATE — Master Blueprint v5.1 (§8, §32.3)
@@ -103,15 +104,17 @@ export function HowWeOperatePage({ go }: { go: Nav }) {
         </div>
       </section>
 
+      <SectionNav items={[['operating-sequence', 'The sequence'], ['operating-roles', 'Possible roles'], ['strategy-structure', 'Strategy & structure']]} />
+
       {/* Signature: the lifecycle rail */}
-      <section className="hwo-cycle hv-pad" data-testid="lifecycle-rail">
+      <section className="hwo-cycle hv-pad" data-testid="lifecycle-rail" id="operating-sequence">
         <div className="hv-wrap">
           <div className="pg-label hv-eyebrow-copper">The operating sequence</div>
           <h2 className="hv-h2 font-serif-display">Originate. Structure. Operate. Realize. Learn.</h2>
           <div className="hwo-rail reveal" role="group" aria-label="The five operating stages">
             {STAGES.map((s, i) => (
               <button key={s.num} type="button" aria-pressed={i === stageIdx}
-                className="hwo-rail-stop" data-on={i === stageIdx || undefined}
+                aria-controls="operating-stage" className="hwo-rail-stop" data-on={i === stageIdx || undefined}
                 onClick={() => setStageIdx(i)}>
                 <span className="hwo-rail-num">{s.num}</span>
                 <span className="hwo-rail-name font-serif-display">{s.name}</span>
@@ -121,7 +124,7 @@ export function HowWeOperatePage({ go }: { go: Nav }) {
               <div className="hwo-rail-fill" style={{ width: `${((stageIdx + 1) / STAGES.length) * 100}%` }} />
             </div>
           </div>
-          <div className="hwo-stage" key={stage.num} aria-live="polite">
+          <div className="hwo-stage" id="operating-stage" aria-live="polite" aria-atomic="true">
             <div>
               <h3 className="hwo-stage-claim font-serif-display">{stage.claim}</h3>
               <p className="hv-muted">{stage.detail}</p>
@@ -137,7 +140,7 @@ export function HowWeOperatePage({ go }: { go: Nav }) {
       </section>
 
       {/* Role selection */}
-      <section className="hwo-roles hv-pad-lg hv-grain">
+      <section className="hwo-roles hv-pad-lg hv-grain" id="operating-roles">
         <div className="hv-wrap">
           <div className="pg-label hv-eyebrow">Role selection</div>
           <h2 className="hv-h2-cream font-serif-display">The role is chosen, not assumed.</h2>
@@ -155,7 +158,7 @@ export function HowWeOperatePage({ go }: { go: Nav }) {
       </section>
 
       {/* Strategy vs structure */}
-      <section className="hwo-svss hv-pad">
+      <section className="hwo-svss hv-pad" id="strategy-structure">
         <div className="hv-wrap hwo-svss-grid reveal">
           <div>
             <div className="pg-label hv-eyebrow-copper">Strategy</div>
