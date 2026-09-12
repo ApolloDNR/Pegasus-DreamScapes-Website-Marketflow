@@ -155,7 +155,7 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
   return (
     <>
       <nav ref={navRef} style={{ "--nav-menu-top": scrolled ? "86px" : "108px" } as React.CSSProperties} className="fixed top-0 inset-x-0 z-40">
-        <div className={`absolute inset-0 h-full pointer-events-none transition-all duration-500 ${menuOpen ? 'bg-[var(--bg-2)]' : overHero ? 'hero-scrim-top' : 'bg-[var(--bg)] border-b border-[var(--line)] shadow-[0_18px_44px_-36px_rgba(13,27,44,0.44)]'}`} />
+        <div className={`absolute inset-0 h-full pointer-events-none transition-all duration-500 ${menuOpen ? 'nav-stock bg-[var(--bg-2)]' : overHero ? 'hero-scrim-top' : 'nav-stock bg-[var(--bg)] border-b border-[var(--line)] shadow-[0_18px_44px_-36px_rgba(13,27,44,0.44)]'}`} />
         <div className={`relative max-w-[1440px] mx-auto px-6 lg:px-16 flex items-center justify-between transition-all duration-500 ${scrolled ? 'h-[74px]' : 'h-24'} ${text}`}>
           <Link href="/" aria-label="Pegasus Dreamscapes home" className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
             <BrandMark boxClassName="w-10 h-10 sm:w-12 sm:h-12" onDark={overHero || theme === 'dark'} />

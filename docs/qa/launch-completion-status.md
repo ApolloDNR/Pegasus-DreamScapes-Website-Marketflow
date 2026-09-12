@@ -2,6 +2,14 @@
 
 Updated 2026-09-12. Scope: `docs/WEBSITE_EXECUTION_BRIEF.md`.
 
+## Business-card finish continuation
+
+The preceding design candidate is published at `4eb0dacfbd57c55f1b481e5f4ee88a64837068dc`. [Run 34703097469](https://github.com/ApolloDNR/Pegasus-DreamScapes-Website-Marketflow/actions/runs/34703097469) passed all 16 jobs, including 45 routes at four widths in both themes and 17 interaction journeys. Its protected preview also passed hosted visual and interaction review.
+
+The owner then supplied the navy/copper business card as a material reference and explicitly asked for a restrained finish, without substantial structural change. `material-finish.css` reuses the existing fine-grain artwork on opaque editorial surfaces, adds restrained copper edges and pressed button detail, reduces floating-card shadows, and gives the shared footer a fine perimeter. It carries through both themes, the navigation, Opportunity Plan, and supporting editorial pages. The card is a visual reference only; its contact details and wording do not replace the approved website information. The approved hero, photographs, fonts, routes, content, forms, and integrations are preserved.
+
+Local verification for this finish: TypeScript, all 213 test files / 2,413 tests, production build, client bundle budgets, deployment-entry runtime checks, and diff hygiene pass. Fresh hosted before screenshots were captured for the homepage, navigation, Opportunity Plan, and footer. Current-source rendered CI and the final hosted comparison must be recorded on PR #26 before this candidate is declared complete. The existing protected-preview authorization and backend limitations below continue to apply.
+
 ## Latest design continuation
 
 The prior design sweep is published at `ed8516e4ff726110b04299b4517a1017299d9691`. Its protected preview rendered successfully and [run 34620908639](https://github.com/ApolloDNR/Pegasus-DreamScapes-Website-Marketflow/actions/runs/34620908639) passed all 16 jobs. It includes the repaired Opportunity Plan, owner/partner controls, operating stages, photo viewer, FAQ search, and shared page refinements. These results supersede the earlier unverified-browser statements below for that source.

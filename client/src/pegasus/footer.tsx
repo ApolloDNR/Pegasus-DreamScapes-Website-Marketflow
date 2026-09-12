@@ -26,7 +26,7 @@ function FooterLink({ label, href, tag }: { label: string; href: string; tag?: s
 
 export function Footer({ go: _go }: { go: Nav }) {
   return (
-    <footer className="bg-[var(--navy)] text-[var(--cream)]">
+    <footer className="pg-footer bg-[var(--navy)] text-[var(--cream)]">
       <div className="max-w-[1320px] mx-auto px-6 lg:px-12 py-20">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-10 lg:gap-12">
           <div className="col-span-2 md:col-span-4">
