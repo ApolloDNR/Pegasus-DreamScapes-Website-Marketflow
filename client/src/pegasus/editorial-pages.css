@@ -2,6 +2,8 @@
 .pg-editorial { color: hsl(var(--foreground)); background: hsl(var(--background)); }
 .pg-editorial h1, .pg-editorial h2, .pg-editorial h3 { letter-spacing: 0; font-weight: 400; text-wrap: balance; }
 .blueprint-editorial h1, .vendor-editorial h1 { font-size: clamp(2.4rem, 4.6vw, 4rem); }
+.blueprint-editorial > section:first-child .font-supporting,
+.vendor-editorial > section:first-child .font-supporting { color: #e2b989; font-size: 10px; letter-spacing: .18em; }
 .pg-editorial h2 { font-family: var(--font-serif); font-size: clamp(1.9rem, 3.3vw, 2.75rem); line-height: 1.17; }
 .pg-editorial section[id] { scroll-margin-top: 110px; }
 .editorial-wrap { width: min(1280px, 100%); margin-inline: auto; padding-inline: 24px; }
