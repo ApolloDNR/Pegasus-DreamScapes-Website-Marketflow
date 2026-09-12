@@ -129,11 +129,16 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
   const allPages = [...PREMIUM_NAVIGATION.primary, ...PREMIUM_NAVIGATION.more.flatMap(group => group.items), ...PREMIUM_NAVIGATION.utilities];
   const query = navigationQuery.trim().toLowerCase();
   const matches = allPages.filter(item => [item.label, item.note, item.route, item.url].filter(Boolean).join(' ').toLowerCase().includes(query));
+  const clearNavigationSearch = () => {
+    setNavigationQuery('');
+    const panel = desktopMoreOpen ? desktopMoreRef.current : menuRef.current;
+    panel?.querySelector<HTMLInputElement>('input[type="search"]')?.focus();
+  };
   const searchControl = (id: string) => <div className="nav-search">
     <Search aria-hidden="true" size={17} />
     <label className="sr-only" htmlFor={id}>Search navigation</label>
     <input id={id} type="search" autoComplete="off" placeholder="Find a page or tool" value={navigationQuery} onChange={event => setNavigationQuery(event.target.value)} />
-    {navigationQuery && <button type="button" aria-label="Clear navigation search" onClick={() => setNavigationQuery('')}><X aria-hidden="true" size={16} /></button>}
+    {navigationQuery && <button type="button" aria-label="Clear navigation search" onClick={clearNavigationSearch}><X aria-hidden="true" size={16} /></button>}
   </div>;
   const searchResults = <div className="nav-search-results">
     <p role="status">{matches.length} {matches.length === 1 ? 'page' : 'pages'} found</p>
@@ -141,7 +146,7 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
       <span className="nav-dd-title">{item.label}</span>
       {item.note && <span className="nav-dd-desc">{item.note}</span>}
     </Link>)}
-    {!matches.length && <div className="nav-search-empty">Try a topic such as property, partners, or Strategy Lab.<button type="button" onClick={() => setNavigationQuery('')}>Show all pages <ArrowRight size={14} aria-hidden="true" /></button></div>}
+    {!matches.length && <div className="nav-search-empty">Try a topic such as property, partners, or Strategy Lab.<button type="button" onClick={clearNavigationSearch}>Show all pages <ArrowRight size={14} aria-hidden="true" /></button></div>}
   </div>;
   const utilities = <div className="nav-utilities" aria-label="Tools and applications">
     {PREMIUM_NAVIGATION.utilities.map(item => <Link key={item.label} href={itemUrl(item)} onClick={closeNavigation} aria-current={isActive(item) ? 'page' : undefined}>{item.label}<ArrowRight size={14} aria-hidden="true" /></Link>)}

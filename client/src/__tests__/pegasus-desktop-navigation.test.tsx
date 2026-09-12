@@ -72,6 +72,7 @@ describe("Pegasus desktop navigation directory", () => {
     expect(directory.getByRole("status")).toHaveTextContent("0 pages found");
     fireEvent.click(directory.getByRole("button", { name: /Show all pages/ }));
     expect(search).toHaveValue("");
+    expect(search).toHaveFocus();
     expect(directory.getByRole("heading", { name: "Company & proof" })).toBeInTheDocument();
   });
 

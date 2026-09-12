@@ -98,7 +98,7 @@ export default function Projects() {
           <div><p className="editorial-kicker">A possible next chapter</p><h2>Have one to add<br className="hidden sm:block" /> to the record?</h2><p>Share the property and the situation for possible review.</p></div>
           <div className="editorial-actions">
             <Link href="/bring-an-opportunity" className="editorial-button" data-testid="link-projects-strategy-review">Start a Strategy Review <ArrowRight size={16} aria-hidden="true" /></Link>
-            <Link href="/capital-partners" className="editorial-text-link">Explore capital partnerships <ArrowRight size={16} aria-hidden="true" /></Link>
+            <Link href="/capital" className="editorial-text-link">Explore capital partnerships <ArrowRight size={16} aria-hidden="true" /></Link>
           </div>
         </div>
       </section>
