@@ -1,97 +1,122 @@
-/* Business-card finish: inked stock, quiet copper edges, and pressed surfaces.
- * Reuses the site's existing grain artwork. Background layers sit behind the
- * content, so photographs, text, pointer targets, and layout remain untouched.
+/* The owner's card translated into material, not page structure: matte navy
+ * bookcloth, ivory type, and copper foil. Texture is a cached image behind
+ * content. Heroes, photographs, diagram geometry, and hit targets stay intact.
  */
 :root {
-  --pg-stock-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --pg-paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  --pg-bookcloth: url('/images/materials/navy-bookcloth.webp');
+  --pg-stock-grain: var(--pg-paper-grain);
+  --pg-stock-size: 120px;
   --pg-stock-base: #f4efe5;
-  --pg-stock-cover: 97%;
-  --pg-copper-edge: rgba(158, 108, 68, .36);
+  --pg-stock-cover: 96%;
+  --pg-copper-edge: rgba(158, 108, 68, .45);
   --pg-pressed-edge: rgba(255, 249, 237, .48);
 }
-
 .dark {
-  --pg-stock-base: #0e1a26;
-  --pg-stock-cover: 95%;
-  --pg-copper-edge: rgba(191, 144, 103, .4);
-  --pg-pressed-edge: rgba(245, 230, 211, .07);
+  --pg-stock-grain: var(--pg-bookcloth);
+  --pg-stock-size: 384px;
+  --pg-stock-base: #101b25;
+  --pg-stock-cover: 78%;
+  --pg-copper-edge: rgba(191, 144, 103, .48);
+  --pg-pressed-edge: rgba(245, 230, 211, .09);
+}
+.pg-root[data-theme='dark'] {
+  --bg: #101b25;
+  --bg-2: #15222b;
+  --bg-3: #1b2a34;
+  --charcoal: #15222b;
+}
+.pg-root[data-theme='dark'] .hv {
+  --hv-v6-limestone: #15222b;
+  --hv-v6-paper: #101b25;
+  --hv-v6-deep: #0c1620;
+  --hv-v6-black: #0a131c;
+}
+.pg-root[data-theme='dark'] :is(.hwo, .po, .dp, .ow) {
+  --ip-limestone: #15222b;
+  --ip-paper: #101b25;
+  --ip-deep: #0c1620;
+  --ip-black: #0a131c;
 }
 
-/* Select only opaque editorial stock. Image-led heroes and tool canvases
- * retain their own backgrounds; no full-page overlay crosses their content.
- */
+/* Warm stock remains quiet. Navy stock carries a visible, fine weave. */
 .pg-root { --pg-stock-base: var(--bg); }
 .pg-root :is(.hv-router, .hv-method-content, .hv-partner) { --pg-stock-base: var(--hv-v6-limestone); }
 .pg-root .hv-plan { --pg-stock-base: var(--hv-v6-paper); }
 .pg-root :is(.hwo-cycle, .hwo-close, .po-stepper, .dp-gp, .ow-numbers, .ow-lessons) { --pg-stock-base: var(--ip-limestone); }
 .pg-root :is(.hwo-svss, .po-restraint, .dp-composer, .ow-transform) { --pg-stock-base: var(--ip-paper); }
-.pg-root :is(.nav-stock, .nav-dropdown-mega) { --pg-stock-base: var(--bg); }
-.pg-root #mobile-menu { --pg-stock-base: var(--bg-2); }
+.pg-root .nav-stock { --pg-stock-base: var(--bg); }
 .pg-editorial { --pg-stock-base: hsl(var(--background)); }
 .pg-editorial .editorial-next { --pg-stock-base: hsl(var(--muted)); }
 .pg-editorial :is(.project-feature-copy, .vendor-form-surface) { --pg-stock-base: hsl(var(--card)); }
-
 .pg-root,
 .pg-root :is(.hv-router, .hv-method-content, .hv-partner, .hv-plan,
   .hwo-cycle, .hwo-close, .po-stepper, .dp-gp, .ow-numbers, .ow-lessons,
-  .hwo-svss, .po-restraint, .dp-composer, .ow-transform,
-  .nav-stock, .nav-dropdown-mega, #mobile-menu),
+  .hwo-svss, .po-restraint, .dp-composer, .ow-transform, .nav-stock),
 .pg-editorial,
 .pg-editorial :is(.editorial-next, .project-feature-copy, .vendor-form-surface) {
   background-color: var(--pg-stock-base);
   background-image:
     linear-gradient(color-mix(in srgb, var(--pg-stock-base) var(--pg-stock-cover), transparent), color-mix(in srgb, var(--pg-stock-base) var(--pg-stock-cover), transparent)),
     var(--pg-stock-grain);
-  background-size: auto, 120px 120px;
+  background-size: auto, var(--pg-stock-size) var(--pg-stock-size);
 }
 
-/* A deeper, less blue stock ties permanent navy sections to the card. */
+/* Permanent navy surfaces form the same material family in both themes. */
 .pg-root :is(.hv-proof, .hv-hero-statbar, .hv-final, .hv-founder,
   .hwo-roles, .hwo-activate, .po-process, .po-close, .dp-lane, .dp-close,
-  .ow-operator, .ow-close, .po-path, .dp-answer, .op-plan, .pg-footer) {
-  --pg-stock-base: #0b1722;
-  background-color: var(--pg-stock-base);
-  background-image:
-    linear-gradient(rgba(11, 23, 34, .95), rgba(11, 23, 34, .95)),
-    var(--pg-stock-grain);
-  background-size: auto, 120px 120px;
+  .ow-operator, .ow-close, .po-path, .dp-answer, .op-plan, .pg-footer,
+  .nav-dropdown-mega, #mobile-menu) {
+  background-color: #0d1922;
+  background-image: linear-gradient(rgba(10, 20, 29, .72), rgba(10, 20, 29, .72)), var(--pg-bookcloth);
+  background-size: auto, 384px 384px;
 }
+.pg-root .hv-proof .hv-fact-ic { color: #d0a27a; }
 
-/* Copper behaves like a fine stamped edge, rather than a glow. */
-.pg-root .nav-dropdown-mega {
-  border-color: var(--pg-copper-edge);
-  box-shadow: inset 0 0 0 1px var(--pg-pressed-edge), 0 20px 42px -20px rgba(5, 14, 23, .48);
+/* Local navigation tokens preserve search, link and focus-state contrast.
+ * The dropdown's existing ::before hover bridge remains untouched. */
+.pg-root :is(.nav-dropdown-mega, #mobile-menu) {
+  --bg: #101b25;
+  --bg-2: #20313c;
+  --text: #f2e8da;
+  --text-2: #e3dacd;
+  --muted: #bbc3c8;
+  --accent: #c99b73;
+  --accent-ink: #d8ad87;
+  --line: rgba(193, 149, 110, .42);
+  --line-soft: rgba(221, 196, 168, .18);
+  color: var(--text);
+  color-scheme: dark;
+  border-color: #977453;
+  box-shadow: inset 0 0 0 1px rgba(243, 223, 197, .07), 0 18px 40px -18px rgba(3, 10, 16, .6);
 }
+.pg-root .nav-dropdown-mega { border-top: 2px solid #bd946e; }
 .pg-root .nav-stock { border-bottom-color: var(--pg-copper-edge); }
-.pg-root :is(.nav-dropdown-head, .nav-utilities, .nav-mobile-contact) { border-color: var(--pg-copper-edge); }
-.pg-root .nav-search input { box-shadow: inset 0 1px 3px rgba(8, 18, 27, .06); }
+.pg-root :is(.nav-dropdown-head, .nav-utilities, .nav-mobile-contact) { border-color: var(--line); }
+.pg-root .nav-search { box-shadow: inset 0 2px 5px rgba(0, 0, 0, .18); }
+.pg-root .nav-dropdown-item { border-radius: 2px; }
 
+/* A foil edge and pressed controls define the diagram without extra clutter. */
 .pg-root .op-plan {
-  border-color: rgba(191, 144, 103, .45);
-  box-shadow: inset 0 0 0 1px rgba(245, 230, 211, .05), 0 12px 30px -20px rgba(0, 0, 0, .45);
+  border-color: #947657;
+  box-shadow: inset 0 0 0 1px rgba(245, 230, 211, .07), 0 12px 30px -20px rgba(0, 0, 0, .45);
 }
 .pg-root .op-plan-bar {
-  background: rgba(7, 17, 26, .5);
-  border-bottom-color: rgba(191, 144, 103, .3);
-  box-shadow: inset 0 1px rgba(245, 230, 211, .06);
+  background: rgba(7, 16, 24, .6);
+  border-bottom-color: rgba(191, 144, 103, .4);
+  box-shadow: inset 0 1px rgba(245, 230, 211, .09);
 }
-.pg-root .op-map { background: #0a1925; box-shadow: inset 0 1px 5px rgba(0, 0, 0, .15); }
-.pg-root .op-map-node { background: #142633; }
-.pg-root .op-choices button {
-  background: #192b38;
-  box-shadow: inset 0 1px rgba(245, 230, 211, .06);
-}
-.pg-root .op-choices button:hover { background: #233846; }
+.pg-root .op-map { background: rgba(8, 19, 27, .76); border-color: #45515a; box-shadow: inset 0 1px 6px rgba(0, 0, 0, .2); }
+.pg-root .op-map-node { background: #172832; border-color: #5d6970; box-shadow: inset 0 1px rgba(245, 230, 211, .07); }
+.pg-root .op-map-focus[data-selected='true'] { border-color: #d2a074; }
+.pg-root .op-choices button { background: #1b2c36; box-shadow: inset 0 1px rgba(245, 230, 211, .07); }
+.pg-root .op-choices button:hover { background: #293d49; }
 .pg-root .op-choices button[aria-pressed='true'] {
-  background: #c89b73;
-  border-color: #d9b28d;
-  box-shadow: inset 0 1px rgba(255, 241, 216, .35), inset 0 -1px rgba(54, 31, 15, .15);
+  background: linear-gradient(115deg, #c3956c, #dfbb94 55%, #c89c76);
+  border-color: #dbb692;
+  box-shadow: inset 0 1px rgba(255, 241, 216, .5), inset 0 -1px rgba(54, 31, 15, .22);
 }
-
-.pg-root :is(.po-path, .dp-answer) {
-  border-top-color: #b98b62;
-  box-shadow: inset 0 1px rgba(245, 230, 211, .06);
-}
+.pg-root :is(.po-path, .dp-answer) { border-top-color: #b98b62; box-shadow: inset 0 1px rgba(245, 230, 211, .08); }
 .pg-editorial :is(.project-feature, .vendor-form-surface) {
   border-color: var(--pg-copper-edge);
   box-shadow: inset 0 1px var(--pg-pressed-edge), 0 8px 22px -20px rgba(8, 18, 27, .25);
@@ -103,37 +128,82 @@
 }
 .pg-root .surface-card::before { height: 1px; background: #b98b62; }
 
+/* Satin highlights are static and narrow, like a pressed foil edge. */
 .pg-root :is(.btn-primary, .btn-solid-light, .pg-nav-cta-hero, .hv-plan-primary),
 .pg-editorial .editorial-button {
-  box-shadow: inset 0 1px rgba(255, 244, 224, .3), inset 0 -1px rgba(52, 30, 16, .12), 0 2px 4px rgba(5, 14, 23, .08);
+  box-shadow: inset 0 1px rgba(255, 244, 224, .5), inset 0 -1px rgba(52, 30, 16, .18), 0 2px 4px rgba(5, 14, 23, .1);
 }
-.pg-root .btn-primary {
-  background-color: #c89b73;
-  border-color: #c89b73;
+.pg-root .btn-primary { background: linear-gradient(115deg, #c3956c, #dfbb94 55%, #c89c76); border-color: #c89b73; }
+.pg-root .btn-primary:hover { background: #dfbb94; border-color: #dfbb94; }
+.pg-root :is(.btn-solid-light, .pg-nav-cta-hero) {
+  background: linear-gradient(115deg, #e9d8c0, #f5e9d7 58%, #e9d8c0);
+  border-color: #d8bd9c;
 }
-.pg-root .btn-primary:hover {
-  background-color: #d2a780;
-  border-color: #d2a780;
-  box-shadow: inset 0 1px rgba(255, 244, 224, .4), 0 3px 8px rgba(5, 14, 23, .12);
-}
+.pg-root :is(.btn-solid-light, .pg-nav-cta-hero):hover { background: #fff2df; border-color: #e8ceb0; }
 .pg-root .pg-nav-cta-scrolled { box-shadow: inset 0 0 0 1px var(--pg-pressed-edge); }
 
-/* The footer is the digital counterpart to the card's fine perimeter. */
+/* A signature plaque gives the footer the card's recognizable composition.
+ * Only this identity block is centered; navigation keeps its clear grid. */
 .pg-root .pg-footer { position: relative; }
 .pg-root .pg-footer::before {
   content: '';
   position: absolute;
   inset: 16px;
-  border: 1px solid rgba(191, 144, 103, .32);
-  border-radius: 4px;
+  border: 1px solid rgba(191, 144, 103, .44);
+  border-radius: 3px;
   pointer-events: none;
 }
 .pg-root .pg-footer > div { position: relative; }
-
+.pg-root .pg-footer-identity {
+  position: relative;
+  align-self: start;
+  padding: 30px 24px 28px;
+  border: 1px solid #947453;
+  border-radius: 3px;
+  background: linear-gradient(rgba(10, 20, 29, .48), rgba(10, 20, 29, .66)), var(--pg-bookcloth) 0 0 / 384px 384px;
+  box-shadow: inset 0 1px rgba(245, 230, 211, .12), 0 9px 18px -12px rgba(0, 0, 0, .65);
+  text-align: center;
+}
+.pg-root .pg-footer-identity::before {
+  content: '';
+  position: absolute;
+  inset: 7px;
+  border: 1px solid rgba(202, 160, 119, .24);
+  border-radius: 2px;
+  pointer-events: none;
+}
+.pg-root .pg-footer-signature { display: flex; align-items: center; flex-direction: column; gap: 16px; }
+.pg-root .pg-footer-wordmark { min-width: 0; width: 100%; }
+.pg-root .pg-footer-name {
+  display: block;
+  color: #eee3d3;
+  font: 400 clamp(1.9rem, 2.5vw, 2.4rem)/1.15 var(--pg-font-display);
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+.pg-root .pg-footer-name > span { display: block; margin-top: 6px; color: #d3a47b; font-size: .43em; line-height: 1.5; letter-spacing: .3em; }
+.pg-root .pg-footer-descriptor { display: block; margin-top: 12px; color: #c7c1b7; font: 400 8px/1.8 var(--pg-font-ui); letter-spacing: .15em; text-transform: uppercase; }
+.pg-root .pg-footer-seal { display: flex; align-items: center; justify-content: center; gap: 12px; margin: 22px auto 17px; width: 72%; color: #c59b75; }
+.pg-root .pg-footer-seal::before,
+.pg-root .pg-footer-seal::after { content: ''; flex: 1; height: 1px; background: currentColor; opacity: .55; }
+.pg-root .pg-footer-seal > span { width: 7px; height: 7px; border: 1px solid currentColor; transform: rotate(45deg); }
+.pg-root .pg-footer-motto { margin: 0; color: #dec6a9; font: 400 10px/1.8 var(--pg-font-label); letter-spacing: .11em; }
+.pg-root .pg-footer-contact { position: relative; font-variant-numeric: lining-nums; }
+.pg-root .pg-footer-contact a { overflow-wrap: anywhere; }
+.pg-root .pg-footer-column { padding-top: 8px; }
+.pg-root .pg-footer-column > div { color: #d4a67f; }
+@media (min-width: 640px) and (max-width: 1023px) {
+  .pg-root .pg-footer-identity { width: min(100%, 440px); justify-self: center; }
+}
+@media (max-width: 639px) {
+  .pg-root .pg-footer > div { padding-top: 48px; }
+  .pg-root .pg-footer::before { inset: 12px; }
+  .pg-root .pg-footer-identity { padding: 26px 22px; }
+}
 @media (forced-colors: active) {
   .pg-root, .pg-root *, .pg-editorial, .pg-editorial * { background-image: none; box-shadow: none; }
 }
 @media print {
   .pg-root, .pg-root *, .pg-editorial, .pg-editorial * { background-image: none; box-shadow: none; }
-  .pg-root .pg-footer::before { display: none; }
+  .pg-root .pg-footer::before, .pg-root .pg-footer-identity::before { display: none; }
 }

@@ -6,7 +6,7 @@ import { urlFor } from './routes';
 
 function FooterCol({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="md:col-span-2">
+    <div className="pg-footer-column lg:col-span-2">
       <div className="pg-label !text-[9px] text-[var(--accent-bright)] mb-5">{title}</div>
       <ul className="space-y-3 pg-label !text-[10px] !tracking-[0.16em] text-[var(--cream)]/70">{children}</ul>
     </div>
@@ -28,19 +28,20 @@ export function Footer({ go: _go }: { go: Nav }) {
   return (
     <footer className="pg-footer bg-[var(--navy)] text-[var(--cream)]">
       <div className="max-w-[1320px] mx-auto px-6 lg:px-12 py-20">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-12 gap-10 lg:gap-12">
-          <div className="col-span-2 md:col-span-4">
-            <Link href={urlFor('home')} aria-label="Pegasus Dreamscapes home" className="flex items-center gap-3.5 mb-6">
-              <BrandMark boxClassName="w-12 h-12" onDark />
-              <div className="flex flex-col leading-none text-left">
-                <span className="font-serif-display text-[24px] tracking-[0.05em]">Pegasus Dreamscapes</span>
-                <span className="pg-label !text-[9px] !tracking-[0.34em] text-[var(--accent-bright)] mt-1.5">Development &middot; Investments &middot; Systems</span>
+        <div className="grid grid-cols-2 lg:grid-cols-12 gap-x-8 gap-y-10 lg:gap-10">
+          <div className="pg-footer-identity col-span-2 lg:col-span-4">
+            <Link href={urlFor('home')} aria-label="Pegasus Dreamscapes home" className="pg-footer-signature">
+              <BrandMark boxClassName="w-[72px] h-[72px]" onDark />
+              <div className="pg-footer-wordmark">
+                <span className="pg-footer-name">Pegasus <span>Dreamscapes</span></span>
+                <span className="pg-footer-descriptor">Development &middot; Investments &middot; Systems</span>
               </div>
             </Link>
-            <p className="font-serif-display italic text-xl text-[var(--cream)]/80 max-w-sm leading-snug">
+            <div className="pg-footer-seal" aria-hidden="true"><span /></div>
+            <p className="pg-footer-motto">
               Dream it. Build it. Live it.
             </p>
-            <ul className="mt-6 space-y-2.5 pg-label !text-[10px] !tracking-[0.16em] text-[var(--cream)]/70">
+            <ul className="pg-footer-contact mt-6 space-y-2.5 pg-label !text-[10px] !tracking-[0.1em] text-[var(--cream)]/70">
               <li><a href="mailto:apollo@pegasusdreamscapes.com" className="link-underline break-all">apollo@pegasusdreamscapes.com</a></li>
               <li><a href="tel:9257448525" className="link-underline">925-744-8525</a></li>
               <li>East Bay · CA</li>

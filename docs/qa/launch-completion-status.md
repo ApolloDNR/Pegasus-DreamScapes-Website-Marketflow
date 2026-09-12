@@ -2,6 +2,14 @@
 
 Updated 2026-09-12. Scope: `docs/WEBSITE_EXECUTION_BRIEF.md`.
 
+## Tactile finish refinement
+
+The owner found the first card-inspired finish too subtle and asked for a stronger result. Its baseline, `c6e94474422062d95012c206ad8457fbef097c86`, passed all 16 jobs in [run 34708852988](https://github.com/ApolloDNR/Pegasus-DreamScapes-Website-Marketflow/actions/runs/34708852988), including 360 route/theme/width combinations and 17 journeys. Fresh baseline screenshots were captured from that actual protected preview.
+
+This refinement uses a generated, uniform navy bookcloth image, optimized to a 49,728-byte WebP, as a repeating material behind content. Permanent navy sections and the navigation directory carry the same woven finish in both themes; dark editorial sections use a less blue ink palette. Copper edges and static satin button highlights give the material a clearer hierarchy. The footer now has a framed Pegasus signature, a small diamond divider, and the existing contact details, with a two-column link layout below the identity on smaller screens. The card's old phone number and wording are not imported. No hero photograph, route, public claim, intake payload, or backend behavior changes.
+
+Local TypeScript, all 213 test files / 2,413 tests, production build, bundle budgets, deployment-entry runtime checks, and diff hygiene pass. Exact-source rendered CI and hosted desktop/mobile material review must be recorded on existing PR #26 before this refinement is declared complete. The existing protected-preview authorization and backend limits remain in effect.
+
 ## Business-card finish continuation
 
 The preceding design candidate is published at `4eb0dacfbd57c55f1b481e5f4ee88a64837068dc`. [Run 34703097469](https://github.com/ApolloDNR/Pegasus-DreamScapes-Website-Marketflow/actions/runs/34703097469) passed all 16 jobs, including 45 routes at four widths in both themes and 17 interaction journeys. Its protected preview also passed hosted visual and interaction review.
