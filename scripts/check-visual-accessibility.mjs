@@ -1604,6 +1604,15 @@ try {
       assert(await link.getAttribute('href') === href, `${label} did not resolve to ${href}`);
     }
 
+    const navigationSearch = directory.getByRole('searchbox', { name: 'Search navigation' });
+    await navigationSearch.fill('strategy lab');
+    assert(await directory.getByRole('link', { name: /^Strategy Lab/ }).getAttribute('href') === '/strategy-lab', 'Navigation search lost the Strategy Lab route');
+    await navigationSearch.fill('no-such-page');
+    assert(await directory.getByRole('status').textContent() === '0 pages found', 'Navigation search did not explain empty results');
+    await directory.getByRole('button', { name: /Show all pages/ }).click();
+    assert(await navigationSearch.inputValue() === '', 'Navigation search did not reset');
+    assert(await directory.evaluate(element => { const rect = element.getBoundingClientRect(); return rect.left >= 0 && rect.right <= window.innerWidth; }), 'More directory escaped the viewport');
+
     await page.keyboard.press('Escape');
     await directory.waitFor({ state: 'hidden' });
     assert(await more.getAttribute('aria-expanded') === 'false', 'Desktop More disclosure did not close with Escape');
@@ -1625,6 +1634,12 @@ try {
     await banner.waitFor({ state: 'visible', timeout: 5_000 });
     await menuButton.click();
     assert(await menuButton.getAttribute('aria-expanded') === 'true', 'Mobile menu did not re-open');
+    await dialog.locator('summary').filter({ hasText: 'Network & resources' }).click();
+    assert(await dialog.getByRole('link', { name: /^Referral Partners/ }).isVisible(), 'Mobile directory did not expand its network links');
+    const mobileSearch = dialog.getByRole('searchbox', { name: 'Search navigation' });
+    await mobileSearch.fill('service area');
+    assert(await dialog.getByRole('link', { name: /^Vendor application/ }).getAttribute('href') === '/vendor-network', 'Mobile navigation search lost the vendor application');
+    await dialog.getByRole('button', { name: 'Clear navigation search' }).click();
     await dialog.getByRole('button', { name: 'Talk to Peggy', exact: true }).click();
 
     const panel = page.locator('.peggy-panel');

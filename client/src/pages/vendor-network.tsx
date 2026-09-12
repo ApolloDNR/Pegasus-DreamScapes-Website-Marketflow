@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { Link } from "wouter";
+import { EditorialSections } from "@/components/editorial-sections";
+import "@/pegasus/editorial-pages.css";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -78,9 +80,9 @@ export default function VendorNetwork() {
   });
 
   return (
-    <div className="min-h-screen">
-      <h1 className="sr-only">Pegasus Vendor Network</h1>
+    <div className="pg-editorial vendor-editorial min-h-screen">
       <HeroSection />
+      <EditorialSections items={[["vendor-categories", "Vendor lanes"], ["vendor-standards", "Standards"], ["vendor-process", "Process"], ["vendor-form", "Application"]]} />
       <CategoriesSection />
       <PegasusStandardSection />
       <HowToJoinSection />
@@ -94,9 +96,6 @@ function HeroSection() {
     <section className="relative min-h-[55vh] flex items-center overflow-hidden pt-20">
       <motion.div
         className="absolute inset-0 scale-105"
-        initial={{ scale: 1.1 }}
-        animate={{ scale: 1.05 }}
-        transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
       >
         <HeroPicture
           alt="Pegasus DreamScapes Vendor Network"
@@ -107,9 +106,9 @@ function HeroSection() {
       <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/70 to-black/85" />
 
       <div className="relative z-10 w-full py-20">
-        <div className="max-w-5xl mx-auto px-6 lg:px-12 text-center">
+        <div className="max-w-7xl mx-auto px-6 lg:px-12 text-left">
           <motion.div
-            className="flex items-center justify-center gap-4 mb-6"
+            className="flex items-center gap-4 mb-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.2 }}
@@ -122,7 +121,7 @@ function HeroSection() {
           </motion.div>
 
           <motion.h1
-            className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold text-white leading-[0.95] tracking-[-0.02em] mb-8"
+            className="font-serif text-3xl sm:text-4xl lg:text-6xl font-normal text-white leading-[1.12] tracking-normal mb-8"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.3 }}
@@ -135,13 +134,17 @@ function HeroSection() {
           </motion.h1>
 
           <motion.p
-            className="text-base sm:text-lg text-white/80 max-w-2xl mx-auto leading-relaxed font-light"
+            className="text-base sm:text-lg text-white/80 max-w-2xl leading-relaxed font-light"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.8, delay: 0.55 }}
           >
             This page collects vendor profiles that may be considered for a future scope. It is not a directory, roster of approved vendors, employment portal, or promise of active work.
           </motion.p>
+          <div className="mt-8 flex flex-wrap items-center gap-6">
+            <a href="#vendor-form" className="editorial-button editorial-button-light">Start your application <ArrowRight size={16} aria-hidden="true" /></a>
+            <a href="#vendor-standards" className="editorial-hero-link">Review the standards <ArrowRight size={16} aria-hidden="true" /></a>
+          </div>
         </div>
       </div>
       <div className="brand-stripe absolute bottom-0 left-0 right-0" aria-hidden="true" />
@@ -184,15 +187,15 @@ const VENDOR_CATEGORIES = [
 
 function CategoriesSection() {
   return (
-    <section className="py-24 lg:py-32 bg-background">
+    <section id="vendor-categories" className="editorial-section bg-background">
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <ScrollReveal className="text-center max-w-2xl mx-auto mb-16">
-          <div className="flex items-center justify-center gap-4 mb-4">
+        <ScrollReveal className="max-w-3xl mb-10">
+          <div className="flex items-center gap-4 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
             <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Profile Categories</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+          <h2 className="font-serif text-3xl sm:text-4xl font-normal tracking-normal mb-5">
             Six possible vendor lanes.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed">
@@ -200,22 +203,12 @@ function CategoriesSection() {
           </p>
         </ScrollReveal>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="vendor-lanes">
           {VENDOR_CATEGORIES.map((cat, i) => (
-            <motion.div
-              key={i}
-              whileHover={{ y: -4 }}
-              transition={{ duration: 0.25 }}
-            >
-              <CardSurface
-                className="group h-full p-7 border-border/40 hover:border-primary/30 transition-all duration-300"
-                data-testid={`vendor-category-${i}`}
-              >
-                <cat.icon className="w-7 h-7 text-primary/70 mb-5 group-hover:text-primary transition-colors" />
-                <h3 className="font-serif text-xl font-semibold mb-3 tracking-tight">{cat.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{cat.desc}</p>
-              </CardSurface>
-            </motion.div>
+            <article key={cat.title} data-testid={`vendor-category-${i}`}>
+              <cat.icon size={23} aria-hidden="true" />
+              <div><h3>{cat.title}</h3><p>{cat.desc}</p></div>
+            </article>
           ))}
         </div>
       </div>
@@ -273,16 +266,16 @@ const PEGASUS_STANDARDS = [
 
 function PegasusStandardSection() {
   return (
-    <section className="py-24 lg:py-32 bg-navy text-white relative overflow-hidden">
+    <section id="vendor-standards" className="editorial-section bg-navy text-white relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-navy via-navy to-charcoal opacity-95" />
       <div className="relative max-w-7xl mx-auto px-6 lg:px-12">
-        <ScrollReveal className="text-center max-w-2xl mx-auto mb-16">
-          <div className="flex items-center justify-center gap-4 mb-4">
+        <ScrollReveal className="max-w-3xl mb-10">
+          <div className="flex items-center gap-4 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
             <p className="text-[11px] uppercase tracking-[0.3em] text-champagne font-supporting font-semibold">The Dreamscaper Standard</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5 text-white">
+          <h2 className="font-serif text-3xl sm:text-4xl font-normal tracking-normal mb-5 text-white">
             Criteria a future scope may require.
           </h2>
           <p className="text-base text-cream/85 leading-relaxed">
@@ -294,11 +287,11 @@ function PegasusStandardSection() {
           {PEGASUS_STANDARDS.map((s, i) => (
             <div
               key={i}
-              className="p-7 bg-black/40 backdrop-blur-xl rounded-lg border border-champagne/20"
+              className="py-6 pr-4 border-t border-champagne/30"
               data-testid={`pegasus-standard-${i}`}
             >
               <CheckCircle2 className="w-6 h-6 text-primary mb-4" />
-              <h3 className="font-serif text-xl font-semibold mb-3 tracking-tight text-white">{s.title}</h3>
+              <h3 className="font-serif text-xl font-normal mb-3 tracking-normal text-white">{s.title}</h3>
               <p className="text-sm text-cream/80 leading-relaxed">{s.desc}</p>
             </div>
           ))}
@@ -310,15 +303,15 @@ function PegasusStandardSection() {
 
 function HowToJoinSection() {
   return (
-    <section className="py-24 lg:py-32 bg-card border-y border-border/40">
+    <section id="vendor-process" className="editorial-section bg-card border-y border-border/40">
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <ScrollReveal className="text-center max-w-2xl mx-auto mb-16">
-          <div className="flex items-center justify-center gap-4 mb-4">
+        <ScrollReveal className="max-w-3xl mb-10">
+          <div className="flex items-center gap-4 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
             <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">How to Join</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+          <h2 className="font-serif text-3xl sm:text-4xl font-normal tracking-normal mb-5">
             Three steps. No pay-to-play.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed">
@@ -330,12 +323,12 @@ function HowToJoinSection() {
           {JOIN_STEPS.map((s, i) => (
             <CardSurface
               key={i}
-              className="relative p-8 bg-background border-border/40"
+              className="relative p-6 bg-background border-border/60 shadow-none"
               data-testid={`vendor-step-${i}`}
             >
-              <p className="font-serif text-6xl text-primary absolute top-4 right-6 leading-none">{s.step}</p>
+              <p className="font-serif text-3xl text-primary absolute top-6 right-6 leading-none">{s.step}</p>
               <s.icon className="w-7 h-7 text-primary mb-5" />
-              <h3 className="font-serif text-xl font-semibold mb-3 tracking-tight">{s.title}</h3>
+              <h3 className="font-serif text-xl font-normal mb-3 tracking-normal">{s.title}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
             </CardSurface>
           ))}
@@ -425,17 +418,17 @@ function VendorFormSection() {
     <section
       id="vendor-form"
       aria-labelledby="vendor-form-title"
-      className="py-28 lg:py-36 bg-background scroll-mt-24"
+      className="editorial-section bg-background scroll-mt-24"
       data-testid="vendor-form"
     >
       <div className="max-w-4xl mx-auto px-6 lg:px-12">
         <ScrollReveal className="text-center max-w-2xl mx-auto mb-12">
-          <div className="flex items-center justify-center gap-4 mb-4">
+          <div className="flex items-center gap-4 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
             <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Vendor Intake</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
-          <h2 id="vendor-form-title" className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+          <h2 id="vendor-form-title" className="font-serif text-3xl sm:text-4xl font-normal tracking-normal mb-5">
             Apply to be considered.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed">
@@ -453,24 +446,27 @@ function VendorFormSection() {
             }}
           />
         ) : (
-          <CardSurface className="p-8 lg:p-10 border-border/50 shadow-md">
+          <CardSurface className="vendor-form-surface p-5 sm:p-8 lg:p-10 border-border/70 shadow-sm">
             <Form {...form}>
               <form
                 onSubmit={form.handleSubmit((d) => mutation.mutate(d))}
-                className="space-y-5"
+                className="space-y-7"
               >
+                <p className="text-sm text-muted-foreground">All fields are required unless marked optional.</p>
+                <fieldset className="vendor-fieldset">
+                  <legend><span>01</span> Your details</legend>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <FormField control={form.control} name="name" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Full Name</FormLabel>
-                      <FormControl><Input placeholder="Jane Smith" {...field} data-testid="input-vendor-name" /></FormControl>
+                      <FormControl><Input autoComplete="name" placeholder="Jane Smith" {...field} data-testid="input-vendor-name" /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="company" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Company</FormLabel>
-                      <FormControl><Input placeholder="Smith Construction Inc." {...field} data-testid="input-vendor-company" /></FormControl>
+                      <FormControl><Input autoComplete="organization" placeholder="Smith Construction Inc." {...field} data-testid="input-vendor-company" /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
@@ -480,19 +476,22 @@ function VendorFormSection() {
                   <FormField control={form.control} name="email" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Email</FormLabel>
-                      <FormControl><Input type="email" placeholder="jane@example.com" {...field} data-testid="input-vendor-email" /></FormControl>
+                      <FormControl><Input type="email" autoComplete="email" placeholder="jane@example.com" {...field} data-testid="input-vendor-email" /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="phone" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Phone</FormLabel>
-                      <FormControl><Input placeholder="Best callback number" {...field} data-testid="input-vendor-phone" /></FormControl>
+                      <FormControl><Input type="tel" autoComplete="tel" placeholder="Best callback number" {...field} data-testid="input-vendor-phone" /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
                 </div>
 
+                </fieldset>
+                <fieldset className="vendor-fieldset">
+                  <legend><span>02</span> Work and credentials</legend>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <FormField control={form.control} name="trade" render={({ field }) => (
                     <FormItem>
@@ -544,6 +543,9 @@ function VendorFormSection() {
                   )} />
                 </div>
 
+                </fieldset>
+                <fieldset className="vendor-fieldset">
+                  <legend><span>03</span> Supporting information</legend>
                 <FormField control={form.control} name="references" render={({ field }) => (
                   <FormItem>
                     <FormLabel>References (optional)</FormLabel>
@@ -583,6 +585,8 @@ function VendorFormSection() {
                     <FormMessage />
                   </FormItem>
                 )} />
+
+                </fieldset>
 
                 <FormField control={form.control} name="consentContact" render={({ field }) => (
                   <FormItem className="rounded-md border border-border/60 bg-muted/20 p-4">

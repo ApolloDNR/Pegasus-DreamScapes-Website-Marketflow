@@ -1,6 +1,16 @@
 # Pegasus website continuation status
 
-Updated 2026-09-11. Scope: `docs/WEBSITE_EXECUTION_BRIEF.md`.
+Updated 2026-09-12. Scope: `docs/WEBSITE_EXECUTION_BRIEF.md`.
+
+## Latest design continuation
+
+The prior design sweep is published at `ed8516e4ff726110b04299b4517a1017299d9691`. Its protected preview rendered successfully and [run 34620908639](https://github.com/ApolloDNR/Pegasus-DreamScapes-Website-Marketflow/actions/runs/34620908639) passed all 16 jobs. It includes the repaired Opportunity Plan, owner/partner controls, operating stages, photo viewer, FAQ search, and shared page refinements. These results supersede the earlier unverified-browser statements below for that source.
+
+The owner's September 12 continuation asks for a finished, elegant preview. A fresh hosted audit found a placeholder Nelson image on Projects, cramped uppercase More-menu descriptions, buried utility routes, and long supporting pages. The new candidate adds navigation search and utility links; collapsible mobile groups; a full-width, real-photo Nelson feature; chapter links and a quieter Deal Blueprint layout; and a directly reachable, grouped vendor application with larger inputs. The approved homepage hero and five primary navigation destinations remain intact. Intake payloads, consent requirements, and engagement boundaries are unchanged.
+
+Local verification: all 213 test files / 2,413 tests pass. TypeScript, production build, client bundle budgets, deployment-entry runtime checks, and diff hygiene pass. Browser interactions now check navigation search, no-result recovery, menu geometry, mobile group expansion, and vendor-route discovery. Rendered CI and current hosted acceptance must be recorded on PR #26 before claiming completion for this new candidate.
+
+The preview backend is still intentionally unavailable without its actual environment configuration. Public browsing and local tools can be reviewed; live intake, Peggy responses, authentication, HQ, and email delivery are not certified. Do not convert this design review into a production launch or fabricate submission receipts. Managed-browser access to `/api/version` was explicitly blocked; verify deployed-source identity through Vercel build logs rather than retrying that endpoint through another transport.
 
 ## Publication continuation
 

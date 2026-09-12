@@ -142,7 +142,8 @@ describe("Lane pages PRD v1 contract (issue #22)", () => {
     }
     expect(nav.textContent).toContain("Bring an Opportunity");
     expect(nav.querySelector('a[href="/marketflow"]')).toBeNull();
-    expect(nav.querySelector('a[href="/strategy-lab"]')).toBeNull();
+    expect(nav.querySelector('a.pg-navlink[href="/strategy-lab"]')).toBeNull();
+    expect(nav.querySelector('#desktop-more-navigation a[href="/strategy-lab"]')).toHaveTextContent('Strategy Lab');
     expect(container.querySelector("main")?.textContent).toContain("Open Strategy Lab");
     expect(container.querySelector('footer a[href="/marketflow"]')).toHaveTextContent("MarketFlow");
   });

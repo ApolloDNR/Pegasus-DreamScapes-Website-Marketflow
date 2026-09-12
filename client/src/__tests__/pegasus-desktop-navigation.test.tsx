@@ -56,4 +56,33 @@ describe("Pegasus desktop navigation directory", () => {
     expect(items.map((item) => item.label)).not.toContain("Investments");
     expect(hrefs).not.toContain("/investments");
   });
+
+  it("finds tools by name and description and recovers from an empty search", () => {
+    renderNav();
+    fireEvent.click(screen.getByRole("button", { name: "More" }));
+    const directory = within(document.getElementById("desktop-more-navigation")!);
+    const search = directory.getByRole("searchbox", { name: "Search navigation" });
+
+    fireEvent.change(search, { target: { value: "strategy lab" } });
+    expect(directory.getByRole("link", { name: /^Strategy Lab/ })).toHaveAttribute("href", "/strategy-lab");
+    expect(directory.queryByRole("link", { name: /^FAQ/ })).not.toBeInTheDocument();
+    fireEvent.change(search, { target: { value: "service area" } });
+    expect(directory.getByRole("link", { name: /^Vendor application/ })).toHaveAttribute("href", "/vendor-network");
+    fireEvent.change(search, { target: { value: "no-such-page" } });
+    expect(directory.getByRole("status")).toHaveTextContent("0 pages found");
+    fireEvent.click(directory.getByRole("button", { name: /Show all pages/ }));
+    expect(search).toHaveValue("");
+    expect(directory.getByRole("heading", { name: "Company & proof" })).toBeInTheDocument();
+  });
+
+  it("dismisses search with Escape and returns focus to the More control", () => {
+    renderNav();
+    const trigger = screen.getByRole("button", { name: "More" });
+    fireEvent.click(trigger);
+    const search = within(document.getElementById("desktop-more-navigation")!).getByRole("searchbox");
+    search.focus();
+    fireEvent.keyDown(search, { key: "Escape" });
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+    expect(trigger).toHaveFocus();
+  });
 });

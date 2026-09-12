@@ -26,7 +26,7 @@ const PREMIUM_MORE_NAV: PremiumNavigationGroup[] = [
       { label: 'Work With Apollo', route: 'apollo', note: 'Ask about current licensed-representation availability.' },
       { label: 'Pegasus Standard', url: '/pegasus-standard', note: 'The long-term development direction, clearly labeled.' },
       { label: 'Contact', route: 'contact', note: 'Start with a general question or ask for the right public route.' },
-      { label: 'Peggy', route: 'peggy', note: 'AI-supported orientation and intake—not licensed advice.' },
+      { label: 'Peggy', route: 'peggy', note: 'AI orientation and intake, with clear limits.' },
     ],
   },
   {
@@ -47,9 +47,16 @@ const PREMIUM_MORE_NAV: PremiumNavigationGroup[] = [
   },
 ];
 
+const PREMIUM_UTILITY_NAV: PremiumNavigationItem[] = [
+  { label: 'Strategy Lab', route: 'strategylab', note: 'Explore property assumptions and compare possible paths.' },
+  { label: 'FAQ', url: '/faq', note: 'Search questions about Pegasus, intake, and the tools.' },
+  { label: 'Vendor application', url: '/vendor-network', note: 'Share your trade, credentials, and service area.' },
+];
+
 export const PREMIUM_NAVIGATION = {
   primary: PREMIUM_PRIMARY_NAV,
   more: PREMIUM_MORE_NAV,
+  utilities: PREMIUM_UTILITY_NAV,
 };
 
 export const NAV_LINKS: NavLink[] = [

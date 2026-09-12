@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'wouter';
-import { ArrowRight, ChevronDown, ConciergeBell, Menu, Phone, X } from 'lucide-react';
+import { ArrowRight, ChevronDown, ConciergeBell, Menu, Phone, Search, X } from 'lucide-react';
 import type { Route, Nav, Theme, NavLink } from './theme';
 import { ThemeToggle, BrandMark } from './primitives';
 import { PREMIUM_NAVIGATION } from './data';
@@ -12,6 +12,7 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
   { go: Nav; route: Route; theme: Theme; toggleTheme: () => void; scrolled: boolean; openPeggy?: () => void }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [desktopMoreOpen, setDesktopMoreOpen] = useState(false);
+  const [navigationQuery, setNavigationQuery] = useState('');
   const [location] = useLocation();
   const toggleLock = useRef(0);
   const navRef = useRef<HTMLElement>(null);
@@ -24,6 +25,7 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
   const closeNavigation = () => {
     setMenuOpen(false);
     setDesktopMoreOpen(false);
+    setNavigationQuery('');
   };
   const itemUrl = (item: PremiumItem) => item.url ?? (item.route ? urlFor(item.route) : '');
   const isActive = (item: PremiumItem) => {
@@ -31,7 +33,6 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
     if (!href) return false;
     return href === '/' ? location === href : location === href || location.startsWith(`${href}/`);
   };
-  const mobileProducts: PremiumItem[] = [{ label: 'Strategy Lab', route: 'strategylab' }];
   const mobileCorePages = PREMIUM_NAVIGATION.primary;
 
   const toggleMenu = (event: React.MouseEvent) => {
@@ -46,7 +47,19 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
   useEffect(() => {
     setMenuOpen(false);
     setDesktopMoreOpen(false);
+    setNavigationQuery('');
   }, [route, location]);
+
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return;
+    const desktop = window.matchMedia('(min-width: 1180px)');
+    const onResize = () => {
+      if (desktop.matches) setMenuOpen(false);
+      else setDesktopMoreOpen(false);
+    };
+    desktop.addEventListener('change', onResize);
+    return () => desktop.removeEventListener('change', onResize);
+  }, []);
 
   useEffect(() => {
     if (!desktopMoreOpen) return;
@@ -77,8 +90,12 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
     }
     document.body.classList.add('pg-menu-open');
     returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : menuButtonRef.current;
-    const selector = ['a[href]', 'button:not([disabled])', 'input:not([disabled])', 'select:not([disabled])', '[tabindex]:not([tabindex="-1"])'].join(',');
-    const focusables = () => Array.from(menuRef.current?.querySelectorAll<HTMLElement>(selector) ?? []).filter((item) => item.getAttribute('aria-hidden') !== 'true');
+    const selector = ['a[href]', 'button:not([disabled])', 'input:not([disabled])', 'select:not([disabled])', 'summary', '[tabindex]:not([tabindex="-1"])'].join(',');
+    const focusables = () => Array.from(menuRef.current?.querySelectorAll<HTMLElement>(selector) ?? []).filter((item) => {
+      const closedGroup = item.closest('details:not([open])');
+      const style = window.getComputedStyle(item);
+      return !item.closest('[hidden], [aria-hidden="true"], [inert]') && (!closedGroup || item.tagName === 'SUMMARY') && style.display !== 'none' && style.visibility !== 'hidden';
+    });
     (menuRef.current?.querySelector<HTMLElement>('[data-menu-initial-focus]') ?? focusables()[0] ?? menuRef.current)?.focus();
     navRef.current?.setAttribute('inert', '');
     const onKey = (event: KeyboardEvent) => {
@@ -107,11 +124,32 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
   const activeTone = overHero ? 'text-[var(--accent-bright)]' : 'text-[var(--accent-ink)]';
   const desktopMoreActive = PREMIUM_NAVIGATION.more.some((group) =>
     group.items.some(isActive),
-  );
+  ) || PREMIUM_NAVIGATION.utilities.some(isActive);
+
+  const allPages = [...PREMIUM_NAVIGATION.primary, ...PREMIUM_NAVIGATION.more.flatMap(group => group.items), ...PREMIUM_NAVIGATION.utilities];
+  const query = navigationQuery.trim().toLowerCase();
+  const matches = allPages.filter(item => [item.label, item.note, item.route, item.url].filter(Boolean).join(' ').toLowerCase().includes(query));
+  const searchControl = (id: string) => <div className="nav-search">
+    <Search aria-hidden="true" size={17} />
+    <label className="sr-only" htmlFor={id}>Search navigation</label>
+    <input id={id} type="search" autoComplete="off" placeholder="Find a page or tool" value={navigationQuery} onChange={event => setNavigationQuery(event.target.value)} />
+    {navigationQuery && <button type="button" aria-label="Clear navigation search" onClick={() => setNavigationQuery('')}><X aria-hidden="true" size={16} /></button>}
+  </div>;
+  const searchResults = <div className="nav-search-results">
+    <p role="status">{matches.length} {matches.length === 1 ? 'page' : 'pages'} found</p>
+    {matches.map(item => <Link key={itemUrl(item)} href={itemUrl(item)} onClick={closeNavigation} className="nav-dropdown-item" aria-current={isActive(item) ? 'page' : undefined}>
+      <span className="nav-dd-title">{item.label}</span>
+      {item.note && <span className="nav-dd-desc">{item.note}</span>}
+    </Link>)}
+    {!matches.length && <div className="nav-search-empty">Try a topic such as property, partners, or Strategy Lab.<button type="button" onClick={() => setNavigationQuery('')}>Show all pages <ArrowRight size={14} aria-hidden="true" /></button></div>}
+  </div>;
+  const utilities = <div className="nav-utilities" aria-label="Tools and applications">
+    {PREMIUM_NAVIGATION.utilities.map(item => <Link key={item.label} href={itemUrl(item)} onClick={closeNavigation} aria-current={isActive(item) ? 'page' : undefined}>{item.label}<ArrowRight size={14} aria-hidden="true" /></Link>)}
+  </div>;
 
   return (
     <>
-      <nav ref={navRef} className="fixed top-0 inset-x-0 z-40">
+      <nav ref={navRef} style={{ "--nav-menu-top": scrolled ? "86px" : "108px" } as React.CSSProperties} className="fixed top-0 inset-x-0 z-40">
         <div className={`absolute inset-0 h-full pointer-events-none transition-all duration-500 ${menuOpen ? 'bg-[var(--bg-2)]' : overHero ? 'hero-scrim-top' : 'bg-[var(--bg)] border-b border-[var(--line)] shadow-[0_18px_44px_-36px_rgba(13,27,44,0.44)]'}`} />
         <div className={`relative max-w-[1440px] mx-auto px-6 lg:px-16 flex items-center justify-between transition-all duration-500 ${scrolled ? 'h-[74px]' : 'h-24'} ${text}`}>
           <Link href="/" aria-label="Pegasus Dreamscapes home" className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
@@ -129,7 +167,7 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
                 {item.label}{item.badge && <span className="px-nav-badge">{item.badge}</span>}
               </Link>
             ))}
-            <div ref={desktopMoreRef} className="nav-group">
+            <div ref={desktopMoreRef} className="nav-group" onBlur={event => { if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget as Node)) setDesktopMoreOpen(false); }}>
               <button
                 ref={desktopMoreButtonRef}
                 type="button"
@@ -141,7 +179,7 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
                   event.preventDefault();
                   setDesktopMoreOpen(true);
                   window.requestAnimationFrame(() => {
-                    desktopMoreRef.current?.querySelector<HTMLAnchorElement>('a[href]')?.focus();
+                    desktopMoreRef.current?.querySelector<HTMLInputElement>('input')?.focus();
                   });
                 }}
                 className={`pg-navlink inline-flex min-h-11 shrink-0 items-center gap-1 whitespace-nowrap px-1.5 transition-opacity hover:opacity-100 ${desktopMoreActive ? `opacity-100 ${activeTone}` : 'opacity-80'}`}
@@ -159,7 +197,8 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
                 aria-hidden={!desktopMoreOpen}
                 {...(!desktopMoreOpen ? { inert: '' } : {})}
               >
-                <div className="nav-dropdown-grid">
+                <div className="nav-directory-top"><span>Explore Pegasus</span>{searchControl('desktop-nav-search')}</div>
+                {query ? searchResults : <><div className="nav-dropdown-grid">
                   {PREMIUM_NAVIGATION.more.map((group) => (
                     <section key={group.label} aria-labelledby={`desktop-nav-${group.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}>
                       <h2
@@ -182,7 +221,7 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
                       ))}
                     </section>
                   ))}
-                </div>
+                </div>{utilities}</>}
               </div>
             </div>
           </div>
@@ -201,23 +240,15 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
         style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }} className={`min-[1180px]:hidden fixed inset-0 z-[100] bg-[var(--bg-2)] transition-opacity duration-300 ease-out ${menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
         <button type="button" onClick={() => setMenuOpen(false)} aria-label="Close menu" className="absolute right-6 top-6 z-10 inline-flex h-11 w-11 items-center justify-center text-[var(--text)]"><X className="h-6 w-6" /></button>
         <div className="h-full px-6 pt-24 pb-10 flex flex-col text-[var(--text)] overflow-y-auto overscroll-contain">
-          <div className="flex flex-col gap-3">
+          <div className="nav-mobile-heading"><span>Explore Pegasus</span><p>Find the right next step.</p></div>
+          {searchControl('mobile-nav-search')}
+          {!query && <div className="flex flex-col gap-3 mt-5">
             <Link href="/bring-an-opportunity" onClick={closeNavigation} data-menu-initial-focus className="btn-primary px-6 py-4 pg-label !text-[10px] !tracking-[0.2em] text-center inline-flex items-center justify-center gap-2.5 group">Bring an Opportunity <ArrowRight className="w-3.5 h-3.5" /></Link>
-            <div className="grid grid-cols-1 gap-3">
-              {mobileProducts.map((item) => (
-                <Link key={item.label} href={itemUrl(item)} onClick={closeNavigation} aria-current={isActive(item) ? 'page' : undefined} className="btn-line px-4 py-4 pg-label !text-[9px] text-center">
-                  {item.label}
-                </Link>
-              ))}
-            </div>
-          </div>
+            <Link href="/strategy-lab" onClick={closeNavigation} className="btn-line px-4 py-3 pg-label !text-[10px] text-center inline-flex items-center justify-center gap-2">Strategy Lab <ArrowRight size={14} aria-hidden="true" /></Link>
+          </div>}
 
-          <div className="mt-7 grid gap-3">
-            <a href="tel:9257448525" className="btn-line w-full px-6 py-4 pg-label !text-[10px] text-center inline-flex items-center justify-center gap-2.5"><Phone className="w-3.5 h-3.5" /> Call 925-744-8525</a>
-            <button type="button" onClick={() => { setMenuOpen(false); openPeggy?.(); }} className="btn-line w-full px-6 py-4 pg-label !text-[10px] text-center inline-flex items-center justify-center gap-2.5"><ConciergeBell className="w-3.5 h-3.5" /> Talk to Peggy</button>
-          </div>
+          {query ? searchResults : <div className="nav-m-directory">
 
-          <div className="nav-m-directory">
             <section>
               <h2>Core pages</h2>
               {mobileCorePages.map((item) => (
@@ -227,16 +258,21 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
               ))}
             </section>
             {PREMIUM_NAVIGATION.more.map((group) => (
-              <section key={group.label}>
-                <h2>{group.label}</h2>
+              <details key={group.label} className="nav-m-section">
+                <summary>{group.label}<ChevronDown size={17} aria-hidden="true" /></summary>
                 {group.items.map((item) => (
                   <Link key={item.label} href={itemUrl(item)} onClick={closeNavigation} aria-current={isActive(item) ? 'page' : undefined} className="nav-m-directory-link">
                     <strong>{item.label}</strong>
                     {item.note && <small>{item.note}</small>}
                   </Link>
                 ))}
-              </section>
+              </details>
             ))}
+            <div className="nav-mobile-resources">{PREMIUM_NAVIGATION.utilities.filter(item => item.route !== 'strategylab').map(item => <Link key={item.label} href={itemUrl(item)} onClick={closeNavigation} className="nav-m-directory-link"><strong>{item.label}</strong></Link>)}</div>
+          </div>}
+          <div className="nav-mobile-contact">
+            <a href="tel:9257448525"><Phone size={16} aria-hidden="true" />925-744-8525</a>
+            <button type="button" onClick={() => { closeNavigation(); openPeggy?.(); }}><ConciergeBell size={16} aria-hidden="true" />Talk to Peggy</button>
           </div>
         </div>
       </div>

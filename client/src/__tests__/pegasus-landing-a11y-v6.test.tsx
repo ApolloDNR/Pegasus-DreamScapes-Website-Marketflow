@@ -287,9 +287,9 @@ describe("Pegasus public-shell navigation accessibility", () => {
     });
     const first = within(menu).getByRole("button", { name: "Close menu" });
     expect(within(menu).getByRole("heading", { name: "Core pages" })).toBeInTheDocument();
-    expect(within(menu).getByRole("heading", { name: "Company & proof" })).toBeInTheDocument();
-    expect(within(menu).getByRole("heading", { name: "Operating lanes" })).toBeInTheDocument();
-    expect(within(menu).getByRole("heading", { name: "Network & resources" })).toBeInTheDocument();
+    expect(within(menu).getByText("Company & proof").closest("details")).not.toHaveAttribute("open");
+    expect(within(menu).getByText("Operating lanes").closest("details")).not.toHaveAttribute("open");
+    expect(within(menu).getByText("Network & resources").closest("details")).not.toHaveAttribute("open");
     await waitFor(() => expect(initial).toHaveFocus());
 
     first.focus();
