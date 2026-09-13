@@ -9,6 +9,7 @@ import type { LucideIcon } from 'lucide-react';
 import type { Nav, Theme, Pillar, FaqItem, Route, SplitPath } from './theme';
 import { IMG, SectionHead, ContourLines, BrandMark } from './primitives';
 import { DealEngineSchematic } from './deal-engine';
+import { ROUTE_TO_URL } from './routes';
 import {
   STATS, DOORS3, PILLARS3, ENGINE_INPUTS, ENGINE_OUTPUT, PRODUCTS, MARKETFLOW,
   ECOSYSTEM, DOCTRINE, LANE_CARDS, APOLLO, NELSON, DEPARTMENTS, DEPT_PILLARS,
@@ -128,8 +129,9 @@ function HeroWorkboard({ go }: { go: Nav }) {
 /* ----------------------------------------------------------------
    Page hero
 ---------------------------------------------------------------- */
-export function PageHero({ eyebrow, title, image, lead, focus = 'center', scrimTop = false }:
-  { eyebrow: string; title: React.ReactNode; image: string; lead: string; focus?: 'center' | 'top'; scrimTop?: boolean }) {
+export function PageHero({ eyebrow, title, image, lead, focus = 'center', scrimTop = false, action, imageCaption }:
+  { eyebrow: string; title: React.ReactNode; image: string; lead: string; focus?: 'center' | 'top'; scrimTop?: boolean;
+    action?: { label: string; href: string }; imageCaption?: string }) {
   return (
     <section className="pg-page-hero relative flex flex-col justify-end min-h-[clamp(520px,68vh,760px)] w-full overflow-hidden">
       <img src={image} alt="" aria-hidden="true" className={`absolute inset-0 w-full h-full object-cover ${focus === 'top' ? 'object-top' : 'object-center'}`} />
@@ -140,6 +142,14 @@ export function PageHero({ eyebrow, title, image, lead, focus = 'center', scrimT
         <div className="pg-label !tracking-[0.34em] text-[var(--cream)]/90 text-on-photo mb-6">{eyebrow}</div>
         <h1 className="font-serif-display font-light leading-[1.02] sm:leading-[0.98] tracking-[0em] text-[clamp(2.35rem,6.2vw,6rem)] max-w-[14ch] [text-wrap:balance] text-on-photo">{title}</h1>
         <p className="pg-page-hero-lead text-[var(--cream)]/90 max-w-2xl mt-7 text-on-photo">{lead}</p>
+        {action && (
+          <div className="pg-arrival-actions">
+            <a href={action.href} className="btn-solid-light pg-arrival-action">
+              {action.label} <ArrowRight aria-hidden="true" />
+            </a>
+          </div>
+        )}
+        {imageCaption && <p className="pg-arrival-caption">{imageCaption}</p>}
       </div>
     </section>
   );
@@ -1256,12 +1266,12 @@ export function Qualifier({ forYou, notFit }: { forYou: string[]; notFit: string
 /* ----------------------------------------------------------------
    Split paths (e.g. three ways to sell)
 ---------------------------------------------------------------- */
-export function SplitPaths({ go, openPeggy, heading, copy, paths, founderPhoto = false, peggyHint = false }:
-  { go: Nav; openPeggy: () => void; heading: string; copy: string; paths: SplitPath[]; founderPhoto?: boolean; peggyHint?: boolean }) {
+export function SplitPaths({ go, openPeggy, heading, copy, paths, founderPhoto = false, peggyHint = false, id }:
+  { go: Nav; openPeggy: () => void; heading: string; copy: string; paths: SplitPath[]; founderPhoto?: boolean; peggyHint?: boolean; id?: string }) {
   const run = (r: Route) => { if (r === 'peggy') openPeggy(); else go(r); };
   const gridCols = paths.length === 2 ? 'lg:grid-cols-2 max-w-[920px] mx-auto' : 'lg:grid-cols-3';
   return (
-    <section className="py-24 lg:py-28">
+    <section id={id} className="pg-audience-options py-24 lg:py-28" tabIndex={id ? -1 : undefined}>
       <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
         <SectionHead eyebrow="Your options" title={heading} copy={copy} />
         {founderPhoto && (
@@ -1378,14 +1388,14 @@ export function DealFindersExtras({ go }: { go: Nav }) {
 /* ----------------------------------------------------------------
    Secondary link strip - never a dead end
 ---------------------------------------------------------------- */
-export function NextStep({ go, label, route }: { go: Nav; label: string; route: Parameters<Nav>[0] }) {
+export function NextStep({ label, route }: { go: Nav; label: string; route: Parameters<Nav>[0] }) {
   return (
     <section className="py-12 border-b border-[var(--line)]">
       <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
-        <button type="button" onClick={() => go(route)}
-          className="link-underline pg-label !text-[10px] !tracking-[0.18em] text-[var(--accent-ink)] inline-flex items-center gap-3 group">
+        <Link href={ROUTE_TO_URL[route]}
+          className="pg-next-step-link link-underline text-[var(--accent-ink)] inline-flex items-center gap-3 group">
           {label} <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
-        </button>
+        </Link>
       </div>
     </section>
   );

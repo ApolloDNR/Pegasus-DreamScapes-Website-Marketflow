@@ -1443,6 +1443,51 @@ let fatalFailure = null;
 // screenshot. Every viewport/theme therefore checks the meaningful selected
 // state, including the mobile diagram that originally lost its labels.
 async function exercisePublicDesign(page, route, viewport) {
+  const arrivalActions = {
+    '/buyers': { hero: '.pg-page-hero', label: 'Choose your buyer path', href: '#audience-options' },
+    '/operators': { hero: '.pg-page-hero', label: 'Open the vendor application', href: '/vendor-network#vendor-form' },
+    '/referral': { hero: '.pg-page-hero', label: 'Share an introduction', href: '/bring-an-opportunity?intent=referral' },
+    '/capital': { hero: '.pg-page-hero', label: 'Read the introduction guidelines', href: '#relationship-guidelines' },
+    '/development': { hero: '.pg-page-hero', label: 'Explore the project framework', href: '#development-framework' },
+    '/how-we-operate': { hero: '.hwo-hero', label: 'Explore the process', href: '#operating-sequence' },
+  };
+  const arrival = arrivalActions[route];
+  if (arrival) {
+    const action = page.locator(arrival.hero).getByRole('link', { name: arrival.label, exact: true });
+    assert(await action.getAttribute('href') === arrival.href, `${route} opening action lost its destination`);
+    const geometry = await action.evaluate((element) => {
+      const rect = element.getBoundingClientRect();
+      return {
+        width: rect.width, height: rect.height,
+        fontSize: Number.parseFloat(getComputedStyle(element).fontSize),
+        clipped: element.scrollWidth > element.clientWidth + 2
+          || rect.left < -2 || rect.right > document.documentElement.clientWidth + 2,
+      };
+    });
+    assert(geometry.width >= 44 && geometry.height >= 44 && geometry.fontSize >= 13 && !geometry.clipped,
+      `${route} opening action is too small or clipped: ${JSON.stringify(geometry)}`);
+    if (arrival.href.startsWith('#')) {
+      await action.click({ timeout: 5_000 });
+      await page.waitForFunction((selector) => {
+        const target = document.querySelector(selector);
+        if (!target) return false;
+        const top = target.getBoundingClientRect().top;
+        return top >= 70 && top < 180;
+      }, arrival.href, { timeout: 5_000 });
+      await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+    } else {
+      await action.click({ trial: true, timeout: 5_000 });
+    }
+    console.log(`[design] opening action PASS ${route} ${viewport.width}px`);
+  }
+  if (route === '/buyers') {
+    const paths = page.locator('#audience-options');
+    for (const href of ['/work-with-apollo', '/bring-an-opportunity?intent=buyer', '/marketflow/access']) {
+      assert(await paths.locator(`a[href="${href}"]`).count() === 1, `Buyers lost the separate ${href} path`);
+    }
+    assert(await page.getByRole('link', { name: /See the Nelson Drive project/ }).getAttribute('href') === '/our-work',
+      'Buyers project evidence no longer leads to the documented work');
+  }
   if (route === '/') {
     const plan = page.getByTestId('opportunity-plan');
     await plan.getByRole('button', { name: 'Development', exact: true }).click();

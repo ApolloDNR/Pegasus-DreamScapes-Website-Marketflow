@@ -21,8 +21,9 @@ export function CapitalPage({ go: _go }: { go: Nav }) {
       <PageHero eyebrow="Introduced relationships"
         title={<>Capital should <span className="italic text-[var(--accent-bright)]">follow discipline.</span></>}
         image={IMG('pegasus-closing.png')}
-        lead="Pegasus begins these conversations only through an existing relationship or a personal introduction. This page records relationship context; it does not present project terms or create access, eligibility, or an agreement." />
-      <section className="pg-capital-context">
+        lead="Pegasus begins these conversations only through an existing relationship or a personal introduction. This page records relationship context; it does not present project terms or create access, eligibility, or an agreement."
+        action={{ label: 'Read the introduction guidelines', href: '#relationship-guidelines' }} />
+      <section id="relationship-guidelines" tabIndex={-1} className="pg-capital-context">
         <div className="hv-wrap pg-capital-context-grid">
           <div>
             <div className="pg-label text-[var(--accent)] mb-5">Start with the relationship</div>

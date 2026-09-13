@@ -2,6 +2,12 @@
 
 Updated 2026-09-13. Scope: `docs/WEBSITE_EXECUTION_BRIEF.md`.
 
+## Professional structure and finish
+
+The owner requested a site-wide professional finish beyond the Property Owners desktop repair. This continuation starts at `a431cb91ae863fb3c328f53e076e6feca040f747`. Fresh hosted screenshots of seven supporting pages exposed oversized arrivals, very small actions, missing opening destinations, a buried buyer-path comparison, and founder identity placed after abstract principles.
+
+The changes establish a consistent supporting-page type and action scale, add six useful opening actions, bring Buyers' three distinct paths forward, remove its repeated MarketFlow module, point its project-evidence link to Our Work, and bring the founder story earlier on About. The approved material finish and locked Home arrival remain intact. [The presentation review](../design/professional-presentation-review.md) records each page's job, the visitor journeys, observed issues, and acceptance criteria. Existing PR #26 records current-source CI and hosted visual acceptance after publication. The production dependencies below remain open.
+
 ## Premium presentation and launch preparation
 
 The owner approved the tactile navy/copper design and asked to improve its remaining rough edges and prepare for launch. This continuation starts from `9a98fa46d892ce8d451ef34c51ad977a56756acf` on the existing PR #26. Fresh protected-preview desktop captures of Home, Our Work, and Bring an Opportunity establish the visual baseline.

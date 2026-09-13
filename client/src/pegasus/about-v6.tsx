@@ -88,30 +88,6 @@ export function AboutPageV6({ go }: { go: Nav }) {
         </div>
       </header>
 
-      <section className="ab6-convictions" aria-labelledby="ab6-convictions-title">
-        <div className="ab6-shell">
-          <div className="ab6-section-intro reveal">
-            <div>
-              <div className="ab6-kicker">Operating convictions</div>
-              <h2 id="ab6-convictions-title">Discipline before momentum.</h2>
-            </div>
-            <p>
-              Pegasus was created around a simple belief: complex property decisions become more manageable when someone owns the whole read without pretending to perform every role.
-            </p>
-          </div>
-
-          <ol className="ab6-conviction-list">
-            {CONVICTIONS.map((item) => (
-              <li key={item.number}>
-                <span className="ab6-conviction-number" aria-hidden="true">{item.number}</span>
-                <h3>{item.title}</h3>
-                <p>{item.copy}</p>
-              </li>
-            ))}
-          </ol>
-        </div>
-      </section>
-
       <section className="ab6-founder" aria-labelledby="ab6-founder-title">
         <div className="ab6-shell ab6-founder-grid">
           <figure className="ab6-founder-portrait reveal">
@@ -151,6 +127,30 @@ export function AboutPageV6({ go }: { go: Nav }) {
               </button>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="ab6-convictions" aria-labelledby="ab6-convictions-title">
+        <div className="ab6-shell">
+          <div className="ab6-section-intro reveal">
+            <div>
+              <div className="ab6-kicker">Operating convictions</div>
+              <h2 id="ab6-convictions-title">Discipline before momentum.</h2>
+            </div>
+            <p>
+              Pegasus was created around a simple belief: complex property decisions become more manageable when someone owns the whole read without pretending to perform every role.
+            </p>
+          </div>
+
+          <ol className="ab6-conviction-list">
+            {CONVICTIONS.map((item) => (
+              <li key={item.number}>
+                <span className="ab6-conviction-number" aria-hidden="true">{item.number}</span>
+                <h3>{item.title}</h3>
+                <p>{item.copy}</p>
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
 

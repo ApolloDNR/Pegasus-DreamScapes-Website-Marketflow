@@ -683,6 +683,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
   /* ---------------------------------------------------------- */
   buyers: {
     eyebrow: 'Who We Serve / Buyers',
+    heroAction: { label: 'Choose your buyer path', href: '#audience-options' },
     // COPY_DECK §7 locked hero (issue #22)
     title: <>Buy with a strategy,<br />not just a search.</>,
     image: 'pegasus-interior-light.png',
@@ -697,7 +698,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
       { t: 'Offer terms are specific', d: 'No offer strategy, acceptance, price, savings, or portfolio result is promised publicly.' },
     ],
     splits: buyerSplits,
-    rich: ['marketflow', 'faq'],
+    rich: ['faq'],
     quote: 'A buyer decision should separate verified property facts from assumptions and future scope.',
     forYou: [
       'You want to ask about current buyer-representation availability',
@@ -709,7 +710,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
       'You want to be rushed into a decision before the numbers are clear',
       'You are looking exclusively for a fixer to renovate entirely on your own with no guidance',
     ],
-    secondary: { label: 'See the work in MarketFlow', route: 'marketflow' },
+    secondary: { label: 'See the Nelson Drive project', route: 'ourwork' },
     faqAnchor: 'working-with-pegasus',
     faq: [
       { q: 'How do I see what is available?', a: 'Public pages do not promise inventory. MarketFlow is a controlled pilot with discretionary access and no guaranteed first look or match.' },
@@ -821,6 +822,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
   /* ---------------------------------------------------------- */
   operators: {
     eyebrow: 'Who We Serve / Operators & Vendors',
+    heroAction: { label: 'Open the vendor application', href: '/vendor-network#vendor-form' },
     title: <>Know the standard<br />before the scope.</>,
     image: 'pegasus-craft-blueprint.webp',
     layout: 'ledger',
@@ -861,6 +863,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
   /* ---------------------------------------------------------- */
   referral: {
     eyebrow: 'Who We Serve / Referral Partners',
+    heroAction: { label: 'Share an introduction', href: '/bring-an-opportunity?intent=referral' },
     // COPY_DECK §10 locked hero + required lawful-compensation note (issue #22)
     title: <>Share an introduction.<br />Set boundaries first.</>,
     image: 'nelson/nelson-exterior-1280.jpg',

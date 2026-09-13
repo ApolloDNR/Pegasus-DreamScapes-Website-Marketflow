@@ -139,8 +139,10 @@ export function DevelopmentPage({ go }: { go: Nav }) {
       <PageHero eyebrow="Pillar 02 · Development"
         title={<>Define project work <span className="italic text-[var(--accent-bright)]">before it begins.</span></>}
         image={IMG('nelson/nelson-kitchen-1280.jpg')}
-        lead="A framework for renovation or ground-up scopes: budget, schedule, qualified providers, permits, change control, and written completion criteria." />
-      <section className="pg-development-plan">
+        lead="A framework for renovation or ground-up scopes: budget, schedule, qualified providers, permits, change control, and written completion criteria."
+        action={{ label: 'Explore the project framework', href: '#development-framework' }}
+        imageCaption="Nelson Drive · completed renovation · real project photography" />
+      <section id="development-framework" tabIndex={-1} className="pg-development-plan">
         <div className="hv-wrap pg-development-grid">
           <div className="pg-development-intro">
             <div className="pg-label text-[var(--accent)]">Before a project starts</div>

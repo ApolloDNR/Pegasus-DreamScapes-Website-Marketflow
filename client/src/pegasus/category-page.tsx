@@ -149,9 +149,9 @@ function TerminalRouteCta({ terminal }: { terminal: CategoryTerminal }) {
 export function CategoryPage({ cat, go, openPeggy }: { cat: Category; go: Nav; openPeggy: () => void }) {
   return (
     <>
-      <PageHero eyebrow={cat.eyebrow} title={cat.title} image={IMG(cat.image)} lead={cat.lead} scrimTop={cat.heroScrimTop} />
+      <PageHero eyebrow={cat.eyebrow} title={cat.title} image={IMG(cat.image)} lead={cat.lead} scrimTop={cat.heroScrimTop} action={cat.heroAction} />
+      {cat.splits && <SplitPaths id="audience-options" go={go} openPeggy={openPeggy} heading={cat.splits.heading} copy={cat.splits.copy} paths={cat.splits.paths} founderPhoto={cat.splits.founderPhoto} peggyHint={cat.splits.peggyHint} />}
       <WhatYouGet cat={cat} />
-      {cat.splits && <SplitPaths go={go} openPeggy={openPeggy} heading={cat.splits.heading} copy={cat.splits.copy} paths={cat.splits.paths} founderPhoto={cat.splits.founderPhoto} peggyHint={cat.splits.peggyHint} />}
       <Qualifier forYou={cat.forYou} notFit={cat.notFit} />
       {cat.rich.includes('engine') && <EngineBlock go={go} />}
       {cat.rich.includes('ladder') && <ProductLadderBlock go={go} openPeggy={openPeggy} />}

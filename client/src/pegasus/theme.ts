@@ -101,6 +101,7 @@ type CategoryBase = {
   faq?: FaqItem[];
   faqAnchor?: string;
   heroScrimTop?: boolean;
+  heroAction?: { label: string; href: string };
 };
 
 export type CategoryTerminal = {

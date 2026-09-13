@@ -100,6 +100,14 @@ export function HowWeOperatePage({ go }: { go: Nav }) {
             Start with the asset and its economics, choose the appropriate role, agree the terms,
             and organize the work required to carry an accepted project forward.
           </p>
+          <div className="pg-arrival-actions">
+            <a href="#operating-sequence" className="btn-solid-light pg-arrival-action">
+              Explore the process <ArrowRight aria-hidden="true" />
+            </a>
+            <a href="/our-work" className="pg-arrival-secondary">
+              See the work <ArrowRight aria-hidden="true" />
+            </a>
+          </div>
           <p className="hwo-hero-caption">Architectural vision &middot; Not property inventory</p>
         </div>
       </section>
