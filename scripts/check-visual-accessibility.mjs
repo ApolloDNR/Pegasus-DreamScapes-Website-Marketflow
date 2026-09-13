@@ -1625,7 +1625,7 @@ try {
     await page.addScriptTag({ content: axeSource });
     const intakeCta = page.locator('nav .pg-nav-cta');
     for (const theme of ['dark', 'light']) {
-      if (await page.locator('.pg-root').getAttribute('data-theme') !== theme) {
+      if (await intakeCta.evaluate((element) => element.closest('.pg-root')?.getAttribute('data-theme')) !== theme) {
         await page.getByRole('button', { name: `Switch to ${theme} mode`, exact: true }).click();
       }
       for (const state of ['hover', 'focus']) {
