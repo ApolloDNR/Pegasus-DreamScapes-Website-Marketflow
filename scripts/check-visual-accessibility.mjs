@@ -1475,6 +1475,19 @@ async function exercisePublicDesign(page, route, viewport) {
         return top >= 70 && top < 180;
       }, arrival.href, { timeout: 5_000 });
       await page.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
+    } else if (route === '/operators') {
+      const returnUrl = page.url();
+      await action.click({ timeout: 5_000 });
+      await page.locator('#vendor-form').waitFor({ state: 'visible', timeout: 10_000 });
+      await page.waitForFunction(() => {
+        const top = document.querySelector('#vendor-form')?.getBoundingClientRect().top;
+        return top >= 70 && top < 180;
+      }, null, { timeout: 5_000 });
+      assert(await page.locator('#vendor-form').evaluate((element) => document.activeElement === element),
+        'Vendor application arrival did not move keyboard focus to the form section');
+      await page.goto(returnUrl, { waitUntil: 'load', timeout: 45_000 });
+      await page.locator('h1').first().waitFor({ state: 'attached', timeout: 10_000 });
+      await settleRenderedPage(page, 'return from vendor application');
     } else {
       await action.click({ trial: true, timeout: 5_000 });
     }

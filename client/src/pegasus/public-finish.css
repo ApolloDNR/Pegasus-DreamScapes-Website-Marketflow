@@ -2,7 +2,8 @@
  * The locked homepage arrival and application-specific controls keep their
  * own geometry. Legacy marketing utilities yield to one readable action scale. */
 .pg-root :is(.btn-primary, .btn-solid-light, .btn-line, .btn-line-light):not(.hv-hero *),
-.pg-root :is(.ab6-button, .ab6-text-link, .hv-proof-link, .pg-next-step-link) {
+.pg-root :is(.ab6-button, .ab6-text-link, .hv-proof-link, .pg-next-step-link, .pg-path-help),
+.pg-root .dp .hv-hero-link {
   font-family: var(--pg-font-ui, Inter, Arial, sans-serif);
   font-size: .875rem !important;
   font-weight: 500;
@@ -16,7 +17,8 @@
   padding: .8rem 1.25rem;
   border-radius: 2px;
 }
-.pg-root :is(.btn-primary, .btn-solid-light, .btn-line, .btn-line-light, .ab6-button, .ab6-text-link, .hv-proof-link, .pg-next-step-link):focus-visible {
+.pg-root :is(.btn-primary, .btn-solid-light, .btn-line, .btn-line-light, .ab6-button, .ab6-text-link, .hv-proof-link, .pg-next-step-link, .pg-path-help):focus-visible,
+.pg-root .dp .hv-hero-link:focus-visible {
   outline: 2px solid var(--accent-bright);
   outline-offset: 4px;
 }
@@ -62,6 +64,9 @@
 .pg-root :is(#audience-options, #relationship-guidelines, #development-framework) { scroll-margin-top: 104px; }
 
 /* Compact, useful arrivals on supporting pages. */
+.pg-page-hero-nav-shade {
+  background: linear-gradient(to bottom, rgba(7, 19, 32, .88), rgba(7, 19, 32, .7) 48%, rgba(7, 19, 32, 0));
+}
 .pg-root .pg-page-hero { min-height: 600px; }
 .pg-root .pg-page-hero h1 {
   max-width: 23ch;
@@ -97,10 +102,7 @@
   line-height: 1.18;
   max-width: 26ch;
 }
-.pg-root .dp-chip {
-  min-height: 54px;
-  font: 400 1rem/1.45 var(--pg-font-ui, Inter, Arial, sans-serif);
-}
+.pg-root .dp .hv-hero-link { display: inline-flex; align-items: center; }
 .pg-root .pg-section-heading { font-size: clamp(2rem, 3.4vw, 3rem); line-height: 1.18; }
 .pg-root .pg-audience-options { padding-block: clamp(3.5rem, 6vw, 5.5rem); }
 .pg-root .pg-audience-options .surface-card {
@@ -113,6 +115,14 @@
 }
 .pg-root .pg-audience-options .surface-card > p { font-size: 1rem; line-height: 1.75; }
 .pg-root .pg-audience-options .surface-card .btn-line { align-self: flex-start; }
+.pg-root .pg-audience-license {
+  margin: -.5rem 0 2rem;
+  padding-left: 1rem;
+  border-left: 1px solid var(--line);
+  color: var(--muted);
+  font: 400 .8125rem/1.7 var(--pg-font-ui, Inter, Arial, sans-serif);
+  text-align: left;
+}
 
 /* Founder identity precedes the operating principles on About. */
 .pg-root .ab6-arrival { min-height: 0; padding-top: 116px; }
@@ -125,6 +135,14 @@
 .pg-root .ab6-founder-portrait img { max-height: 560px; }
 .pg-root .ab6-convictions { border-top: 1px solid var(--ab6-line); }
 .pg-root .ab6-kicker { font-size: .6875rem; letter-spacing: .18em; }
+/* About's lazy stylesheet must not restore the superseded blue palette. */
+.pg-root[data-theme='dark'] main .about-v6 {
+  --ab6-navy: #101b25;
+  --ab6-navy-soft: #20313c;
+  --ab6-limestone: #101b25;
+  --ab6-limestone-deep: #15222b;
+}
+.pg-root[data-theme='dark'] .about-v6 .ab6-founder { background: #15222b; }
 
 @media (max-width: 900px) {
   .pg-root :is(.hwo, .dp) :is(.hwo-hero, .dp-hero) { padding-top: 8rem; }

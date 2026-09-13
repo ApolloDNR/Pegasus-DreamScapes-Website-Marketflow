@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { EditorialSections } from "@/components/editorial-sections";
 import "@/pegasus/editorial-pages.css";
@@ -78,6 +78,18 @@ export default function VendorNetwork() {
       "Submit a vendor profile for possible future project consideration. Application does not promise review, approval, placement, work, volume, or compensation.",
     image: "/og/default.png",
   });
+
+  useEffect(() => {
+    if (window.location.hash !== "#vendor-form") return;
+    // The destination mounts after the app shell resets route scroll. Restore
+    // the requested section after that reset, including a direct URL arrival.
+    const frame = requestAnimationFrame(() => {
+      const formSection = document.getElementById("vendor-form");
+      formSection?.scrollIntoView({ block: "start", behavior: "auto" });
+      formSection?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
 
   return (
     <div className="pg-editorial vendor-editorial min-h-screen">
@@ -417,6 +429,7 @@ function VendorFormSection() {
   return (
     <section
       id="vendor-form"
+      tabIndex={-1}
       aria-labelledby="vendor-form-title"
       className="editorial-section bg-background scroll-mt-24"
       data-testid="vendor-form"

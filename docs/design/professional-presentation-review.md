@@ -44,6 +44,9 @@ Fresh screenshots of the actual protected preview at 1363 by 936 covered Deal Pa
 | Buyers linked its work prompt to MarketFlow | The promise of project evidence led to the wrong type of content | Link directly to the actual Nelson Drive record on Our Work |
 | About placed abstract convictions before the founder | Visitors encountered doctrine before the person responsible | Founder story immediately after the introduction, followed by principles and credential boundaries |
 | Secondary actions used programmatic buttons and very small, widely spaced labels | Links were less readable and lacked normal link behavior | Semantic destination links and the shared readable action scale |
+| Hosted follow-up exposed a floating buyer credential note and an older blue About background winning the lazy stylesheet cascade | The comparison felt disconnected and the approved material palette was inconsistent | Align the credential note with the options, make buyer help readable, and keep the approved dark About palette after route loading |
+| The Operators action reached the Vendor Network URL, but route initialization reset its application anchor to the top | The visitor still had to find the form after asking to open it | Restore the form anchor after the page mounts, move keyboard focus into that section, and verify the actual cross-page arrival in rendered checks |
+| Phone screenshots showed bright photograph details behind pale navigation controls on supporting pages | Menu and theme controls were less distinct | Add a localized dark fade behind the header on shared photographic arrivals, preserving the locked Home image |
 
 Strengths retained: the approved navy bookcloth and copper finish, ivory typography, actual Nelson project evidence, differentiated owner and partner selectors, searchable navigation, and the stable primary navigation structure. No invented portfolio, credentials, testimonials, market coverage, or performance claims were added.
 
