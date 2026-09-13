@@ -10,7 +10,9 @@
 }
 
 .pg-root .ow .ow-hero-media::after {
-  background: linear-gradient(0deg, rgba(7, 21, 31, .96) 0%, rgba(7, 21, 31, .84) 16%, rgba(7, 21, 31, .26) 46%, rgba(7, 21, 31, .08) 70%);
+  background:
+    linear-gradient(180deg, rgba(7, 21, 31, .92) 0, rgba(7, 21, 31, .86) 100px, rgba(7, 21, 31, .36) 170px, transparent 270px),
+    linear-gradient(0deg, rgba(7, 21, 31, .96) 0%, rgba(7, 21, 31, .84) 16%, rgba(7, 21, 31, .26) 46%, rgba(7, 21, 31, .08) 70%);
 }
 
 .pg-root .ow .ow-hero-inner {
