@@ -165,7 +165,7 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
             </div>
           </Link>
 
-          <div className="hidden min-[1180px]:flex items-center gap-2 min-[1340px]:gap-3 min-[1500px]:gap-5 pg-label !text-[9px] !tracking-[0.16em]">
+          <div className="hidden min-[1180px]:flex items-center gap-2 min-[1340px]:gap-3 min-[1500px]:gap-5 pg-label !text-[10px] !tracking-[0.1em]">
             {PREMIUM_NAVIGATION.primary.map((item) => (
               <Link key={item.label} href={itemUrl(item)} onClick={closeNavigation} aria-current={isActive(item) ? 'page' : undefined}
                 className={`pg-navlink inline-flex min-h-11 shrink-0 items-center whitespace-nowrap px-1.5 transition-opacity hover:opacity-100 ${isActive(item) ? `opacity-100 ${activeTone}` : 'opacity-80'}`} data-active={isActive(item) || undefined}>

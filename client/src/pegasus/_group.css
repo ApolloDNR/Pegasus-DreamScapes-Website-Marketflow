@@ -3824,7 +3824,7 @@ select.pg-field option { color: #1b1712; }
 .pg-nav-cta-hero { color:var(--navy-deep); background:var(--cream); border-color:var(--cream); }
 .pg-nav-cta-hero:hover { color:var(--navy-deep); background:#fffaf3; border-color:#fffaf3; }
 .pg-nav-cta-scrolled { color:var(--text); background:transparent; border-color:rgba(139,85,53,.55); }
-.pg-nav-cta-scrolled:hover { color:var(--hv-cream); background:var(--hv-v6-bronze, #8b5535); border-color:var(--hv-v6-bronze, #8b5535); }
+.pg-nav-cta-scrolled:hover, .pg-nav-cta-scrolled:focus-visible { color:var(--cream); background:#8b5535; border-color:#8b5535; }
 .hv-stack dd { margin:0; font-family: var(--pg-font-display, Georgia); font-size: 1.5rem; color: var(--hv-cream); font-variant-numeric: tabular-nums; }
 .hv-edge { margin-top: 1.6rem; padding: 1.35rem 1.5rem; background: #11243A; border-left: 2px solid var(--hv-copper); }
 .hv-edge-big { font-size: 2.4rem; color: var(--hv-brass); line-height: 1; font-weight: 600; }

@@ -49,7 +49,6 @@ export function AboutPageV6({ go }: { go: Nav }) {
   return (
     <article className="about-v6">
       <header className="ab6-arrival">
-        <div className="ab6-arrival-lines" aria-hidden="true" />
         <div className="ab6-shell ab6-arrival-grid">
           <div className="ab6-arrival-main reveal">
             <div className="ab6-kicker ab6-kicker-on-dark">About Pegasus Dreamscapes</div>

@@ -563,5 +563,5 @@ export function ContactPage({ handoff = null }: { handoff?: PeggyHandoff | null 
   if (handoff) {
     return <LeadSection cfg={CONTACT_FORM} eyebrow="Continue the property handoff" showRole tone="page" handoff={handoff} />;
   }
-  return <ConnectChooser />;
+  return <ConnectChooser context="contact" />;
 }

@@ -1,6 +1,16 @@
 # Pegasus website continuation status
 
-Updated 2026-09-12. Scope: `docs/WEBSITE_EXECUTION_BRIEF.md`.
+Updated 2026-09-13. Scope: `docs/WEBSITE_EXECUTION_BRIEF.md`.
+
+## Final detail review
+
+The owner approved the woven navy/copper direction at `f2d3389ae2cf8b4a16405db4afb5f4b4c9024e92` and asked for a critique and correction of the remaining rough edges. That baseline passed all 16 jobs in [run 34710327519](https://github.com/ApolloDNR/Pegasus-DreamScapes-Website-Marketflow/actions/runs/34710327519) and rendered in its protected preview.
+
+Fresh desktop captures from that actual preview covered the homepage, open More directory, About arrival, footer, Contact default and selected buyer lane, and intake first step. They exposed five concrete issues: very small navigation and footer labels; an undefined hover text color on the inner-page header CTA; oversized About headings and older decorative arcs; Contact's QR-specific introduction and orange boxed controls; and intake selection indicators that were invisible until hover or selection.
+
+This candidate raises navigation labels to 10px without changing destinations, uses readable 13px sentence-case footer links with 44px phone targets, fixes header hover and keyboard-focus contrast, quiets About's typography and spacing, and extends the approved woven stock to About and Contact. Contact now introduces the actual contact page while the QR entry retains its card context. Direct contact links and the route panel have fewer nested boxes and softer copper detail. Intake choices show an empty selection circle before selection and a check afterward. The locked homepage composition, project imagery, legal copy, backend contracts, and five-step intake are retained.
+
+Local TypeScript, all 213 test files / 2,413 tests, production build, bundle budgets, deployment-entry checks, and diff hygiene pass. The existing desktop navigation journey now checks real hover and keyboard-focus contrast in both themes using axe. Current-source rendered CI, responsive screenshots, and hosted acceptance must be recorded on PR #26 before this candidate is declared complete. No live backend submission is part of this visual review; the protected-preview authorization and configuration limits below continue to apply.
 
 ## Tactile finish refinement
 
@@ -101,6 +111,6 @@ Automatic approval review rejected the previous GitHub push because it treated t
 
 The intended existing preview destination is `pegasus-dreamscapes-preview`, project `prj_xqZDdr0YWRY3dstXga5caY8RmkeC`, team `team_peFANIMRrkMuCUtV1U52oyOb`. The older deployment `dpl_NaYgV1gEuGf9wosbRRPuJ8vruyKw` had a startup crash; a READY provider status did not prove functioning runtime.
 
-Publication was subsequently authorized and completed as described above. Continue by verifying `/api/version` identifies the current candidate and noindex remains enforced, then inspecting the actual preview and completing the hosted customer journeys. Repeatedly regenerating share tokens is not a substitute for a working deployment.
+Publication was subsequently authorized and completed as described above. Verify the current candidate through its immutable-source deployment build log and inspect the actual protected preview. Do not retry the managed-browser-blocked `/api/version` endpoint through another transport. Repeatedly regenerating share tokens is not a substitute for a working deployment.
 
 Production/DNS changes, live-data mutation, paid activation, and broad public distribution remain outside this continuation's completed work. Finish environment-specific intake/HQ/email proof and the required launch reviews before public launch.

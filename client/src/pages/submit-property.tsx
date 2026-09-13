@@ -234,9 +234,9 @@ function ChoiceGrid({ options, value, onPick, cols = 2 }:
             )}
             <span aria-hidden="true"
               className={`absolute right-0 top-4 flex h-5 w-5 items-center justify-center rounded-full border transition-all duration-200 ${
-                active ? "border-[#b47645] bg-[#9c5a24] opacity-100" : "border-[#d8cdbc] opacity-0 group-hover:opacity-60 dark:border-[#2a3a4e]"
+                active ? "border-[#b47645] bg-[#9c5a24]" : "border-[#8b7a66] group-hover:border-[#9c5a24] dark:border-[#7d8ba0] dark:group-hover:border-[#c88a5d]"
               }`}>
-              <Check className="h-3 w-3 text-white" strokeWidth={3} />
+              {active && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
             </span>
           </button>
         );

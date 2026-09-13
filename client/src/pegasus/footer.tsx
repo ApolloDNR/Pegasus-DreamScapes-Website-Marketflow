@@ -7,8 +7,8 @@ import { urlFor } from './routes';
 function FooterCol({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="pg-footer-column lg:col-span-2">
-      <div className="pg-label !text-[9px] text-[var(--accent-bright)] mb-5">{title}</div>
-      <ul className="space-y-3 pg-label !text-[10px] !tracking-[0.16em] text-[var(--cream)]/70">{children}</ul>
+      <div className="pg-label !text-[10px] text-[var(--accent-bright)] mb-4">{title}</div>
+      <ul className="pg-footer-links">{children}</ul>
     </div>
   );
 }

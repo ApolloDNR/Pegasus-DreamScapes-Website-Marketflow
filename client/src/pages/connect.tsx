@@ -259,9 +259,11 @@ function ActiveLanePanel({ lane }: { lane: ConnectLane }) {
 function Hero({
   activeLane,
   setActiveLane,
+  context,
 }: {
   activeLane: ConnectLane;
   setActiveLane: (lane: ConnectLane) => void;
+  context: "card" | "contact";
 }) {
   return (
     <section className="connect-hero" data-testid="section-connect-hero">
@@ -275,10 +277,12 @@ function Hero({
 
       <div className="connect-shell connect-hero-grid">
         <div className="connect-hero-copy">
-          <p className="connect-eyebrow">Private QR front door</p>
+          <p className="connect-eyebrow">{context === "contact" ? "Contact Pegasus" : "Private QR front door"}</p>
           <h1>The right door, before the wrong conversation.</h1>
           <p className="connect-lead">
-            Use this card page to choose the correct Pegasus lane: property intake, Apollo representation, buyer strategy, deal finder or JV, development, capital, vendor work, or a direct note.
+            {context === "contact"
+              ? "Choose the path that fits your property, project, or question. You can also call or email Apollo directly."
+              : "Use this card page to choose the correct Pegasus lane: property intake, Apollo representation, buyer strategy, deal finder or JV, development, capital, vendor work, or a direct note."}
           </p>
 
           <div className="connect-actions">
@@ -413,12 +417,12 @@ function StandardsBand() {
   );
 }
 
-export function ConnectChooser() {
+export function ConnectChooser({ context = "card" }: { context?: "card" | "contact" }) {
   const [activeLane, setActiveLane] = useState<ConnectLane>(LANES[0]);
 
   return (
     <div className="connect-premium">
-      <Hero activeLane={activeLane} setActiveLane={setActiveLane} />
+      <Hero activeLane={activeLane} setActiveLane={setActiveLane} context={context} />
       <LaneDirectory activeLane={activeLane} setActiveLane={setActiveLane} />
       <StandardsBand />
     </div>

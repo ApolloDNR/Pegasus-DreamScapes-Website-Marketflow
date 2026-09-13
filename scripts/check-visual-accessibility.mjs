@@ -1617,6 +1617,43 @@ try {
     await directory.waitFor({ state: 'hidden' });
     assert(await more.getAttribute('aria-expanded') === 'false', 'Desktop More disclosure did not close with Escape');
     assert(await more.evaluate((element) => element === document.activeElement), 'Desktop More disclosure did not restore focus after Escape');
+
+    // An inner-page CTA previously inherited an undefined hero color on
+    // hover. Exercise the real hover and keyboard states in both themes;
+    // the ordinary route scans do not activate these states.
+    await openPage(page, '/bring-an-opportunity');
+    await page.addScriptTag({ content: axeSource });
+    const intakeCta = page.locator('nav .pg-nav-cta');
+    for (const theme of ['dark', 'light']) {
+      if (await page.locator('.pg-root').getAttribute('data-theme') !== theme) {
+        await page.getByRole('button', { name: `Switch to ${theme} mode`, exact: true }).click();
+      }
+      for (const state of ['hover', 'focus']) {
+        if (state === 'hover') await intakeCta.hover();
+        else {
+          await page.mouse.move(0, 0);
+          await intakeCta.focus();
+          await page.keyboard.press('Tab');
+          await page.keyboard.press('Shift+Tab');
+        }
+        assert(await intakeCta.evaluate((element, selector) => element.matches(selector), state === 'hover' ? ':hover' : ':focus-visible'),
+          `Header CTA did not enter its ${state} state`);
+        await intakeCta.evaluate(async (element) => {
+          await Promise.all(element.getAnimations().map((animation) => animation.finished.catch(() => {})));
+        });
+        const contrast = await intakeCta.evaluate(async (element) => {
+          const result = await globalThis.axe.run(element, {
+            runOnly: { type: 'rule', values: ['color-contrast'] },
+          });
+          return {
+            passed: result.passes.some((rule) => rule.id === 'color-contrast'),
+            failures: result.violations.map((rule) => rule.nodes.map((node) => node.failureSummary)),
+          };
+        });
+        assert(contrast.passed && contrast.failures.length === 0,
+          `Header CTA ${theme} ${state} contrast failed: ${JSON.stringify(contrast)}`);
+      }
+    }
   });
 
   await runInteraction('mobile navigation destination', { viewport: getViewport('mobile-390'), seedConsent: false }, async (page) => {
