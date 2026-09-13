@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import { ArrowRight } from 'lucide-react';
 import type { Nav } from './theme';
 import { ResponsiveChoiceList } from './responsive-choice-list';
+import './property-owners.css';
 
 /* ================================================================
    PROPERTY OWNERS — Master Blueprint v5.1 (§9, §32.3)
@@ -39,42 +40,41 @@ export function PropertyOwnersPage({ go }: { go: Nav }) {
   return (
     <div className="po">
       {/* Hero — v5.1 §9 locked promise */}
-      <section className="po-hero hv-grain">
-        <div className="po-hero-media" aria-hidden="true">
-          <div className="po-hero-plate">
+      <section className="po-hero">
+        <div className="po-hero-grid">
+          <div className="po-hero-copy">
+            <div className="pg-label po-kicker">Property Owners</div>
+            <h1 className="po-title font-serif-display">
+              A complex property needs a clear plan.
+            </h1>
+            <p className="po-hero-lead">
+              Repairs, inherited ownership, unfinished work, or a difficult timeline can change the
+              right path for a property. Start with your situation and objective.
+            </p>
+            <div className="po-hero-actions">
+              <a href="/bring-an-opportunity" onClick={toIntake}
+                className="btn-solid-light po-primary-action">
+                Tell Us About the Property <ArrowRight aria-hidden="true" />
+              </a>
+              <button type="button" onClick={() => go('strategylab')} className="po-secondary-action">
+                Open Strategy Lab <ArrowRight aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+          <figure className="po-hero-figure">
             <img
               src="/images/nelson/nelson-before-exterior-front-1280.jpg"
-              alt=""
+              alt="Nelson Drive before renovation, with the original front entrance and garden"
               width="1280"
               height="941"
               loading="eager"
               decoding="async"
             />
-            <span>Nelson Drive &middot; before renovation &middot; real project record</span>
-          </div>
-        </div>
-        <div className="hv-wrap">
-          <div className="hv-rule" />
-          <div className="pg-label hv-eyebrow">Property Owners</div>
-          <h1 className="hwo-h1 font-serif-display">
-            A complex property needs a clear plan.
-          </h1>
-          <p className="hv-lead">
-            Repairs, inherited ownership, unfinished work, or a difficult timeline can change the
-            right path for a property. Start with your situation and objective. Pegasus considers
-            opportunities case by case, with any acquisition, project role, or licensed representation
-            defined separately.
-          </p>
-          <div className="hv-cta-row">
-            <a href="/bring-an-opportunity" onClick={toIntake}
-              className="btn-solid-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px] group">
-              Tell Us About the Property <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-            </a>
-            <button type="button" onClick={() => go('strategylab')} className="hv-hero-link">
-              Open Strategy Lab
-            </button>
-          </div>
-          <p className="po-hero-caption">Real project photography &middot; Nelson Drive, before renovation</p>
+            <figcaption>
+              <span className="po-photo-title font-serif-display">Nelson Drive</span>
+              <span>Before renovation &middot; real project photography</span>
+            </figcaption>
+          </figure>
         </div>
       </section>
 
@@ -82,7 +82,7 @@ export function PropertyOwnersPage({ go }: { go: Nav }) {
       <section className="po-stepper hv-pad" data-testid="situation-stepper">
         <div className="hv-wrap">
           <div className="pg-label hv-eyebrow-copper">Start with your situation</div>
-          <h2 className="hv-h2 font-serif-display">What is standing between you and the next step?</h2>
+          <h2 className="hv-h2 font-serif-display">Start with what needs to be resolved.</h2>
           <div className="po-step-grid reveal">
             <ResponsiveChoiceList id="owner-situation" label="Common owner situations" options={SITUATIONS}
               value={idx} onChange={setIdx} controls="owner-path" className="po-situations" itemClassName="po-situation" />
@@ -102,7 +102,7 @@ export function PropertyOwnersPage({ go }: { go: Nav }) {
       <section className="po-process hv-pad-lg hv-grain">
         <div className="hv-wrap">
           <div className="pg-label hv-eyebrow">What the intake records</div>
-          <h2 className="hv-h2-cream font-serif-display">Four ways to make the submission clearer.</h2>
+          <h2 className="hv-h2-cream font-serif-display">A useful starting point.</h2>
           <ol className="po-steps reveal">
             <li><b>Describe the property.</b> Add the address, known condition, occupancy, timing, and your objective.</li>
             <li><b>Separate facts from assumptions.</b> Label estimates and unknowns instead of presenting them as verified.</li>
@@ -115,13 +115,19 @@ export function PropertyOwnersPage({ go }: { go: Nav }) {
       {/* Restraint — §9 "required restraint" as a trust panel (§32.13) */}
       <section className="po-restraint hv-pad">
         <div className="hv-wrap">
-          <div className="pg-label hv-eyebrow-copper">What we will not promise</div>
+          <div className="pg-label hv-eyebrow-copper">Before you submit</div>
           <h2 className="hv-h2 font-serif-display">The limits, stated plainly.</h2>
-          <p className="hv-muted">
-            Submission may be considered, but no written review, response, route, or offer is promised.
-            It is not a valuation, appraisal, legal opinion, foreclosure-rescue service, representation
-            agreement, or closing commitment.
-          </p>
+          <div className="po-boundary-copy">
+            <p className="hv-muted">
+              Pegasus considers opportunities case by case, with any acquisition, project role, or
+              licensed representation defined separately.
+            </p>
+            <p className="hv-muted">
+              Submission may be considered, but no written review, response, route, or offer is promised.
+              It is not a valuation, appraisal, legal opinion, foreclosure-rescue service, representation
+              agreement, or closing commitment.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -129,13 +135,13 @@ export function PropertyOwnersPage({ go }: { go: Nav }) {
       <section className="po-close hv-pad-lg hv-grain">
         <div className="hv-wrap">
           <h2 className="hv-h2-cream font-serif-display">Share the facts. Keep control of the decision.</h2>
-          <div className="ow-close-ctas">
+          <div className="po-hero-actions">
             <a href="/bring-an-opportunity" onClick={toIntake}
-              className="btn-solid-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px] group">
-              Tell Us About the Property <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
+              className="btn-solid-light po-primary-action">
+              Tell Us About the Property <ArrowRight aria-hidden="true" />
             </a>
-            <button type="button" className="hv-hero-link" onClick={() => go('ourwork')}>
-              See a finished project
+            <button type="button" className="po-secondary-action" onClick={() => go('ourwork')}>
+              See a finished project <ArrowRight aria-hidden="true" />
             </button>
           </div>
         </div>

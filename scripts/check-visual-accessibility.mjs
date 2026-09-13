@@ -1359,6 +1359,85 @@ async function captureInventoryState(
   await captureEvidenceScreenshot(page, health, filename, options);
 }
 
+async function verifyWideOwnerHero(page, originalViewport) {
+  // The former percentage padding collapsed the copy beyond the capped 1240px
+  // wrapper. Document overflow alone missed it because the hero clips overflow.
+  // Keep these measurements inside the existing desktop route checks so both
+  // themes run them without changing the canonical route or screenshot counts.
+  try {
+    for (const viewport of [{ width: 1920, height: 1080 }, { width: 2560, height: 1440 }]) {
+      await page.setViewportSize(viewport);
+      const geometry = await page.evaluate(async () => {
+        window.scrollTo(0, 0);
+        await document.fonts.ready;
+        await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+        const hero = document.querySelector('.po-hero');
+        const copy = hero?.querySelector('.po-hero-copy');
+        const figure = hero?.querySelector('figure.po-hero-figure');
+        const title = copy?.querySelector('h1.po-title');
+        const lead = copy?.querySelector('.po-hero-lead');
+        const actions = [...(copy?.querySelectorAll('.po-hero-actions > a, .po-hero-actions > button') ?? [])];
+        if (!hero || !copy || !figure || !title || !lead || !actions.length) return null;
+
+        const bounds = (element) => {
+          const { left, right, top, bottom, width, height } = element.getBoundingClientRect();
+          return { left, right, top, bottom, width, height };
+        };
+        const heroBounds = bounds(hero);
+        const copyBounds = bounds(copy);
+        const text = [title, lead, ...actions].map((element) => {
+          const box = bounds(element);
+          const style = getComputedStyle(element);
+          const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+          const textRects = [];
+          while (walker.nextNode()) {
+            if (!walker.currentNode.textContent.trim()) continue;
+            const range = document.createRange();
+            range.selectNodeContents(walker.currentNode);
+            textRects.push(...range.getClientRects());
+          }
+          return {
+            label: element.textContent.trim().slice(0, 80),
+            box,
+            overflow: element.scrollWidth > element.clientWidth + 2
+              || (['hidden', 'clip'].includes(style.overflowY) && element.scrollHeight > element.clientHeight + 2),
+            clipped: box.left < copyBounds.left - 2 || box.right > copyBounds.right + 2
+              || box.top < heroBounds.top - 2 || box.bottom > heroBounds.bottom + 2
+              || textRects.some((rect) => rect.left < box.left - 2 || rect.right > box.right + 2
+                || rect.top < heroBounds.top - 2 || rect.bottom > heroBounds.bottom + 2),
+          };
+        });
+        return {
+          theme: document.querySelector('.pg-root')?.getAttribute('data-theme'),
+          hero: heroBounds,
+          copy: copyBounds,
+          figure: bounds(figure),
+          text,
+        };
+      });
+      const context = `Property Owners ${viewport.width}px: ${JSON.stringify(geometry)}`;
+      assert(geometry, `Owner hero is missing its copy, figure, or action: ${context}`);
+      assert(geometry.copy.width >= 420 && geometry.figure.width >= 420, `Owner desktop columns collapsed: ${context}`);
+      assert(geometry.copy.right <= geometry.figure.left + 2
+        && Math.min(geometry.copy.bottom, geometry.figure.bottom) > Math.max(geometry.copy.top, geometry.figure.top),
+      `Owner desktop columns overlap or lost their side-by-side layout: ${context}`);
+      assert(geometry.hero.height <= 900, `Owner hero became excessively tall: ${context}`);
+      assert(geometry.text.every(({ box, overflow, clipped }) => box.width > 0 && box.height > 0 && !overflow && !clipped),
+        `Owner hero text or actions are clipped: ${context}`);
+      const primary = page.locator('.po-hero .po-hero-actions').getByRole('link', { name: 'Tell Us About the Property', exact: true });
+      const primaryBox = await primary.boundingBox();
+      assert(primaryBox && primaryBox.width >= 44 && primaryBox.height >= 44,
+        `Owner primary action is too small: ${context}`);
+      assert(await primary.getAttribute('href') === '/bring-an-opportunity', 'Owner hero lost its intake destination');
+      await primary.click({ trial: true, timeout: 5_000 });
+      console.log(`[design] owner wide-desktop PASS ${context}`);
+    }
+  } finally {
+    await page.setViewportSize(originalViewport);
+    await page.evaluate(() => new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+  }
+}
+
 let fatalFailure = null;
 // Exercise the redesigned public controls before the existing route scan and
 // screenshot. Every viewport/theme therefore checks the meaningful selected
@@ -1379,6 +1458,7 @@ async function exercisePublicDesign(page, route, viewport) {
     assert(controls.every((control) => control.width > 0 && !control.overflow && (!control.button || control.height >= 44)), `Diagram labels or touch targets failed: ${JSON.stringify(controls)}`);
   }
   if (route === '/property-owners') {
+    if (viewport.width === 1440) await verifyWideOwnerHero(page, viewport);
     if (viewport.width <= 900) await page.getByRole('combobox', { name: 'Common owner situations' }).selectOption('2');
     else await page.getByRole('group', { name: 'Common owner situations' }).getByRole('button', { name: 'Inherited property' }).click();
     assert(await page.locator('#owner-path').getByRole('heading', { name: 'Inherited property' }).count() === 1, 'Owner answer did not update');
