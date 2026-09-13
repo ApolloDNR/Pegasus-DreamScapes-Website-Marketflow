@@ -2,6 +2,18 @@
 
 Updated 2026-09-13. Scope: `docs/WEBSITE_EXECUTION_BRIEF.md`.
 
+## Premium presentation and launch preparation
+
+The owner approved the tactile navy/copper design and asked to improve its remaining rough edges and prepare for launch. This continuation starts from `9a98fa46d892ce8d451ef34c51ad977a56756acf` on the existing PR #26. Fresh protected-preview desktop captures of Home, Our Work, and Bring an Opportunity establish the visual baseline.
+
+The refinement makes the primary navigation more readable, restores the full desktop wordmark at intermediate widths, adds a concise company introduction below the locked homepage headline, and gives Nelson Drive a clearer photographic and editorial hierarchy. The case study separates project narrative from the unchanged sourced financial facts. Intake choices and progress labels use larger, simpler text while retaining all eight backend values, the five-step journey, eligibility boundaries, consent fields, and retry behavior. The approved hero image, headline, action order, woven texture, copper finish, routes, and public contact details remain intact.
+
+HQ acknowledgements now require a valid receipt before an outbox item is marked forwarded. Both the existing receipt and the documented v2 receipt can be recognized; malformed success bodies remain pending for bounded retry. Capability URLs are validated but never persisted, exposed, or followed. This does not claim compatibility with the separate v2 request contract. See [HQ contract readiness](hq-contract-readiness.md) for the consent and non-property inquiry mismatch that still requires an operational decision.
+
+Local verification passes: TypeScript; 213 test files / 2,429 tests; the production client/server build; bundle budgets; all four deployment-entry scenarios; environment-variable-name smoke; production dependency audit with zero vulnerabilities; and diff hygiene. The build uses the documented `node --import tsx` equivalent for this environment's blocked tsx IPC socket. The test environment suppresses only the injected `UNDICI-EHPA` warning. Current-source rendered CI, hosted comparison, and the final preview URL are recorded on PR #26 after publication.
+
+The protected Vercel deployment remains a browsing preview. Production is not certified: the separate Render/Neon website environment, verified email delivery, authentication and Peggy configuration, and a consent-compatible HQ receiver require actual configuration and receipt evidence. The connected Command Center Supabase project is not a substitute for the website database. The launch checklist now explicitly keeps `SITE_INDEXABLE=false` until production SSL, canonical-host behavior, and the required intake smoke are accepted.
+
 ## Final detail review
 
 The owner approved the woven navy/copper direction at `f2d3389ae2cf8b4a16405db4afb5f4b4c9024e92` and asked for a critique and correction of the remaining rough edges. That baseline passed all 16 jobs in [run 34710327519](https://github.com/ApolloDNR/Pegasus-DreamScapes-Website-Marketflow/actions/runs/34710327519) and rendered in its protected preview.

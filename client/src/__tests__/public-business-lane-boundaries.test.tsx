@@ -97,12 +97,12 @@ describe("public business-lane boundaries", () => {
   it.each([
     [
       "partnership",
-      /an existing capital relationship or personal introduction/i,
+      /a capital relationship/i,
       /use this only if Apollo already knows you or someone personally introduced you/i,
     ],
     [
       "buyer",
-      /an investor-interest request/i,
+      /investor interest/i,
       /not a request for licensed representation or MarketFlow access/i,
     ],
   ])("preselects the bounded %s intake", (intent, label, description) => {

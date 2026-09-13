@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import type { Nav } from './theme';
 import { ProjectGallery } from './project-gallery';
 import { SectionNav } from './section-nav';
+import './our-work.css';
 import {
   NELSON_COST_DISCLOSURE,
   NELSON_EXECUTION_DISCLOSURE,
@@ -25,16 +26,16 @@ const PAIRS: Array<{ title: string; before: string; after: string; beforeAlt: st
     after: '/images/nelson/kitchen-after.webp',
     beforeAlt: 'Nelson Drive kitchen before: dated galley kitchen with laminate counters',
     afterAlt: 'Nelson Drive kitchen after: deep-navy cabinetry, waterfall quartz island, statement hood',
-    note: 'The finished image shows deep-navy cabinetry, a waterfall quartz island, and a statement hood.',
+    note: 'Deep-navy cabinetry, a waterfall quartz island, and a statement hood in the finished kitchen.',
   },
   {
     title: 'The primary bath',
-    tag: 'Built from the studs',
+    tag: 'During construction',
     before: '/images/nelson/bath-before.webp',
     after: '/images/nelson/bath-after.webp',
     beforeAlt: 'Primary bath during construction: open stud framing and rough plumbing',
     afterAlt: 'Primary bath finished: freestanding soaking tub, glass walk-in shower, warm wood paneling',
-    note: 'The construction image shows exposed framing; the finished image shows a soaking tub, glass shower, and warm wood paneling.',
+    note: 'From exposed framing to a freestanding tub, glass shower, and warm wood paneling.',
   },
   {
     title: 'The living space',
@@ -42,7 +43,7 @@ const PAIRS: Array<{ title: string; before: string; after: string; beforeAlt: st
     after: '/images/nelson/living-after.webp',
     beforeAlt: 'Living room before: dark wood paneling and a dropped soffit',
     afterAlt: 'Living room after: one open, staged great room across living, dining, and kitchen',
-    note: 'The paired images show a transition from dark paneling and a dropped soffit to an open, staged living, dining, and kitchen area.',
+    note: 'Dark paneling and a dropped soffit give way to an open, staged living, dining, and kitchen area.',
   },
 ];
 
@@ -67,12 +68,9 @@ export function OurWorkPage({ go }: { go: Nav }) {
         </div>
         <div className="hv-wrap ow-hero-inner">
           <div className="pg-label hv-eyebrow">Our Work &middot; Completed</div>
-          <h1 className="ow-h1 font-serif-display">Nelson Drive: a documented East Bay transformation.</h1>
-          <p className="ow-loc pg-label">{NELSON_FACTS.name} &middot; {NELSON_FACTS.areaLabel}</p>
-          <p className="hv-lead-dim">
-            {NELSON_PUBLIC_DESCRIPTION} The paired photographs show visible before, construction,
-            and finished conditions; they do not by themselves establish who performed each role.
-          </p>
+          <h1 className="ow-h1 font-serif-display">Nelson Drive</h1>
+          <p className="ow-hero-subtitle font-serif-display">An East Bay transformation</p>
+          <p className="ow-loc">{NELSON_FACTS.areaLabel} &middot; Settled {NELSON_FACTS.settled}</p>
         </div>
       </section>
 
@@ -82,15 +80,14 @@ export function OurWorkPage({ go }: { go: Nav }) {
       <section className="ow-numbers hv-pad" id="project-record">
         <div className="hv-wrap ow-numbers-grid reveal">
           <div>
-            <div className="pg-label hv-eyebrow-copper">The public record</div>
-            <h2 className="hv-h2 font-serif-display">Documented figures, with their limits intact.</h2>
+            <div className="pg-label hv-eyebrow-copper">The figures</div>
+            <h2 className="hv-h2 font-serif-display">Acquisition to sale.</h2>
             <p className="hv-muted">
-              The available record supports the acquisition amount, improvement budget, subtotal
-              before other costs, sale amount, and settlement month shown here.
+              {NELSON_PUBLIC_DESCRIPTION}
             </p>
             <p className="hv-muted">
-              It does not document every project cost, participant, contract, permit, license,
-              financing term, or service relationship. No broader conclusion is stated as fact.
+              The amounts below are the available financial record, not a complete project
+              accounting. The subtotal includes acquisition and improvements only.
             </p>
           </div>
           <div>
@@ -102,7 +99,7 @@ export function OurWorkPage({ go }: { go: Nav }) {
             </dl>
             <div className="hv-edge ow-edge">
               <div className="hv-edge-big font-serif-display">{dollars(NELSON_FACTS.grossSpreadBeforeOtherCosts)}</div>
-              <p>gross spread before other costs, calculated from the three documented figures.</p>
+              <p>gross spread before other costs</p>
             </div>
             <p className="ow-lift">{dollars(NELSON_FACTS.grossSpreadBeforeOtherCosts)} gross spread. Not net profit or return.</p>
             <p className="hv-fine">
@@ -115,8 +112,8 @@ export function OurWorkPage({ go }: { go: Nav }) {
       {/* Evidence boundary */}
       <section className="ow-operator">
         <div className="hv-wrap">
-          <div className="pg-label hv-eyebrow">Evidence boundary</div>
-          <h2 className="hv-h2-cream font-serif-display">What the record does not assign.</h2>
+          <div className="pg-label hv-eyebrow">Project context</div>
+          <h2 className="hv-h2-cream font-serif-display">About this case study.</h2>
           <p className="hv-lead-dim">
             {NELSON_EXECUTION_DISCLOSURE}
           </p>
@@ -127,7 +124,7 @@ export function OurWorkPage({ go }: { go: Nav }) {
       <section className="ow-transform hv-pad-lg" id="project-gallery">
         <div className="hv-wrap">
           <div className="pg-label hv-eyebrow-copper">The transformation</div>
-          <h2 className="hv-h2 font-serif-display">Room by room, honestly shown.</h2>
+          <h2 className="hv-h2 font-serif-display">Before, during, and after.</h2>
           <ProjectGallery pairs={PAIRS} finishes={FINISH_STRIP} />
         </div>
       </section>
@@ -135,11 +132,11 @@ export function OurWorkPage({ go }: { go: Nav }) {
       {/* Lessons */}
       <section className="ow-lessons" id="project-lessons">
         <div className="hv-wrap">
-          <div className="pg-label hv-eyebrow-copper">Carried forward</div>
-          <p className="ow-lesson font-serif-display">
-            The photographs document visible change. The financial register documents limited
-            arithmetic. Neither is presented as proof of a participant&apos;s role, net profit, return,
-            savings, or a result another property will repeat.
+          <div className="pg-label hv-eyebrow-copper">The takeaway</div>
+          <h2 className="hv-h2 font-serif-display">Every property has its own starting point.</h2>
+          <p className="ow-lesson">
+            These photographs and figures describe one property. They do not establish a
+            participant&apos;s role, net profit, return, savings, or a result another property will repeat.
           </p>
         </div>
       </section>
@@ -148,7 +145,7 @@ export function OurWorkPage({ go }: { go: Nav }) {
       <section className="ow-close hv-pad-lg hv-grain">
         <div className="hv-wrap">
           <h2 className="hv-h2-cream font-serif-display">
-            Have a property or proposal you want to document clearly?
+            What are you considering for your property?
           </h2>
           <p className="hv-lead-dim">
             Use the intake to share facts for possible consideration. Submission does not promise

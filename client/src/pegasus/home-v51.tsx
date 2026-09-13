@@ -39,9 +39,13 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
             <h1 className="hv-h1 font-serif-display">
               Complex real estate,<br className="hv-h1-break" /> <em>made executable.</em>
             </h1>
+            <p className="hv-arrival-intro">
+              Pegasus connects property strategy, deal structure, and execution
+              for East Bay owners and partners.
+            </p>
             <div className="hv-cta-row">
               <a href="/bring-an-opportunity" onClick={toIntake}
-                className="btn-solid-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px] group">
+                className="btn-solid-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[11px] group">
                 Bring an Opportunity <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
               </a>
               <button type="button" onClick={() => go('dealstrategy')} className="hv-hero-link">
@@ -95,8 +99,8 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
             <div className="pg-label hv-eyebrow-copper">Start with what you have</div>
             <h2 className="hv-h2 font-serif-display">What are you bringing to Pegasus?</h2>
             <p className="hv-muted">
-              Pegasus connects property strategy, deal structure, and execution. Start with the
-              property, opportunity, or expertise you bring, then identify the path and role that fit.
+              Start with your property, opportunity, or expertise. Choose the path
+              that fits your situation and see what information helps move the discussion forward.
             </p>
             <button type="button" className="hv-text-link" onClick={() => openPeggy()}>
               Talk to Peggy <ArrowRight className="h-3.5 w-3.5" />
@@ -105,7 +109,7 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
           <div className="hv-route-list">
             {([
               ['A property I own', 'Condition, timing, inheritance, or a sale that is not working.', 'sellers'],
-              ['A deal I found', 'A lead, a contract, or a buyer — with one piece still missing.', 'dealfinders'],
+              ['A deal I found', 'A lead, a contract, or a buyer, with one piece still missing.', 'dealfinders'],
               ["A project I'm operating", 'You run the deal; you need a specific capability filled.', 'operators'],
               ['A relationship or specialty', 'Capital, trades, or professional services.', 'referral'],
             ] as const).map(([title, sub, route]) => (
@@ -126,8 +130,8 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
         <div className="hv-wrap reveal">
           <div className="hv-proof-head">
             <div>
-              <div className="pg-label hv-eyebrow">Proof before aspiration &middot; Nelson Drive &middot; El Sobrante</div>
-              <h2 className="hv-h2-cream font-serif-display">One property, read honestly.</h2>
+              <div className="pg-label hv-eyebrow">Completed project &middot; El Sobrante</div>
+              <h2 className="hv-h2-cream font-serif-display">Nelson Drive, before and after.</h2>
             </div>
             <p className="hv-lead-dim">{NELSON_PUBLIC_DESCRIPTION}</p>
           </div>
@@ -143,7 +147,7 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
             </figure>
           </div>
 
-          <p className="hv-proof-thesis font-serif-display">Documented basis. Documented sale.</p>
+          <p className="hv-proof-thesis font-serif-display">Acquisition to sale.</p>
           <dl className="hv-proof-facts">
             <div><dt>Acquired</dt><dd>${NELSON_FACTS.acquired.toLocaleString('en-US')}</dd></div>
             <div><dt>Improvement budget</dt><dd>${NELSON_FACTS.improvementBudget.toLocaleString('en-US')}</dd></div>
@@ -176,15 +180,15 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
         </div>
         <div className="hv-method-content">
           <div className="pg-label hv-eyebrow-copper">How we work</div>
-          <h2 className="hv-h2 font-serif-display">A method, not a script.</h2>
+          <h2 className="hv-h2 font-serif-display">From opportunity to execution.</h2>
           <p className="hv-muted">Start with the property and its economics. Define the strategy, agree the roles and terms, and carry an accepted project through execution and its intended exit.</p>
           <ol className="hv-steps reveal" aria-label="The Pegasus method">
             {([
               ['Originate', 'Find, receive, or develop the opportunity.'],
               ['Structure', 'Set the role, strategy, control, economics, and approvals.'],
-              ['Operate', 'Activate the capabilities and manage the execution.'],
+              ['Operate', 'Coordinate the agreed work, responsibilities, and milestones.'],
               ['Realize', 'Acquire, sell, assign, refinance, hold, represent, refer, or pass.'],
-              ['Learn', 'Turn the outcome into proof, intelligence, and a better system.'],
+              ['Learn', 'Review what worked, what changed, and what to carry forward.'],
             ] as const).map(([title, sub]) => (
               <li key={title} className="hv-step">
                 <h3 className="font-serif-display">{title}</h3>
@@ -258,7 +262,7 @@ export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void 
           </figure>
           <h2 className="font-serif-display">Paolo &ldquo;Apollo&rdquo; Duran</h2>
           <p className="hv-founder-title">Founder, Pegasus Dreamscapes</p>
-          <p className="hv-founder-statement">Apollo founded Pegasus to connect property strategy with the work required to carry it out. The company’s role, responsibilities, and economics are agreed for each accepted project.</p>
+          <p className="hv-founder-statement">Apollo brings a background in residential construction and real estate operations. He founded Pegasus to connect property strategy with the work required to carry it out. The company’s role, responsibilities, and economics are agreed for each accepted project.</p>
           <dl className="hv-founder-roles">
             <div><dt>Pegasus</dt><dd>Founder, Pegasus Dreamscapes</dd></div>
             <div><dt>Public-facing name</dt><dd>Paolo &ldquo;Apollo&rdquo; Duran</dd></div>

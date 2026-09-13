@@ -51,4 +51,5 @@
 - Render production deploys only from `main` after the `launch verification` check passes.
 - The `onrender.com` release candidate passes the full launch smoke before any DNS change.
 - Production domain, SSL, robots, sitemap, OG image, favicon, and canonical URLs are verified.
+- Keep `SITE_INDEXABLE=false` until the canonical domain passes SSL and the live smoke. Then set `SITE_INDEXABLE=true` with `APP_ENV=production` on the Render production service only and verify indexing on `pegasusdreamscapes.com`. Preview and `onrender.com` hosts must remain non-indexable.
 - Real production `/api/opportunities` smoke verifies the canonical intake, database, Pegasus HQ outbox, and staff/customer notifications. Use a marked test opportunity and delete/archive it after proof is captured.

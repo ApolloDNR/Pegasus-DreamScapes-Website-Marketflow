@@ -100,8 +100,7 @@ describe("outreachReasonForLeadType — replit.md leadType→reason map", () => 
 describe("forward() — outbox-first guarantee", () => {
   it("queues a row before any network attempt and returns an idempotency key", async () => {
     const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async () => {
-      // First call is /api/health, return 200
-      return new Response("{}", { status: 200 });
+      return new Response(JSON.stringify({ hq_submission_id: "HQ-QUEUED-1" }), { status: 200 });
     });
 
     const result = await forward({
@@ -203,6 +202,102 @@ describe("retryOutboxRow() — success path back-references the source row", () 
     expect(row.hqSubmissionId).toBe("HQ-ABC-123");
     expect(leadUpdates.some((u) => u.id === 99 && u.hqSubmissionId === "HQ-ABC-123")).toBe(true);
     fetchMock.mockRestore();
+  });
+});
+
+describe("HQ receipt validation", () => {
+  it.each([
+    ["empty object", "{}"],
+    ["HTML success page", "<html>Sign in</html>"],
+    ["null", "null"],
+    ["array", '[{"hq_submission_id":"HQ-UNRELATED"}]'],
+    ["empty identifier", '{"hq_submission_id":"  "}'],
+    ["non-string identifier", '{"hq_submission_id":42}'],
+    ["oversized identifier", JSON.stringify({ hq_submission_id: "x".repeat(65) })],
+    ["control characters", JSON.stringify({ hq_submission_id: "HQ-\n123" })],
+    ["explicit rejection", '{"ok":false,"hq_submission_id":"HQ-REJECTED"}'],
+    ["reference without acceptance", '{"reference":"SEED-123","statusUrl":"https://hq.test/status/token","message":"Received"}'],
+    ["reference without status URL", '{"ok":true,"reference":"SEED-123","message":"Received"}'],
+    ["reference without message", '{"ok":true,"reference":"SEED-123","statusUrl":"https://hq.test/status/token"}'],
+    ["reference at another origin", '{"ok":true,"reference":"SEED-123","statusUrl":"https://other.test/status/token","message":"Received"}'],
+    ["reference with an invalid status route", '{"ok":true,"reference":"SEED-123","statusUrl":"https://hq.test/sign-in","message":"Received"}'],
+    ["reference with URL credentials", '{"ok":true,"reference":"SEED-123","statusUrl":"https://user:password@hq.test/status/token","message":"Received"}'],
+  ])("keeps %s pending without claiming delivery or updating the source", async (_name, body) => {
+    vi.spyOn(globalThis, "setTimeout").mockImplementation(((fn: () => void) => {
+      fn();
+      return 0 as any;
+    }) as any);
+    const fetchSpy = vi.spyOn(globalThis, "fetch").mockImplementation(async () =>
+      new Response(body, { status: 200 }),
+    );
+    const { storage } = await import("../storage");
+    const idempotencyKey = "00000000-0000-4000-8000-000000000007";
+    const row = await storage.createHqOutbox({
+      idempotencyKey,
+      surface: "lead",
+      sourceId: 77,
+      payload: {
+        contactName: "Receipt test",
+        outreachReason: "property_review",
+        sourceChannel: "website:submit",
+        consentContact: true,
+        consentCcpaAcknowledged: true,
+        idempotencyKey,
+      },
+      status: "pending",
+    });
+
+    const result = await drainPending(1);
+
+    expect(result).toEqual({ tried: 1, ok: 0, stillPending: 1 });
+    expect(outboxRows.get(row.id)).toMatchObject({
+      status: "pending",
+      hqSubmissionId: null,
+      forwardedAt: null,
+      attempts: 3,
+    });
+    expect(outboxRows.get(row.id)?.lastError).toContain("valid HQ submission receipt");
+    expect(leadUpdates).toEqual([]);
+    expect(peggyUpdates).toEqual([]);
+    expect(fetchSpy).toHaveBeenCalledTimes(3);
+    for (const [, request] of fetchSpy.mock.calls) {
+      expect(JSON.parse(String(request?.body)).idempotencyKey).toBe(idempotencyKey);
+    }
+  });
+
+  it("records the documented public intake reference without retaining its status capability", async () => {
+    const statusUrl = "https://hq.test/status/private-status-capability";
+    vi.spyOn(globalThis, "fetch").mockImplementation(async () => new Response(JSON.stringify({
+      ok: true,
+      reference: "SEED-2026-00123",
+      statusUrl,
+      message: "Intake received. A Pegasus strategist will review the Seed.",
+    }), { status: 200 }));
+    const { storage } = await import("../storage");
+    const row = await storage.createHqOutbox({
+      idempotencyKey: "00000000-0000-4000-8000-000000000008",
+      surface: "peggy",
+      sourceId: 88,
+      payload: {
+        contactName: "Receipt test",
+        outreachReason: "peggy_inbound",
+        sourceChannel: "website:peggy",
+        consentContact: true,
+        consentCcpaAcknowledged: true,
+        idempotencyKey: "00000000-0000-4000-8000-000000000008",
+      },
+      status: "pending",
+    });
+
+    expect(await retryOutboxRow(row.id)).toEqual({ hq_submission_id: "SEED-2026-00123" });
+    expect(outboxRows.get(row.id)).toMatchObject({
+      status: "forwarded",
+      hqSubmissionId: "SEED-2026-00123",
+      lastError: null,
+    });
+    expect(peggyUpdates).toEqual([expect.objectContaining({ id: 88, hqSubmissionId: "SEED-2026-00123" })]);
+    expect(JSON.stringify(outboxRows.get(row.id))).not.toContain(statusUrl);
+    expect(JSON.stringify(peggyUpdates)).not.toContain(statusUrl);
   });
 });
 

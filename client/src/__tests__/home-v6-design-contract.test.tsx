@@ -116,7 +116,7 @@ describe("Pegasus mounted v5.1 homepage design contract", () => {
 
     const copy = proof!.textContent?.replace(/\s+/g, " ") ?? "";
     for (const fact of [
-      "Documented basis. Documented sale.",
+      "Acquisition to sale.",
       "$600,000",
       "$105,000",
       "$705,000",

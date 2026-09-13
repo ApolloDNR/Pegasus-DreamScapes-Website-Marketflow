@@ -1,0 +1,117 @@
+/* Nelson's property photographs carry the page. Keep the existing material,
+ * gallery, and financial disclosures, with a quieter editorial hierarchy. */
+.pg-root .ow .ow-hero {
+  min-height: clamp(570px, 78svh, 780px);
+}
+
+.pg-root .ow .ow-hero-media img {
+  opacity: 1;
+  object-position: center 52%;
+}
+
+.pg-root .ow .ow-hero-media::after {
+  background: linear-gradient(0deg, rgba(7, 21, 31, .96) 0%, rgba(7, 21, 31, .84) 16%, rgba(7, 21, 31, .26) 46%, rgba(7, 21, 31, .08) 70%);
+}
+
+.pg-root .ow .ow-hero-inner {
+  width: 100%;
+  padding-top: 12rem;
+  padding-bottom: clamp(2.5rem, 4vw, 3.75rem);
+}
+
+.pg-root .ow .ow-h1 {
+  max-width: none;
+  margin-top: .85rem;
+  font-size: clamp(3rem, 5.5vw, 5.1rem);
+  line-height: 1.1;
+}
+
+.pg-root .ow .ow-hero-subtitle {
+  margin-top: .65rem;
+  color: #f0dfca;
+  font-size: clamp(1.25rem, 2.1vw, 1.8rem);
+  line-height: 1.4;
+}
+
+.pg-root .ow .ow-loc {
+  margin-top: 1rem;
+  max-width: 55ch;
+  color: #d5d0c7;
+  font: 400 .8rem/1.65 var(--pg-font-ui);
+}
+
+.pg-root .ow :is(.ow-numbers, .ow-transform, .ow-close) {
+  padding-block: clamp(3.75rem, 7vw, 6.5rem);
+}
+
+.pg-root .ow :is(.ow-numbers, .ow-transform, .ow-lessons) .hv-h2,
+.pg-root .ow :is(.ow-operator, .ow-close) .hv-h2-cream {
+  max-width: 23ch;
+  font-size: clamp(2rem, 3.5vw, 3.2rem);
+  line-height: 1.18;
+}
+
+.pg-root .ow .ow-numbers-grid {
+  column-gap: clamp(2.5rem, 7vw, 6rem);
+}
+
+.pg-root .ow .ow-numbers .hv-stack > div {
+  gap: 1.5rem;
+  padding-block: 1.1rem;
+  border-color: color-mix(in srgb, var(--ip-ink) 18%, transparent);
+}
+
+.pg-root .ow .ow-numbers .hv-stack {
+  border-color: color-mix(in srgb, var(--ip-ink) 22%, transparent);
+}
+
+.pg-root .ow .ow-numbers .hv-fine {
+  font-size: .8rem;
+  line-height: 1.75;
+}
+
+.pg-root .ow .ow-operator {
+  padding-block: clamp(2.75rem, 5vw, 4.5rem);
+}
+
+.pg-root .ow .ow-operator .hv-lead-dim {
+  max-width: 76ch;
+  color: #cec8be;
+  font-size: .95rem;
+  line-height: 1.8;
+}
+
+.pg-root .ow .ow-lessons {
+  padding-block: clamp(3rem, 5vw, 4.5rem);
+}
+
+.pg-root .ow .ow-lesson {
+  max-width: 68ch;
+  color: var(--ip-slate);
+  font: 400 1rem/1.75 var(--pg-font-ui);
+}
+
+@media (max-width: 639px) {
+  .pg-root .ow .ow-hero {
+    min-height: 600px;
+  }
+
+  .pg-root .ow .ow-h1 {
+    font-size: clamp(2.65rem, 11.5vw, 3.5rem);
+  }
+
+  .pg-root .ow .ow-numbers .hv-stack dt {
+    max-width: 18ch;
+  }
+
+  .pg-root .ow .ow-close-ctas {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .pg-root .ow .ow-close-ctas > :is(a, button) {
+    min-height: 48px;
+    justify-content: center;
+  }
+}

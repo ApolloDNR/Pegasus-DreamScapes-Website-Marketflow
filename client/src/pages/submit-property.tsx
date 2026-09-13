@@ -15,22 +15,21 @@ import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
  * Bring an Opportunity — Master Blueprint v5.1 (§14, §31).
  * The primary public action: a multi-step intake desk opening on the
  * §14 first question ("What are you bringing to Pegasus?"). Every
- * completed submission creates a structured opportunity record via
- * POST /api/opportunities and is pre-routed to the lane that should
- * read it first. URL intent params (?intent=sell | deal-jv |
+ * successful submission creates a structured opportunity record via
+ * POST /api/opportunities. URL intent params (?intent=sell | deal-jv |
  * partnership) preselect the answer so lane CTAs land mid-flow.
  * Supersedes the issue-#22 "Submit a Property" framing.
  */
 
 const VISITOR_TYPES = [
   { value: "owner", label: "A property I own", desc: "Condition, timing, inheritance, occupancy, or a sale that stalled." },
-  { value: "deal_finder", label: "A lead or opportunity", desc: "You found it; the contract is not signed yet." },
+  { value: "deal_finder", label: "A property lead", desc: "You found it; the contract is not signed yet." },
   { value: "deal_finder_contract", label: "A property under contract", desc: "You hold the agreement and need the next piece." },
-  { value: "strategy_only", label: "A project or development plan", desc: "A scope, a lot, or a plan that needs a straight read." },
-  { value: "capital_partner", label: "An existing capital relationship or personal introduction", desc: "Use this only if Apollo already knows you or someone personally introduced you." },
-  { value: "buyer", label: "An investor-interest request", desc: "A property mandate for possible consideration, not a request for licensed representation or MarketFlow access." },
+  { value: "strategy_only", label: "A project or plan", desc: "A lot, renovation, or development plan to discuss." },
+  { value: "capital_partner", label: "A capital relationship", desc: "Use this only if Apollo already knows you or someone personally introduced you." },
+  { value: "buyer", label: "Investor interest", desc: "A property mandate for possible consideration, not a request for licensed representation or MarketFlow access." },
   { value: "vendor_operator", label: "A specialist relationship", desc: "GC, trade, lender, title, design, or another service." },
-  { value: "other", label: "Something else", desc: "Tell us in the notes; we route it to the right desk." },
+  { value: "other", label: "Something else", desc: "Describe what you have in the notes." },
 ] as const;
 
 /** §14 choices that share a backend lane keep their nuance in the record. */
@@ -195,12 +194,12 @@ const EMPTY: FormState = {
 
 const field =
   "w-full rounded-none border-0 border-b border-[#bdb09d] dark:border-[#415066] bg-transparent " +
-  "px-0 py-3 text-[15px] text-[#171f2a] dark:text-[#f4efe6] outline-none " +
+  "px-0 py-3 text-[16px] text-[#171f2a] dark:text-[#f4efe6] outline-none " +
   "focus:border-[#9c5a24] focus:ring-0 transition-colors disabled:cursor-not-allowed disabled:opacity-60";
 
 function Label({ children, htmlFor }: { children: React.ReactNode; htmlFor?: string }) {
   return (
-    <label htmlFor={htmlFor} className="block text-[11px] font-semibold uppercase tracking-[0.18em] text-[#6b5f4d] dark:text-[#b9a888] mb-2">
+    <label htmlFor={htmlFor} className="mb-2 block text-[13px] font-medium leading-relaxed text-[#6b5f4d] dark:text-[#b9a888]">
       {children}
     </label>
   );
@@ -212,23 +211,23 @@ const choiceLabel = (c: Choice) => (typeof c === "string" ? c : c.label);
 function ChoiceGrid({ options, value, onPick, cols = 2 }:
   { options: readonly Choice[]; value: string; onPick: (v: string) => void; cols?: number }) {
   return (
-    <div className={`grid gap-3 ${cols === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+    <div className={`grid gap-x-6 gap-y-0 ${cols === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
       {options.map((c) => {
         const label = choiceLabel(c);
         const desc = typeof c === "string" ? undefined : c.desc;
         const active = value === label;
         return (
           <button key={label} type="button" onClick={() => onPick(label)} aria-pressed={active}
-            className={`group relative border-x-0 border-t-0 border-b px-0 py-4 pr-9 text-left transition-colors duration-200 ${
+            className={`group relative flex flex-col items-start justify-start border-x-0 border-t-0 border-b px-0 py-4 pr-9 text-left transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#9c5a24] dark:focus-visible:outline-[#c88a5d] ${
               active
                 ? "border-[#9c5a24] bg-transparent"
                 : "border-[#c9bead] bg-transparent hover:border-[#9c5a24] dark:border-[#35455a] dark:hover:border-[#c88a5d]"
             }`}>
-            <span className={`block text-[15px] leading-snug ${active ? "font-medium text-[#171f2a] dark:text-[#f4efe6]" : "text-[#454b55] dark:text-[#cfc5b4]"}`}>
+            <span className={`block text-[16px] font-medium leading-snug ${active ? "text-[#171f2a] dark:text-[#f4efe6]" : "text-[#454b55] dark:text-[#cfc5b4]"}`}>
               {label}
             </span>
             {desc && (
-              <span className="mt-1 block text-[12.5px] leading-snug text-[#6e6455] dark:text-[#7d8ba0]">
+              <span className="mt-1.5 block text-[14px] leading-relaxed text-[#6e6455] dark:text-[#b9a888]">
                 {desc}
               </span>
             )}
@@ -527,7 +526,7 @@ export default function SubmitPropertyPage() {
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_290px] lg:items-start lg:gap-12">
         <div className="min-w-0">
         {/* progress */}
-        <ol className="mb-10 flex items-center gap-2" aria-label="Form progress">
+        <ol className="mb-8 flex items-start gap-2" aria-label="Form progress">
           {STEPS.map((s, i) => (
             <li key={s} className="flex-1">
               <button type="button" disabled={submit.isPending || i >= step} onClick={() => moveToStep(i)}
@@ -535,9 +534,9 @@ export default function SubmitPropertyPage() {
                 aria-label={i < step ? `Return to ${s}` : s}
                 aria-current={i === step ? "step" : undefined}>
                 <div className={`h-1 rounded-full transition-colors ${i <= step ? "bg-[#9c5a24]" : "bg-[#d8cdbc] dark:bg-[#2a3a4e]"}`} />
-                <span className={`mt-2 hidden items-center gap-1 sm:inline-flex text-[10px] font-semibold uppercase tracking-[0.16em] ${
-                  i === step ? "text-[#8b5a36] dark:text-[#c88a5d]" : i < step ? "text-[#6b5f4d] hover:text-[#8b5a36] dark:text-[#b9a888] dark:hover:text-[#c88a5d]" : "text-[#6e6455] dark:text-[#7d8ba0]"}`}>
-                  {i < step && <Check className="h-3 w-3 text-[#8b5a36] dark:text-[#c88a5d]" strokeWidth={3} />}{s}
+                <span className={`mt-2 inline-flex items-center gap-1 text-[12px] font-medium sm:text-[13px] ${
+                  i === step ? "text-[#8b5a36] dark:text-[#c88a5d]" : i < step ? "text-[#6b5f4d] hover:text-[#8b5a36] dark:text-[#b9a888] dark:hover:text-[#c88a5d]" : "text-[#6e6455] dark:text-[#9aa6b7]"}`}>
+                  {i < step && <Check className="hidden h-3 w-3 text-[#8b5a36] dark:text-[#c88a5d] sm:block" strokeWidth={3} />}{s}
                 </span>
               </button>
             </li>
@@ -588,7 +587,7 @@ export default function SubmitPropertyPage() {
               >
                 The property.
               </legend>
-              <p className="text-sm text-[#6b5f4d] dark:text-[#b9a888]">Share what you know — partial information is fine.</p>
+              <p className="text-sm text-[#6b5f4d] dark:text-[#b9a888]">Share what you know. Partial information is fine.</p>
               <div>
                 <Label htmlFor="sp-address">Property address</Label>
                 <input id="sp-address" className={field} value={form.propertyAddress}
@@ -801,24 +800,24 @@ export default function SubmitPropertyPage() {
 
           <div className="mt-10 flex items-center justify-between gap-4">
             <button type="button" disabled={submit.isPending} onClick={() => moveToStep(Math.max(0, step - 1))}
-              className={`inline-flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.14em] text-[#6b5f4d] transition-colors hover:text-[#8b5a36] disabled:cursor-not-allowed disabled:opacity-45 dark:text-[#b9a888] dark:hover:text-[#c88a5d] ${step === 0 ? "invisible" : ""}`}>
+              className={`inline-flex min-h-12 items-center gap-2 text-[15px] font-medium text-[#6b5f4d] transition-colors hover:text-[#8b5a36] disabled:cursor-not-allowed disabled:opacity-45 dark:text-[#b9a888] dark:hover:text-[#c88a5d] ${step === 0 ? "invisible" : ""}`}>
               <ArrowLeft className="h-4 w-4" /> Back
             </button>
             <button type="submit" disabled={(step < 4 && !canNext) || submit.isPending}
               aria-busy={submit.isPending || undefined}
               aria-describedby={step === 4 ? "sp-contact-requirements sp-contact-validation" : undefined}
-              className="inline-flex items-center gap-2 border border-[#9c5a24] bg-[#9c5a24] px-8 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-[#8b5a36] disabled:cursor-not-allowed disabled:opacity-45">
+              className="inline-flex min-h-12 items-center justify-center gap-2 border border-[#9c5a24] bg-[#9c5a24] px-6 py-3.5 text-[15px] font-semibold text-white transition-colors hover:bg-[#8b5a36] disabled:cursor-not-allowed disabled:opacity-45 sm:px-8">
               {submit.isPending ? <Loader2 className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" /> : null}
               {submit.isPending ? "Recording…" : step < 4 ? "Continue" : "Record Opportunity"}
               {step < 4 && !submit.isPending && <ArrowRight className="h-4 w-4" aria-hidden="true" />}
             </button>
           </div>
-          <p className="mt-5 text-center text-[12px] text-[#6e6455] dark:text-[#7d8ba0] lg:hidden">
-            Receipt is immediate. Review and response timing are not promised. No agency is created by submitting.
+          <p className="mt-5 text-[13px] leading-relaxed text-[#6e6455] dark:text-[#9aa6b7] lg:hidden">
+            Review and response timing are not promised. No agency is created by submitting.
           </p>
         </form>
 
-        <p className="mt-8 text-xs leading-relaxed text-[#6e6455] dark:text-[#7d8ba0]">
+        <p className="mt-8 text-[13px] leading-relaxed text-[#6e6455] dark:text-[#9aa6b7]">
           Pegasus Dreamscapes Corp. is a real estate investment, development, and strategy company.
           Pegasus Dreamscapes Corp. is not a real estate brokerage. This site uses Paolo “Apollo”
           Duran as a public-facing name. For license verification, CA DRE #02333658 is listed under
@@ -827,10 +826,10 @@ export default function SubmitPropertyPage() {
         </p>
         </div>
 
-        {/* The desk's promise, kept in view while the visitor works. */}
+        {/* Submission boundaries remain in view while the visitor works. */}
         <aside className="mt-10 hidden lg:sticky lg:top-28 lg:mt-0 lg:block" aria-label="What happens next">
           <div className="border-l border-[#bdb09d] bg-transparent py-1 pl-6 dark:border-[#415066]">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#8b5a36] dark:text-[#c88a5d]">What happens next</p>
+            <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#8b5a36] dark:text-[#c88a5d]">What happens next</p>
             <ol className="mt-5 space-y-5">
               {[
                 ["Received", "Your submission creates a private record — never a public listing."],

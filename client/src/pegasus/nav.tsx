@@ -156,16 +156,16 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
     <>
       <nav ref={navRef} style={{ "--nav-menu-top": scrolled ? "86px" : "108px" } as React.CSSProperties} className="fixed top-0 inset-x-0 z-40">
         <div className={`absolute inset-0 h-full pointer-events-none transition-all duration-500 ${menuOpen ? 'nav-stock bg-[var(--bg-2)]' : overHero ? 'hero-scrim-top' : 'nav-stock bg-[var(--bg)] border-b border-[var(--line)] shadow-[0_18px_44px_-36px_rgba(13,27,44,0.44)]'}`} />
-        <div className={`relative max-w-[1440px] mx-auto px-6 lg:px-16 flex items-center justify-between transition-all duration-500 ${scrolled ? 'h-[74px]' : 'h-24'} ${text}`}>
+        <div className={`relative max-w-[1440px] mx-auto px-6 min-[1180px]:px-8 min-[1440px]:px-12 flex items-center justify-between gap-2 min-[1180px]:gap-5 transition-all duration-500 ${scrolled ? 'h-[74px]' : 'h-24'} ${text}`}>
           <Link href="/" aria-label="Pegasus Dreamscapes home" className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
             <BrandMark boxClassName="w-10 h-10 sm:w-12 sm:h-12" onDark={overHero || theme === 'dark'} />
-            <div className="hidden min-[360px]:flex min-[1180px]:hidden min-[1340px]:flex flex-col leading-none text-left min-w-0">
-              <span className="font-serif-display text-[16px] sm:text-[22px] tracking-[0.04em] sm:tracking-[0.06em] leading-none whitespace-nowrap">Pegasus Dreamscapes</span>
-              <span className={`pg-label !text-[7px] sm:!text-[9px] !tracking-[0.24em] sm:!tracking-[0.34em] ${overHero ? 'text-[var(--accent-bright)]' : 'text-[var(--accent-ink)]'} mt-1.5 whitespace-nowrap`}>Development &middot; Investments &middot; Systems</span>
+            <div className="hidden min-[360px]:flex flex-col leading-none text-left min-w-0">
+              <span className="pg-nav-wordmark font-serif-display leading-none whitespace-nowrap">Pegasus Dreamscapes</span>
+              <span className={`pg-nav-descriptor pg-label ${overHero ? 'text-[var(--accent-bright)]' : 'text-[var(--accent-ink)]'} mt-1.5 whitespace-nowrap`}>Development &middot; Investments &middot; Systems</span>
             </div>
           </Link>
 
-          <div className="hidden min-[1180px]:flex items-center gap-2 min-[1340px]:gap-3 min-[1500px]:gap-5 pg-label !text-[10px] !tracking-[0.1em]">
+          <div className="pg-primary-links hidden min-[1180px]:flex items-center gap-1 min-[1340px]:gap-2 min-[1500px]:gap-4">
             {PREMIUM_NAVIGATION.primary.map((item) => (
               <Link key={item.label} href={itemUrl(item)} onClick={closeNavigation} aria-current={isActive(item) ? 'page' : undefined}
                 className={`pg-navlink inline-flex min-h-11 shrink-0 items-center whitespace-nowrap px-1.5 transition-opacity hover:opacity-100 ${isActive(item) ? `opacity-100 ${activeTone}` : 'opacity-80'}`} data-active={isActive(item) || undefined}>
@@ -233,7 +233,7 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
 
           <div className="flex items-center gap-3 lg:gap-4">
             <ThemeToggle theme={theme} onToggle={toggleTheme} light={overHero} />
-            <Link href="/bring-an-opportunity" className={`pg-nav-cta hidden sm:inline-flex ${overHero ? 'pg-nav-cta-hero' : 'pg-nav-cta-scrolled'} px-5 lg:px-6 py-3 pg-label !text-[10px] !tracking-[0.2em] whitespace-nowrap`}>Bring an Opportunity</Link>
+            <Link href="/bring-an-opportunity" className={`pg-nav-cta hidden sm:inline-flex ${overHero ? 'pg-nav-cta-hero' : 'pg-nav-cta-scrolled'} px-5 py-3 pg-label !text-[11px] !tracking-[0.1em] whitespace-nowrap`}>Bring an Opportunity</Link>
             <button ref={menuButtonRef} type="button" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen} aria-controls="mobile-menu" onClick={toggleMenu} style={{ touchAction: 'manipulation' }} className="min-[1180px]:hidden relative z-10 -mr-2 p-2.5">
               {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>

@@ -81,9 +81,65 @@ export interface HqPayload {
 }
 
 export interface HqResponse {
+  // Normalized receipt identifier. Legacy receivers return hq_submission_id;
+  // the documented public intake receiver returns the traceable Seed reference.
   hq_submission_id?: string;
   received_at?: string;
   next_step?: string;
+}
+
+function receiptIdentifier(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const identifier = value.trim();
+  // Match the existing outbox/source identifier column capacity. A receipt
+  // that cannot be retained must never make the outbox look delivered.
+  if (!identifier || identifier.length > 64 || /[\u0000-\u001f\u007f]/.test(identifier)) {
+    return null;
+  }
+  return identifier;
+}
+
+function parseHqReceipt(value: unknown, endpoint: string): HqResponse | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const body = value as Record<string, unknown>;
+  if (body.ok !== undefined && body.ok !== true) return null;
+
+  const legacyIdentifier = receiptIdentifier(body.hq_submission_id);
+  if (legacyIdentifier) {
+    return {
+      hq_submission_id: legacyIdentifier,
+      ...(typeof body.received_at === "string" ? { received_at: body.received_at } : {}),
+      ...(typeof body.next_step === "string" ? { next_step: body.next_step } : {}),
+    };
+  }
+
+  // Public intake contract, verified against HQ commit 027095b73fa76867d673b1d2cc5ce3509b073d2b:
+  // { ok: true, reference, statusUrl, message }. The status URL contains a
+  // capability token. Validate its shape without following, storing, or
+  // returning that capability through the website's admin retry endpoint.
+  const reference = receiptIdentifier(body.reference);
+  if (
+    body.ok !== true ||
+    !reference ||
+    typeof body.message !== "string" ||
+    !body.message.trim() ||
+    typeof body.statusUrl !== "string"
+  ) {
+    return null;
+  }
+  try {
+    const statusUrl = new URL(body.statusUrl);
+    if (
+      statusUrl.origin !== new URL(endpoint).origin ||
+      statusUrl.username || statusUrl.password || statusUrl.search || statusUrl.hash ||
+      !/^\/status\/[^/]+$/.test(statusUrl.pathname)
+    ) {
+      return null;
+    }
+  } catch {
+    return null;
+  }
+  return { hq_submission_id: reference };
 }
 
 const LEAD_TYPE_TO_REASON: Record<string, string> = {
@@ -255,21 +311,24 @@ async function drainOutboxRow(outboxId: number, payload: HqPayload): Promise<HqR
       const totalAttempts = attempt + 1;
 
       if (res.status >= 200 && res.status < 300) {
-        const body: HqResponse = await res.json().catch(() => ({}));
-        await storage.updateHqOutbox(outboxId, {
-          attempts: totalAttempts,
-          lastAttemptAt: new Date(),
-          status: "forwarded",
-          hqSubmissionId: body.hq_submission_id,
-          forwardedAt: new Date(),
-          lastError: null as any,
-        });
-        // Back-reference the originating row when we know the surface.
-        await backReference(outboxId, body.hq_submission_id);
-        return body;
-      }
-
-      if (res.status >= 400 && res.status < 500) {
+        const body = parseHqReceipt(await res.json().catch(() => null), endpoint);
+        if (body) {
+          await storage.updateHqOutbox(outboxId, {
+            attempts: totalAttempts,
+            lastAttemptAt: new Date(),
+            status: "forwarded",
+            hqSubmissionId: body.hq_submission_id,
+            forwardedAt: new Date(),
+            lastError: null as any,
+          });
+          // Back-reference only a receipt we can trace in HQ.
+          await backReference(outboxId, body.hq_submission_id);
+          return body;
+        }
+        // An HTTP success is not delivery evidence. Preserve the payload and
+        // idempotency key for bounded retries; never save the untrusted body.
+        lastError = `HQ ${res.status}: missing a valid HQ submission receipt`;
+      } else if (res.status >= 400 && res.status < 500) {
         const text = await res.text().catch(() => "");
         lastError = `HQ ${res.status}: ${text.slice(0, 500)}`;
         await storage.updateHqOutbox(outboxId, {
@@ -279,9 +338,9 @@ async function drainOutboxRow(outboxId: number, payload: HqPayload): Promise<HqR
           lastError,
         });
         return null;
+      } else {
+        lastError = `HQ ${res.status}`;
       }
-
-      lastError = `HQ ${res.status}`;
     } catch (err: any) {
       lastError = `network: ${err?.message || String(err)}`;
     }
