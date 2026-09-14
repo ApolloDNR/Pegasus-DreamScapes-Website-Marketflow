@@ -80,7 +80,7 @@ The locked design and launch sources (`docs/design/final-design-lock.md`, `docs/
 - Contact form submissions should notify `STAFF_NOTIFICATION_EMAIL`.
 - Submit-deal / offer notifications should notify `STAFF_NOTIFICATION_EMAIL`.
 - `DEFAULT_FROM_EMAIL` must be a verified sender in SendGrid.
-- If `SENDGRID_API_KEY` is missing, the server logs the email payload fallback and does not crash.
+- If `SENDGRID_API_KEY` is missing, delivery reports failure without logging recipients or message content. This is not a delivered notification.
 
 ## Supabase auth production checklist
 - Set `SUPABASE_URL` and `SUPABASE_ANON_KEY`.

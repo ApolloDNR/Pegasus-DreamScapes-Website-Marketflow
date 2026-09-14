@@ -19,7 +19,8 @@
 - `npm test` passes.
 - `npm run build` passes.
 - `npm run smoke:launch -- --example` passes.
-- `npm run smoke:launch -- --base-url https://YOUR_DEPLOYED_SITE --post-test-lead` passes in staging or production.
+- `npm run smoke:launch -- --base-url https://YOUR_DEPLOYED_SITE` confirms health and database/configuration readiness.
+- In the authorized environment, `npm run smoke:launch -- --base-url https://YOUR_DEPLOYED_SITE --post-test-lead --test-email YOUR_AUTHORIZED_TEST_EMAIL` returns a canonical opportunity receipt. Verify the separate HQ and notification receipts before declaring delivery complete.
 - Route-by-route launch matrix passes.
 - No blank shells, broken nav, or dead primary CTAs.
 

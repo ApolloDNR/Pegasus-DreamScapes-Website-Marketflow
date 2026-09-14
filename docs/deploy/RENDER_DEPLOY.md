@@ -1,6 +1,6 @@
 # Render Deploy Runbook — Pegasus DreamScapes
 
-Last updated: 2026-09-13. Pairs with `render.yaml` at the repo root.
+Last updated: 2026-09-14. Pairs with `render.yaml` at the repo root.
 
 This gets pegasusdreamscapes.com live on Render with the database on Neon
 and auth on Supabase. Total hands-on time: roughly 30–45 minutes.
@@ -145,6 +145,17 @@ safe replay.
 
 ## Step 4 — Prove the Render release candidate
 
+Start with the read-only check:
+
+```bash
+npm run smoke:launch -- --base-url https://YOUR_RENDER_SERVICE
+```
+
+This requires JSON health and database/configuration readiness. It does not
+prove valid authentication, HQ delivery, or email delivery. A missing setting,
+HTML sign-in response, redirect, timeout, or unready database must not be
+treated as a pass.
+
 Keep Squarespace serving the public domain. Run Step 6 against the
 `onrender.com` URL, including a marked intake whose database row, HQ outbox
 state, HQ receipt, and both notification emails are confirmed. Check desktop,
@@ -194,6 +205,21 @@ Those hosts must retain `noindex` and disallow crawling. The Vercel config's
 preview environment and `X-Robots-Tag` header must remain unchanged.
 
 ## Step 6 — Launch smoke test (10 minutes)
+
+After the environment, HQ contract, and test notifications are authorized,
+choose a test mailbox you control and run:
+
+```bash
+npm run smoke:launch -- --base-url https://YOUR_RENDER_SERVICE --post-test-lead --test-email YOUR_AUTHORIZED_TEST_EMAIL
+```
+
+The CLI checks health/readiness first and sends one marked opportunity. The
+test recipient is explicit; no hardcoded phone or default mailbox is used.
+It requires HTTP 201 with the canonical UUID and `New` status. Preserve that
+UUID as the correlation reference while checking the database, HQ outbox and
+receiver receipt, and both email receipts. A queued outbox is still pending.
+If the POST fails or returns an ambiguous receipt, inspect existing records
+before rerunning to avoid a duplicate. The CLI never automatically retries.
 
 Run this on the Render release candidate first, then repeat on
 https://pegasusdreamscapes.com after cutover (URLs below are the v5.1 spine —

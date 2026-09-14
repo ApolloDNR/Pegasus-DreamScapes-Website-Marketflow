@@ -1,6 +1,49 @@
 # Pegasus website continuation status
 
-Updated 2026-09-13. Scope: `docs/WEBSITE_EXECUTION_BRIEF.md`.
+Updated 2026-09-14. Scope: `docs/WEBSITE_EXECUTION_BRIEF.md`.
+
+## Launch verification continuation
+
+The reviewed presentation candidate `c3341d676d57ccaecc51efb8687d74f30a4a5adc`
+remains green in [run 34783571379](https://github.com/ApolloDNR/Pegasus-DreamScapes-Website-Marketflow/actions/runs/34783571379),
+and its protected deployment remains READY. No visual redesign is part of
+this continuation.
+
+Source review found false-positive paths in `scripts/launch-intake-smoke.mjs`:
+it checked health without database readiness, continued to a POST after a
+requested environment failure, and described arbitrary successful responses
+as accepted opportunities, including an `unknown` record ID. It also followed
+redirects, had no request deadline, printed untrusted response/error text, and
+embedded a real phone number and default notification recipient.
+
+The repaired CLI requires the exact health/readiness JSON responses before
+submission, stops on failed prerequisites or invalid arguments, bounds
+requests to 15 seconds, rejects redirects, and validates the canonical HTTP
+201 UUID/`New` receipt. An authorized test mailbox must be explicit; the
+embedded phone/default email are removed. Failures do not print response
+bodies or untrusted network details. No ambiguous POST is retried. Acceptance
+still requires separate database, correlated HQ receipt, and notification
+proof; queued is not delivered.
+
+Twenty-six subprocess regression cases reproduced the old failures before
+the repair. They intercept every request, so they create no live records or
+notifications. All 26 new cases and the five existing deployment-contract
+tests pass locally on Node 22. TypeScript, the full 214-file/2,455-test suite,
+production build, bundle budgets, all four deployment-entry checks, and the
+production dependency audit also pass locally. Final current-source Node 22
+CI verification is recorded on PR #26.
+The environment/runbook/checklist commands now match the canonical intake and
+explicit test recipient.
+
+The current workspace has none of the ten required website runtime settings.
+Render, Neon, and SendGrid configuration are not exposed by the available
+connectors; the connected Vercel project remains the browsing preview.
+Production readiness therefore remains unverified. The next external step is
+to make the existing Render website service and its non-production settings
+available for configuration and receipt verification. Do not paste secrets
+into chat, replace the database, or treat the connected HQ/auth Supabase
+project as the website database. The unresolved receiver/consent mapping in
+[HQ contract readiness](hq-contract-readiness.md) still applies.
 
 ## Professional structure and finish
 
