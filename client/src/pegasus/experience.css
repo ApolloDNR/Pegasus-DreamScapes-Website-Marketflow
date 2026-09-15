@@ -2,12 +2,12 @@
 .pg-root, .public-reading-surface {
   --experience-midnight:#0b1d29;
   --experience-navy:#132a38;
-  --experience-paper:#fcfaf6;
-  --experience-limestone:#f4f0e9;
+  --experience-paper:#f5efe4;
+  --experience-limestone:#eee5d6;
   --experience-text:#0b1d29;
   --experience-muted:#5c6265;
-  --experience-copper:#975735;
-  --experience-rule:#d2c7ba;
+  --experience-copper:#8e5030;
+  --experience-rule:#c9bba8;
   --experience-gutter:24px;
 }
 .pg-root[data-theme='dark'], .public-reading-surface[data-theme='dark'] {

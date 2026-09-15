@@ -804,7 +804,8 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
             </footer>
           </article>
 
-          <aside className="px-lab-brief" aria-label="Current planning summary">
+          <aside className={`px-lab-brief${hasDecisionBasis ? '' : ' px-lab-brief-empty'}`} aria-label="Current planning summary">
+            {hasDecisionBasis ? <>
             <div className="px-lab-brief-head">
               <span>Current planning summary</span>
               <strong>{readiness}</strong>
@@ -814,15 +815,21 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
               <div><strong>{state.address || 'Property not entered'}</strong><span>{state.propertyType} · {state.condition}</span></div>
             </div>
             <dl>
-              <div><dt>Leading path</dt><dd>{hasDecisionBasis ? laneDisplayName(topLane) : 'Awaiting basis'}</dd></div>
-              <div><dt>Verdict</dt><dd>{hasDecisionBasis ? topLane?.verdictLabel : 'Needs inputs'}</dd></div>
-              <div><dt>Cash-in model</dt><dd>{hasDecisionBasis ? money(snapshot.totalCashIn) : 'Not entered'}</dd></div>
+              <div><dt>Leading path</dt><dd>{laneDisplayName(topLane)}</dd></div>
+              <div><dt>Verdict</dt><dd>{topLane?.verdictLabel}</dd></div>
+              <div><dt>Cash-in model</dt><dd>{money(snapshot.totalCashIn)}</dd></div>
               <div><dt>Open questions</dt><dd>{openQuestions.length}</dd></div>
               <div><dt>Decision lens</dt><dd>{state.objective}</dd></div>
             </dl>
             <div className="px-lab-brief-rule" />
             <p>This browser record can move from the automated model to Peggy and the intake desk. You remain responsible for independently verifying market support, title, occupancy, condition, capital, and written terms.</p>
-            <button type="button" onClick={carryToIntake} disabled={!hasDecisionBasis}>Carry this brief into intake <ArrowRight aria-hidden="true" /></button>
+            <button type="button" onClick={carryToIntake}>Carry this brief into intake <ArrowRight aria-hidden="true" /></button>
+            </> : <>
+              <span className="px-lab-empty-label">Your comparison</span>
+              <h2>A few facts first.</h2>
+              <p>Add a purchase price and either a projected sale value or monthly rent in Assumptions. Your modeled options will appear here.</p>
+              <p className="px-lab-empty-note">Use the figures you know. Leave unknowns blank and review the starting assumptions.</p>
+            </>}
           </aside>
         </div>
       </section>

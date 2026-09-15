@@ -29,7 +29,7 @@ describe('public design interactions', () => {
     render(<PropertyOwnersPage go={vi.fn()} />);
     fireEvent.change(screen.getByRole('combobox', { name: 'Common owner situations' }), { target: { value: '2' } });
     expect(within(screen.getByRole('group', { name: 'Common owner situations' })).getByRole('button', { name: 'Inherited property' })).toHaveAttribute('aria-pressed', 'true');
-    expect(document.getElementById('owner-path')).toHaveTextContent('probate or trust status');
+    expect(document.getElementById('owner-path')).toHaveTextContent('probate or trust process already underway');
     expect(screen.getByRole('link', { name: 'Start with this situation' })).toHaveAttribute('href', '/bring-an-opportunity?intent=property&owner_situation=Inherited%20property');
   });
 

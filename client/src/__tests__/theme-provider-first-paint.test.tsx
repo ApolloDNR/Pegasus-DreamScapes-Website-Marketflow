@@ -1,6 +1,6 @@
 import React from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { cleanup, render } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { ThemeProvider, useTheme } from "@/components/theme-provider";
 
 const originalMatchMedia = window.matchMedia;
@@ -20,9 +20,9 @@ function matchMediaWithDarkPreference(query: string): MediaQueryList {
 }
 
 function ThemeProbe() {
-  const { resolvedTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
   renderSequence.push(resolvedTheme);
-  return <span>{resolvedTheme}</span>;
+  return <><span>{resolvedTheme}</span><button onClick={() => setTheme("dark")}>Choose dark</button></>;
 }
 
 beforeEach(() => {
@@ -33,11 +33,36 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  vi.restoreAllMocks();
   localStorage.clear();
   window.matchMedia = originalMatchMedia;
 });
 
 describe("ThemeProvider first paint", () => {
+  it("opens in parchment light mode on a dark OS until the visitor chooses otherwise", () => {
+    const view = render(<ThemeProvider><ThemeProbe /></ThemeProvider>);
+    expect(renderSequence[0]).toBe("light");
+    expect(document.documentElement).toHaveClass("light");
+    expect(localStorage.getItem("pegasus-ui-theme")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Choose dark" }));
+    expect(document.documentElement).toHaveClass("dark");
+    expect(localStorage.getItem("pegasus-ui-theme")).toBe("dark");
+    view.unmount();
+    renderSequence = [];
+    render(<ThemeProvider><ThemeProbe /></ThemeProvider>);
+    expect(renderSequence[0]).toBe("dark");
+  });
+
+  it("keeps the site and manual theme choice usable when browser storage is blocked", () => {
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => { throw new DOMException("Blocked", "SecurityError"); });
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => { throw new DOMException("Blocked", "SecurityError"); });
+    render(<ThemeProvider><ThemeProbe /></ThemeProvider>);
+    expect(renderSequence[0]).toBe("light");
+    fireEvent.click(screen.getByRole("button", { name: "Choose dark" }));
+    expect(document.documentElement).toHaveClass("dark");
+  });
+
   it("resolves a dark system preference before rendering children", () => {
     render(
       <ThemeProvider defaultTheme="system">

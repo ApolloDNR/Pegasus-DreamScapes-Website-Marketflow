@@ -1,5 +1,13 @@
 # Pegasus website continuation status
 
+## September 15: parchment-first refinement and quieter working pages
+
+Baseline `ec9d57305197fb028d3cd758d8d2add53a0fc570`. Fresh hosted browser captures of the arrival, Property Owners selector, and Strategy Lab entry showed near-white reading surfaces, procedural owner copy, and a prominent summary full of missing values before useful modeling inputs existed.
+
+Apollo requested a cream/parchment initial appearance and a less overwhelming finish. New visitors now start in light mode, while their saved preference still wins. Shared reading and form surfaces use warm paper; the approved navy arrival, footer, real imagery, and six-section homepage remain. Owner guidance separates the useful prompt from the unchanged limitation, selected rows gain a check and side rule, and the short process becomes a compact three-step composition. Strategy Lab presents brief input guidance until a valid basis supports its real summary. Calculation logic, intake context, disclosures, and consent contracts are unchanged.
+
+Theme regression coverage now exercises a dark OS with no stored preference, a saved manual choice after remount/refresh and navigation, and blocked browser storage. The invalid-input tool test checks that conclusions and handoff stay absent until valid inputs exist. Existing rendered route/journey coverage remains required. Current-source CI, protected deployment identity, and visual evidence will be recorded on PR #26 after publication; historical results below do not certify this refinement. Production dependencies and the existing preview-only authorization remain unchanged.
+
 ## September 15: approved homepage direction extended through visitor journeys
 
 Baseline: `73f50c0074eaa6afd5f1c63921317eddd1d250aa`, existing recovery branch and PR #26. Apollo approved the homepage direction and instructed us to develop the remaining site. The six-section homepage and approved imagery stay in place.

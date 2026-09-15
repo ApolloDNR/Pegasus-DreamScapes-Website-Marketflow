@@ -24,18 +24,17 @@ function resolveTheme(theme: Theme): "dark" | "light" {
 
 export function ThemeProvider({
   children,
-  defaultTheme = "system",
+  defaultTheme = "light",
   storageKey = "pegasus-ui-theme",
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window !== "undefined") {
-      const stored = localStorage.getItem(storageKey) as Theme | null;
-      if (stored === "light" || stored === "dark" || stored === "system") {
-        return stored;
+      try {
+        const stored = localStorage.getItem(storageKey);
+        if (stored === "light" || stored === "dark" || stored === "system") return stored;
+      } catch {
+        // A blocked browser store must not prevent the public site from opening.
       }
-      // No stored preference: honour the OS-level preference on first paint.
-      // Manual toggle still wins (and persists to localStorage).
-      return defaultTheme;
     }
     return defaultTheme;
   });
@@ -71,7 +70,11 @@ export function ThemeProvider({
   const value = {
     theme,
     setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme);
+      try {
+        localStorage.setItem(storageKey, theme);
+      } catch {
+        // The choice still works for this visit when browser storage is unavailable.
+      }
       setTheme(theme);
     },
     resolvedTheme,

@@ -32,7 +32,7 @@ function PublicEffects() {
 export default function PublicApp() {
   return (
     <QueryClientProvider client={publicQueryClient}>
-      <ThemeProvider defaultTheme="system" storageKey="pegasus-ui-theme">
+    <ThemeProvider defaultTheme="light" storageKey="pegasus-ui-theme">
         <PublicEffects />
         <div className="min-h-screen flex flex-col bg-background text-foreground">
           <a href="#main-content" className="skip-to-content">

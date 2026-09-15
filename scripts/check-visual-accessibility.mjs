@@ -1937,7 +1937,15 @@ try {
   await runInteraction('theme toggle persistence', { colorScheme: 'dark' }, async (page) => {
     await openPage(page, '/');
     const root = page.locator('.pg-root');
-    assert(await root.getAttribute('data-theme') === 'dark', 'Dark theme was not initialized');
+    assert(await root.getAttribute('data-theme') !== 'dark', 'A new visitor with a dark OS did not start in parchment light mode');
+    assert(await page.evaluate(() => localStorage.getItem('pegasus-ui-theme')) === null, 'The default appearance was incorrectly saved as a visitor choice');
+    await switchPublicTheme(page, 'dark');
+    await page.reload();
+    await root.waitFor({ state: 'visible' });
+    assert(await root.getAttribute('data-theme') === 'dark', 'The visitor dark-mode choice did not survive refresh');
+    await openPage(page, '/property-owners');
+    assert(await root.getAttribute('data-theme') === 'dark', 'Dark-mode choice did not follow navigation');
+    await openPage(page, '/');
 
     const geometrySelectors = [
       '.experience-arrival',

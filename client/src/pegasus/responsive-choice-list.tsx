@@ -1,4 +1,4 @@
-import { ChevronRight } from 'lucide-react';
+import { Check, ChevronRight } from 'lucide-react';
 
 /** Keep the selected answer beside its control, including on narrow screens. */
 export function ResponsiveChoiceList({ id, label, options, value, onChange, controls, className, itemClassName }: {
@@ -17,7 +17,7 @@ export function ResponsiveChoiceList({ id, label, options, value, onChange, cont
         {options.map((option, index) => (
           <button key={option.label} type="button" aria-pressed={index === value} aria-controls={controls}
             className={itemClassName} data-on={index === value || undefined} onClick={() => onChange(index)}>
-            <span>{option.label}</span><ChevronRight aria-hidden="true" />
+            <span>{option.label}</span>{index === value ? <Check aria-hidden="true" /> : <ChevronRight aria-hidden="true" />}
           </button>
         ))}
       </div>

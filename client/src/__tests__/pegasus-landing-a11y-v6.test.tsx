@@ -186,7 +186,7 @@ const SIGNATURE_ROUTES: SignatureRoute[] = [
     initialChoice: "Significant repairs",
     nextChoice: "Inherited property",
     outputSelector: "#owner-path",
-    nextOutput: /Record the known ownership, probate or trust status, decision-makers, and timing/i,
+    nextOutput: /Start with who owns the property, who is involved in the decision, and any probate or trust process already underway/i,
   },
   {
     path: "/deal-partners",
@@ -466,7 +466,10 @@ describe("Pegasus Strategy Lab workspace accessibility", () => {
 
     expect(ltv).toHaveAttribute("aria-invalid", "true");
     expect(within(main).getByText(/Use a percentage from 0 to 100/i)).toBeInTheDocument();
-    expect(within(main).getAllByText("Not entered").length).toBeGreaterThan(0);
+    const summary = within(main).getByRole("complementary", { name: "Current planning summary" });
+    expect(summary).toHaveTextContent("A few facts first.");
+    expect(within(summary).queryByText("Leading path")).not.toBeInTheDocument();
+    expect(within(summary).queryByText("Open questions")).not.toBeInTheDocument();
 
     await user.click(within(main).getByRole("button", { name: /03\s*Compare/i }));
     expect(
@@ -474,8 +477,8 @@ describe("Pegasus Strategy Lab workspace accessibility", () => {
     ).toHaveTextContent(/Decision brief not generated/i);
     expect(within(main).queryByText(/View all nine paths/i)).not.toBeInTheDocument();
     expect(
-      within(main).getByRole("button", { name: /Carry this brief into intake/i }),
-    ).toBeDisabled();
+      within(main).queryByRole("button", { name: /Carry this brief into intake/i }),
+    ).not.toBeInTheDocument();
 
     await user.click(within(main).getByRole("button", { name: /04\s*Summary/i }));
     expect(

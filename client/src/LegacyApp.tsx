@@ -389,7 +389,7 @@ function AppShell() {
 function LegacyApp() {
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider defaultTheme="system" storageKey="pegasus-ui-theme">
+    <ThemeProvider defaultTheme="light" storageKey="pegasus-ui-theme">
         <SupabaseAuthProvider>
           <SiteContentProvider>
             <EditModeProvider>
