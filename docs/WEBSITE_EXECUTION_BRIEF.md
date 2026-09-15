@@ -1,5 +1,8 @@
 # Pegasus website execution brief
 
+
+> Current owner instruction: Website experience and build blueprint v1.1 (September 14, 2026) supersedes the older header, hero actions, proof rail, visitor paths and homepage section rules below. See [implementation ledger](design/experience-v1-1/README.md). Preserve all assets, routes, factual/legal boundaries and application contracts. This is a homepage visual review checkpoint before the remaining page rollout.
+
 Recovered direction: [owner's shared conversation](https://chatgpt.com/share/6aa2d5e3-15c0-83e8-951f-05e91a635474). Continuation checkpoint: 2026-09-11.
 
 ## Objective

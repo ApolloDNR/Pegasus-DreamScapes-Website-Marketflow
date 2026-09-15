@@ -1,6 +1,5 @@
 import { useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useLocation } from "wouter";
 import { CookieConsent } from "@/components/cookie-consent";
 import { ErrorBoundary } from "@/components/error-boundary";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -25,12 +24,6 @@ const publicQueryClient = new QueryClient({
 });
 
 function PublicEffects() {
-  const [location] = useLocation();
-
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "instant" });
-  }, [location]);
-
   useEffect(() => initAnalytics(), []);
 
   return null;

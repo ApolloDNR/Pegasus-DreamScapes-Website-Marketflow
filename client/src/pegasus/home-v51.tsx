@@ -1,294 +1,87 @@
-import React from 'react';
-import { useLocation } from 'wouter';
-import { ArrowRight, Compass, House, MapPin, UserRound } from 'lucide-react';
-import {
-  NELSON_COST_DISCLOSURE,
-  NELSON_EXECUTION_DISCLOSURE,
-  NELSON_FACTS,
-  NELSON_PUBLIC_DESCRIPTION,
-} from '@shared/nelson-facts';
+import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { Link } from 'wouter';
+import { ArrowRight } from 'lucide-react';
 import type { Nav } from './theme';
+import { HOME_PATHS, PUBLIC_ACTIONS, REPRESENTATION_NOTICE, SUBMISSION_NOTICE } from './public-content';
+import './experience.css';
 
-import { OpportunityPlan } from './opportunity-plan';
+const OpportunityPlan = lazy(() => import('./opportunity-plan').then(module => ({ default: module.OpportunityPlan })));
 
-/* ── The page ── */
+function DeferredOpportunityPlan() {
+  const host = useRef<HTMLDivElement>(null);
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    if (!host.current || typeof IntersectionObserver === 'undefined') return;
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) { setReady(true); observer.disconnect(); }
+    }, { rootMargin: '400px' });
+    observer.observe(host.current);
+    return () => observer.disconnect();
+  }, []);
+  const fallback = <div className="experience-plan-placeholder">
+    <h3>Opportunity Plan</h3>
+    <p>Choose a need to explore its connected planning question.</p>
+    <button type="button" className="experience-link" onClick={() => setReady(true)}>Open the planning guide <ArrowRight aria-hidden="true" size={17} /></button>
+  </div>;
+  return <div ref={host} className="experience-plan-host">{ready ? <Suspense fallback={fallback}><OpportunityPlan /></Suspense> : fallback}</div>;
+}
 
-export function HomePageV51({ go, openPeggy }: { go: Nav; openPeggy: () => void }) {
-  const [, setLocation] = useLocation();
-  const toIntake = (e: React.MouseEvent) => { e.preventDefault(); setLocation('/bring-an-opportunity'); };
-
-  return (
-    <div className="hv">
-      {/* 1 · ARRIVAL */}
-      <section className="hv-hero hv-hero-editorial" data-hv="arrival"
-        data-hero-composition="approved-bay-colonnade-v1">
-        <div className="hv-hero-top">
-          <div className="hv-hero-marble" aria-hidden="true">
-            <img src="/images/hero/pegasus-v6-arrival.webp"
-              data-testid="approved-home-hero-image"
-              width={1672} height={941} alt="" loading="eager"
-              decoding="async" {...{ fetchpriority: 'high' }} />
-          </div>
-          <div className="hv-wrap hv-hero-inner">
-            <div className="hv-eyebrow-row">
-              <span className="pg-label hv-eyebrow">
-                <span>Real estate operating company</span>
-                <span>Contra Costa &amp; Alameda</span>
-              </span>
-            </div>
-            <h1 className="hv-h1 font-serif-display">
-              Complex real estate,<br className="hv-h1-break" /> <em>made executable.</em>
-            </h1>
-            <p className="hv-arrival-intro">
-              Pegasus connects property strategy, deal structure, and execution
-              for East Bay owners and partners.
-            </p>
-            <div className="hv-cta-row">
-              <a href="/bring-an-opportunity" onClick={toIntake}
-                className="btn-solid-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[11px] group">
-                Bring an Opportunity <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-              </a>
-              <button type="button" onClick={() => go('dealstrategy')} className="hv-hero-link">
-                See How We Operate <ArrowRight aria-hidden="true" className="h-3 w-3" />
-              </button>
-              <button type="button" onClick={() => go('strategylab')} className="hv-hero-link">
-                Open Strategy Lab <ArrowRight aria-hidden="true" className="h-3 w-3" />
-              </button>
-            </div>
-          </div>
+export function HomePageV51(_props: { go: Nav; openPeggy: () => void }) {
+  return <div className="experience-home">
+    <section className="experience-arrival" data-hv="arrival" data-hero-composition="approved-bay-colonnade-v1">
+      <img className="experience-hero-image" src="/images/hero/pegasus-v6-arrival.webp" data-testid="approved-home-hero-image"
+        width={1672} height={941} alt="" loading="eager" decoding="async" {...{ fetchpriority: 'high' }} />
+      <div className="experience-wrap experience-arrival-copy">
+        <p className="experience-geography">Contra Costa &amp; Alameda</p>
+        <h1>Complex real estate,<br /> <em>made executable.</em></h1>
+        <p className="experience-intro">Property strategy, renovation insight, and execution for East Bay owners and partners. Led by Apollo Duran.</p>
+        <div className="experience-actions">
+          <Link href={PUBLIC_ACTIONS.opportunity.href} className="experience-button">{PUBLIC_ACTIONS.opportunity.label}<ArrowRight aria-hidden="true" size={18} /></Link>
+          <Link href={PUBLIC_ACTIONS.work.href} className="experience-link">{PUBLIC_ACTIONS.work.label}<ArrowRight aria-hidden="true" size={17} /></Link>
         </div>
-        <div className="hv-hero-statbar">
-          <ul className="hv-wrap hv-hero-facts">
-            <li className="hv-fact">
-              <span className="hv-fact-ic"><UserRound aria-hidden="true" /></span>
-              <span className="hv-fact-txt">
-                <span className="hv-fact-k font-serif-display">Founder-led</span>
-                <span className="hv-fact-v">Led by Paolo “Apollo” Duran.</span>
-              </span>
-            </li>
-            <li className="hv-fact">
-              <span className="hv-fact-ic"><House aria-hidden="true" /></span>
-              <span className="hv-fact-txt">
-                <span className="hv-fact-k font-serif-display">Nelson Drive</span>
-                <span className="hv-fact-v">Documented $600K acquisition to $840K sale.</span>
-              </span>
-            </li>
-            <li className="hv-fact">
-              <span className="hv-fact-ic"><MapPin aria-hidden="true" /></span>
-              <span className="hv-fact-txt">
-                <span className="hv-fact-k font-serif-display">East Bay</span>
-                <span className="hv-fact-v">Contra Costa &amp; Alameda County.</span>
-              </span>
-            </li>
-            <li className="hv-fact">
-              <span className="hv-fact-ic"><Compass aria-hidden="true" /></span>
-              <span className="hv-fact-txt">
-                <span className="hv-fact-k font-serif-display">Strategy first</span>
-                <span className="hv-fact-v">Start with facts, constraints, roles, and written terms.</span>
-              </span>
-            </li>
-          </ul>
-          <p className="hv-hero-place">Architectural vision &middot; East Bay, California &middot; Not property inventory</p>
-        </div>
-      </section>
-
-      {/* 2 · VISITOR ROUTER */}
-      <section className="hv-router hv-pad" data-hv="router">
-        <div className="hv-wrap hv-router-layout reveal">
-          <div className="hv-router-intro">
-            <div className="pg-label hv-eyebrow-copper">Start with what you have</div>
-            <h2 className="hv-h2 font-serif-display">What are you bringing to Pegasus?</h2>
-            <p className="hv-muted">
-              Start with your property, opportunity, or expertise. Choose the path
-              that fits your situation and see what information helps move the discussion forward.
-            </p>
-            <button type="button" className="hv-text-link" onClick={() => openPeggy()}>
-              Talk to Peggy <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-          </div>
-          <div className="hv-route-list">
-            {([
-              ['A property I own', 'Condition, timing, inheritance, or a sale that is not working.', 'sellers'],
-              ['A deal I found', 'A lead, a contract, or a buyer, with one piece still missing.', 'dealfinders'],
-              ["A project I'm operating", 'You run the deal; you need a specific capability filled.', 'operators'],
-              ['A relationship or specialty', 'Capital, trades, or professional services.', 'referral'],
-            ] as const).map(([title, sub, route]) => (
-              <button key={title} type="button" className="hv-route" onClick={() => go(route)}>
-                <span className="hv-route-body">
-                  <span className="hv-route-title font-serif-display">{title}</span>
-                  <span className="hv-route-sub">{sub}</span>
-                </span>
-                <ArrowRight className="hv-route-arrow h-4 w-4" />
-              </button>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 3 · PROOF — Nelson Drive */}
-      <section className="hv-proof hv-pad-lg" data-hv="proof">
-        <div className="hv-wrap reveal">
-          <div className="hv-proof-head">
-            <div>
-              <div className="pg-label hv-eyebrow">Completed project &middot; El Sobrante</div>
-              <h2 className="hv-h2-cream font-serif-display">Nelson Drive, before and after.</h2>
-            </div>
-            <p className="hv-lead-dim">{NELSON_PUBLIC_DESCRIPTION}</p>
-          </div>
-
-          <div className="hv-ba">
-            <figure className="hv-ba-after">
-              <img src="/images/nelson/kitchen-after.webp" alt="Nelson Drive kitchen after the renovation: navy cabinetry and a waterfall island" loading="lazy" />
-              <figcaption>After &middot; completed interior</figcaption>
-            </figure>
-            <figure>
-              <img src="/images/nelson/kitchen-before.webp" alt="Nelson Drive kitchen before the renovation" loading="lazy" />
-              <figcaption>Before &middot; original interior condition</figcaption>
-            </figure>
-          </div>
-
-          <p className="hv-proof-thesis font-serif-display">Acquisition to sale.</p>
-          <dl className="hv-proof-facts">
-            <div><dt>Acquired</dt><dd>${NELSON_FACTS.acquired.toLocaleString('en-US')}</dd></div>
-            <div><dt>Improvement budget</dt><dd>${NELSON_FACTS.improvementBudget.toLocaleString('en-US')}</dd></div>
-            <div><dt>Basis before other costs</dt><dd>${NELSON_FACTS.totalBasisBeforeOtherCosts.toLocaleString('en-US')}</dd></div>
-            <div><dt>Sold</dt><dd>${NELSON_FACTS.salePrice.toLocaleString('en-US')}</dd></div>
-          </dl>
-
-          <div className="hv-proof-notes">
-            <p>{NELSON_COST_DISCLOSURE}</p>
-            <p>{NELSON_EXECUTION_DISCLOSURE}</p>
-          </div>
-          <button type="button" className="hv-proof-link" onClick={() => go('ourwork')}>
-            See the full project <ArrowRight className="inline h-3.5 w-3.5" />
-          </button>
-        </div>
-      </section>
-
-      {/* 4 · PEGASUS METHOD */}
-      <section className="hv-method" data-hv="method">
-        <div className="hv-method-media">
-          <img src="/images/hall/pegasus-planning-loggia.webp"
-            srcSet="/images/hall/pegasus-planning-loggia-m.webp 1080w, /images/hall/pegasus-planning-loggia.webp 3168w"
-            sizes="100vw" width={3168} height={1344}
-            alt="A stone planning loggia at blue hour: rolled drawings and a brass lamp on the table, the Bay and its bridges below"
-            loading="lazy" decoding="async" />
-          <p className="hv-method-media-copy">
-            Architectural discipline. Operational clarity.
-            <span>Planning loggia &middot; East Bay vision, not inventory</span>
-          </p>
-        </div>
-        <div className="hv-method-content">
-          <div className="pg-label hv-eyebrow-copper">How we work</div>
-          <h2 className="hv-h2 font-serif-display">From opportunity to execution.</h2>
-          <p className="hv-muted">Start with the property and its economics. Define the strategy, agree the roles and terms, and carry an accepted project through execution and its intended exit.</p>
-          <ol className="hv-steps reveal" aria-label="The Pegasus method">
-            {([
-              ['Originate', 'Find, receive, or develop the opportunity.'],
-              ['Structure', 'Set the role, strategy, control, economics, and approvals.'],
-              ['Operate', 'Coordinate the agreed work, responsibilities, and milestones.'],
-              ['Realize', 'Acquire, sell, assign, refinance, hold, represent, refer, or pass.'],
-              ['Learn', 'Review what worked, what changed, and what to carry forward.'],
-            ] as const).map(([title, sub]) => (
-              <li key={title} className="hv-step">
-                <h3 className="font-serif-display">{title}</h3>
-                <p>{sub}</p>
-              </li>
-            ))}
-          </ol>
-          <p className="hv-method-fine">Any specialist work requires separate project agreements and appropriate qualification or licensing; this framework does not imply a standing team or available capacity.</p>
-        </div>
-      </section>
-
-      {/* 5 · OPPORTUNITY PLAN — signature */}
-      <section className="hv-plan hv-pad-lg" data-hv="plan">
-        <div className="hv-wrap hv-plan-layout">
-          <div className="hv-plan-head reveal">
-            <div className="pg-label hv-eyebrow-copper">The Opportunity Plan</div>
-            <h2 className="hv-h2 font-serif-display">Strategy should become visible.</h2>
-            <p className="hv-muted">
-              Strategy Lab organizes user-supplied inputs into illustrative planning lanes. It can
-              expose assumptions and missing evidence, but it is not a valuation, advice, or a promise of human review.
-            </p>
-            <p className="hv-plan-contract">Most opportunities have a constraint to resolve.</p>
-            <div className="hv-plan-actions">
-              <button type="button" className="hv-plan-primary inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px]"
-                onClick={() => go('strategylab')}>
-                Open Strategy Lab <ArrowRight className="h-3.5 w-3.5" />
-              </button>
-              <button type="button" className="hv-text-link" onClick={() => openPeggy()}>
-                Talk to Peggy <ArrowRight className="h-3.5 w-3.5" />
-              </button>
-            </div>
-            <p className="hv-plan-legal">Illustrative Quick Read. A route is not a commitment to participate in any deal.</p>
-          </div>
-          <OpportunityPlan />
-        </div>
-      </section>
-
-      {/* 6 · PARTNER PROPOSITION + ACCOUNTABILITY */}
-      <div className="hv-alignment">
-      <section className="hv-partner hv-pad" data-hv="partner">
-        <div className="hv-wrap hv-partner-shell reveal">
-          <div className="hv-partner-copy">
-            <div className="pg-label hv-eyebrow-copper">Partners</div>
-            <h2 className="hv-h2 font-serif-display">Bring the opportunity. Define the partnership.</h2>
-            <p className="hv-muted">Describe the opportunity, your role, and the unresolved constraint. Any Pegasus participation depends on diligence, availability, alignment, and separate written terms.</p>
-            <dl className="hv-relationships">
-              <div><dt>Deal finder</dt><dd>Possible operating discussion</dd></div>
-              <div><dt>Specialty GP</dt><dd>Role and location fit</dd></div>
-              <div><dt>Property owner</dt><dd>Possible property consideration</dd></div>
-              <div><dt>Capital relationship</dt><dd>Project-specific context</dd></div>
-              <div><dt>Contractor or specialist</dt><dd>Vendor-profile submission</dd></div>
-            </dl>
-            <button type="button" className="hv-text-link" onClick={() => go('dealfinders')}>
-              Explore a partnership <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-            <p className="hv-partner-fine">Licensed representation may be available only through a separate written brokerage agreement. CA DRE #02333658 is listed under Duran Ramirez, Paolo Ariel; responsible broker: BMP Realty Inc DBA Keller Williams Realty-East Bay. Verify current status.</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="hv-founder" data-hv="founder">
-        <div className="hv-founder-inner reveal">
-          <div className="pg-label hv-eyebrow">Founder-led</div>
-          <figure className="hv-founder-photo">
-            <img
-              src="/images/founder/apollo.webp"
-              alt="Paolo 'Apollo' Duran, founder of Pegasus Dreamscapes"
-              loading="lazy"
-              decoding="async"
-          />
-          </figure>
-          <h2 className="font-serif-display">Paolo &ldquo;Apollo&rdquo; Duran</h2>
-          <p className="hv-founder-title">Founder, Pegasus Dreamscapes</p>
-          <p className="hv-founder-statement">Apollo brings a background in residential construction and real estate operations. He founded Pegasus to connect property strategy with the work required to carry it out. The company’s role, responsibilities, and economics are agreed for each accepted project.</p>
-          <dl className="hv-founder-roles">
-            <div><dt>Pegasus</dt><dd>Founder, Pegasus Dreamscapes</dd></div>
-            <div><dt>Public-facing name</dt><dd>Paolo &ldquo;Apollo&rdquo; Duran</dd></div>
-            <div><dt>License record</dt><dd>Duran Ramirez, Paolo Ariel<br />CA DRE #02333658</dd></div>
-            <div><dt>Responsible broker</dt><dd>BMP Realty Inc DBA Keller Williams Realty-East Bay</dd></div>
-          </dl>
-          <p className="hv-founder-statement">The limited public Nelson record does not identify who provided brokerage representation or every project role.</p>
-        </div>
-      </section>
       </div>
-
-      <section className="hv-final hv-pad-lg" data-hv="final">
-        <div className="hv-wrap">
-          <h2 className="hv-h2-cream font-serif-display">Bring the property, the contract, the project, or the plan.</h2>
-          <p className="hv-lead-dim">Use the intake to provide context. Submission does not create representation, confidentiality, source protection, partnership, review, or a duty to respond.</p>
-          <div className="hv-final-actions">
-            <a href="/bring-an-opportunity" onClick={toIntake}
-              className="btn-solid-light inline-flex items-center gap-3 px-8 py-4 pg-label !text-[10px] group">
-              Bring an Opportunity <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-            </a>
-            <button type="button" className="hv-hero-link" onClick={() => go('strategylab')}>
-              Open Strategy Lab
-            </button>
-          </div>
+      <p className="experience-wrap experience-image-notice">Architectural vision · East Bay, California · Not property inventory</p>
+    </section>
+    <section className="experience-orientation experience-section" data-hv="router" aria-labelledby="home-paths-title">
+      <div className="experience-wrap">
+        <h2 id="home-paths-title">What brings you here?</h2>
+        <div className="experience-paths">{HOME_PATHS.map(path => <Link key={path.href} href={path.href} className="experience-path">
+          <span><strong>{path.label}</strong><span>{path.note}</span></span><ArrowRight aria-hidden="true" size={22} />
+        </Link>)}</div>
+      </div>
+    </section>
+    <section className="experience-evidence experience-section" data-hv="proof" aria-labelledby="home-proof-title">
+      <div className="experience-wrap">
+        <div className="experience-section-head"><h2 id="home-proof-title">Nelson Drive,<br /> before and after.</h2><p>A completed East Bay residential transformation. Explore the property, the decisions, and the documented outcome.</p></div>
+        <div className="experience-photo-pair">
+          <figure><img src="/images/nelson/kitchen-before.webp" alt="Nelson Drive kitchen before the renovation" width={1600} height={999} loading="lazy" decoding="async" /><figcaption>Before · Original kitchen</figcaption></figure>
+          <figure><img src="/images/nelson/kitchen-after.webp" alt="Nelson Drive kitchen after the renovation: navy cabinetry and a waterfall island" width={1600} height={996} loading="lazy" decoding="async" /><figcaption>After · Completed interior</figcaption></figure>
         </div>
-      </section>
-    </div>
-  );
+        <Link href="/projects/nelson-dr" className="experience-link">Explore the case study<ArrowRight aria-hidden="true" size={17} /></Link>
+      </div>
+    </section>
+    <section className="experience-founder experience-section" data-hv="founder" aria-labelledby="home-founder-title">
+      <div className="experience-wrap experience-founder-layout">
+        <figure><img src="/images/founder/apollo.webp" alt="Apollo Duran, founder of Pegasus Dreamscapes" width={1100} height={1375} loading="lazy" decoding="async" /></figure>
+        <div className="experience-founder-copy"><h2 id="home-founder-title">Apollo Duran</h2><p className="experience-founder-role">Founder, Pegasus Dreamscapes</p>
+          <p>Apollo’s background is in residential construction and real estate operations. Pegasus connects property strategy with the work required to carry it out.</p>
+          <Link href="/about" className="experience-link">Meet Apollo<ArrowRight aria-hidden="true" size={17} /></Link>
+          <div className="experience-representation"><Link href="/work-with-apollo" className="experience-link">Buy or sell with Apollo<ArrowRight aria-hidden="true" size={17} /></Link><p className="experience-notice">{REPRESENTATION_NOTICE}</p></div>
+        </div>
+      </div>
+    </section>
+    <section className="experience-usefulness experience-section" data-hv="plan" aria-labelledby="home-tool-title">
+      <div className="experience-wrap">
+        <div className="experience-section-head"><h2 id="home-tool-title">A clearer view<br /> of the next move.</h2><p>Start with the missing piece. Explore the connected questions, then continue into Strategy Lab.</p></div>
+        <DeferredOpportunityPlan />
+        <div className="experience-actions"><Link href={PUBLIC_ACTIONS.lab.href} className="experience-button">{PUBLIC_ACTIONS.lab.label}<ArrowRight aria-hidden="true" size={18} /></Link><Link href={PUBLIC_ACTIONS.tools.href} className="experience-link">{PUBLIC_ACTIONS.tools.label}<ArrowRight aria-hidden="true" size={17} /></Link></div>
+      </div>
+    </section>
+    <section className="experience-invitation experience-section" data-hv="final" aria-labelledby="home-invitation-title">
+      <div className="experience-wrap"><h2 id="home-invitation-title">Start with what you have.</h2><p>Tell us about your property, deal, or project.</p>
+        <div className="experience-actions"><Link href={PUBLIC_ACTIONS.opportunity.href} className="experience-button">{PUBLIC_ACTIONS.opportunity.label}<ArrowRight aria-hidden="true" size={18} /></Link><Link href={PUBLIC_ACTIONS.contact.href} className="experience-link">{PUBLIC_ACTIONS.contact.label}<ArrowRight aria-hidden="true" size={17} /></Link></div>
+        <p className="experience-notice">{SUBMISSION_NOTICE}</p>
+      </div>
+    </section>
+  </div>;
 }

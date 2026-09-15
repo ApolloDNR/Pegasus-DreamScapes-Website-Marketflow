@@ -748,40 +748,19 @@ describe("rendered visual-accessibility gate contract", () => {
     expect(interaction).toContain("button-sidebar-toggle");
   });
 
-  it("keeps the calm desktop spine visible while exercising its canonical More directory", () => {
-    const interaction = sliceBetween(
-      "await runInteraction('desktop navigation spine'",
-      "await runInteraction('mobile navigation destination'",
-    );
-
+  it("checks the compact Real Estate menu, primary destinations, search, and keyboard dismissal", () => {
+    const interaction = sliceBetween("await runInteraction('desktop navigation spine'", "await runInteraction('mobile navigation destination'");
     for (const [label, href] of [
-      ["How We Operate", "/how-we-operate"],
-      ["Property Owners", "/property-owners"],
-      ["Deal Partners", "/deal-partners"],
-      ["Our Work", "/our-work"],
-      ["About", "/about"],
-    ]) {
-      expect(interaction).toContain(`['${label}', '${href}']`);
-    }
-    expect(interaction).toContain("getByRole('button', { name: 'More', exact: true })");
-    expect(interaction).toContain("#desktop-more-navigation");
+      ['Our Work','/our-work'], ['Tools','/tools'], ['About','/about'],
+      ['Property owners','/property-owners'], ['Buy or sell with Apollo','/work-with-apollo'],
+      ['Deal partners','/deal-partners'], ['Project planning','/development'], ['How we operate','/how-we-operate'],
+    ]) expect(interaction).toContain(`['${label}', '${href}']`);
+    expect(interaction).toContain("getByRole('button', { name: 'Real Estate', exact: true })");
+    expect(interaction).toContain('#desktop-real-estate');
     expect(interaction).toContain("page.keyboard.press('Enter')");
     expect(interaction).toContain("page.keyboard.press('Escape')");
-    for (const [label, href] of [
-      ["Work With Apollo", "/work-with-apollo"],
-      ["Pegasus Standard", "/pegasus-standard"],
-      ["Contact", "/contact"],
-      ["Peggy", "/peggy"],
-      ["Development", "/development"],
-      ["Capital Partners", "/capital"],
-      ["Buyers", "/buyers"],
-      ["Operators & Vendors", "/operators"],
-      ["Referral Partners", "/referral"],
-      ["Pegasus Ecosystem", "/ecosystem"],
-    ]) {
-      expect(interaction).toContain(`['${label}', '${href}']`);
-    }
-    expect(interaction).not.toContain("count() === 0");
+    expect(interaction).toContain('navigationSearch');
+    expect(interaction).toContain('0 pages found');
   });
 
   it("follows the approved MarketFlow pilot-access control without restoring a review promise", () => {

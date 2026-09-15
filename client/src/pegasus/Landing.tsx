@@ -13,6 +13,8 @@ import { useTheme } from '@/components/theme-provider';
 import { PageLoader } from '@/components/error-boundary';
 import { seoFor, seoNameFor } from '@shared/seo-routes';
 
+const ToolsPage = lazy(() => import('./tools').then(module => ({ default: module.ToolsPage })));
+
 const loadPages = () => import('./pages');
 const CategoryPage = lazy(() => import('./category-page').then((module) => ({ default: module.CategoryPage })));
 const InvestmentsPage = lazy(() => loadPages().then((module) => ({ default: module.InvestmentsPage })));
@@ -61,7 +63,6 @@ export function Landing() {
 
   const go = useCallback<Nav>((r) => {
     setLocation(urlFor(r));
-    window.scrollTo({ top: 0, behavior: 'auto' });
   }, [setLocation]);
 
   const toggleTheme = useCallback(() => setTheme(theme === 'dark' ? 'light' : 'dark'), [setTheme, theme]);
@@ -82,7 +83,6 @@ export function Landing() {
   const toStrategyLab = useCallback(() => go('strategylab'), [go]);
   const toSubmit = useCallback((intent?: string) => {
     setLocation(intent ? `/bring-an-opportunity?intent=${intent}` : '/bring-an-opportunity');
-    window.scrollTo({ top: 0, behavior: 'auto' });
   }, [setLocation]);
   const onHandoffToReview = useCallback((h: PeggyHandoff) => {
     setPeggyHandoff(h);
@@ -148,7 +148,7 @@ export function Landing() {
 
       <main id="main-content" key={route} className="page-in" tabIndex={-1}>
         <Suspense fallback={<PageLoader />}>
-          {/* v5.1 homepage (seven movements). The issue-#22 HomePage stays
+          {/* Blueprint v1.1 homepage (six sections). The issue-#22 HomePage stays
               exported for reference but no longer mounts. The homepage remains
               synchronous; non-home public pages load only when their route is active. */}
           {route === 'home' && <HomePageV51 go={go} openPeggy={openPeggy} />}
@@ -165,6 +165,7 @@ export function Landing() {
           {route === 'ourwork' && <OurWorkPage go={go} />}
           {route === 'investments' && <InvestmentsPage go={go} openPeggy={openPeggy} />}
           {route === 'development' && <DevelopmentPage go={go} />}
+          {route === 'tools' && <ToolsPage />}
           {route === 'strategylab' && <StrategyLabPage go={go} openPeggy={openPeggy} />}
           {route === 'marketflow' && <MarketFlowPage go={go} />}
           {route === 'apollo' && <WorkWithApolloPage go={go} />}

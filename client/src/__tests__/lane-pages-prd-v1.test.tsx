@@ -137,13 +137,13 @@ describe("Lane pages PRD v1 contract (issue #22)", () => {
   it("locks the approved calm top navigation and subordinate product access", () => {
     const { container } = renderAt("/");
     const nav = container.querySelector("nav")!;
-    for (const label of ["How We Operate", "Property Owners", "Deal Partners", "Our Work", "About"]) {
+    for (const label of ["Real Estate", "Our Work", "Tools", "About"]) {
       expect(nav.textContent, `missing primary nav item: ${label}`).toContain(label);
     }
     expect(nav.textContent).toContain("Bring an Opportunity");
     expect(nav.querySelector('a[href="/marketflow"]')).toBeNull();
     expect(nav.querySelector('a.pg-navlink[href="/strategy-lab"]')).toBeNull();
-    expect(nav.querySelector('#desktop-more-navigation a[href="/strategy-lab"]')).toHaveTextContent('Strategy Lab');
+    expect(nav.querySelector('a[href="/tools"]')).toHaveTextContent('Tools');
     expect(container.querySelector("main")?.textContent).toContain("Open Strategy Lab");
     expect(container.querySelector('footer a[href="/marketflow"]')).toHaveTextContent("MarketFlow");
   });
@@ -152,29 +152,15 @@ describe("Lane pages PRD v1 contract (issue #22)", () => {
     const { container } = renderAt("/");
     const footer = container.querySelector("footer")!;
     for (const label of [
-      "Property Owners",
-      "Deal Partners",
-      "Buyers",
-      "Capital Partners",
-      "Operators & Vendors",
-      "Referral Partners",
-      "How We Operate",
-      "Our Work",
-      "Case Study",
-      "The Pegasus Standard",
-      "Contact",
-      "Disclosures",
-      "Privacy Policy",
-      "Terms",
-      "Bring an Opportunity",
+      "Property owners", "Buy or sell with Apollo", "Deal partners", "How we operate",
+      "Our Work", "Tools", "Saved work", "Property Review", "Vendor network", "Contact",
+      "Disclosures", "Privacy Policy", "Terms", "About Pegasus",
     ]) {
       expect(footer.textContent, `missing footer link: ${label}`).toContain(label);
     }
     expect(footer.querySelector('a[href="/strategy-lab"]')).toHaveTextContent("Strategy Lab");
     expect(footer.querySelector('a[href="/marketflow"]')).toHaveTextContent("MarketFlow");
-    expect(footer.querySelector('a[href="/bring-an-opportunity"]')).toHaveTextContent(
-      "Bring an Opportunity",
-    );
+    expect(footer.querySelector('a[href="/tools"]')).toHaveTextContent("Tools");
     expect(footer.querySelectorAll("button")).toHaveLength(0);
     // The site-wide locked disclosure paragraph stays intact.
     expect(footer.textContent).toContain("Pegasus Dreamscapes Corp. is a real estate investment, development, and strategy company, not a real estate brokerage.");

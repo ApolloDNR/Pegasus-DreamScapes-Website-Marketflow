@@ -548,17 +548,17 @@ export async function aggregateRenderedQaEvidence({ rootDir, outputPath, expecte
       });
     }
   }
-  if (screenshotMetadataKeys.length !== 399 || new Set(screenshotMetadataKeys).size !== 399) {
-    addError('SCREENSHOT_COUNT_MISMATCH', `Aggregate declared ${screenshotMetadataKeys.length} screenshots (${new Set(screenshotMetadataKeys).size} unique); expected exactly 399`, {
+  if (screenshotMetadataKeys.length !== 407 || new Set(screenshotMetadataKeys).size !== 407) {
+    addError('SCREENSHOT_COUNT_MISMATCH', `Aggregate declared ${screenshotMetadataKeys.length} screenshots (${new Set(screenshotMetadataKeys).size} unique); expected exactly 407`, {
       actual: screenshotMetadataKeys.length,
       unique: new Set(screenshotMetadataKeys).size,
-      expected: 399,
+      expected: 407,
     });
   }
-  if (diskPngPaths.length !== 399) {
-    addError('SCREENSHOT_FILE_COUNT_MISMATCH', `Evidence directory contains ${diskPngPaths.length} PNGs; expected exactly 399`, {
+  if (diskPngPaths.length !== 407) {
+    addError('SCREENSHOT_FILE_COUNT_MISMATCH', `Evidence directory contains ${diskPngPaths.length} PNGs; expected exactly 407`, {
       actual: diskPngPaths.length,
-      expected: 399,
+      expected: 407,
     });
   }
 
@@ -646,9 +646,9 @@ export async function aggregateRenderedQaEvidence({ rootDir, outputPath, expecte
     shardRunAttempts,
     expected: {
       shards: 12,
-      routeChecks: 360,
+      routeChecks: 368,
       journeyChecks: 17,
-      screenshots: 399,
+      screenshots: 407,
     },
     counts: {
       shards: records.length,
@@ -712,7 +712,7 @@ export function parseAggregateRenderedQaArgs(argv = process.argv.slice(2), env =
 async function main() {
   const options = parseAggregateRenderedQaArgs();
   const aggregate = await aggregateRenderedQaEvidence(options);
-  const summary = `[rendered-qa-aggregate] ${aggregate.result.toUpperCase()}: ${aggregate.counts.shards}/12 shards, ${aggregate.counts.routeChecks}/360 routes, ${aggregate.counts.journeyChecks}/17 journeys, ${aggregate.counts.screenshots}/399 screenshots`;
+  const summary = `[rendered-qa-aggregate] ${aggregate.result.toUpperCase()}: ${aggregate.counts.shards}/12 shards, ${aggregate.counts.routeChecks}/368 routes, ${aggregate.counts.journeyChecks}/17 journeys, ${aggregate.counts.screenshots}/407 screenshots`;
   if (aggregate.result === 'passed') console.log(summary);
   else {
     console.error(summary);

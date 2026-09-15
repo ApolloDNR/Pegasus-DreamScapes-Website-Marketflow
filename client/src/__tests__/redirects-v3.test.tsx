@@ -270,15 +270,11 @@ describe("v4 re-skin: chrome + shell pages never link to an off-limits URL", () 
     });
   }
 
-  it("the harness actually exercises navigation (non-vacuous)", () => {
-    // Guard against a vacuous pass: the v5.1 Home routes its proof CTA to
-    // /our-work through go(), proving clickAll wires the handlers.
-    const { go, calls } = makeGo();
-    const { container } = renderChrome(
-      <HomePageV51 go={go} openPeggy={noop} />,
-      "/",
-    );
-    clickAll(container);
-    expect(calls, "Home triggered no go() navigations").toContain("ourwork");
+  it("the real homepage links navigate without the retired route adapters", () => {
+    const memory = memoryLocation({path:'/',record:true});
+    const {container} = render(<Router hook={memory.hook}><HomePageV51 go={noop} openPeggy={noop} /></Router>);
+    const proof = container.querySelector<HTMLAnchorElement>('[data-hv="proof"] a')!;
+    fireEvent.click(proof);
+    expect(memory.history?.at(-1)).toBe('/projects/nelson-dr');
   });
 });

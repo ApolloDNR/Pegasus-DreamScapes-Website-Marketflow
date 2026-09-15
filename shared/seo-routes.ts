@@ -140,6 +140,11 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
       "A public overview of development questions Pegasus may consider. No scope, budget, schedule, licensed team, permit, or project delivery is promised.",
     image: `${SITE_URL}/og/development.png`,
   },
+  "/tools": {
+    title: tag("Tools"),
+    description: "Explore property assumptions in Strategy Lab, resume browser-saved work, or request a separately scoped Property Review.",
+    image: DEFAULT_OG_IMAGE,
+  },
   "/strategy-lab": {
     title: tag("Strategy Lab"),
     description:

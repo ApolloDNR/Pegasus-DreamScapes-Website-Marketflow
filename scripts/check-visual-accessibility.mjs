@@ -21,6 +21,13 @@ const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '
 const buildRoot = path.join(projectRoot, 'dist/public');
 const axeSource = await readFile(path.join(projectRoot, 'node_modules/axe-core/axe.min.js'), 'utf8');
 
+async function switchPublicTheme(page, theme) {
+  if (page.viewportSize().width >= 1100) await page.getByRole('button', { name: 'Real Estate', exact: true }).click();
+  else await page.getByRole('button', { name: 'Open menu', exact: true }).click();
+  await page.getByRole('button', { name: `Switch to ${theme} mode`, exact: true }).click();
+  await page.keyboard.press('Escape');
+}
+
 const releaseRoutes = [
   '/',
   '/property-owners',
@@ -1502,10 +1509,13 @@ async function exercisePublicDesign(page, route, viewport) {
       'Buyers project evidence no longer leads to the documented work');
   }
   if (route === '/') {
+    await page.locator('[data-hv="plan"]').scrollIntoViewIfNeeded();
     const plan = page.getByTestId('opportunity-plan');
+    await plan.waitFor({ state: 'visible' });
     await plan.getByRole('button', { name: 'Development', exact: true }).click();
     assert(await plan.getByRole('link', { name: 'Explore project planning' }).getAttribute('href') === '/development', 'Development map lost its next step');
     const controls = await plan.locator('.op-choices button, .op-map-node strong').evaluateAll((elements) => elements.map((element) => ({
+      visible: element.getBoundingClientRect().width > 0,
       label: element.textContent,
       width: element.clientWidth,
       overflow: element.scrollWidth > element.clientWidth + 2,
@@ -1513,7 +1523,7 @@ async function exercisePublicDesign(page, route, viewport) {
       button: element.tagName === 'BUTTON',
     })));
     assert(controls.filter((control) => control.button).length === 8, 'Opportunity Plan lost a planning need');
-    assert(controls.every((control) => control.width > 0 && !control.overflow && (!control.button || control.height >= 44)), `Diagram labels or touch targets failed: ${JSON.stringify(controls)}`);
+    assert(controls.filter(control => control.visible).every((control) => control.width > 0 && !control.overflow && (!control.button || control.height >= 44)), `Diagram labels or touch targets failed: ${JSON.stringify(controls)}`);
   }
   if (route === '/property-owners') {
     if (viewport.width === 1440) await verifyWideOwnerHero(page, viewport);
@@ -1701,47 +1711,31 @@ try {
   await runInteraction('desktop navigation spine', {}, async (page) => {
     await openPage(page, '/');
     const navigation = page.locator('nav');
-    const expected = [
-      ['How We Operate', '/how-we-operate'],
-      ['Property Owners', '/property-owners'],
-      ['Deal Partners', '/deal-partners'],
-      ['Our Work', '/our-work'],
-      ['About', '/about'],
-    ];
+    const expected = [['Our Work', '/our-work'], ['Tools', '/tools'], ['About', '/about']];
     for (const [label, href] of expected) {
       const link = navigation.getByRole('link', { name: label, exact: true });
       assert(await link.count() === 1, `Desktop navigation did not expose exactly one ${label} link`);
       assert(await link.getAttribute('href') === href, `${label} did not resolve to ${href}`);
     }
 
-    const more = navigation.getByRole('button', { name: 'More', exact: true });
+    const more = navigation.getByRole('button', { name: 'Real Estate', exact: true });
     assert(await more.count() === 1, 'Desktop navigation did not expose exactly one More disclosure');
     assert(await more.getAttribute('aria-expanded') === 'false', 'Desktop More disclosure initialized open');
-    assert(await more.getAttribute('aria-controls') === 'desktop-more-navigation', 'Desktop More disclosure lost its directory relationship');
-    const directory = page.locator('#desktop-more-navigation');
+    assert(await more.getAttribute('aria-controls') === 'desktop-real-estate', 'Desktop More disclosure lost its directory relationship');
+    const directory = page.locator('#desktop-real-estate');
     await more.focus();
     await page.keyboard.press('Enter');
     await directory.waitFor({ state: 'visible' });
     assert(await more.getAttribute('aria-expanded') === 'true', 'Desktop More disclosure did not open from the keyboard');
-    assert(await directory.getAttribute('aria-hidden') === 'false', 'Desktop More directory remained hidden from assistive technology');
-    const secondary = [
-      ['Work With Apollo', '/work-with-apollo'],
-      ['Pegasus Standard', '/pegasus-standard'],
-      ['Contact', '/contact'],
-      ['Peggy', '/peggy'],
-      ['Development', '/development'],
-      ['Capital Partners', '/capital'],
-      ['Buyers', '/buyers'],
-      ['Operators & Vendors', '/operators'],
-      ['Referral Partners', '/referral'],
-      ['Pegasus Ecosystem', '/ecosystem'],
-    ];
+    assert(await directory.isVisible(), 'Real Estate menu remained hidden');
+    const secondary = [['Property owners', '/property-owners'], ['Buy or sell with Apollo', '/work-with-apollo'], ['Deal partners', '/deal-partners'], ['Project planning', '/development'], ['How we operate', '/how-we-operate']];
     for (const [label, href] of secondary) {
       const link = directory.getByRole('link', { name: new RegExp(`^${label}`) });
       assert(await link.count() === 1, `Desktop More directory did not expose exactly one ${label} link`);
       assert(await link.getAttribute('href') === href, `${label} did not resolve to ${href}`);
     }
 
+    await directory.locator('summary').filter({ hasText: 'Search the site' }).click();
     const navigationSearch = directory.getByRole('searchbox', { name: 'Search navigation' });
     await navigationSearch.fill('strategy lab');
     assert(await directory.getByRole('link', { name: /^Strategy Lab/ }).getAttribute('href') === '/strategy-lab', 'Navigation search lost the Strategy Lab route');
@@ -1761,10 +1755,10 @@ try {
     // the ordinary route scans do not activate these states.
     await openPage(page, '/bring-an-opportunity');
     await page.addScriptTag({ content: axeSource });
-    const intakeCta = page.locator('nav .pg-nav-cta');
+    const intakeCta = page.locator('nav .site-header-action');
     for (const theme of ['dark', 'light']) {
       if (await intakeCta.evaluate((element) => element.closest('.pg-root')?.getAttribute('data-theme')) !== theme) {
-        await page.getByRole('button', { name: `Switch to ${theme} mode`, exact: true }).click();
+        await switchPublicTheme(page, theme);
       }
       for (const state of ['hover', 'focus']) {
         if (state === 'hover') await intakeCta.hover();
@@ -1796,11 +1790,13 @@ try {
 
   await runInteraction('mobile navigation destination', { viewport: getViewport('mobile-390'), seedConsent: false }, async (page) => {
     await openPage(page, '/');
-    const menuButton = page.locator('button[aria-controls="mobile-menu"]');
+    const menuButton = page.locator('button[aria-controls="site-mobile-menu"]');
     await menuButton.click();
     assert(await menuButton.getAttribute('aria-expanded') === 'true', 'Mobile menu did not expand');
     const dialog = page.getByRole('dialog', { name: 'Primary navigation' });
-    await dialog.getByRole('link', { name: 'Strategy Lab', exact: true }).first().click();
+    await dialog.getByRole('link', { name: 'Tools', exact: true }).click();
+    await page.waitForURL(/\/tools$/);
+    await page.getByRole('link', { name: 'Open Strategy Lab', exact: true }).first().click();
     await page.waitForURL(/\/strategy-lab$/);
     await page.locator('h1').first().waitFor({ state: 'attached' });
 
@@ -1809,8 +1805,8 @@ try {
     await banner.waitFor({ state: 'visible', timeout: 5_000 });
     await menuButton.click();
     assert(await menuButton.getAttribute('aria-expanded') === 'true', 'Mobile menu did not re-open');
-    await dialog.locator('summary').filter({ hasText: 'Network & resources' }).click();
-    assert(await dialog.getByRole('link', { name: /^Referral Partners/ }).isVisible(), 'Mobile directory did not expand its network links');
+    await dialog.locator('summary').filter({ hasText: 'Real Estate' }).click();
+    assert(await dialog.getByRole('link', { name: 'Property owners', exact: true }).isVisible(), 'Mobile menu did not expand its property paths');
     const mobileSearch = dialog.getByRole('searchbox', { name: 'Search navigation' });
     await mobileSearch.fill('service area');
     assert(await dialog.getByRole('link', { name: /^Vendor application/ }).getAttribute('href') === '/vendor-network', 'Mobile navigation search lost the vendor application');
@@ -1861,13 +1857,13 @@ try {
     assert(await root.getAttribute('data-theme') === 'dark', 'Dark theme was not initialized');
 
     const geometrySelectors = [
-      '.hv-hero-top',
+      '.experience-arrival',
       '[data-testid="approved-home-hero-image"]',
-      '.hv-eyebrow-row',
-      '.hv-h1',
-      '.hv-cta-row',
-      '.hv-hero-statbar',
-      'nav > div:nth-child(2)',
+      '.experience-geography',
+      '.experience-arrival h1',
+      '.experience-arrival .experience-actions',
+      '.experience-image-notice',
+      '.site-nav-inner',
     ];
     const geometryAt = async () => page.evaluate((selectors) => {
       const hero = document.querySelector('[data-testid="approved-home-hero-image"]');
@@ -1897,7 +1893,7 @@ try {
         `Theme geometry did not settle before the toggle at ${viewport.width}px`,
       );
       const before = await geometryAt();
-      await page.getByRole('button', { name: 'Switch to light mode' }).click();
+      await switchPublicTheme(page, 'light');
       await page.waitForFunction(() => document.querySelector('.pg-root')?.getAttribute('data-theme') !== 'dark');
       const postToggleRenderedPage = await settleRenderedPage(
         page,
@@ -1936,7 +1932,7 @@ try {
       });
 
       if (viewport.width !== 390) {
-        await page.getByRole('button', { name: 'Switch to dark mode' }).click();
+        await switchPublicTheme(page, 'dark');
         await page.waitForFunction(() => document.querySelector('.pg-root')?.getAttribute('data-theme') === 'dark');
       }
     }

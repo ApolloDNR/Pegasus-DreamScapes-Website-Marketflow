@@ -230,16 +230,16 @@ describe.sequential("rendered QA aggregate evidence", () => {
     });
     expect(aggregate.counts).toEqual({
       shards: 12,
-      routeChecks: 360,
+      routeChecks: 368,
       journeyChecks: 17,
-      screenshots: 399,
+      screenshots: 407,
     });
     expect(aggregate.shards.map((shard: JsonRecord) => shard.shardId)).toEqual(
       contract.renderedQaShardIds,
     );
-    expect(new Set(aggregate.routeChecks.map((check: JsonRecord) => check.key)).size).toBe(360);
+    expect(new Set(aggregate.routeChecks.map((check: JsonRecord) => check.key)).size).toBe(368);
     expect(new Set(aggregate.journeyChecks.map((check: JsonRecord) => check.journeyId)).size).toBe(17);
-    expect(new Set(aggregate.screenshots.map((shot: JsonRecord) => shot.path)).size).toBe(399);
+    expect(new Set(aggregate.screenshots.map((shot: JsonRecord) => shot.path)).size).toBe(407);
     expect(JSON.parse(await readFile(outputPath, "utf8"))).toEqual(aggregate);
   });
 

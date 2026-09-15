@@ -2,9 +2,11 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'wouter';
 import { ArrowRight, ChevronDown, ConciergeBell, Menu, Phone, Search, X } from 'lucide-react';
 import type { Route, Nav, Theme, NavLink } from './theme';
-import { ThemeToggle, BrandMark } from './primitives';
+import { BrandMark } from './primitives';
 import { PREMIUM_NAVIGATION } from './data';
 import { urlFor } from './routes';
+import { PRIMARY_LINKS, REAL_ESTATE_LINKS, PUBLIC_ACTIONS, PUBLIC_CONTACT } from './public-content';
+import './experience.css';
 
 type PremiumItem = NavLink & { note?: string; badge?: string };
 
@@ -14,7 +16,7 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
   const [desktopMoreOpen, setDesktopMoreOpen] = useState(false);
   const [navigationQuery, setNavigationQuery] = useState('');
   const [location] = useLocation();
-  const toggleLock = useRef(0);
+
   const navRef = useRef<HTMLElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -33,14 +35,10 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
     if (!href) return false;
     return href === '/' ? location === href : location === href || location.startsWith(`${href}/`);
   };
-  const mobileCorePages = PREMIUM_NAVIGATION.primary;
 
   const toggleMenu = (event: React.MouseEvent) => {
     event.preventDefault();
     event.stopPropagation();
-    const now = Date.now();
-    if (now - toggleLock.current < 320) return;
-    toggleLock.current = now;
     setMenuOpen((open) => !open);
   };
 
@@ -52,7 +50,7 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
 
   useEffect(() => {
     if (typeof window.matchMedia !== 'function') return;
-    const desktop = window.matchMedia('(min-width: 1180px)');
+    const desktop = window.matchMedia('(min-width: 1100px)');
     const onResize = () => {
       if (desktop.matches) setMenuOpen(false);
       else setDesktopMoreOpen(false);
@@ -88,6 +86,13 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
       navRef.current?.removeAttribute('inert');
       return;
     }
+    const previousOverflow = document.body.style.overflow;
+    const previousPadding = document.body.style.paddingRight;
+    const scrollbar = window.innerWidth - document.documentElement.clientWidth;
+    document.body.style.overflow = 'hidden';
+    if (scrollbar > 0) document.body.style.paddingRight = `${scrollbar}px`;
+    const background = Array.from(document.querySelectorAll<HTMLElement>('#main-content, footer')).filter(element => !element.hasAttribute('inert'));
+    background.forEach(element => element.setAttribute('inert', ''));
     document.body.classList.add('pg-menu-open');
     returnFocusRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : menuButtonRef.current;
     const selector = ['a[href]', 'button:not([disabled])', 'input:not([disabled])', 'select:not([disabled])', 'summary', '[tabindex]:not([tabindex="-1"])'].join(',');
@@ -113,174 +118,78 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
     return () => {
       document.removeEventListener('keydown', onKey);
       document.body.classList.remove('pg-menu-open');
+      document.body.style.overflow = previousOverflow;
+      document.body.style.paddingRight = previousPadding;
+      background.forEach(element => element.removeAttribute('inert'));
       navRef.current?.removeAttribute('inert');
       (returnFocusRef.current?.isConnected ? returnFocusRef.current : menuButtonRef.current)?.focus();
       returnFocusRef.current = null;
     };
   }, [menuOpen]);
 
-  const overHero = !scrolled && !menuOpen && route !== 'apollo';
-  const text = overHero ? 'text-[var(--cream)]' : 'text-[var(--text)]';
-  const activeTone = overHero ? 'text-[var(--accent-bright)]' : 'text-[var(--accent-ink)]';
-  const desktopMoreActive = PREMIUM_NAVIGATION.more.some((group) =>
-    group.items.some(isActive),
-  ) || PREMIUM_NAVIGATION.utilities.some(isActive);
-
-  const allPages = [...PREMIUM_NAVIGATION.primary, ...PREMIUM_NAVIGATION.more.flatMap(group => group.items), ...PREMIUM_NAVIGATION.utilities];
+  const overHero = route === 'home' && !scrolled;
+  const current = (href: string) => location === href || location.startsWith(`${href}/`);
+  const estateActive = REAL_ESTATE_LINKS.some(item => current(item.href));
+  const entries = [
+    ...REAL_ESTATE_LINKS.map(item => ({ ...item, note: '' })),
+    ...PRIMARY_LINKS.map(item => ({ ...item, note: '' })),
+    ...[...PREMIUM_NAVIGATION.primary, ...PREMIUM_NAVIGATION.more.flatMap(group => group.items), ...PREMIUM_NAVIGATION.utilities].map(item => ({ label: item.label, href: itemUrl(item), note: item.note ?? '' })),
+    { label: 'Saved work', href: '/saved', note: 'Browser saved Strategy Lab draft and Peggy transcripts' },
+    { label: 'Property Review', href: '/deal-blueprint', note: 'Request a scoped review' },
+  ];
+  const allPages = entries.filter((item, index) => entries.findIndex(other => other.href === item.href) === index);
   const query = navigationQuery.trim().toLowerCase();
-  const matches = allPages.filter(item => [item.label, item.note, item.route, item.url].filter(Boolean).join(' ').toLowerCase().includes(query));
+  const matches = allPages.filter(item => `${item.label} ${item.note} ${item.href}`.toLowerCase().includes(query));
   const clearNavigationSearch = () => {
     setNavigationQuery('');
-    const panel = desktopMoreOpen ? desktopMoreRef.current : menuRef.current;
-    panel?.querySelector<HTMLInputElement>('input[type="search"]')?.focus();
+    (desktopMoreOpen ? desktopMoreRef.current : menuRef.current)?.querySelector<HTMLInputElement>('input[type="search"]')?.focus();
   };
-  const searchControl = (id: string) => <div className="nav-search">
-    <Search aria-hidden="true" size={17} />
-    <label className="sr-only" htmlFor={id}>Search navigation</label>
+  const searchControl = (id: string) => <div className="site-search">
+    <Search aria-hidden="true" size={18} /><label className="sr-only" htmlFor={id}>Search navigation</label>
     <input id={id} type="search" autoComplete="off" placeholder="Find a page or tool" value={navigationQuery} onChange={event => setNavigationQuery(event.target.value)} />
-    {navigationQuery && <button type="button" aria-label="Clear navigation search" onClick={clearNavigationSearch}><X aria-hidden="true" size={16} /></button>}
+    {navigationQuery && <button type="button" aria-label="Clear navigation search" onClick={clearNavigationSearch}><X aria-hidden="true" size={18} /></button>}
   </div>;
-  const searchResults = <div className="nav-search-results">
-    <p role="status">{matches.length} {matches.length === 1 ? 'page' : 'pages'} found</p>
-    {matches.map(item => <Link key={itemUrl(item)} href={itemUrl(item)} onClick={closeNavigation} className="nav-dropdown-item" aria-current={isActive(item) ? 'page' : undefined}>
-      <span className="nav-dd-title">{item.label}</span>
-      {item.note && <span className="nav-dd-desc">{item.note}</span>}
-    </Link>)}
-    {!matches.length && <div className="nav-search-empty">Try a topic such as property, partners, or Strategy Lab.<button type="button" onClick={clearNavigationSearch}>Show all pages <ArrowRight size={14} aria-hidden="true" /></button></div>}
+  const searchResults = <div className="site-search-results"><p role="status">{matches.length} {matches.length === 1 ? 'page' : 'pages'} found</p>
+    {matches.map(item => <Link key={item.href} href={item.href} onClick={closeNavigation} aria-current={current(item.href) ? 'page' : undefined}>{item.label}<ArrowRight size={16} aria-hidden="true" /></Link>)}
+    {!matches.length && <div><p>Try property, partners, or Strategy Lab.</p><button type="button" onClick={clearNavigationSearch}>Show all pages</button></div>}
   </div>;
-  const utilities = <div className="nav-utilities" aria-label="Tools and applications">
-    {PREMIUM_NAVIGATION.utilities.map(item => <Link key={item.label} href={itemUrl(item)} onClick={closeNavigation} aria-current={isActive(item) ? 'page' : undefined}>{item.label}<ArrowRight size={14} aria-hidden="true" /></Link>)}
-  </div>;
+  const estateLinks = REAL_ESTATE_LINKS.map(item => <Link key={item.href} href={item.href} onClick={closeNavigation} aria-current={current(item.href) ? 'page' : undefined}>{item.label}<ArrowRight aria-hidden="true" size={16} /></Link>);
+  const themeControl = <button type="button" className="site-theme" onClick={toggleTheme} aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}><span>Appearance</span><span>{theme === 'dark' ? 'Dark' : 'Light'} mode</span></button>;
 
-  return (
-    <>
-      <nav ref={navRef} style={{ "--nav-menu-top": scrolled ? "86px" : "108px" } as React.CSSProperties} className="fixed top-0 inset-x-0 z-40">
-        <div className={`absolute inset-0 h-full pointer-events-none transition-all duration-500 ${menuOpen ? 'nav-stock bg-[var(--bg-2)]' : overHero ? 'hero-scrim-top' : 'nav-stock bg-[var(--bg)] border-b border-[var(--line)] shadow-[0_18px_44px_-36px_rgba(13,27,44,0.44)]'}`} />
-        <div className={`relative max-w-[1440px] mx-auto px-6 min-[1180px]:px-8 min-[1440px]:px-12 flex items-center justify-between gap-2 min-[1180px]:gap-5 transition-all duration-500 ${scrolled ? 'h-[74px]' : 'h-24'} ${text}`}>
-          <Link href="/" aria-label="Pegasus Dreamscapes home" className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
-            <BrandMark boxClassName="w-10 h-10 sm:w-12 sm:h-12" onDark={overHero || theme === 'dark'} />
-            <div className="hidden min-[360px]:flex flex-col leading-none text-left min-w-0">
-              <span className="pg-nav-wordmark font-serif-display leading-none whitespace-nowrap">Pegasus Dreamscapes</span>
-              <span className={`pg-nav-descriptor pg-label ${overHero ? 'text-[var(--accent-bright)]' : 'text-[var(--accent-ink)]'} mt-1.5 whitespace-nowrap`}>Development &middot; Investments &middot; Systems</span>
-            </div>
-          </Link>
-
-          <div className="pg-primary-links hidden min-[1180px]:flex items-center gap-1 min-[1340px]:gap-2 min-[1500px]:gap-4">
-            {PREMIUM_NAVIGATION.primary.map((item) => (
-              <Link key={item.label} href={itemUrl(item)} onClick={closeNavigation} aria-current={isActive(item) ? 'page' : undefined}
-                className={`pg-navlink inline-flex min-h-11 shrink-0 items-center whitespace-nowrap px-1.5 transition-opacity hover:opacity-100 ${isActive(item) ? `opacity-100 ${activeTone}` : 'opacity-80'}`} data-active={isActive(item) || undefined}>
-                {item.label}{item.badge && <span className="px-nav-badge">{item.badge}</span>}
-              </Link>
-            ))}
-            <div ref={desktopMoreRef} className="nav-group" onBlur={event => { if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget as Node)) setDesktopMoreOpen(false); }}>
-              <button
-                ref={desktopMoreButtonRef}
-                type="button"
-                aria-expanded={desktopMoreOpen}
-                aria-controls="desktop-more-navigation"
-                onClick={() => setDesktopMoreOpen((open) => !open)}
-                onKeyDown={(event) => {
-                  if (event.key !== 'ArrowDown') return;
-                  event.preventDefault();
-                  setDesktopMoreOpen(true);
-                  window.requestAnimationFrame(() => {
-                    desktopMoreRef.current?.querySelector<HTMLInputElement>('input')?.focus();
-                  });
-                }}
-                className={`pg-navlink inline-flex min-h-11 shrink-0 items-center gap-1 whitespace-nowrap px-1.5 transition-opacity hover:opacity-100 ${desktopMoreActive ? `opacity-100 ${activeTone}` : 'opacity-80'}`}
-                data-testid="button-pegasus-nav-more"
-              >
-                More
-                <ChevronDown
-                  aria-hidden="true"
-                  className={`h-3.5 w-3.5 transition-transform ${desktopMoreOpen ? 'rotate-180' : ''}`}
-                />
-              </button>
-              <div
-                id="desktop-more-navigation"
-                className={`nav-dropdown nav-dropdown-mega ${desktopMoreOpen ? 'is-open' : ''}`}
-                aria-hidden={!desktopMoreOpen}
-                {...(!desktopMoreOpen ? { inert: '' } : {})}
-              >
-                <div className="nav-directory-top"><span>Explore Pegasus</span>{searchControl('desktop-nav-search')}</div>
-                {query ? searchResults : <><div className="nav-dropdown-grid">
-                  {PREMIUM_NAVIGATION.more.map((group) => (
-                    <section key={group.label} aria-labelledby={`desktop-nav-${group.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}>
-                      <h2
-                        id={`desktop-nav-${group.label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`}
-                        className="nav-dropdown-head"
-                      >
-                        {group.label}
-                      </h2>
-                      {group.items.map((item) => (
-                        <Link
-                          key={item.label}
-                          href={itemUrl(item)}
-                          onClick={closeNavigation}
-                          aria-current={isActive(item) ? 'page' : undefined}
-                          className={`nav-dropdown-item ${isActive(item) ? 'is-active' : ''}`}
-                        >
-                          <span className="nav-dd-title">{item.label}</span>
-                          {item.note && <span className="nav-dd-desc">{item.note}</span>}
-                        </Link>
-                      ))}
-                    </section>
-                  ))}
-                </div>{utilities}</>}
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3 lg:gap-4">
-            <ThemeToggle theme={theme} onToggle={toggleTheme} light={overHero} />
-            <Link href="/bring-an-opportunity" className={`pg-nav-cta hidden sm:inline-flex ${overHero ? 'pg-nav-cta-hero' : 'pg-nav-cta-scrolled'} px-5 py-3 pg-label !text-[11px] !tracking-[0.1em] whitespace-nowrap`}>Bring an Opportunity</Link>
-            <button ref={menuButtonRef} type="button" aria-label={menuOpen ? 'Close menu' : 'Open menu'} aria-expanded={menuOpen} aria-controls="mobile-menu" onClick={toggleMenu} style={{ touchAction: 'manipulation' }} className="min-[1180px]:hidden relative z-10 -mr-2 p-2.5">
-              {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+  return <>
+    <nav ref={navRef} aria-label="Main navigation" className={`site-nav ${overHero ? 'site-nav-over-hero' : ''}`}>
+      <div className="experience-wrap site-nav-inner">
+        <Link href="/" aria-label="Pegasus Dreamscapes home" className="site-brand"><BrandMark boxClassName="site-brand-mark" onDark />
+          <span><span className="site-wordmark">Pegasus Dreamscapes</span><span className="site-brand-caption">Development · Investments · Systems</span></span>
+        </Link>
+        <div className="site-desktop-links">
+          <div ref={desktopMoreRef} className="site-estate" onBlur={event => { if (event.relatedTarget && !event.currentTarget.contains(event.relatedTarget as Node)) setDesktopMoreOpen(false); }}>
+            <button ref={desktopMoreButtonRef} type="button" aria-expanded={desktopMoreOpen} aria-controls="desktop-real-estate" className="site-nav-link" data-active={estateActive || undefined}
+              onClick={() => setDesktopMoreOpen(open => !open)} onKeyDown={event => { if (event.key === 'ArrowDown') { event.preventDefault(); setDesktopMoreOpen(true); requestAnimationFrame(() => desktopMoreRef.current?.querySelector<HTMLAnchorElement>('a')?.focus()); } }}>
+              Real Estate<ChevronDown aria-hidden="true" size={16} />
             </button>
+            {desktopMoreOpen && <div id="desktop-real-estate" className="site-estate-panel">
+              <div className="site-estate-links">{estateLinks}</div>
+              <details className="site-directory"><summary><Search size={16} aria-hidden="true" />Search the site</summary>{searchControl('desktop-nav-search')}{query && searchResults}</details>
+              {themeControl}
+            </div>}
           </div>
+          {PRIMARY_LINKS.map(item => <Link key={item.href} href={item.href} onClick={closeNavigation} className="site-nav-link" aria-current={current(item.href) ? 'page' : undefined}>{item.label}</Link>)}
         </div>
-      </nav>
-
-      <div ref={menuRef} id="mobile-menu" role="dialog" aria-modal={menuOpen ? 'true' : undefined} aria-label="Primary navigation" aria-hidden={!menuOpen} tabIndex={-1} {...(!menuOpen ? { inert: '' } : {})}
-        style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }} className={`min-[1180px]:hidden fixed inset-0 z-[100] bg-[var(--bg-2)] transition-opacity duration-300 ease-out ${menuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}>
-        <button type="button" onClick={() => setMenuOpen(false)} aria-label="Close menu" className="absolute right-6 top-6 z-10 inline-flex h-11 w-11 items-center justify-center text-[var(--text)]"><X className="h-6 w-6" /></button>
-        <div className="h-full px-6 pt-24 pb-10 flex flex-col text-[var(--text)] overflow-y-auto overscroll-contain">
-          <div className="nav-mobile-heading"><span>Explore Pegasus</span><p>Find the right next step.</p></div>
-          {searchControl('mobile-nav-search')}
-          {!query && <div className="flex flex-col gap-3 mt-5">
-            <Link href="/bring-an-opportunity" onClick={closeNavigation} data-menu-initial-focus className="btn-primary px-6 py-4 pg-label !text-[10px] !tracking-[0.2em] text-center inline-flex items-center justify-center gap-2.5 group">Bring an Opportunity <ArrowRight className="w-3.5 h-3.5" /></Link>
-            <Link href="/strategy-lab" onClick={closeNavigation} className="btn-line px-4 py-3 pg-label !text-[10px] text-center inline-flex items-center justify-center gap-2">Strategy Lab <ArrowRight size={14} aria-hidden="true" /></Link>
-          </div>}
-
-          {query ? searchResults : <div className="nav-m-directory">
-
-            <section>
-              <h2>Core pages</h2>
-              {mobileCorePages.map((item) => (
-                <Link key={item.label} href={itemUrl(item)} onClick={closeNavigation} aria-current={isActive(item) ? 'page' : undefined} className="nav-m-directory-link">
-                  <strong>{item.label}</strong>
-                </Link>
-              ))}
-            </section>
-            {PREMIUM_NAVIGATION.more.map((group) => (
-              <details key={group.label} className="nav-m-section">
-                <summary>{group.label}<ChevronDown size={17} aria-hidden="true" /></summary>
-                {group.items.map((item) => (
-                  <Link key={item.label} href={itemUrl(item)} onClick={closeNavigation} aria-current={isActive(item) ? 'page' : undefined} className="nav-m-directory-link">
-                    <strong>{item.label}</strong>
-                    {item.note && <small>{item.note}</small>}
-                  </Link>
-                ))}
-              </details>
-            ))}
-            <div className="nav-mobile-resources">{PREMIUM_NAVIGATION.utilities.filter(item => item.route !== 'strategylab').map(item => <Link key={item.label} href={itemUrl(item)} onClick={closeNavigation} className="nav-m-directory-link"><strong>{item.label}</strong></Link>)}</div>
-          </div>}
-          <div className="nav-mobile-contact">
-            <a href="tel:9257448525"><Phone size={16} aria-hidden="true" />925-744-8525</a>
-            <button type="button" onClick={() => { closeNavigation(); openPeggy?.(); }}><ConciergeBell size={16} aria-hidden="true" />Talk to Peggy</button>
-          </div>
-        </div>
+        <Link href={PUBLIC_ACTIONS.opportunity.href} className="experience-button site-header-action">{PUBLIC_ACTIONS.opportunity.label}<ArrowRight aria-hidden="true" size={16} /></Link>
+        <button ref={menuButtonRef} type="button" className="site-menu-button" aria-label="Open menu" aria-expanded={menuOpen} aria-controls="site-mobile-menu" onClick={toggleMenu}><Menu aria-hidden="true" size={21} />Menu</button>
       </div>
-    </>
-  );
+    </nav>
+    {menuOpen && <div ref={menuRef} id="site-mobile-menu" className="site-mobile-menu" role="dialog" aria-modal="true" aria-label="Primary navigation" tabIndex={-1}>
+      <div className="site-mobile-top"><span>Menu</span><button type="button" data-menu-initial-focus onClick={() => setMenuOpen(false)} aria-label="Close menu"><X aria-hidden="true" size={23} />Close</button></div>
+      <div className="site-mobile-body">
+        <details className="site-mobile-estate" open={estateActive || undefined}><summary>Real Estate<ChevronDown aria-hidden="true" size={19} /></summary><div>{estateLinks}</div></details>
+        {PRIMARY_LINKS.map(item => <Link key={item.href} href={item.href} onClick={closeNavigation} className="site-mobile-link" aria-current={current(item.href) ? 'page' : undefined}>{item.label}<ArrowRight aria-hidden="true" size={18} /></Link>)}
+        <Link href={PUBLIC_ACTIONS.opportunity.href} onClick={closeNavigation} className="experience-button site-mobile-action">{PUBLIC_ACTIONS.opportunity.label}<ArrowRight aria-hidden="true" size={18} /></Link>
+        {searchControl('mobile-nav-search')}{query && searchResults}
+        {themeControl}
+        <div className="site-mobile-contact"><a href={PUBLIC_CONTACT.telephone}><Phone aria-hidden="true" size={17} />{PUBLIC_CONTACT.phone}</a><button type="button" onClick={() => { closeNavigation(); openPeggy?.(); }}><ConciergeBell aria-hidden="true" size={17} />Talk to Peggy</button></div>
+      </div>
+    </div>}
+  </>;
 }

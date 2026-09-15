@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { useLocation } from "wouter";
 import { isPegasusUrl } from "@/pegasus/routes";
+import { NavigationContinuity } from "@/components/navigation-continuity";
 import PublicApp from "@/PublicApp";
 import { normalizeSpaPath } from "@shared/spa-routes";
 import { useSEO } from "@/hooks/use-seo";
@@ -50,7 +51,7 @@ function RootLoader() {
 export default function App() {
   const [location] = useLocation();
 
-  const metadata = <RouteSeoDefaults location={location} />;
+  const metadata = <><NavigationContinuity /><RouteSeoDefaults location={location} /></>;
 
   if (isPegasusUrl(normalizeSpaPath(location))) {
     return <>{metadata}<PublicApp /></>;

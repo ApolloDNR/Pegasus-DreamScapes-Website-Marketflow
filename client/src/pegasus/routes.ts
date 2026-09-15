@@ -19,6 +19,7 @@ export const ROUTE_TO_URL: Record<Route, string> = {
   ourwork: '/our-work',
   investments: '/capital',
   development: '/development',
+  tools: '/tools',
   strategylab: '/strategy-lab',
   marketflow: '/marketflow',
   apollo: '/work-with-apollo',

@@ -9,6 +9,8 @@ const SHELL_FILES = [
   "client/src/pegasus/home-v51.tsx",
   "client/src/pegasus/about-v6.tsx",
   "client/src/pegasus/footer.tsx",
+  "client/src/pegasus/public-content.ts",
+  "client/src/pegasus/tools.tsx",
   "client/src/pegasus/peggy.tsx",
   "client/src/pegasus/how-we-operate.tsx",
   "client/src/pegasus/category-page.tsx",
@@ -27,7 +29,7 @@ describe("mounted Pegasus public truth contract", () => {
     expect(landing).toContain("module.WorkWithApolloPage");
     expect(landing).toContain("<Footer go={go}");
     expect(landing).toContain("import('./how-we-operate')");
-    expect(SHELL_FILES).toHaveLength(10);
+    expect(SHELL_FILES).toHaveLength(12);
   });
 
   it("does not restore retired staffing, workflow, timing, or transaction promises", () => {
@@ -85,9 +87,11 @@ describe("mounted Pegasus public truth contract", () => {
       read("client/src/pegasus/pages.tsx"),
     ].join("\n");
 
-    expect(home).toContain("NELSON_COST_DISCLOSURE");
-    expect(home).toContain("NELSON_EXECUTION_DISCLOSURE");
-    expect(home).toMatch(/does not identify who provided brokerage representation/i);
+    expect(home).toContain('/projects/nelson-dr');
+    expect(home).not.toMatch(/sourced the deal|represented the seller|listed Nelson/i);
+    const record = read("client/src/pages/project-nelson-dr.tsx");
+    expect(record).toContain("NELSON_COST_DISCLOSURE");
+    expect(record).toContain("NELSON_EXECUTION_DISCLOSURE");
     expect(aboutAndPages).not.toMatch(/On Nelson Drive, Apollo (?:sourced|represented|listed)/i);
   });
 });

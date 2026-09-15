@@ -29,8 +29,8 @@ describe("rendered QA shard contract", () => {
     );
 
     expect(routeShards).toHaveLength(8);
-    expect(renderedQaFullPublicRoutes).toHaveLength(45);
-    expect(new Set(renderedQaFullPublicRoutes).size).toBe(45);
+    expect(renderedQaFullPublicRoutes).toHaveLength(46);
+    expect(new Set(renderedQaFullPublicRoutes).size).toBe(46);
     expect(actualPairs.sort()).toEqual(expectedPairs.sort());
     for (const shard of routeShards) {
       expect(shard.colorSchemes).toHaveLength(1);
@@ -63,7 +63,7 @@ describe("rendered QA shard contract", () => {
     expect(renderedQaJourneyGroups.marketflow).toHaveLength(3);
   });
 
-  it("preserves the full 399-screenshot evidence distribution", async () => {
+  it("preserves the full 407-screenshot evidence distribution", async () => {
     const { renderedQaShards } = await loadContract();
     const screenshotsByShard = Object.fromEntries(
       renderedQaShards.map(({ id, expectedScreenshots }) => [id, expectedScreenshots]),
@@ -78,7 +78,7 @@ describe("rendered QA shard contract", () => {
         (total, { expectedScreenshots }) => total + expectedScreenshots,
         0,
       ),
-    ).toBe(399);
+    ).toBe(407);
   });
 
   it("rejects unknown shard IDs and preserves unsharded mode", async () => {

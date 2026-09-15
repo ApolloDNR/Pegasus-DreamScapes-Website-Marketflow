@@ -37,16 +37,6 @@ import {
   QUERY_PRESERVING_INTAKE_PATHS,
 } from "@shared/redirects";
 
-function ScrollToTop() {
-  const [location] = useLocation();
-
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "instant" });
-  }, [location]);
-
-  return null;
-}
-
 function QueryPreservingRedirect({ to }: { to: string }) {
   const search = useSearch();
   return <Redirect to={appendRedirectSearch(to, search)} />;
@@ -383,7 +373,6 @@ function AppShell() {
   const legacy = shellMode === "legacy";
   return (
     <>
-      <ScrollToTop />
       <AnalyticsBoot />
       <AdminBar />
       <AnonymousClaimWatcher />

@@ -1,5 +1,8 @@
 # Pegasus Dreamscapes Final Design Lock
 
+
+> Current owner instruction: Website experience and build blueprint v1.1 (September 14, 2026) supersedes the older header, hero actions, proof rail, visitor paths and homepage section rules below. See [implementation ledger](experience-v1-1/README.md). Preserve all assets, routes, factual/legal boundaries and application contracts. This is a homepage visual review checkpoint before the remaining page rollout.
+
 Last updated: 2026-08-06
 
 This document exists to stop the loop. The website is no longer in open-ended planning. The next phase is controlled visual refinement, route-by-route QA, and launch readiness.

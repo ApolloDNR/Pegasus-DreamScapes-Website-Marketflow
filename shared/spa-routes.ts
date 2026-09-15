@@ -15,6 +15,7 @@ export const SPA_EXACT_PATHS = new Set<string>([
   "/how-we-operate",
   "/our-work",
   "/development",
+  "/tools",
   "/strategy-lab",
   "/marketflow",
   "/work-with-apollo",

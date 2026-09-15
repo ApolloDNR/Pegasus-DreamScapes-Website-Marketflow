@@ -30,22 +30,16 @@ describe("Pegasus desktop navigation directory", () => {
   it("exposes every non-primary public destination through one accessible More disclosure", () => {
     renderNav();
 
-    const trigger = screen.getByRole("button", { name: "More" });
+    const trigger = screen.getByRole("button", { name: "Real Estate" });
     expect(trigger).toHaveAttribute("aria-expanded", "false");
     fireEvent.click(trigger);
     expect(trigger).toHaveAttribute("aria-expanded", "true");
 
-    const directory = document.getElementById("desktop-more-navigation");
+    const directory = document.getElementById("desktop-real-estate");
     expect(directory).not.toBeNull();
-    for (const group of PREMIUM_NAVIGATION.more) {
-      expect(within(directory!).getByRole("heading", { name: group.label })).toBeInTheDocument();
-      for (const item of group.items) {
-        expect(within(directory!).getByRole("link", { name: new RegExp(`^${item.label}`) })).toHaveAttribute(
-          "href",
-          item.url ?? (item.route ? urlFor(item.route) : ""),
-        );
-      }
-    }
+    expect(within(directory!).getAllByRole('link').map(link=>link.getAttribute('href'))).toEqual([
+      '/property-owners','/work-with-apollo','/deal-partners','/development','/how-we-operate',
+    ]);
   });
 
   it("does not present duplicate destinations or the retired Investments label", () => {
@@ -59,8 +53,9 @@ describe("Pegasus desktop navigation directory", () => {
 
   it("finds tools by name and description and recovers from an empty search", () => {
     renderNav();
-    fireEvent.click(screen.getByRole("button", { name: "More" }));
-    const directory = within(document.getElementById("desktop-more-navigation")!);
+    fireEvent.click(screen.getByRole("button", { name: "Real Estate" }));
+    const directory = within(document.getElementById("desktop-real-estate")!);
+    fireEvent.click(directory.getByText('Search the site'));
     const search = directory.getByRole("searchbox", { name: "Search navigation" });
 
     fireEvent.change(search, { target: { value: "strategy lab" } });
@@ -73,14 +68,15 @@ describe("Pegasus desktop navigation directory", () => {
     fireEvent.click(directory.getByRole("button", { name: /Show all pages/ }));
     expect(search).toHaveValue("");
     expect(search).toHaveFocus();
-    expect(directory.getByRole("heading", { name: "Company & proof" })).toBeInTheDocument();
+    expect(directory.getByRole("link", { name: "Property owners" })).toBeInTheDocument();
   });
 
   it("dismisses search with Escape and returns focus to the More control", () => {
     renderNav();
-    const trigger = screen.getByRole("button", { name: "More" });
+    const trigger = screen.getByRole("button", { name: "Real Estate" });
     fireEvent.click(trigger);
-    const search = within(document.getElementById("desktop-more-navigation")!).getByRole("searchbox");
+    fireEvent.click(screen.getByText("Search the site"));
+    const search = within(document.getElementById("desktop-real-estate")!).getByRole("searchbox");
     search.focus();
     fireEvent.keyDown(search, { key: "Escape" });
     expect(trigger).toHaveAttribute("aria-expanded", "false");

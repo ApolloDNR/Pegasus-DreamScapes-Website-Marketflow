@@ -12,6 +12,7 @@ export type Route =
   | 'ourwork'
   | 'investments'
   | 'development'
+  | 'tools'
   | 'strategylab'
   | 'marketflow'
   | 'apollo'

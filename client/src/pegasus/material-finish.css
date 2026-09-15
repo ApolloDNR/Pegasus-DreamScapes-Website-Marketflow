@@ -65,7 +65,7 @@
 /* Permanent navy surfaces form the same material family in both themes. */
 .pg-root :is(.hv-proof, .hv-hero-statbar, .hv-final, .hv-founder,
   .hwo-roles, .hwo-activate, .po-process, .po-close, .dp-lane, .dp-close,
-  .ow-operator, .ow-close, .po-path, .dp-answer, .op-plan, .pg-footer,
+  .ow-operator, .ow-close, .po-path, .dp-answer, .pg-footer,
   .nav-dropdown-mega, #mobile-menu) {
   background-color: #0d1922;
   background-image: linear-gradient(rgba(10, 20, 29, .72), rgba(10, 20, 29, .72)), var(--pg-bookcloth);
@@ -96,26 +96,6 @@
 .pg-root .nav-search { box-shadow: inset 0 2px 5px rgba(0, 0, 0, .18); }
 .pg-root .nav-dropdown-item { border-radius: 2px; }
 
-/* A foil edge and pressed controls define the diagram without extra clutter. */
-.pg-root .op-plan {
-  border-color: #947657;
-  box-shadow: inset 0 0 0 1px rgba(245, 230, 211, .07), 0 12px 30px -20px rgba(0, 0, 0, .45);
-}
-.pg-root .op-plan-bar {
-  background: rgba(7, 16, 24, .6);
-  border-bottom-color: rgba(191, 144, 103, .4);
-  box-shadow: inset 0 1px rgba(245, 230, 211, .09);
-}
-.pg-root .op-map { background: rgba(8, 19, 27, .76); border-color: #45515a; box-shadow: inset 0 1px 6px rgba(0, 0, 0, .2); }
-.pg-root .op-map-node { background: #172832; border-color: #5d6970; box-shadow: inset 0 1px rgba(245, 230, 211, .07); }
-.pg-root .op-map-focus[data-selected='true'] { border-color: #d2a074; }
-.pg-root .op-choices button { background: #1b2c36; box-shadow: inset 0 1px rgba(245, 230, 211, .07); }
-.pg-root .op-choices button:hover { background: #293d49; }
-.pg-root .op-choices button[aria-pressed='true'] {
-  background: linear-gradient(115deg, #c3956c, #dfbb94 55%, #c89c76);
-  border-color: #dbb692;
-  box-shadow: inset 0 1px rgba(255, 241, 216, .5), inset 0 -1px rgba(54, 31, 15, .22);
-}
 .pg-root :is(.po-path, .dp-answer) { border-top-color: #b98b62; box-shadow: inset 0 1px rgba(245, 230, 211, .08); }
 .pg-editorial :is(.project-feature, .vendor-form-surface) {
   border-color: var(--pg-copper-edge);

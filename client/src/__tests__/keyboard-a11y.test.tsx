@@ -534,6 +534,7 @@ import { CATEGORIES } from "@/pegasus/data";
 import { PropertyOwnersPage } from "@/pegasus/property-owners";
 import { DealPartnersPage } from "@/pegasus/deal-partners";
 import { HowWeOperatePage } from "@/pegasus/how-we-operate";
+import { ToolsPage } from "@/pegasus/tools";
 import { OurWorkPage } from "@/pegasus/our-work";
 import { ContactPage, EcosystemPage, PeggyPage, WorkWithApolloPage } from "@/pegasus/pages";
 // Task #145 — admin / HQ surfaces.
@@ -631,6 +632,7 @@ const PUBLIC_ROUTES: RouteSpec[] = [
   { path: "/operators", Page: OperatorsPublicPage },
   { path: "/referral", Page: ReferralPublicPage },
   { path: "/how-we-operate", Page: HowWeOperatePublicPage },
+  { path: "/tools", Page: ToolsPage },
   { path: "/our-work", Page: OurWorkPublicPage },
   { path: "/about", Page: AboutPage },
   { path: "/development", Page: DevelopmentPage },

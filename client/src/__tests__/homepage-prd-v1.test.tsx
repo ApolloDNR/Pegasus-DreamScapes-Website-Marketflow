@@ -101,124 +101,61 @@ describe("Homepage premium editorial contract", () => {
     expect(hero).toHaveAttribute("fetchpriority", "high");
   });
 
-  it("locks the approved Arrival promise and concise three-action row", () => {
+  it("uses the specified arrival copy and two real links", () => {
     const { container } = renderHome();
-    const arrival = container.querySelector<HTMLElement>('[data-hv="arrival"]')!;
-    const text = arrival.textContent!;
-    expect(text).toContain("Complex real estate, made executable.");
-    expect(text).toContain("Bring an Opportunity");
-    expect(text).toContain("See How We Operate");
-    expect(text).toContain("Open Strategy Lab");
-    expect(arrival.querySelector(".hv-lead")).toBeNull();
-    // §31: the primary CTA is a real link to the canonical intake URL.
-    const primary = Array.from(container.querySelectorAll("a")).find((a) =>
-      a.textContent?.includes("Bring an Opportunity"),
-    );
-    expect(primary?.getAttribute("href")).toBe("/bring-an-opportunity");
+    const arrival = within(container.querySelector<HTMLElement>('[data-hv="arrival"]')!);
+    expect(arrival.getByRole('heading', { level:1 })).toHaveTextContent('Complex real estate, made executable.');
+    expect(arrival.getAllByRole('link').map(link => link.getAttribute('href'))).toEqual(['/bring-an-opportunity','/our-work']);
+    expect(arrival.getByText(/Property strategy, renovation insight/)).toBeInTheDocument();
   });
-
-  it("locks the approved four-part proof rail", () => {
+  it("does not repeat the old proof rail", () => {
     const { container } = renderHome();
-    const rail = container.querySelector(".hv-hero-statbar")!;
-    expect(rail.textContent).toContain("Founder-ledLed by Paolo “Apollo” Duran.");
-    expect(rail.textContent).toContain("Nelson DriveDocumented $600K acquisition to $840K sale.");
-    expect(rail.textContent).toContain("East BayContra Costa & Alameda County.");
-    expect(rail.textContent).toContain("Strategy firstStart with facts, constraints, roles, and written terms.");
+    expect(container.querySelector('.hv-hero-statbar')).toBeNull();
+    expect(container.querySelector('[data-hv="proof"] img')).toBeInTheDocument();
   });
-
-  it("locks the Visitor Router question and its four routes (§7.2)", () => {
+  it("gives owners, representation clients, and deal partners a direct path", () => {
     const { container } = renderHome();
-    const text = container.querySelector("main")!.textContent!;
-    expect(text).toContain("What are you bringing to Pegasus?");
-    for (const route of [
-      "A property I own",
-      "A deal I found",
-      "A project I'm operating",
-      "A relationship or specialty",
-    ]) {
-      expect(text).toContain(route);
-    }
+    const links = within(container.querySelector<HTMLElement>('[data-hv="router"]')!).getAllByRole('link');
+    expect(links.map(link => link.getAttribute('href'))).toEqual(['/property-owners','/work-with-apollo','/deal-partners']);
   });
-
-  it("locks the Nelson proof with the §11-safe number framing", () => {
+  it("keeps accounting and role attribution out of the homepage evidence summary", () => {
     const { container } = renderHome();
-    const text = container.querySelector("main")!.textContent!;
-    expect(text).toContain("A completed East Bay residential transformation documented");
-    expect(text).toContain("Nelson Drive");
-    expect(text).toContain("El Sobrante");
-    // Transparent stack — acquisition / improvement budget / basis / sale.
-    expect(text).toContain("$600,000");
-    expect(text).toContain("$105,000");
-    expect(text).toContain("$840,000");
-    expect(text).toContain("$135K gross spread");
-    // The arithmetic is not presented as profit or proof of who performed the work.
-    expect(text).toContain("not net profit");
-    expect(text).toContain("does not identify every contractor");
-    expect(text).not.toContain("$240K value created");
+    const proof = container.querySelector<HTMLElement>('[data-hv="proof"]')!;
+    expect(proof).toHaveTextContent('A completed East Bay residential transformation.');
+    expect(proof).not.toHaveTextContent(/\$|ROI|profit|sourced the deal/);
+    expect(within(proof).getByRole('link')).toHaveAttribute('href','/projects/nelson-dr');
   });
-
-  it("locks the five-step Pegasus Method (§7.4)", () => {
+  it("removes the duplicated method pitch from Home", () => {
     const { container } = renderHome();
-    const text = container.querySelector("main")!.textContent!;
-    for (const step of ["Originate", "Structure", "Operate", "Realize", "Learn"]) {
-      expect(text).toContain(step);
-    }
+    expect(container.querySelector('[data-hv="method"]')).toBeNull();
+    expect(within(container.querySelector('nav')!).getByRole('button', {name:'Real Estate'})).toBeInTheDocument();
   });
-
-  it("locks the Opportunity Plan signature with its eight needs (§32.2)", () => {
+  it("keeps the optional tool behind an on-demand load and direct Strategy Lab access", () => {
     const { container } = renderHome();
-    const text = container.querySelector("main")!.textContent!;
-    expect(text).toContain("Most opportunities have a constraint to resolve.");
-    for (const need of [
-      "Control",
-      "Underwriting",
-      "Buyer",
-      "Capital",
-      "Development",
-      "Local context",
-      "Disposition",
-      "Asset operations",
-    ]) {
-      expect(text).toContain(need);
-    }
-    // The signature must never read as a commitment (§15/§21 discipline).
-    expect(text).toContain("Illustrative");
+    const plan = within(container.querySelector<HTMLElement>('[data-hv="plan"]')!);
+    expect(plan.getByRole('button', {name:'Open the planning guide'})).toBeInTheDocument();
+    expect(plan.getByRole('link', {name:'Open Strategy Lab'})).toHaveAttribute('href','/strategy-lab');
   });
-
-  it("locks the Partner Proposition and Founder Trust movements (§7.7–§7.8)", () => {
+  it("pairs the founder portrait and biography with the required representation boundary", () => {
     const { container } = renderHome();
-    const text = container.querySelector("main")!.textContent!;
-    expect(text).toContain("Bring the opportunity. Define the partnership.");
-    expect(text).toContain("Paolo");
-    expect(text).toContain("Duran Ramirez, Paolo Ariel");
-    expect(text).toContain("BMP Realty Inc DBA Keller Williams Realty-East Bay");
-    expect(text).toContain("CA DRE #02333658");
+    const founder = container.querySelector<HTMLElement>('[data-hv="founder"]')!;
+    expect(founder).toHaveTextContent('Apollo Duran');
+    expect(founder).toHaveTextContent('Duran Ramirez, Paolo Ariel');
+    expect(founder).toHaveTextContent('BMP Realty Inc DBA Keller Williams Realty-East Bay');
+    expect(founder).toHaveTextContent('CA DRE #02333658');
   });
-
-  it("keeps the seven movements in the locked narrative order (§32.1)", () => {
+  it("keeps exactly six sections in the blueprint order", () => {
     const { container } = renderHome();
-    const order = Array.from(
-      container.querySelectorAll<HTMLElement>("[data-hv]"),
-    ).map((el) => el.dataset.hv);
-    expect(order).toEqual([
-      "arrival",
-      "router",
-      "proof",
-      "method",
-      "plan",
-      "partner",
-      "founder",
-      "final",
-    ]);
+    expect(Array.from(container.querySelectorAll<HTMLElement>('[data-hv]')).map(el=>el.dataset.hv)).toEqual(['arrival','router','proof','founder','plan','final']);
   });
-
-  it("selecting an Opportunity Plan need reveals connected planning questions", () => {
+  it("selects the real connected question after loading the guide", async () => {
     const { container } = renderHome();
-    const plan = container.querySelector<HTMLElement>('[data-testid="opportunity-plan"]')!;
-    const choice = within(plan).getByRole('button', { name: 'Underwriting' });
+    fireEvent.click(within(container).getByRole('button', {name:'Open the planning guide'}));
+    const plan = await within(container).findByTestId('opportunity-plan');
+    const choice = within(plan).getByRole('button', {name:'Underwriting'});
     fireEvent.click(choice);
-    expect(choice).toHaveAttribute('aria-pressed', 'true');
-    expect(within(plan).getByRole('link', { name: 'Work through the numbers' })).toHaveAttribute('href', '/strategy-lab');
+    expect(choice).toHaveAttribute('aria-pressed','true');
+    expect(within(plan).getByRole('link', {name:'Work through the numbers'})).toHaveAttribute('href','/strategy-lab');
     expect(plan.querySelector('.op-map-node:not(.op-map-focus)')).toHaveTextContent('Capital');
   });
 });

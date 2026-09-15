@@ -217,26 +217,14 @@ describe("Public Pegasus CTAs never point at a dead destination (Task #201)", ()
 describe("Click harness actually exercises navigation (Task #201)", () => {
   // Guards against a vacuous pass: if the harness stopped triggering the
   // page's onClick wiring, this asserts Home still produces real navigations.
-  it("Home routes its CTAs through go() to real destinations", () => {
-    const { go, calls } = makeGo();
-    const { container } = renderPage(
-      <HomePageV51 go={go} openPeggy={noop} />,
-      "/",
-    );
-    clickAll(container);
-
-    expect(calls.length, "Home triggered no go() navigations").toBeGreaterThan(2);
-    // v5.1: the Visitor Router + Proof movements must route to real pages.
-    expect(calls, "Home router must offer the owner lane").toContain("sellers");
-    expect(calls, "Home proof must route to Our Work").toContain("ourwork");
-    for (const r of calls) {
-      expect(VALID_ROUTES.has(r), `Home routed to unknown key '${r}'`).toBe(true);
-    }
-    // §31: the primary CTA is a real link to the canonical intake URL.
-    const primary = Array.from(container.querySelectorAll("a")).find((a) =>
-      a.textContent?.includes("Bring an Opportunity"),
-    );
-    expect(primary?.getAttribute("href")).toBe("/bring-an-opportunity");
+  it("Home links actually navigate to the advertised public routes", () => {
+    const memory = memoryLocation({path:'/',record:true});
+    const {container} = render(<Router hook={memory.hook}><HomePageV51 go={noop} openPeggy={noop} /></Router>);
+    const links = Array.from(container.querySelectorAll<HTMLAnchorElement>('[data-hv="router"] a, [data-hv="proof"] a'));
+    expect(links).toHaveLength(4);
+    for (const link of links) { fireEvent.click(link); expect(memory.history?.at(-1)).toBe(link.getAttribute('href')); }
+    expect(memory.history).toContain('/property-owners');
+    expect(memory.history).toContain('/projects/nelson-dr');
   });
 });
 
