@@ -10,7 +10,7 @@
 .experience-page figure { margin:0; min-width:0; }
 .experience-page img { display:block; width:100%; height:auto; object-fit:cover; }
 .experience-page figcaption { font:400 13px/1.6 var(--pg-font-ui); color:var(--experience-muted); margin-top:12px; }
-.experience-page section[id],.experience-page [id$='lead'] { scroll-margin-top:112px; }
+.experience-page [id] { scroll-margin-top:112px; }
 .experience-page :is(a,button,select,input,textarea,summary):focus-visible { outline:2px solid var(--experience-copper); outline-offset:5px; }
 .ep-opening { padding:160px 0 64px; background:var(--experience-paper); border-bottom:1px solid var(--experience-rule); }
 .ep-opening-grid { display:grid; gap:48px; }

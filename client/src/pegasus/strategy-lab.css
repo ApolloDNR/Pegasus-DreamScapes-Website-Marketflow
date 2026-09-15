@@ -25,7 +25,7 @@
 .px-lab.experience-page .px-lab-step-footer { margin-top:32px; }
 .px-lab.experience-page .px-lab-step-footer button,.px-lab.experience-page .px-lab-review-actions button { min-height:48px; font:500 15px/1.5 var(--pg-font-ui); text-transform:none; letter-spacing:0; }
 .px-lab.experience-page .px-lab-assumption-note p { font-size:14px; }
-.px-lab.experience-page .px-lab-boundary { max-width:1280px; width:calc(100% - 2 * var(--experience-gutter)); margin:auto; padding:40px 0 64px; }
+.px-lab.experience-page .px-lab-boundary { max-width:1280px; width:calc(100% - 2 * var(--experience-gutter)); margin:auto; padding:40px 32px 48px; --experience-muted:#c0c8ca; --muted:#c0c8ca; background:#0b1d29; }
 .px-lab.experience-page .px-lab-boundary h2 { font-size:28px; }
 .px-lab.experience-page .px-lab-boundary p { font-size:14px; }
 @media(max-width:1099px) { .ep-lab-opening { padding-top:124px; } }

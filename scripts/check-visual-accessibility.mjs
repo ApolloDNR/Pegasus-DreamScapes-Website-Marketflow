@@ -1451,7 +1451,7 @@ let fatalFailure = null;
 // Exercise the redesigned public controls before the existing route scan and
 // screenshot. Every viewport/theme therefore checks the meaningful selected
 // state, including the mobile diagram that originally lost its labels.
-async function exercisePublicDesign(page, route, viewport) {
+async function exercisePublicDesign(page, route, viewport, health) {
   if (viewport.width === 1440 && ['/', '/property-owners', '/work-with-apollo', '/strategy-lab'].includes(route)) {
     try {
       for (const width of [320, 360, 430]) {
@@ -1511,6 +1511,8 @@ async function exercisePublicDesign(page, route, viewport) {
       }, null, { timeout: 5_000 });
       assert(await page.locator('#vendor-form').evaluate((element) => document.activeElement === element),
         'Vendor application arrival did not move keyboard focus to the form section');
+      const vendorRequests = await waitForActiveRequestCount(health, 0);
+      assert(vendorRequests.settled, 'Vendor application requests did not settle before returning');
       await page.goto(returnUrl, { waitUntil: 'load', timeout: 45_000 });
       await page.locator('h1').first().waitFor({ state: 'attached', timeout: 10_000 });
       await settleRenderedPage(page, 'return from vendor application');
@@ -1633,8 +1635,31 @@ try {
                     { waitUntil: 'load', timeout: 45_000 },
                   );
                   await page.locator('h1').first().waitFor({ state: 'attached', timeout: 10_000 });
+                  if (route === '/' && [390, 1440].includes(viewport.width)) {
+                    const arrival = await page.evaluate(async () => {
+                      const lcpEntries = [];
+                      const observer = new PerformanceObserver((list) => lcpEntries.push(...list.getEntries()));
+                      observer.observe({ type: 'largest-contentful-paint', buffered: true });
+                      await document.fonts.ready;
+                      await Promise.allSettled([...document.images].filter(image => image.getBoundingClientRect().top < innerHeight).map(image => image.decode()));
+                      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+                      observer.disconnect();
+                      const navigation = performance.getEntriesByType('navigation')[0];
+                      return {
+                        lcpMs: lcpEntries.at(-1)?.startTime ?? null,
+                        domContentLoadedMs: navigation?.domContentLoadedEventEnd ?? null,
+                        loadMs: navigation?.loadEventEnd ?? null,
+                        resources: performance.getEntriesByType('resource').map(entry => ({
+                          path: new URL(entry.name).pathname, type: entry.initiatorType,
+                          startMs: Math.round(entry.startTime), durationMs: Math.round(entry.duration),
+                          transferBytes: entry.transferSize,
+                        })),
+                      };
+                    });
+                    console.log(`[arrival-lab] ${JSON.stringify({ route, viewport, colorScheme, cache: 'disabled by guarded request routing', cpu: 'unthrottled GitHub runner', network: 'local exact-build HTTP server, no throttling', optionalServices: 'unavailable preview stubs', ...arrival })}`);
+                  }
                   await settleRenderedPage(page, 'route pre-axe');
-                  await exercisePublicDesign(page, route, viewport);
+                  await exercisePublicDesign(page, route, viewport, health);
                   const firstRequestState = await waitForActiveRequestCount(health, 0);
                   await page.addScriptTag({ content: axeSource });
 

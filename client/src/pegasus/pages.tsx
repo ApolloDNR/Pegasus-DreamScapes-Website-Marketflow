@@ -274,7 +274,7 @@ export function WorkWithApolloPage({ go }: { go: Nav }) {
         <div><h2>Agree the scope together.</h2><p>Seller or buyer representation may be available only after current license and broker verification, fit review, and a separate written brokerage agreement.</p></div>
         <div className="ep-rows"><RepLane rep={APOLLO_REP.seller} /><RepLane rep={APOLLO_REP.buyer} /></div>
       </div></section>
-      <section className="ep-section"><div className="experience-wrap ep-split"><h2>A clearly documented relationship.</h2><div><p>{APOLLO_DISCLOSURE}</p><p className="ep-notice">Equal Housing Opportunity. If representation is offered, the policy is to provide it without unlawful discrimination, subject to the signed brokerage agreement.</p></div></div></section>
+      <section className="ep-section ep-dark"><div className="experience-wrap ep-split"><h2>A clearly documented relationship.</h2><div><p>{APOLLO_DISCLOSURE}</p><p className="ep-notice">Equal Housing Opportunity. If representation is offered, the policy is to provide it without unlawful discrimination, subject to the signed brokerage agreement.</p></div></div></section>
       <div ref={leadRef} id="apollo-lead" className="ep-form-section">
         <LeadSection cfg={APOLLO_FORM} eyebrow="Represent with Apollo" tone="page" headingLevel={2} showRole preferredRole={preferredRole} onRoleChange={selectRole} roleFieldRef={roleFieldRef} showDecorativeContour={false} />
       </div>
