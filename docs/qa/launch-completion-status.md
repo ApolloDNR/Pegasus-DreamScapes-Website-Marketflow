@@ -10,6 +10,8 @@ Theme regression coverage now exercises a dark OS with no stored preference, a s
 
 Both-theme route shards now seed an explicit visitor preference and assert the actual rendered theme. OS emulation alone would otherwise exercise the new light default twice. The dedicated theme journey keeps storage empty to test first-visit behavior. The lazy Peggy-page unit test uses the same five-second rendering allowance as other lazily mounted supporting pages; its composer and handoff assertions remain intact.
 
+Rendered QA caught one shared-snapshot header caption at 4.47:1 on the warmer translucent surface. Its legacy navigation caption now uses readable 13px type and the semantic ink color. All final-source route/theme checks must pass after this correction; no failing contrast check is waived.
+
 ## September 15: approved homepage direction extended through visitor journeys
 
 Baseline: `73f50c0074eaa6afd5f1c63921317eddd1d250aa`, existing recovery branch and PR #26. Apollo approved the homepage direction and instructed us to develop the remaining site. The six-section homepage and approved imagery stay in place.

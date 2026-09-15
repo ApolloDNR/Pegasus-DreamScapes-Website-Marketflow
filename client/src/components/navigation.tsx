@@ -403,8 +403,8 @@ export function Navigation() {
                 Pegasus Dreamscapes
               </span>
               <span
-                className={`text-[9px] lg:text-[10px] tracking-[0.32em] uppercase font-supporting mt-1 ${
-                  onLightSurface ? "text-[hsl(var(--bronze))]" : "text-[hsl(var(--bronze-soft))]"
+                className={`text-[13px] tracking-[0.04em] font-supporting mt-1 ${
+                  onLightSurface ? "text-[hsl(var(--ink))]" : "text-[hsl(var(--bronze-soft))]"
                 }`}
               >
                 Deal Strategy
