@@ -1461,6 +1461,30 @@ let fatalFailure = null;
 // screenshot. Every viewport/theme therefore checks the meaningful selected
 // state, including the mobile diagram that originally lost its labels.
 async function exercisePublicDesign(page, route, viewport, health) {
+  if (['/property-owners', '/deal-partners'].includes(route) && viewport.width <= 900) {
+    const readableStack = await page.locator('.ep-choice-layout').evaluate(element => {
+      const [control, answer] = [...element.children].map(child => child.getBoundingClientRect());
+      return control && answer && Math.abs(control.left - answer.left) <= 2
+        && Math.abs(control.width - answer.width) <= 2 && answer.top >= control.bottom;
+    });
+    assert(readableStack, `${route} must keep the tablet/phone selector and answer in one readable column`);
+  }
+  if (route === '/property-owners' && viewport.width <= 1099) {
+    const readableProcess = await page.locator('.ep-process ol').evaluate(element => {
+      const rows = [...element.children].map(child => child.getBoundingClientRect());
+      return rows.length === 3 && rows.every((row, index) => Math.abs(row.left - rows[0].left) <= 2
+        && (index === 0 || row.top >= rows[index - 1].bottom));
+    });
+    assert(readableProcess, 'The owner process must use readable rows at tablet and phone widths');
+  }
+  if (route.startsWith('/snapshot/property/')) {
+    const clearOpening = await page.locator('h1').first().evaluate(heading => {
+      const label = heading.parentElement?.firstElementChild?.getBoundingClientRect();
+      const header = document.querySelector('header')?.getBoundingClientRect();
+      return label && (!header || label.top >= header.bottom - 1);
+    });
+    assert(clearOpening, 'Shared snapshot source label must clear the fixed navigation');
+  }
   if (['/property-owners', '/deal-partners'].includes(route) && viewport.width > 900) {
     const rowsFillColumn = await page.locator('.pg-choice-desktop button').evaluateAll(buttons => buttons.length > 0 && buttons.every(button =>
       Math.abs(button.getBoundingClientRect().width - button.parentElement.getBoundingClientRect().width) <= 2));

@@ -120,7 +120,7 @@ export default function SnapshotPropertyPage() {
       {/* Hero */}
       <section className="bg-[hsl(var(--navy))] text-cream">
         <div className="border-t-4 border-[hsl(var(--copper))]" />
-        <div className="max-w-[1180px] mx-auto px-6 lg:px-10 py-14 lg:py-20">
+        <div className="max-w-[1180px] mx-auto px-6 lg:px-10 pt-32 pb-14 lg:pt-36 lg:pb-20">
           <div className={`text-[10px] uppercase tracking-[0.3em] font-supporting font-semibold mb-4 ${HERO_ACCENT_CLASS}`}>
             Property Strategy Snapshot · {data.visibility === "full" ? "Full Tier" : "Summary Tier"}
           </div>

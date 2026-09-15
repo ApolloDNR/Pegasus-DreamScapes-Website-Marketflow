@@ -12,6 +12,8 @@ Both-theme route shards now seed an explicit visitor preference and assert the a
 
 Rendered QA caught one shared-snapshot header caption at 4.47:1 on the warmer translucent surface. Its legacy navigation caption now uses readable 13px type and the semantic ink color. All final-source route/theme checks must pass after this correction; no failing contrast check is waived.
 
+Manual screenshot review additionally found that the tablet selector left its answer in a narrow adjacent column and the three-step process compressed its paragraphs. Selectors and answers now stack together through 900px, matching the existing selector breakpoint; the process uses rows through 1099px. A shared snapshot opening receives enough top padding to keep its source label below the fixed header. The final-source matrix includes explicit geometry assertions for these cases.
+
 ## September 15: approved homepage direction extended through visitor journeys
 
 Baseline: `73f50c0074eaa6afd5f1c63921317eddd1d250aa`, existing recovery branch and PR #26. Apollo approved the homepage direction and instructed us to develop the remaining site. The six-section homepage and approved imagery stay in place.
