@@ -8,6 +8,8 @@ Apollo requested a cream/parchment initial appearance and a less overwhelming fi
 
 Theme regression coverage now exercises a dark OS with no stored preference, a saved manual choice after remount/refresh and navigation, and blocked browser storage. The invalid-input tool test checks that conclusions and handoff stay absent until valid inputs exist. Existing rendered route/journey coverage remains required. Current-source CI, protected deployment identity, and visual evidence will be recorded on PR #26 after publication; historical results below do not certify this refinement. Production dependencies and the existing preview-only authorization remain unchanged.
 
+Both-theme route shards now seed an explicit visitor preference and assert the actual rendered theme. OS emulation alone would otherwise exercise the new light default twice. The dedicated theme journey keeps storage empty to test first-visit behavior. The lazy Peggy-page unit test uses the same five-second rendering allowance as other lazily mounted supporting pages; its composer and handoff assertions remain intact.
+
 ## September 15: approved homepage direction extended through visitor journeys
 
 Baseline: `73f50c0074eaa6afd5f1c63921317eddd1d250aa`, existing recovery branch and PR #26. Apollo approved the homepage direction and instructed us to develop the remaining site. The six-section homepage and approved imagery stay in place.

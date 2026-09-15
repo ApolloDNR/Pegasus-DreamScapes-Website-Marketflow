@@ -316,7 +316,7 @@ describe("Pegasus public-shell navigation accessibility", () => {
 
     const pagePrompt = await screen.findByRole("textbox", {
       name: "Describe your deal",
-    });
+    }, { timeout: 5000 });
     await user.type(pagePrompt, "I inherited a duplex that needs major repairs");
     await user.click(
       within(pagePrompt.closest("form")!).getByRole("button", { name: "Open Peggy" }),

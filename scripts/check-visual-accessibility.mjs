@@ -1637,6 +1637,9 @@ try {
           reducedMotion: 'reduce',
         });
         try {
+          // Route shards test an explicit visitor choice; OS preference alone
+          // no longer selects dark mode for a first-time visitor.
+          await context.addInitScript((theme) => localStorage.setItem('pegasus-ui-theme', theme), colorScheme);
           await context.addInitScript(() => localStorage.setItem('pegasus-cookie-consent', JSON.stringify({
             essential: true, analytics: false, marketing: false, decidedAt: '2026-01-01T00:00:00.000Z',
           })));
@@ -1653,6 +1656,7 @@ try {
                     { waitUntil: 'load', timeout: 45_000 },
                   );
                   await page.locator('h1').first().waitFor({ state: 'attached', timeout: 10_000 });
+                  assert(await page.evaluate((theme) => document.documentElement.classList.contains(theme), colorScheme), `Route ${route} did not render the requested ${colorScheme} theme`);
                   if (route === '/' && [390, 1440].includes(viewport.width)) {
                     const arrival = await page.evaluate(async () => {
                       const lcpEntries = [];
