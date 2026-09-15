@@ -72,7 +72,7 @@ export function CommandPalette() {
   const navigationItems: CommandItem[] = [
     { id: "home", label: "Home", description: "Return to homepage", icon: Home, href: "/", keywords: ["main", "start"] },
     { id: "properties", label: "For Buyers", description: "Find a finished home or an investor-side read", icon: Home, href: "/buyers", keywords: ["buy", "house", "real estate"] },
-    { id: "wholesale", label: "For Partners", description: "Bring a lead, deal, or JV opportunity", icon: Briefcase, href: "/partners", keywords: ["deals", "investment", "jv"] },
+    { id: "wholesale", label: "For Partners", description: "Bring a lead, deal, or JV opportunity", icon: Briefcase, href: "/deal-partners", keywords: ["deals", "investment", "jv"] },
     { id: "sell", label: "For Sellers", description: "Submit a property or plan a listing", icon: DollarSign, href: "/sellers", keywords: ["sell", "property", "listing"] },
     { id: "invest", label: "Capital & Partnerships", description: "Private capital and partnership conversations", icon: TrendingUp, href: "/capital", keywords: ["partner", "capital"] },
     { id: "projects", label: "Case Studies", description: "Real project examples", icon: Target, href: "/projects", keywords: ["portfolio", "examples"] },
@@ -82,7 +82,7 @@ export function CommandPalette() {
 
   const toolItems: CommandItem[] = [
     { id: "strategy-lab", label: "Strategy Lab", description: "Run a property through the Pegasus lens", icon: Calculator, href: "/strategy-lab", keywords: ["math", "analyze", "calculator", "lane", "verdict"], badge: "New" },
-    { id: "resources", label: "Strategy Library", description: "Read the Pegasus frameworks", icon: BookOpen, href: "/strategy-lab/library", keywords: ["learn", "education"] },
+    { id: "resources", label: "Saved Work", description: "Resume Strategy Lab drafts and saved conversations", icon: BookOpen, href: "/saved", keywords: ["saved", "drafts", "conversations"] },
     { id: "community", label: "MarketFlow Community", description: "Private network conversations", icon: MessageSquare, href: "/marketflow/community", keywords: ["forum", "chat", "social"] },
   ];
 

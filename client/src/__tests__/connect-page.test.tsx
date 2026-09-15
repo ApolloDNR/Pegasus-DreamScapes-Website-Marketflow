@@ -4,36 +4,32 @@ import { cleanup, fireEvent, render, screen, within } from "@testing-library/rea
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 
-import ConnectPage from "@/pages/connect";
+import { ConnectChooser } from "@/pages/connect";
 
-function renderConnect() {
-  const { hook } = memoryLocation({ path: "/connect", static: true });
+function renderContactChooser() {
+  const { hook } = memoryLocation({ path: "/contact", static: true });
   return render(
     <Router hook={hook}>
-      <ConnectPage />
+      <ConnectChooser />
     </Router>,
   );
 }
 
 afterEach(() => cleanup());
 
-describe("Connect page route card", () => {
-  it("starts on the property route and updates when a lane is selected", () => {
-    renderConnect();
-
-    const activeLane = screen.getByTestId("connect-active-lane");
-    expect(within(activeLane).getByText("PROPERTY READ")).toBeInTheDocument();
-    expect(
-      within(activeLane).getByText("I need to sell or solve a property situation"),
-    ).toBeInTheDocument();
-
-    fireEvent.click(screen.getByTestId("button-connect-lane-buyer-investor"));
-
-    expect(within(activeLane).getByText("BUYER READ")).toBeInTheDocument();
-    expect(within(activeLane).getByText("I am buying or investing")).toBeInTheDocument();
-    expect(screen.getByTestId("link-connect-active-buyer-investor")).toHaveAttribute(
-      "href",
-      "/buyers",
-    );
+describe("Contact direct paths", () => {
+  it("makes all eight destinations available in a single activation", () => {
+    renderContactChooser();
+    const paths = {
+      'property-situation': '/bring-an-opportunity?intent=property',
+      representation: '/work-with-apollo', 'buyer-investor': '/buyers',
+      'deal-finder': '/deal-partners', build: '/development', capital: '/capital',
+      vendor: '/vendor-network', 'not-sure': 'mailto:apollo@pegasusdreamscapes.com',
+    };
+    for (const [id, href] of Object.entries(paths)) {
+      expect(screen.getByTestId(`link-connect-${id}`)).toHaveAttribute('href', href);
+    }
+    expect(screen.getByRole('link', { name: /Tools.*Model/ })).toHaveAttribute('href', '/tools');
+    expect(screen.queryByTestId('connect-active-lane')).not.toBeInTheDocument();
   });
 });

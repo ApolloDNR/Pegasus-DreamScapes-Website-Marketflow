@@ -148,6 +148,44 @@ const FUNDING_TIMELINES = [
 export function CapitalRaiseInvestmentStudio({
   open,
   onOpenChange,
+  project,
+}: CapitalRaiseInvestmentStudioProps) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-xl">
+        <DialogHeader>
+          <DialogTitle>Capital relationships begin privately</DialogTitle>
+          <DialogDescription>{project.title}</DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            This project record is not an executable offering. MarketFlow does not accept,
+            counter, allocate, or commit funds through this studio.
+          </p>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Any later conversation requires a separate relationship, diligence, eligibility,
+            and written documentation. Project terms and projections must be independently
+            verified.
+          </p>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <a href="/capital#capital-introduction" className="flex-1">
+              <Button variant="outline" className="w-full">
+                Relationship information
+              </Button>
+            </a>
+            <Button type="button" variant="ghost" className="flex-1" onClick={() => onOpenChange(false)}>
+              Close
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function LegacyCapitalRaiseInvestmentStudio({
+  open,
+  onOpenChange,
   mode,
   project,
   onSubmit,
@@ -171,12 +209,16 @@ export function CapitalRaiseInvestmentStudio({
   const form = useForm<InvestmentStudioData>({
     resolver: zodResolver(investmentSchema),
     defaultValues: {
-      investmentAmount: project.minInvestment || 25000,
+      investmentAmount: project.minInvestment ?? 0,
       acceptOperatorTerms: mode === "accept",
       counterInterestRate: project.askingInterestRate || "",
       counterLoanDuration: project.askingLoanDuration || "",
-      counterProfitSplit: parseInt(project.askingProfitSplit?.split("/")[0] || "70"),
-      counterPreferredReturn: parseFloat(project.askingPreferredReturn?.replace("%", "") || "8"),
+      counterProfitSplit: project.askingProfitSplit
+        ? parseInt(project.askingProfitSplit.split("/")[0], 10)
+        : undefined,
+      counterPreferredReturn: project.askingPreferredReturn
+        ? parseFloat(project.askingPreferredReturn.replace("%", ""))
+        : undefined,
       counterHoldPeriod: project.holdPeriod || "",
       investmentTranche: "single",
       milestoneConditions: "",
@@ -226,7 +268,7 @@ export function CapitalRaiseInvestmentStudio({
 
   const calculateMatchScore = () => {
     let score = 70;
-    if (investmentAmount >= (project.minInvestment || 25000)) score += 10;
+    if (project.minInvestment && investmentAmount >= project.minInvestment) score += 10;
     if (watchedValues.accreditedInvestor) score += 8;
     if (watchedValues.proofOfFunds) score += 7;
     if (watchedValues.fundingTimeline === "immediate") score += 5;
@@ -240,7 +282,7 @@ export function CapitalRaiseInvestmentStudio({
       id: "welcome",
       sender: "peggy",
       senderName: "Peggy",
-      message: `Welcome to ${project.title}! This is a ${structureLabel} opportunity seeking ${formatCurrency(fundingGoal)} total capital. The operator is offering ${project.projectedReturn || project.askingInterestRate || "attractive returns"}. I'll help you structure your investment optimally.`,
+      message: `${project.title} is recorded as a ${structureLabel} project seeking ${formatCurrency(fundingGoal)}. Terms and projections shown here are submitted context and require independent verification. I can help organize questions, but I cannot assess suitability or predict results.`,
       timestamp: new Date(),
       isAI: true,
     };
@@ -250,11 +292,9 @@ export function CapitalRaiseInvestmentStudio({
   const generatePeggyInsights = () => {
     const insights: string[] = [];
     
-    const progressPercent = (amountRaised / fundingGoal) * 100;
-    if (progressPercent > 70) {
-      insights.push(`This project is ${progressPercent.toFixed(0)}% funded - limited spots remaining!`);
-    } else if (progressPercent > 40) {
-      insights.push(`Good traction: ${progressPercent.toFixed(0)}% funded with strong investor interest`);
+    const progressPercent = fundingGoal > 0 ? (amountRaised / fundingGoal) * 100 : null;
+    if (progressPercent !== null) {
+      insights.push(`Recorded funding progress: ${progressPercent.toFixed(0)}%. Verify the source and current status before relying on it.`);
     }
 
     if (isDebt && project.askingInterestRate) {
@@ -269,13 +309,11 @@ export function CapitalRaiseInvestmentStudio({
       insights.push(`Projected return: ${project.projectedReturn}`);
     }
 
-    if (project.riskLevel === "low") {
-      insights.push("Lower risk profile - suitable for conservative investors");
-    } else if (project.riskLevel === "high") {
-      insights.push("Higher risk/reward profile - for experienced investors");
+    if (project.riskLevel) {
+      insights.push(`Submitted risk label: ${project.riskLevel}. This label is not an independent risk assessment.`);
     }
 
-    insights.push("Accredited investor status may unlock additional opportunities");
+    insights.push("Access, eligibility, and any later terms must be determined separately; no form response guarantees preferential treatment.");
 
     setPeggyInsights(insights);
   };
@@ -306,17 +344,19 @@ export function CapitalRaiseInvestmentStudio({
     let response = "";
 
     if (lowerInput.includes("return") || lowerInput.includes("profit")) {
-      response = `For this ${project.structure} structure, the operator projects ${project.projectedReturn || "strong returns"}. Based on similar deals, investors typically see actual returns within 10-20% of projections. Counter-offering for a higher profit split can improve your upside.`;
+      response = `The submitted record lists ${project.projectedReturn || "no projected return"}. Any projection is unverified and may differ materially from an actual result; this assistant cannot predict returns or recommend terms.`;
     } else if (lowerInput.includes("risk") || lowerInput.includes("safe")) {
-      response = `This project is rated as ${project.riskLevel || "medium"} risk. Key factors: operator track record, location strength (${project.location}), and market conditions. I recommend reviewing the operator's previous project performance.`;
+      response = `The submitted record lists the risk level as ${project.riskLevel || "not provided"}. That label is not an independent assessment. Verify the operator, title, budget, documents, market assumptions, and loss scenarios separately.`;
     } else if (lowerInput.includes("interest") || lowerInput.includes("rate")) {
-      response = `Current market rates for similar ${project.strategy} projects range from 10-14% annually. The operator's asking rate of ${project.askingInterestRate || "standard terms"} is ${parseFloat(project.askingInterestRate || "12") > 12 ? "above" : "within"} market averages.`;
+      response = `The submitted record lists ${project.askingInterestRate || "no interest rate"}. This assistant does not have verified comparable terms and cannot characterize a rate as fair, standard, or market-based.`;
     } else if (lowerInput.includes("invest") || lowerInput.includes("amount")) {
-      response = `The minimum investment is ${formatCurrency(project.minInvestment || 25000)}. Investing ${formatCurrency(Math.round(fundingGoal * 0.1))} or more may give you preferred treatment. Larger commitments often unlock better terms.`;
+      response = project.minInvestment
+        ? `The submitted record lists a minimum of ${formatCurrency(project.minInvestment)}. A larger amount does not guarantee access, priority, allocation, or different terms.`
+        : "The submitted record does not state a minimum. Do not infer one, and do not send funds through this interface.";
     } else if (lowerInput.includes("counter") || lowerInput.includes("negotiate")) {
-      response = `Good strategy! On ${project.structure} deals, you can typically negotiate: ${isDebt ? "interest rate (+1-2%), loan term, and payment schedule" : "profit split (5-10% more), preferred return, and hold period"}. Operators are more flexible when you commit quickly and provide proof of funds.`;
+      response = "Any possible terms must be discussed and documented separately. This assistant cannot recommend a counter, promise flexibility, or suggest that speed or proof of funds will earn preferential treatment.";
     } else {
-      response = `Great question about ${project.title}! This ${project.strategy?.replace(/-/g, " ")} project in ${project.location} has a solid foundation. Would you like me to analyze specific terms, suggest counter-offer strategies, or explain the investment structure?`;
+      response = `I can help identify missing fields and organize diligence questions about ${project.title}. I cannot validate the project, analyze suitability, recommend terms, or predict performance.`;
     }
 
     return {
@@ -435,7 +475,7 @@ export function CapitalRaiseInvestmentStudio({
               </div>
             </FormControl>
             <FormDescription className="flex items-center justify-between">
-              <span>Minimum: {formatCurrency(project.minInvestment || 25000)}</span>
+              <span>Minimum: {project.minInvestment ? formatCurrency(project.minInvestment) : "Not provided"}</span>
               <span className="font-medium text-primary">{myContributionPercent.toFixed(1)}% of total raise</span>
             </FormDescription>
             <FormMessage />

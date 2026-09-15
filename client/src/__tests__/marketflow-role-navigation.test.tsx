@@ -82,6 +82,8 @@ describe("MarketFlow role navigation only advertises working destinations", () =
     expect(linkFor("button-submit-deal")).toHaveAttribute("href", "/marketflow/submit");
     expect(screen.getByTestId("button-deal-registry-pilot")).toBeDisabled();
     expect(screen.getByTestId("action-browse-buyers-pilot")).toBeDisabled();
+    expect(queryKeys).toContain("/api/supabase/marketplace/wholesaler/deals");
+    expect(queryKeys).not.toContain("/api/supabase/wholesale-deals/my");
   });
 
   it("routes DreamScaper actions to real intake and project-management surfaces", () => {
@@ -90,6 +92,8 @@ describe("MarketFlow role navigation only advertises working destinations", () =
     expect(linkFor("button-new-project")).toHaveAttribute("href", "/marketflow/submit");
     expect(screen.getByTestId("button-project-registry-pilot")).toBeDisabled();
     expect(screen.getByTestId("action-raise-capital-pilot")).toBeDisabled();
+    expect(queryKeys).toContain("/api/supabase/marketplace/dreamscaper/projects");
+    expect(queryKeys).not.toContain("/api/supabase/capital-projects/my");
   });
 
   it("keeps investor portfolio and saved workspaces truthful while the pilot is controlled", () => {

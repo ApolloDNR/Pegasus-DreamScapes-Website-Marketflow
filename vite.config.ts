@@ -37,6 +37,7 @@ export default defineConfig({
   build: {
     outDir: path.resolve(projectRoot, "dist/public"),
     emptyOutDir: true,
+    manifest: true,
     rollupOptions: {
       output: {
         // §32.9 performance budget: keep the app entry lean and let the

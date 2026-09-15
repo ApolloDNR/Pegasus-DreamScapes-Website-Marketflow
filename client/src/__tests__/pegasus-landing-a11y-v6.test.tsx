@@ -14,6 +14,7 @@ import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 
 import { ThemeProvider } from "@/components/theme-provider";
+import { PeggyProvider } from "@/contexts/peggy-context";
 import { Landing } from "@/pegasus/Landing";
 
 vi.mock("@/lib/analytics", () => ({
@@ -21,6 +22,38 @@ vi.mock("@/lib/analytics", () => ({
   trackEvent: () => {},
   trackCtaClick: () => {},
 }));
+
+vi.mock("@/contexts/supabase-auth-context", async () => {
+  const actual = await vi.importActual<typeof import("@/contexts/supabase-auth-context")>(
+    "@/contexts/supabase-auth-context",
+  );
+  return {
+    ...actual,
+    useSupabaseAuth: () => ({
+      user: null,
+      session: null,
+      profile: null,
+      isLoading: false,
+      isAuthenticated: false,
+      isGuestMode: false,
+      guestRole: null,
+      userRole: null,
+      isAdmin: false,
+      isWholesaler: false,
+      isDreamscaper: false,
+      isInvestor: false,
+      isBuyer: false,
+      isPegasus: false,
+      hasPermission: () => false,
+      signUp: vi.fn(),
+      signIn: vi.fn(),
+      signOut: vi.fn(),
+      refreshProfile: vi.fn(),
+      enterGuestMode: vi.fn(),
+      exitGuestMode: vi.fn(),
+    }),
+  };
+});
 
 class NoopIntersectionObserver {
   root = null;
@@ -34,12 +67,46 @@ class NoopIntersectionObserver {
   }
 }
 
+class NoopResizeObserver {
+  constructor(private readonly callback: ResizeObserverCallback) {}
+  observe(target: Element) {
+    const contentRect = {
+      x: 0,
+      y: 0,
+      width: 1024,
+      height: 768,
+      top: 0,
+      right: 1024,
+      bottom: 768,
+      left: 0,
+      toJSON: () => ({}),
+    } as DOMRectReadOnly;
+    this.callback(
+      [{
+        target,
+        contentRect,
+        borderBoxSize: [],
+        contentBoxSize: [],
+        devicePixelContentBoxSize: [],
+      }],
+      this as unknown as ResizeObserver,
+    );
+  }
+  unobserve() {}
+  disconnect() {}
+}
+
 if (typeof globalThis.IntersectionObserver === "undefined") {
   (
     globalThis as unknown as {
       IntersectionObserver: typeof NoopIntersectionObserver;
     }
   ).IntersectionObserver = NoopIntersectionObserver;
+}
+
+if (typeof globalThis.ResizeObserver === "undefined") {
+  (globalThis as unknown as { ResizeObserver: typeof NoopResizeObserver })
+    .ResizeObserver = NoopResizeObserver;
 }
 
 if (typeof window !== "undefined" && !window.matchMedia) {
@@ -74,7 +141,9 @@ function renderLanding(routePath: string) {
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>
         <Router hook={memory.hook}>
-          <Landing />
+          <PeggyProvider>
+            <Landing />
+          </PeggyProvider>
         </Router>
       </ThemeProvider>
     </QueryClientProvider>,
@@ -86,6 +155,7 @@ function renderLanding(routePath: string) {
 afterEach(() => {
   cleanup();
   window.localStorage.clear();
+  window.sessionStorage.clear();
   window.history.replaceState({}, "", "/");
 });
 
@@ -102,30 +172,30 @@ type SignatureRoute = {
 const SIGNATURE_ROUTES: SignatureRoute[] = [
   {
     path: "/how-we-operate",
-    pageHeading: /Complex opportunities fail when the pieces are fragmented/i,
+    pageHeading: /From property to plan to execution/i,
     groupName: "The five operating stages",
     initialChoice: "Originate",
     nextChoice: "Structure",
-    outputSelector: ".hwo-stage",
-    nextOutput: /Set the role, the strategy, and the terms/i,
+    outputSelector: "#operating-stage",
+    nextOutput: /Compare possible roles, strategies, and required terms/i,
   },
   {
     path: "/property-owners",
-    pageHeading: /A difficult property does not always need a conventional solution/i,
+    pageHeading: /A clear next step for your property/i,
     groupName: "Common owner situations",
     initialChoice: "Significant repairs",
     nextChoice: "Inherited property",
-    outputSelector: ".po-path",
-    nextOutput: /Probate timing, siblings, and an old house at once/i,
+    outputSelector: "#owner-path",
+    nextOutput: /Start with who owns the property, who is involved in the decision, and any probate or trust process already underway/i,
   },
   {
     path: "/deal-partners",
-    pageHeading: /You found the opportunity\. We help make it executable/i,
+    pageHeading: /Bring the deal. Define the role/i,
     groupName: "What the deal is missing",
     initialChoice: "Seller access or negotiation",
     nextChoice: "Underwriting",
-    outputSelector: ".dp-answer",
-    nextOutput: /Our own numbers on the deal/i,
+    outputSelector: "#partner-answer",
+    nextOutput: /Separate supported property facts from visitor-entered scope/i,
   },
 ];
 
@@ -148,51 +218,21 @@ describe("Pegasus public-shell navigation accessibility", () => {
     ).toBeTruthy();
   });
 
-  it("keeps Strategy Lab and MarketFlow visible and exposes the complete More directory", async () => {
-    const user = userEvent.setup({ delay: null });
+  it("keeps four navigation destinations with direct tool access and one primary action", () => {
     const { container } = renderLanding("/");
-    const nav = container.querySelector("nav");
-    expect(nav).toBeTruthy();
-
-    expect(within(nav!).getByRole("link", { name: /Strategy Lab/i })).toHaveAttribute(
-      "href",
-      "/strategy-lab",
-    );
-    expect(within(nav!).getByRole("link", { name: /MarketFlow/i })).toHaveAttribute(
-      "href",
-      "/marketflow",
-    );
-
-    const more = within(nav!).getByRole("button", { name: /More/i });
-    await user.click(more);
-
-    const directory = screen.getByRole("region", { name: /More Pegasus pages/i });
-    expect(within(directory).getByRole("link", { name: /Our Work/i })).toHaveAttribute(
-      "href",
-      "/our-work",
-    );
-    expect(within(directory).getByRole("link", { name: /Investments/i })).toBeInTheDocument();
-    expect(within(directory).getByRole("link", { name: /Pegasus Ecosystem/i })).toBeInTheDocument();
-    expect(more).not.toHaveAttribute("aria-haspopup");
-
-    await user.keyboard("{Escape}");
-    expect(screen.queryByRole("region", { name: /More Pegasus pages/i })).not.toBeInTheDocument();
-    expect(more).toHaveFocus();
+    const nav = within(container.querySelector('nav')!);
+    expect(nav.getAllByRole('link').map(link=>link.getAttribute('href'))).toEqual(['/','/our-work','/tools','/about','/bring-an-opportunity']);
+    expect(nav.getByRole('button', {name:'Real Estate'})).toHaveAttribute('aria-expanded','false');
+    expect(nav.queryByRole('link', {name:/MarketFlow/})).not.toBeInTheDocument();
+    expect(container.querySelector('footer a[href="/marketflow"]')).toHaveTextContent('MarketFlow');
+    expect(within(container.querySelector('[data-hv="plan"]')!).getByRole('link',{name:'Open Strategy Lab'})).toHaveAttribute('href','/strategy-lab');
   });
 
-  it("keeps product navigation active throughout its public child journeys", () => {
-    const marketflow = renderLanding("/marketflow/access");
+  it("marks the approved public spine active on its destinations", () => {
+    const work = renderLanding("/our-work");
     expect(
-      within(marketflow.container.querySelector("nav")!).getByRole("link", {
-        name: /MarketFlow/i,
-      }),
-    ).toHaveAttribute("aria-current", "page");
-    cleanup();
-
-    const lab = renderLanding("/strategy-lab/classic");
-    expect(
-      within(lab.container.querySelector("nav")!).getByRole("link", {
-        name: /Strategy Lab/i,
+      within(work.container.querySelector("nav")!).getByRole("link", {
+        name: /Our Work/i,
       }),
     ).toHaveAttribute("aria-current", "page");
   });
@@ -209,23 +249,21 @@ describe("Pegasus public-shell navigation accessibility", () => {
     expect(trigger).toHaveAttribute("aria-expanded", "true");
     expect(container.querySelector("nav")).toHaveAttribute("inert");
 
-    const initial = within(menu).getByRole("link", {
-      name: /Bring an Opportunity/i,
-    });
+    const initial = within(menu).getByRole("button", { name: "Close menu" });
     const first = within(menu).getByRole("button", { name: "Close menu" });
-    const last = within(menu).getByRole("link", { name: /^Peggy/i });
-    expect(within(menu).getByRole("heading", { name: "Core pages" })).toBeInTheDocument();
-    expect(within(menu).getByRole("heading", { name: "Company & proof" })).toBeInTheDocument();
-    expect(within(menu).getByRole("heading", { name: "Operating lanes" })).toBeInTheDocument();
-    expect(within(menu).getByRole("heading", { name: "Network & resources" })).toBeInTheDocument();
+    expect(within(menu).getByText('Real Estate').closest('details')).not.toHaveAttribute('open');
+    expect(within(menu).getByRole('link', {name:'Tools'})).toHaveAttribute('href','/tools');
+    expect(container.querySelector('main')).toHaveAttribute('inert');
     await waitFor(() => expect(initial).toHaveFocus());
 
-    last.focus();
+    first.focus();
+    await user.tab({ shift: true });
+    const last = document.activeElement;
+    expect(last).not.toBe(first);
+    expect(menu.contains(last)).toBe(true);
+
     await user.tab();
     expect(first).toHaveFocus();
-
-    await user.tab({ shift: true });
-    expect(last).toHaveFocus();
 
     await user.keyboard("{Escape}");
     await waitFor(() => {
@@ -233,8 +271,64 @@ describe("Pegasus public-shell navigation accessibility", () => {
       expect(trigger).toHaveFocus();
     });
     expect(container.querySelector("nav")).not.toHaveAttribute("inert");
-    expect(menu).toHaveAttribute("aria-hidden", "true");
-    expect(menu).not.toHaveAttribute("aria-modal");
+    expect(menu).not.toBeInTheDocument();
+    expect(container.querySelector("main")).not.toHaveAttribute("inert");
+  });
+
+  it("keeps mobile core-page parity and follows a real first-level route", async () => {
+    const user = userEvent.setup({ delay: null });
+    const { history } = renderLanding("/");
+
+    await user.click(screen.getByRole("button", { name: "Open menu" }));
+    const menu = screen.getByRole("dialog", { name: "Primary navigation" });
+    const coreSection = menu.querySelector<HTMLElement>('.site-mobile-body')!;
+    const coreLinks = Array.from(menu.querySelectorAll<HTMLAnchorElement>('.site-mobile-link'));
+    expect(coreLinks.map(link=>link.getAttribute('href'))).toEqual(['/our-work','/tools','/about']);
+    expect(within(menu).getByRole('link',{name:'Bring an Opportunity'})).toHaveAttribute('href','/bring-an-opportunity');
+    expect(menu.querySelector('a[href="/marketflow"]')).not.toBeInTheDocument();
+
+    await user.click(within(coreSection!).getByRole("link", { name: "Our Work" }));
+    await waitFor(() => {
+      expect(history.at(-1)).toBe("/our-work");
+      expect(menu).not.toBeInTheDocument();
+    });
+  });
+
+  it("opens the Peggy dialog from the mobile menu entry", async () => {
+    const user = userEvent.setup({ delay: null });
+    renderLanding("/");
+
+    await user.click(screen.getByRole("button", { name: "Open menu" }));
+    const menu = screen.getByRole("dialog", { name: "Primary navigation" });
+    await user.click(within(menu).getByRole("button", { name: "Talk to Peggy" }));
+
+    expect(menu).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("dialog", {
+        name: "Peggy, the Pegasus intake concierge",
+      }),
+    ).toHaveAttribute("aria-hidden", "false");
+  });
+
+  it("carries the /peggy page prompt into the live Peggy composer", async () => {
+    const user = userEvent.setup({ delay: null });
+    renderLanding("/peggy");
+
+    const pagePrompt = await screen.findByRole("textbox", {
+      name: "Describe your deal",
+    }, { timeout: 5000 });
+    await user.type(pagePrompt, "I inherited a duplex that needs major repairs");
+    await user.click(
+      within(pagePrompt.closest("form")!).getByRole("button", { name: "Open Peggy" }),
+    );
+
+    const dialog = screen.getByRole("dialog", {
+      name: "Peggy, the Pegasus intake concierge",
+    });
+    expect(dialog).toHaveAttribute("aria-hidden", "false");
+    expect(within(dialog).getByRole("textbox", { name: "Talk to Peggy" })).toHaveValue(
+      "I inherited a duplex that needs major repairs",
+    );
   });
 });
 
@@ -245,7 +339,7 @@ describe("Pegasus v6 Landing-shell choice controls", () => {
     const main = container.querySelector("main")!;
     const group = await within(main).findByRole("group", {
       name: "MarketFlow relationship roles",
-    });
+    }, { timeout: 5000 });
     expect(main.querySelector('[role="tablist"]')).toBeNull();
 
     const source = within(group).getByRole("button", { name: "Deal source" });
@@ -256,14 +350,18 @@ describe("Pegasus v6 Landing-shell choice controls", () => {
     await user.click(buyer);
     expect(source).toHaveAttribute("aria-pressed", "false");
     expect(buyer).toHaveAttribute("aria-pressed", "true");
-    expect(within(main).getByText(/See only what fits your mandate/i)).toBeInTheDocument();
+    expect(within(main).getByText(/Define the buyer mandate/i)).toBeInTheDocument();
   });
 
   for (const route of SIGNATURE_ROUTES) {
     it(`${route.path} uses button-group semantics and announces the current output`, async () => {
       const { container } = renderLanding(route.path);
 
-      await screen.findByRole("heading", { name: route.pageHeading });
+      await screen.findByRole(
+        "heading",
+        { name: route.pageHeading },
+        { timeout: 5000 },
+      );
       const main = container.querySelector("main");
       expect(main, `${route.path} must render inside the live Landing main`).toBeTruthy();
 
@@ -296,25 +394,49 @@ describe("Pegasus v6 Landing-shell choice controls", () => {
 });
 
 describe("Pegasus Strategy Lab workspace accessibility", () => {
+  it("keeps the mounted entry concise and carries the full operating boundary", async () => {
+    const { container } = renderLanding("/strategy-lab");
+    const main = container.querySelector("main")!;
+
+    await within(main).findByRole("heading", {
+      name: /Strategy Lab\./i,
+    });
+
+    expect(
+      within(main).getByText(/Explore a property’s costs, assumptions, and possible next steps/),
+    ).toBeInTheDocument();
+    expect(
+      within(main).queryByLabelText(/Strategy Lab operating record/i),
+    ).not.toBeInTheDocument();
+    expect(
+      within(main).queryByLabelText(/Strategy Lab principles/i),
+    ).not.toBeInTheDocument();
+
+    const boundary = within(main).getByTestId("text-strategy-disclaimer");
+    expect(boundary).toHaveTextContent(
+      "Strategy Lab outputs come from visitor-entered, unverified assumptions and an automated model. They are preliminary and directional, not legal, tax, lending, accounting, appraisal, engineering, securities, construction, or investment advice. Carrying a brief into intake does not guarantee review, response, routing, an offer, or a timeline.",
+    );
+  });
+
   it("opens on the real decision desk, advances steps, and moves focus to the current workspace heading", async () => {
     const { container } = renderLanding("/strategy-lab");
 
     await screen.findByRole("heading", {
-      name: /Turn one property into a decision you can defend/i,
+      name: /Strategy Lab\./i,
     });
     const main = container.querySelector("main");
     expect(main).toBeTruthy();
 
-    const basisStep = within(main!).getByRole("button", { name: /02\s*Basis/i });
+    const basisStep = within(main!).getByRole("button", { name: /02\s*Assumptions/i });
     fireEvent.click(basisStep);
 
     const heading = await within(main!).findByRole("heading", {
-      name: /Strategy Lab Basis step/i,
+      name: /Strategy Lab Assumptions step/i,
     });
     await waitFor(() => expect(heading).toHaveFocus());
     expect(
       within(main!).getByRole("heading", {
-        name: /Make every material assumption visible/i,
+        name: /Set the assumptions/i,
       }),
     ).toBeInTheDocument();
     expect(basisStep).toHaveAttribute("aria-current", "step");
@@ -325,7 +447,7 @@ describe("Pegasus Strategy Lab workspace accessibility", () => {
     const { container } = renderLanding("/strategy-lab");
     const main = container.querySelector("main")!;
 
-    await user.click(within(main).getByRole("button", { name: /02\s*Basis/i }));
+    await user.click(within(main).getByRole("button", { name: /02\s*Assumptions/i }));
     const acquisition = within(main).getByRole("textbox", {
       name: /Acquisition or current basis/i,
     });
@@ -344,43 +466,188 @@ describe("Pegasus Strategy Lab workspace accessibility", () => {
 
     expect(ltv).toHaveAttribute("aria-invalid", "true");
     expect(within(main).getByText(/Use a percentage from 0 to 100/i)).toBeInTheDocument();
-    expect(within(main).getAllByText("—").length).toBeGreaterThan(0);
+    const summary = within(main).getByRole("complementary", { name: "Current planning summary" });
+    expect(summary).toHaveTextContent("A few facts first.");
+    expect(within(summary).queryByText("Leading path")).not.toBeInTheDocument();
+    expect(within(summary).queryByText("Open questions")).not.toBeInTheDocument();
 
-    await user.click(within(main).getByRole("button", { name: /03\s*Paths/i }));
+    await user.click(within(main).getByRole("button", { name: /03\s*Compare/i }));
     expect(
       within(main).getByRole("status", { name: /More inputs required/i }),
     ).toHaveTextContent(/Decision brief not generated/i);
     expect(within(main).queryByText(/View all nine paths/i)).not.toBeInTheDocument();
     expect(
-      within(main).getByRole("button", { name: /Carry this brief into intake/i }),
-    ).toBeDisabled();
+      within(main).queryByRole("button", { name: /Carry this brief into intake/i }),
+    ).not.toBeInTheDocument();
 
-    await user.click(within(main).getByRole("button", { name: /04\s*Brief/i }));
+    await user.click(within(main).getByRole("button", { name: /04\s*Summary/i }));
     expect(
       within(main).getByRole("status", { name: /Decision brief unavailable/i }),
     ).toHaveTextContent(/needs valid inputs/i);
     expect(within(main).queryByText(/Read the full engine rationale/i)).not.toBeInTheDocument();
   });
 
-  it("opens calculator deep links at the instrument library and keeps the detail open when switching", async () => {
+  it("carries one valid basis through live paths, the brief, and the intake handoff", async () => {
     const user = userEvent.setup({ delay: null });
-    window.history.replaceState({}, "", "/strategy-lab?tool=calculators&tab=roi");
-    const { container } = renderLanding("/strategy-lab");
+    const { container, history } = renderLanding("/strategy-lab");
     const main = container.querySelector("main")!;
 
-    const group = await within(main).findByRole("group", {
-      name: /Underwriting instruments/i,
-    });
-    const roi = within(group).getByRole("button", { name: /Return frame/i });
-    const cashFlow = within(group).getByRole("button", { name: /Cash flow/i });
-    expect(roi).toHaveAttribute("aria-pressed", "true");
-    expect(cashFlow).toHaveAttribute("aria-pressed", "false");
-    expect(main.querySelector(".px-lab-instrument-detail")).toBeInTheDocument();
+    await user.type(
+      within(main).getByRole("textbox", { name: /Property address or city/i }),
+      "19 Bay View Ave, Walnut Creek",
+    );
+    await user.click(within(main).getByRole("button", { name: /02\s*Assumptions/i }));
+    expect(within(main).queryByText(/02 · Basis ledger/i)).not.toBeInTheDocument();
 
-    await user.click(cashFlow);
-    expect(roi).toHaveAttribute("aria-pressed", "false");
-    expect(cashFlow).toHaveAttribute("aria-pressed", "true");
-    expect(main.querySelector(".px-lab-instrument-detail")).toBeInTheDocument();
+    const acquisition = within(main).getByRole("textbox", {
+      name: /Acquisition or current basis/i,
+    });
+    const scope = within(main).getByRole("textbox", {
+      name: /Scope \/ improvement budget/i,
+    });
+    const exitValue = within(main).getByRole("textbox", {
+      name: /Projected exit value/i,
+    });
+    const marketRent = within(main).getByRole("textbox", {
+      name: /Projected monthly market rent/i,
+    });
+    await user.type(acquisition, "600000");
+    await user.type(scope, "105000");
+    await user.type(exitValue, "840000");
+    await user.type(marketRent, "4500");
+
+    await user.click(within(main).getByRole("button", { name: /03\s*Compare/i }));
+    expect(
+      within(main).getByRole("heading", { name: /Compare the possible paths/i }),
+    ).toBeInTheDocument();
+    expect(within(main).getByText(/View all nine paths/i)).toBeInTheDocument();
+    expect(
+      within(main).getByRole("button", { name: /Carry this brief into intake/i }),
+    ).toBeEnabled();
+
+    await user.click(within(main).getByRole("button", { name: /04\s*Summary/i }));
+    expect(
+      within(main).getByRole("region", { name: /Decision brief/i }),
+    ).toBeInTheDocument();
+    const intake = within(main).getByRole("button", {
+      name: /Carry this brief into intake/i,
+    });
+    expect(intake).toBeEnabled();
+    await user.click(intake);
+
+    await waitFor(() => {
+      expect(history).toContain(
+        "/bring-an-opportunity?intent=property&ref=strategy-lab",
+      );
+    });
+    expect(window.sessionStorage.length).toBeGreaterThan(0);
+  });
+
+  it("opens the real calculator selection model directly and focuses it", async () => {
+    const user = userEvent.setup({ delay: null });
+    const originalScrollIntoView = Element.prototype.scrollIntoView;
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    try {
+      const { container } = renderLanding("/strategy-lab");
+      const main = container.querySelector("main")!;
+      await user.click(
+        within(main).getByRole("button", { name: /Open calculators/i }),
+      );
+
+      const panel = await within(main).findByRole("region", {
+        name: /Decision calculators/i,
+      });
+      await within(panel).findByRole("tablist", undefined, { timeout: 5000 });
+      expect(within(main).getAllByRole("tablist")).toHaveLength(1);
+      expect(
+        within(main).queryByRole("group", { name: /Underwriting instruments/i }),
+      ).not.toBeInTheDocument();
+      expect(within(main).queryByText(/Selected worksheet/i)).not.toBeInTheDocument();
+      expect(
+        within(main).queryByRole("button", { name: /Open detailed worksheet/i }),
+      ).not.toBeInTheDocument();
+      await waitFor(() => expect(panel).toHaveFocus());
+      expect(scrollIntoView).toHaveBeenCalledWith({
+        block: "start",
+        behavior: "smooth",
+      });
+    } finally {
+      Element.prototype.scrollIntoView = originalScrollIntoView;
+    }
+  });
+
+  it("uses non-animated calculator focus when reduced motion is preferred", async () => {
+    const user = userEvent.setup({ delay: null });
+    const originalMatchMedia = window.matchMedia;
+    const originalScrollIntoView = Element.prototype.scrollIntoView;
+    const scrollIntoView = vi.fn();
+    window.matchMedia = vi.fn((query: string) => ({
+      matches: query === "(prefers-reduced-motion: reduce)",
+      media: query,
+      onchange: null,
+      addListener: () => {},
+      removeListener: () => {},
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      dispatchEvent: () => false,
+    })) as typeof window.matchMedia;
+    Element.prototype.scrollIntoView = scrollIntoView;
+    try {
+      const { container } = renderLanding("/strategy-lab");
+      const main = container.querySelector("main")!;
+      await user.click(
+        within(main).getByRole("button", { name: /Open calculators/i }),
+      );
+
+      const panel = await within(main).findByRole("region", {
+        name: /Decision calculators/i,
+      });
+      await waitFor(() => expect(panel).toHaveFocus());
+      expect(scrollIntoView).toHaveBeenCalledWith({
+        block: "start",
+        behavior: "auto",
+      });
+      expect(scrollIntoView).not.toHaveBeenCalledWith({
+        block: "start",
+        behavior: "smooth",
+      });
+    } finally {
+      window.matchMedia = originalMatchMedia;
+      Element.prototype.scrollIntoView = originalScrollIntoView;
+    }
+  });
+
+  it("opens calculator deep links at the single real selector and keeps the selected tab in the URL", async () => {
+    const user = userEvent.setup({ delay: null });
+    const originalScrollIntoView = Element.prototype.scrollIntoView;
+    const scrollIntoView = vi.fn();
+    Element.prototype.scrollIntoView = scrollIntoView;
+    window.history.replaceState({}, "", "/strategy-lab?tool=calculators&tab=roi");
+    try {
+      const { container } = renderLanding("/strategy-lab");
+      const main = container.querySelector("main")!;
+
+      const panel = await within(main).findByRole("region", {
+        name: /Decision calculators/i,
+      });
+      await within(panel).findByRole("tablist");
+      expect(within(main).getAllByRole("tablist")).toHaveLength(1);
+      const roi = within(panel).getByRole("tab", { name: /^ROI$/i });
+      const cashFlow = within(panel).getByRole("tab", { name: /Cash Flow/i });
+      expect(roi).toHaveAttribute("aria-selected", "true");
+      expect(cashFlow).toHaveAttribute("aria-selected", "false");
+      await waitFor(() => expect(panel).toHaveFocus());
+      expect(scrollIntoView).toHaveBeenCalledWith({ block: "start", behavior: "auto" });
+
+      await user.click(cashFlow);
+      expect(roi).toHaveAttribute("aria-selected", "false");
+      expect(cashFlow).toHaveAttribute("aria-selected", "true");
+      expect(window.location.search).toContain("tool=calculators");
+      expect(window.location.search).toContain("tab=cashflow");
+    } finally {
+      Element.prototype.scrollIntoView = originalScrollIntoView;
+    }
   });
 });
 
@@ -389,17 +656,17 @@ describe("Pegasus v6 live About routing", () => {
     const { container } = renderLanding("/about");
 
     await screen.findByRole("heading", {
-      name: /A single, accountable point of view/i,
+      name: /Apollo Duran/i,
     });
     const main = container.querySelector("main");
     expect(main).toBeTruthy();
 
     const links = within(main!).getAllByRole("link", {
-      name: /Bring an Opportunity/i,
+      name: /Start a conversation|Contact Apollo/i,
     });
     expect(links).toHaveLength(2);
     for (const link of links) {
-      expect(link).toHaveAttribute("href", "/bring-an-opportunity");
+      expect(link).toHaveAttribute("href", "/contact");
     }
 
     expect(

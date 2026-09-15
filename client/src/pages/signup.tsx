@@ -16,8 +16,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardDescription } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Mail, Lock, User, Building2, Home, DollarSign, Briefcase, CheckCircle2, Eye } from "lucide-react";
@@ -35,6 +36,9 @@ const signupSchema = z.object({
     "buyer_retail",
     "buyer_investment",
   ] as const),
+  acceptPolicies: z.boolean().refine((accepted) => accepted, {
+    message: "Accept the Terms and Privacy Policy to create an account",
+  }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -45,32 +49,32 @@ type SignupFormData = z.infer<typeof signupSchema>;
 const roleOptions = [
   {
     value: "wholesaler",
-    label: "Wholesaler",
-    description: "I find and flip deals to investors",
+    label: "Deal sourcing",
+    description: "I am interested in sourcing or assigning opportunities",
     icon: Briefcase,
   },
   {
     value: "dreamscaper",
-    label: "DreamScaper",
-    description: "I renovate and transform properties",
+    label: "Renovation / operations",
+    description: "I am interested in renovating or operating projects",
     icon: Building2,
   },
   {
     value: "investor",
-    label: "Investor",
-    description: "I invest capital in real estate deals",
+    label: "Capital relationships",
+    description: "I am interested in learning about private capital relationships",
     icon: DollarSign,
   },
   {
     value: "buyer_retail",
-    label: "Retail Buyer",
-    description: "I'm looking for my next home",
+    label: "Home buying",
+    description: "I am interested in licensed buyer-representation information",
     icon: Home,
   },
   {
     value: "buyer_investment",
-    label: "Investment Buyer",
-    description: "I buy properties for investment",
+    label: "Investment-property buying",
+    description: "I am interested in investment-property buying information",
     icon: Building2,
   },
 ];
@@ -95,6 +99,7 @@ export default function SignupPage() {
       password: "",
       confirmPassword: "",
       role: "investor",
+      acceptPolicies: false,
     },
   });
 
@@ -118,11 +123,11 @@ export default function SignupPage() {
         });
       } else {
         toast({
-          title: "Account Created",
-          description: "Please check your email to verify your account.",
+          title: "Preview Account Created",
+          description:
+            "Please check your email to verify the account. MarketFlow access remains separate and invitation-led.",
         });
-        const dashboardPath = getRoleDashboardPath(data.role as UserRole);
-        setLocation(dashboardPath);
+        setLocation("/marketflow");
       }
     } catch (err) {
       toast({
@@ -154,14 +159,22 @@ export default function SignupPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 px-4 pt-24 pb-12">
       <Card className="w-full max-w-lg">
         <CardHeader className="space-y-2 text-center">
-          <CardTitle className="text-3xl font-serif" data-testid="text-signup-title">
-            Join Pegasus DreamScapes
-          </CardTitle>
+          <h1
+            className="text-3xl font-serif font-semibold leading-none tracking-tight"
+            data-testid="text-signup-title"
+          >
+            Create a Pegasus preview account
+          </h1>
           <CardDescription>
             {step === 1
-              ? "Select your role to get started"
-              : "Complete your account setup"}
+              ? "Choose the interest that should shape your preview"
+              : "Complete your general preview-account setup"}
           </CardDescription>
+
+          <p className="text-sm text-muted-foreground leading-relaxed pt-2" data-testid="signup-access-boundary">
+            Your selected role records declared interest. It does not verify or approve you,
+            and it does not grant MarketFlow inventory access or submission privileges.
+          </p>
 
           <div className="flex items-center justify-center gap-2 pt-4">
             <div
@@ -171,7 +184,7 @@ export default function SignupPage() {
               )}
             >
               {step > 1 ? <CheckCircle2 className="h-4 w-4" /> : <span>1</span>}
-              <span>Role</span>
+              <span>Interest</span>
             </div>
             <div className="w-8 h-0.5 bg-border" />
             <div
@@ -196,7 +209,7 @@ export default function SignupPage() {
                     name="role"
                     render={({ field }) => (
                       <FormItem className="space-y-4">
-                        <FormLabel className="sr-only">Select your role</FormLabel>
+                        <FormLabel className="sr-only">Select your declared interest</FormLabel>
                         <FormControl>
                           <RadioGroup
                             onValueChange={field.onChange}
@@ -283,6 +296,32 @@ export default function SignupPage() {
                           </div>
                         </FormControl>
                         <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="acceptPolicies"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-start gap-3 rounded-md border border-border p-4">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={(checked) => field.onChange(checked === true)}
+                              data-testid="checkbox-signup-policies"
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel className="text-sm font-normal leading-relaxed cursor-pointer">
+                              I agree to the <Link href="/terms" className="underline underline-offset-2">Terms</Link>{" "}
+                              and acknowledge the <Link href="/privacy" className="underline underline-offset-2">Privacy Policy</Link>.
+                              Creating this account does not create MarketFlow approval or access.
+                            </FormLabel>
+                            <FormMessage />
+                          </div>
+                        </div>
                       </FormItem>
                     )}
                   />
@@ -377,7 +416,7 @@ export default function SignupPage() {
                       {isSubmitting ? (
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
                       ) : null}
-                      Create Account
+                      Create Preview Account
                     </Button>
                   </div>
                 </>
@@ -395,6 +434,11 @@ export default function SignupPage() {
               Sign in
             </Link>
           </div>
+
+          <p className="mt-4 text-xs text-muted-foreground text-center leading-relaxed">
+            MarketFlow is a controlled, invitation-led pilot. A preview account does not
+            provide approval, verification, private inventory, or submission privileges.
+          </p>
 
           <div className="mt-4 pt-4 border-t">
             <p className="text-sm text-muted-foreground text-center mb-3">

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { useLocation } from 'wouter';
 import './_group.css';
+import './public-reading.css';
 import type { Nav, Route, PeggyHandoff } from './theme';
 import { NavBar } from './nav';
 import { Footer } from './footer';
@@ -45,7 +46,6 @@ export function PegasusStandaloneShell({
   const go = useCallback<Nav>(
     (r) => {
       setLocation(urlFor(r));
-      window.scrollTo({ top: 0, behavior: 'auto' });
     },
     [setLocation],
   );
@@ -62,7 +62,6 @@ export function PegasusStandaloneShell({
   const toSubmit = useCallback(
     (intent?: string) => {
       setLocation(intent ? `/bring-an-opportunity?intent=${intent}` : '/bring-an-opportunity');
-      window.scrollTo({ top: 0, behavior: 'auto' });
     },
     [setLocation],
   );
@@ -98,7 +97,7 @@ export function PegasusStandaloneShell({
         />
       </div>
 
-      {children}
+      <div className="public-reading-surface" data-theme={dataTheme}>{children}</div>
 
       <div className="pg-root" data-theme={dataTheme}>
         <Footer go={go} />

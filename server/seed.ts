@@ -17,85 +17,53 @@ import {
   siteContent
 } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import {
+  NELSON_FACTS,
+  NELSON_PUBLIC_DESCRIPTION,
+  NELSON_PUBLIC_HIGHLIGHTS,
+} from "@shared/nelson-facts";
 
 const initialProjects = [
   {
     slug: "nelson-dr",
-    name: "4369 Nelson Dr",
-    address: "4369 Nelson Dr",
-    city: "Richmond",
-    state: "CA",
+    name: `${NELSON_FACTS.name} · ${NELSON_FACTS.areaLabel}`,
+    address: NELSON_FACTS.address,
+    city: NELSON_FACTS.city,
+    state: NELSON_FACTS.state,
     strategy: "fix-flip",
     status: "completed",
-    purchasePrice: 600000,
-    rehabCost: 95000,
+    purchasePrice: NELSON_FACTS.acquired,
+    rehabCost: NELSON_FACTS.improvementBudget,
     arv: null,
-    salePrice: 840000,
+    salePrice: NELSON_FACTS.salePrice,
     profit: null,
     roi: null,
-    holdTime: "~6 months",
+    holdTime: null,
     bedrooms: null,
     bathrooms: null,
     sqft: null,
     yearBuilt: null,
-    description: "The first Pegasus-controlled project. A complex East Bay single-family acquisition that taught us permit planning, scope control, and the communication discipline that became the foundation of how Pegasus operates today.",
-    beforeImages: [],
-    afterImages: [
-      "/nelson/nelson-01.webp",
-      "/nelson/nelson-02.webp",
-      "/nelson/nelson-03.webp",
-      "/nelson/nelson-04.webp",
-      "/nelson/nelson-05.webp",
-      "/nelson/nelson-06.webp",
-      "/nelson/nelson-07.webp",
-      "/nelson/nelson-08.webp",
-      "/nelson/nelson-09.webp",
-      "/nelson/nelson-10.webp",
-      "/nelson/nelson-11.webp",
-      "/nelson/nelson-12.webp",
-      "/nelson/nelson-13.webp",
-      "/nelson/nelson-14.webp",
-      "/nelson/nelson-15.webp",
-      "/nelson/nelson-16.webp",
-      "/nelson/nelson-17.webp",
-      "/nelson/nelson-18.webp",
-      "/nelson/nelson-19.webp",
-      "/nelson/nelson-20.webp",
-      "/nelson/nelson-21.webp",
-      "/nelson/nelson-22.webp",
-      "/nelson/nelson-23.webp",
-      "/nelson/nelson-24.webp",
-      "/nelson/nelson-25.webp",
-      "/nelson/nelson-26.webp",
-      "/nelson/nelson-27.webp",
-      "/nelson/nelson-28.webp",
-      "/nelson/nelson-29.webp",
-      "/nelson/nelson-30.webp",
-      "/nelson/nelson-31.webp",
-      "/nelson/nelson-32.webp",
-      "/nelson/nelson-33.webp",
-      "/nelson/nelson-34.webp",
-      "/nelson/nelson-35.webp",
-      "/nelson/nelson-37.webp"
+    description: NELSON_PUBLIC_DESCRIPTION,
+    beforeImages: [
+      "/images/nelson/nelson-before-exterior-front-1280.jpg",
+      "/images/nelson/nelson-before-kitchen-1280.jpg",
     ],
-    highlights: [
-      "Full interior renovation: kitchen, bathrooms, flooring, paint",
-      "Electrical and plumbing updates to meet inspection standards",
-      "Permit coordination with the City of Richmond",
-      "Exterior refresh including landscaping and curb appeal",
-      "Staging and resale execution"
-    ]
+    afterImages: [
+      "/images/nelson/nelson-hero-1280.jpg",
+      "/images/nelson/nelson-kitchen-1280.jpg",
+    ],
+    highlights: [...NELSON_PUBLIC_HIGHLIGHTS],
   }
 ];
 
 const initialArticles = [
   {
     slug: "70-percent-rule-explained",
-    title: "The 70% Rule in Real Estate: A Complete Guide",
-    excerpt: "Learn how the 70% rule helps real estate investors quickly evaluate fix-and-flip opportunities.",
-    content: `# The 70% Rule in Real Estate\n\nThe 70% rule is a fundamental tool for real estate investors. It provides a quick way to determine the maximum price you should pay for a fix-and-flip property.\n\n## Formula\nMaximum Purchase Price = (ARV x 0.70) - Repair Costs`,
+    title: "The 70% Rule in Real Estate: A Screening Heuristic",
+    excerpt: "A plain-language explanation of a common fix-and-flip screening formula and the costs it leaves out.",
+    content: `# The 70% Rule in Real Estate\n\nThe 70% rule is a rough screening heuristic sometimes used by investors. It is not a valuation, recommended offer, or substitute for property-specific diligence.\n\n## Formula\nIllustrative screening amount = (estimated ARV x 0.70) - estimated repair costs\n\nFinancing, holding, transaction, tax, insurance, contingency, market, and execution costs can materially change an outcome.`,
     category: "Investment Strategies",
-    author: "Pegasus DreamScapes Team",
+    author: "Pegasus DreamScapes",
     imageUrl: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800",
     published: true,
     publishedAt: new Date("2024-11-15"),
@@ -104,8 +72,8 @@ const initialArticles = [
   {
     slug: "what-is-creative-finance",
     title: "What is creative finance?",
-    excerpt: "Why most distressed properties don't need cash buyers. The four levers (terms, time, structure, position) that unlock deals traditional financing kills.",
-    content: `# What is creative finance?\n\nCreative finance is the practice of structuring real estate purchases around terms, time, structure, and position rather than cash and conventional debt.\n\n## The four levers\n- **Terms.** Interest rate, amortization, balloon date.\n- **Time.** When the seller actually receives proceeds.\n- **Structure.** Subject-to, seller financing, lease-option, wraps, JV.\n- **Position.** Where the new financing sits in priority.\n\nMost distressed properties don't need a cash buyer. They need a structure that solves the seller's actual problem (timeline, equity, lien stack, tax exposure) without forcing a fire sale.\n\n*Educational only. Not legal, tax, or securities advice.*`,
+    excerpt: "An educational overview of terms, time, structure, and lien position in non-conventional real estate transactions.",
+    content: `# What is creative finance?\n\nCreative finance is a broad label for real estate structures that use negotiated terms or existing financing instead of only cash and conventional debt.\n\n## Four variables\n- **Terms.** Interest rate, amortization, balloon date.\n- **Time.** When proceeds are paid.\n- **Structure.** Examples may include seller financing, lease options, or joint ventures.\n- **Position.** Where financing sits in lien priority.\n\nEach structure carries legal, tax, lending, disclosure, default, and counterparty risks.\n\n*Educational only. Not legal, tax, lending, or investment advice.*`,
     category: "Creative Finance",
     author: "Pegasus DreamScapes",
     published: true,
@@ -117,8 +85,8 @@ const initialArticles = [
   {
     slug: "seller-financing-explained",
     title: "Seller financing explained.",
-    excerpt: "How owner-carried notes actually work, where they protect both sides, and the variables that decide whether a seller-finance offer is real or theater.",
-    content: `# Seller financing explained\n\nIn a seller-financed deal, the seller acts as the lender. Instead of receiving full cash at closing, they carry back a promissory note secured by a deed of trust against the property.\n\n## The variables that decide if it's real\n- Down payment\n- Interest rate\n- Amortization and balloon\n- Default and cure language\n- Subordination and lien position\n- Tax treatment for the seller\n\nA seller-finance offer that doesn't address all six is theater. A real one protects both sides.\n\n*Educational only. Not legal, tax, or securities advice.*`,
+    excerpt: "An educational overview of owner-carried notes and transaction terms that require professional review.",
+    content: `# Seller financing explained\n\nIn some seller-financed transactions, a seller accepts a promissory note for part of the purchase price. Documents, security, disclosures, servicing, and remedies vary by transaction and jurisdiction.\n\n## Terms to examine\n- Down payment\n- Interest rate\n- Amortization and balloon\n- Default and cure language\n- Lien position\n- Tax treatment\n\nThose terms do not by themselves establish suitability or protection. Use qualified legal, tax, lending, and title professionals.`,
     category: "Creative Finance",
     author: "Pegasus DreamScapes",
     published: true,
@@ -131,7 +99,7 @@ const initialArticles = [
     slug: "what-does-subject-to-mean",
     title: "What does subject-to mean?",
     excerpt: "Taking title subject to existing financing. What it solves, what it risks, and the disclosures and protections that have to be in place before anyone signs.",
-    content: `# What does subject-to mean?\n\nA subject-to purchase is when a buyer takes title to a property while leaving the seller's existing mortgage in place, in the seller's name.\n\n## What it solves\n- Sellers who can't qualify for a payoff\n- Properties with low-rate legacy financing\n- Distressed timelines where conventional refinance is too slow\n\n## What it risks\n- Due-on-sale acceleration\n- Insurance and escrow handling\n- Seller credit exposure\n- Disclosure requirements that vary by state\n\nDone right, subject-to is a documented, disclosed, protected transaction. Done wrong, it harms the seller. Pegasus only structures these when both sides are protected.\n\n*Educational only. Not legal, tax, or securities advice.*`,
+    content: `# What does subject-to mean?\n\n“Subject to” generally describes a transfer of title while existing financing remains in place. The loan and its obligations do not automatically transfer with title.\n\n## Material risks\n- Due-on-sale acceleration\n- Insurance and escrow handling\n- Seller credit and payment exposure\n- State-specific disclosure and licensing requirements\n\nNo structure can eliminate these risks by label alone. Parties should obtain transaction-specific legal, lending, insurance, tax, title, and servicing advice.`,
     category: "Creative Finance",
     author: "Pegasus DreamScapes",
     published: true,
@@ -144,7 +112,7 @@ const initialArticles = [
     slug: "jv-structures-in-real-estate",
     title: "JV structures in real estate.",
     excerpt: "Equity splits, preferred returns, waterfall basics, and how decision rights get assigned when operator and capital are different people.",
-    content: `# JV structures in real estate\n\nA joint venture is the defined partnership between an operator and capital. Good JVs make the splits, the decision rights, and the exit explicit before the first dollar moves.\n\n## The pieces every JV defines\n- Equity split and preferred return\n- Waterfall (return of capital, pref, then promote)\n- Decision rights (major decisions vs. day-to-day)\n- Reporting cadence\n- Exit triggers and buy-sell\n\n## Why this matters\nMost JV disputes aren't about the deal. They're about something the JV agreement didn't cover. Pegasus structures JVs so the boring questions are answered in writing, in advance.\n\n*Educational only. Not legal, tax, or securities advice.*`,
+    content: `# JV structures in real estate\n\nA real estate joint venture may allocate capital, operating duties, economics, decisions, reporting, and exit rights among parties.\n\n## Terms often documented\n- Contributions and distributions\n- Waterfall mechanics\n- Decision rights\n- Reporting\n- Defaults, transfers, and exit rights\n\nThis overview is not an offer, term sheet, or statement that Pegasus has a current JV opportunity. Qualified counsel should prepare and review any agreement.`,
     category: "Capital & Partnerships",
     author: "Pegasus DreamScapes",
     published: true,
@@ -156,8 +124,8 @@ const initialArticles = [
   {
     slug: "what-makes-an-adu-opportunity-valuable",
     title: "What makes an ADU opportunity valuable?",
-    excerpt: "Lot, zoning, access, utilities, and exit. The five filters we run before an ADU project is worth designing, let alone building.",
-    content: `# What makes an ADU opportunity valuable?\n\nNot every lot is a real ADU opportunity. Pegasus runs five filters before we'll spend design dollars on one.\n\n## The five filters\n1. **Lot.** Size, shape, setbacks, slope.\n2. **Zoning.** What the jurisdiction actually allows, including ministerial paths.\n3. **Access.** Pedestrian and emergency access without re-plumbing the main house.\n4. **Utilities.** Sewer capacity, panel capacity, water service.\n5. **Exit.** Rental comps, sale comps if separable, refinance basis.\n\nAn ADU that fails any one of these isn't a project, it's a lesson.\n\n*Educational only. Not permit or design advice.*`,
+    excerpt: "Five common ADU diligence questions: lot, zoning, access, utilities, and possible exit use.",
+    content: `# What makes an ADU opportunity worth studying?\n\nFive common diligence categories are lot conditions, current zoning, access, utility capacity, and intended use. Local rules and site facts control.\n\nThis checklist is educational and is not a feasibility finding, permit opinion, design, cost estimate, valuation, or promise that Pegasus provides ADU services. Consult the applicable city and licensed professionals.`,
     category: "Property Strategy",
     author: "Pegasus DreamScapes",
     published: true,
@@ -169,8 +137,8 @@ const initialArticles = [
   {
     slug: "what-is-a-strategy-snapshot",
     title: "What is a Strategy Snapshot?",
-    excerpt: "The free, written read every reviewed property gets. What goes in it, what doesn't, and how it leads to a Pegasus Deal Blueprint or a routed lane.",
-    content: `# What is a Strategy Snapshot?\n\nA Strategy Snapshot is the free, written read Pegasus produces on every reviewed property. It's educational, not an offer.\n\n## What's in it\n- Read on the property and the seller's situation\n- The two or three structures that could fit\n- Likely lane: development, wholesale, listing, capital, or pass\n- What we'd need to go deeper\n\n## What's not in it\n- A binding offer\n- A guaranteed purchase price\n- Securities or investment advice\n\nFrom a Snapshot, sellers can either route to the lane that fits, or commission a Pegasus Deal Blueprint, by review, for a deeper structuring document.\n\n*Educational only. Not legal, tax, or securities advice.*`,
+    excerpt: "What the self-service Strategy Snapshot shows, and why its ranges remain educational rather than a review or offer.",
+    content: `# What is a Strategy Snapshot?\n\nThe public Strategy Snapshot is a self-service educational output based on user inputs and general assumptions. It is not proof that a person reviewed the property.\n\nIt may show illustrative lane concepts, ranges, and risks. It is not an offer, appraisal, valuation, feasibility finding, recommendation, or promise of follow-up. A Deal Blueprint is only a possible separately scoped engagement; a request is not an order.`,
     category: "Pegasus Standard",
     author: "Pegasus DreamScapes",
     published: true,
@@ -885,21 +853,21 @@ const initialBeginnerSteps = [
     step: "01",
     title: "Start with the doctrine",
     description:
-      "Read 'What is creative finance?' and 'What is a Strategy Snapshot?' to understand how Pegasus reads a property before talking numbers.",
+      "Read 'What is creative finance?' and 'What is a Strategy Snapshot?' as educational introductions before studying property-specific facts.",
     sortOrder: 1,
   },
   {
     step: "02",
     title: "Learn the structures",
     description:
-      "Move into seller financing, subject-to, and JV structures. These are the levers behind almost every Pegasus deal.",
+      "Move into seller financing, subject-to, and JV concepts, including their legal, lending, tax, disclosure, and counterparty risks.",
     sortOrder: 2,
   },
   {
     step: "03",
     title: "Apply it to a property",
     description:
-      "Take what you've learned and run a real situation through Strategy Review. That's where education becomes a path.",
+      "Use the self-service tools for illustration or submit context for possible consideration; neither creates advice, review, or a transaction.",
     sortOrder: 3,
   },
 ];
@@ -911,8 +879,8 @@ const initialGlossaryTerms = [
   { term: "JV", definition: "Joint Venture. A defined partnership between operator and capital with explicit splits and roles.", sortOrder: 4 },
   { term: "Seller Financing", definition: "The seller acts as the lender, carrying back a note instead of receiving full cash at closing.", sortOrder: 5 },
   { term: "Subject-To", definition: "Buyer takes title subject to the existing mortgage, which stays in the seller's name.", sortOrder: 6 },
-  { term: "Strategy Snapshot", definition: "Pegasus's free written read on a reviewed property. Educational only, not an offer.", sortOrder: 7 },
-  { term: "Deal Blueprint", definition: "By-review, in-depth structuring document for a complex property. Maps multiple lanes side-by-side.", sortOrder: 8 },
+  { term: "Strategy Snapshot", definition: "A self-service educational output based on user inputs; not proof of human review, an offer, or a valuation.", sortOrder: 7 },
+  { term: "Deal Blueprint", definition: "A possible separately scoped property analysis. A request is not an order, and contents require written terms.", sortOrder: 8 },
 ];
 
 // Seed sentinels live in site_content so the defaults are only ever inserted

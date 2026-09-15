@@ -41,7 +41,7 @@ export function inferRisks(ctx: Ctx): RiskFlag[] {
       category: "title",
       severity: "high",
       title: "Title may be encumbered",
-      detail: "User flagged liens, lis pendens, probate, or code violations on title. Pull a prelim before committing capital.",
+      detail: "The visitor flagged liens, lis pendens, probate, or code violations. Independent title review is required before anyone relies on this model.",
       affects: ["flip", "wholetail", "brrrr", "rental_hold", "wholesale"],
     });
   }
@@ -53,7 +53,7 @@ export function inferRisks(ctx: Ctx): RiskFlag[] {
       category: "permit",
       severity: "watch",
       title: "Open or expired permits possible",
-      detail: "User flagged permit concerns. Pull permit history before scoping rehab; unpermitted work can trigger reassessment or removal orders.",
+      detail: "The visitor flagged permit concerns. Verify permit history with the applicable authority and qualified professionals before relying on a scope.",
       affects: ["flip", "brrrr", "adu_development"],
     });
   }
@@ -67,7 +67,7 @@ export function inferRisks(ctx: Ctx): RiskFlag[] {
         category: "construction",
         severity: "watch",
         title: "Heavy rehab relative to purchase",
-        detail: `Rehab budget of ${fmtDollars(rehab)} is ${fmtPct(rehabPct * 100, 0)} of asking price. Add a 15-20% contingency and verify scope with a licensed GC.`,
+        detail: `Rehab budget of ${fmtDollars(rehab)} is ${fmtPct(rehabPct * 100, 0)} of asking price. The model flags scope uncertainty; verify it with an appropriately licensed professional and choose your own contingency.`,
         affects: ["flip", "brrrr", "wholetail"],
       });
     }
@@ -78,7 +78,7 @@ export function inferRisks(ctx: Ctx): RiskFlag[] {
       category: "construction",
       severity: "watch",
       title: "Heavy or gut-level condition",
-      detail: `Reported condition is "${property.condition}". Schedule a structural / mechanical walk before final offer.`,
+      detail: `Reported condition is "${property.condition}". Consider independent structural and mechanical inspections before relying on the modeled scope.`,
       affects: ["flip", "brrrr", "rental_hold"],
     });
   }
@@ -92,7 +92,7 @@ export function inferRisks(ctx: Ctx): RiskFlag[] {
         category: "valuation",
         severity: "high",
         title: "All-in over 85% of ARV",
-        detail: `Purchase plus rehab equals ${fmtPct(arvRatio * 100, 1)} of ARV. Most flip and BRRRR underwriting wants ≤ 75-80%; refi and resale margin will be tight.`,
+        detail: `Purchase plus rehab equals ${fmtPct(arvRatio * 100, 1)} of visitor-entered ARV. That exceeds the model's illustrative 75-80% range and narrows modeled headroom; actual lender and resale outcomes vary.`,
         affects: ["flip", "wholetail", "brrrr"],
       });
     }
@@ -105,7 +105,7 @@ export function inferRisks(ctx: Ctx): RiskFlag[] {
       category: "financing",
       severity: "info",
       title: "Financing not yet committed",
-      detail: "User has not confirmed lender or source of funds. Lock financing path before signing a contract with hard money timelines.",
+      detail: "The visitor has not confirmed a lender or source of funds. Verify financing feasibility and contractual deadlines with qualified professionals before relying on this path.",
       affects: ["flip", "brrrr", "rental_hold", "adu_development"],
     });
   }
@@ -115,7 +115,7 @@ export function inferRisks(ctx: Ctx): RiskFlag[] {
       category: "financing",
       severity: "high",
       title: "Worst case DSCR below 1.00",
-      detail: `Worst-case scenario DSCR is ${worst.dscr.toFixed(2)}. Most DSCR lenders require ≥ 1.20-1.25; refinance cash-out will not clear.`,
+      detail: `Worst-case modeled DSCR is ${worst.dscr.toFixed(2)}, below the tool's illustrative 1.20-1.25 comparison range. Actual lender criteria vary, and this model cannot determine eligibility.`,
       affects: ["brrrr", "rental_hold"],
     });
   }
@@ -127,7 +127,7 @@ export function inferRisks(ctx: Ctx): RiskFlag[] {
       category: "timeline",
       severity: "high",
       title: "Tight close window",
-      detail: `User must close in ${property.timelineDaysToClose} days. Conventional and DSCR loans will not clear; expect hard money or cash.`,
+      detail: `The visitor entered a ${property.timelineDaysToClose}-day close. That window may not accommodate many financing processes; confirm feasibility directly with a qualified lender.`,
       affects: ["flip", "brrrr", "wholesale", "wholetail"],
     });
   }
@@ -139,7 +139,7 @@ export function inferRisks(ctx: Ctx): RiskFlag[] {
       category: "exit",
       severity: "high",
       title: "Base case cash flow is negative",
-      detail: `Base case annual cash flow is ${fmtDollars(base.annualCashFlow)}. Hold strategies require appreciation or rent growth to clear.`,
+      detail: `Base case modeled annual cash flow is ${fmtDollars(base.annualCashFlow)}. A positive outcome would depend on assumptions outside this base case, which require independent verification.`,
       affects: ["rental_hold", "brrrr"],
     });
   }
@@ -149,7 +149,7 @@ export function inferRisks(ctx: Ctx): RiskFlag[] {
       category: "exit",
       severity: "watch",
       title: "Base case DSCR below 1.20",
-      detail: `Base case DSCR is ${base.dscr.toFixed(2)}. DSCR refinance lenders typically require ≥ 1.20.`,
+      detail: `Base case modeled DSCR is ${base.dscr.toFixed(2)}, below the tool's illustrative 1.20 comparison point. Actual program criteria vary.`,
       affects: ["brrrr", "rental_hold"],
     });
   }
@@ -164,7 +164,7 @@ export function inferRisks(ctx: Ctx): RiskFlag[] {
       category: "occupancy",
       severity: "watch",
       title: "Property is owner-occupied",
-      detail: "Seller still lives in the home. Build a vacate timeline and possession date into the contract before closing.",
+      detail: "The visitor marked the home owner-occupied. Possession, relocation, representation, and contract terms require case-specific legal and professional review.",
       affects: ["flip", "wholetail", "brrrr"],
     });
   }
@@ -177,8 +177,8 @@ export function inferRisks(ctx: Ctx): RiskFlag[] {
       severity,
       title: "Property is tenant-occupied",
       detail: monthsLeft > 0
-        ? `Existing tenant has ${monthsLeft} month${monthsLeft === 1 ? "" : "s"} remaining on lease. Flip and BRRRR strategies cannot start rehab until possession; rental hold inherits the lease.`
-        : "Existing tenant in place. Confirm lease terms and possession path before underwriting flip or BRRRR strategies; rental hold inherits the lease.",
+        ? `The visitor reported ${monthsLeft} month${monthsLeft === 1 ? "" : "s"} remaining on a lease. Occupancy may affect timing and rights; verify the lease and applicable law independently.`
+        : "The visitor reported an existing tenant. Verify lease terms, possession rights, and applicable law before relying on any modeled path.",
       affects: ["flip", "wholetail", "brrrr", "rental_hold"],
     });
   }
@@ -192,7 +192,7 @@ export function inferRisks(ctx: Ctx): RiskFlag[] {
         category: "market",
         severity: "info",
         title: "Gross rent yield below 6% of price",
-        detail: `Gross annual rent is ${fmtPct(onePctRatio * 100, 1)} of asking price. Cash-flow plays will need expense discipline; consider whether the bet is appreciation.`,
+        detail: `Gross annual visitor-entered rent is ${fmtPct(onePctRatio * 100, 1)} of asking price. Modeled cash flow is sensitive to expenses and appreciation assumptions that require independent verification.`,
         affects: ["rental_hold", "brrrr"],
       });
     }

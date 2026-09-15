@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,12 +15,11 @@ import {
   Handshake,
   TrendingUp,
   Clock,
-  ChevronRight
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, AUTHENTICATED_QUERY_META } from "@/lib/queryClient";
 import type { InvestorActivity } from "@shared/schema";
 
 interface ActivityItem {
@@ -57,20 +56,25 @@ const activityColors: Record<string, string> = {
 
 export function useActivityFeed() {
   const { user } = useSupabaseAuth();
+  const client = useQueryClient();
+  const subjectId = user?.id ?? null;
 
-  const { data: activities = [], isLoading, refetch } = useQuery<InvestorActivity[]>({
-    queryKey: ['/api/investor-activity'],
-    enabled: !!user,
+  const { data: activities = [], isLoading, isError, refetch } = useQuery<InvestorActivity[]>({
+    queryKey: ['/api/investor-activity', subjectId],
+    queryFn: async () => (await apiRequest('GET', '/api/investor-activity')).json(),
+    enabled: Boolean(subjectId),
     staleTime: 60000,
+    meta: AUTHENTICATED_QUERY_META,
   });
 
   const addActivityMutation = useMutation({
     mutationFn: async (activity: { type: string; title: string; description?: string; link?: string }) => {
+      if (!subjectId) throw new Error("Authentication required");
       const res = await apiRequest('POST', '/api/investor-activity', activity);
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/investor-activity'] });
+      client.invalidateQueries({ queryKey: ['/api/investor-activity', subjectId], exact: true });
     },
   });
 
@@ -98,6 +102,7 @@ export function useActivityFeed() {
     getActivities, 
     addActivity, 
     isLoading,
+    isError,
     refetch,
     rawActivities: activities 
   };
@@ -124,7 +129,6 @@ function ActivityItemRow({ item }: { item: ActivityItem }) {
           {formatDistanceToNow(new Date(item.timestamp), { addSuffix: true })}
         </p>
       </div>
-      <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0" />
     </div>
   );
 }
@@ -137,7 +141,7 @@ interface ActivityFeedProps {
 
 export function ActivityFeed({ className, maxItems = 10, compact = false }: ActivityFeedProps) {
   const { isAuthenticated } = useSupabaseAuth();
-  const { getActivities, isLoading } = useActivityFeed();
+  const { getActivities, isLoading, isError } = useActivityFeed();
   const [filter, setFilter] = useState<string | null>(null);
 
   const activities = getActivities();
@@ -150,6 +154,18 @@ export function ActivityFeed({ className, maxItems = 10, compact = false }: Acti
 
   if (isLoading) {
     return <ActivitySkeleton />;
+  }
+
+  if (isError) {
+    return (
+      <Card className={cn("", className)} data-testid="card-activity-feed" role="status">
+        <CardContent className="py-8 text-center">
+          <Activity className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+          <p className="text-sm font-medium">Activity unavailable</p>
+          <p className="mt-1 text-xs text-muted-foreground">Your private activity could not be loaded.</p>
+        </CardContent>
+      </Card>
+    );
   }
 
   if (!isAuthenticated && activities.length === 0) {
@@ -228,8 +244,16 @@ export function ActivityFeed({ className, maxItems = 10, compact = false }: Acti
 }
 
 export function ActivityFeedWidget({ className }: { className?: string }) {
-  const { getActivities } = useActivityFeed();
+  const { getActivities, isError } = useActivityFeed();
   const activities = getActivities().slice(0, 5);
+
+  if (isError) {
+    return (
+      <div className={cn("bg-card border rounded-lg p-3", className)} role="status">
+        <p className="text-xs font-medium">Activity unavailable</p>
+      </div>
+    );
+  }
 
   if (activities.length === 0) {
     return null;

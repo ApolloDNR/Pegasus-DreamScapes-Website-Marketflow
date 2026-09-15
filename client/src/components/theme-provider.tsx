@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useLayoutEffect, useState } from "react";
 
 type Theme = "dark" | "light" | "system";
 
@@ -16,37 +16,37 @@ interface ThemeProviderProps {
   storageKey?: string;
 }
 
+function resolveTheme(theme: Theme): "dark" | "light" {
+  if (theme !== "system") return theme;
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") return "light";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
 export function ThemeProvider({
   children,
-  defaultTheme = "system",
+  defaultTheme = "light",
   storageKey = "pegasus-ui-theme",
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window !== "undefined") {
-      const stored = localStorage.getItem(storageKey) as Theme | null;
-      if (stored === "light" || stored === "dark" || stored === "system") {
-        return stored;
+      try {
+        const stored = localStorage.getItem(storageKey);
+        if (stored === "light" || stored === "dark" || stored === "system") return stored;
+      } catch {
+        // A blocked browser store must not prevent the public site from opening.
       }
-      // No stored preference: honour the OS-level preference on first paint.
-      // Manual toggle still wins (and persists to localStorage).
-      return defaultTheme;
     }
     return defaultTheme;
   });
 
-  const [resolvedTheme, setResolvedTheme] = useState<"dark" | "light">("light");
+  const [resolvedTheme, setResolvedTheme] = useState<"dark" | "light">(
+    () => resolveTheme(theme),
+  );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const root = window.document.documentElement;
     root.classList.remove("light", "dark");
-
-    let effectiveTheme: "dark" | "light";
-    if (theme === "system") {
-      effectiveTheme = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-    } else {
-      effectiveTheme = theme;
-    }
-
+    const effectiveTheme = resolveTheme(theme);
     root.classList.add(effectiveTheme);
     setResolvedTheme(effectiveTheme);
   }, [theme]);
@@ -70,7 +70,11 @@ export function ThemeProvider({
   const value = {
     theme,
     setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme);
+      try {
+        localStorage.setItem(storageKey, theme);
+      } catch {
+        // The choice still works for this visit when browser storage is unavailable.
+      }
       setTheme(theme);
     },
     resolvedTheme,

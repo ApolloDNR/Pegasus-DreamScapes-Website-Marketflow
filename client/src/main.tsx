@@ -15,6 +15,8 @@ import "@fontsource/cinzel/latin-500.css";
 import "@fontsource/cinzel/latin-600.css";
 import "./index.css";
 import "./pegasus/_group.css";
+import "./pegasus/material-finish.css";
+import "./pegasus/public-finish.css";
 import { isPreviewHostname } from "@shared/preview-hosts";
 
 if (isPreviewHostname(window.location.hostname)) {

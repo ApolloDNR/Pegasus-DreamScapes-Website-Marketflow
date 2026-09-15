@@ -1,11 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 import { 
-  TrendingUp, 
-  TrendingDown, 
   Target, 
   Clock, 
   DollarSign,
@@ -17,6 +14,7 @@ import {
   Lightbulb,
   Scale
 } from "lucide-react";
+import { PrivateDataError } from "@/components/private-data-state";
 
 interface NegotiationStats {
   totalNegotiations: number;
@@ -40,14 +38,41 @@ interface NegotiationAnalyticsProps {
   userId?: string;
 }
 
+function isNegotiationStatsPayload(value: unknown): value is NegotiationStats {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const candidate = value as Partial<NegotiationStats>;
+  return [
+    candidate.totalNegotiations,
+    candidate.successRate,
+    candidate.averageCounters,
+    candidate.averageTimeToClose,
+    candidate.averageDiscount,
+    candidate.bestDealSaved,
+    candidate.strategyScore,
+  ].every((item) => typeof item === "number" && Number.isFinite(item)) &&
+    ["up", "down", "stable"].includes(String(candidate.recentTrend));
+}
+
 export function NegotiationAnalytics({ userId }: NegotiationAnalyticsProps) {
-  const { data: stats, isLoading } = useQuery<NegotiationStats>({
+  const {
+    data: stats,
+    isLoading,
+    isError: statsError,
+    isFetching: statsFetching,
+    refetch: refetchStats,
+  } = useQuery<NegotiationStats>({
     queryKey: ["/api/analytics/negotiations", userId],
     enabled: !!userId,
     staleTime: 1000 * 60 * 5,
   });
 
-  const { data: insights } = useQuery<NegotiationInsight[]>({
+  const {
+    data: insights,
+    isLoading: insightsLoading,
+    isError: insightsError,
+    isFetching: insightsFetching,
+    refetch: refetchInsights,
+  } = useQuery<NegotiationInsight[]>({
     queryKey: ["/api/analytics/negotiation-insights", userId],
     enabled: !!userId,
     staleTime: 1000 * 60 * 10,
@@ -70,36 +95,57 @@ export function NegotiationAnalytics({ userId }: NegotiationAnalyticsProps) {
     return <NegotiationAnalyticsSkeleton />;
   }
 
-  const mockStats: NegotiationStats = stats || {
-    totalNegotiations: 24,
-    successRate: 72,
-    averageCounters: 2.3,
-    averageTimeToClose: 4.2,
-    averageDiscount: 8.5,
-    bestDealSaved: 45000,
-    recentTrend: "up",
-    strategyScore: 85,
-  };
+  if (statsError || !isNegotiationStatsPayload(stats)) {
+    return (
+      <PrivateDataError
+        title="Negotiation analytics unavailable"
+        description="Pegasus could not verify your negotiation history. No zero performance metrics are shown from this failed response."
+        onRetry={() => void refetchStats()}
+        isRetrying={statsFetching}
+        testId="state-negotiation-analytics-error"
+      />
+    );
+  }
 
-  const mockInsights: NegotiationInsight[] = insights || [
-    {
-      type: "success",
-      title: "Strong Negotiator",
-      description: "Your success rate is 15% higher than average investors",
-    },
-    {
-      type: "tip",
-      title: "Timing Matters",
-      description: "Deals closed within 48 hours have 30% higher success rate",
-      action: "Respond faster to new offers",
-    },
-    {
-      type: "warning",
-      title: "Counter Limit",
-      description: "Negotiations with 4+ counters rarely close successfully",
-      action: "Consider final offers earlier",
-    },
-  ];
+  const insightsUnavailable = insightsError || (!insightsLoading && !Array.isArray(insights));
+  const displayInsights: NegotiationInsight[] = Array.isArray(insights) ? insights : [];
+  const hasHistory = stats.totalNegotiations > 0;
+
+  if (!hasHistory) {
+    return (
+      <div className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-primary" />
+              Negotiation performance
+            </CardTitle>
+            <CardDescription>Calculated only from completed, recorded MarketFlow negotiations.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-lg border border-dashed p-6 text-center">
+              <p className="font-medium">No verified negotiation history is available yet.</p>
+              <p className="mx-auto mt-1 max-w-xl text-sm leading-relaxed text-muted-foreground">
+                Rates, timing, savings, and pattern notes remain hidden until the live workflow records enough completed activity.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        {insightsLoading && (
+          <p className="py-4 text-center text-sm text-muted-foreground" role="status">Loading recorded pattern notes…</p>
+        )}
+        {insightsUnavailable && (
+          <PrivateDataError
+            title="Negotiation notes unavailable"
+            description="The pattern-notes request failed; this is not an empty-insights result."
+            onRetry={() => void refetchInsights()}
+            isRetrying={insightsFetching}
+            testId="state-negotiation-insights-error"
+          />
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -115,17 +161,23 @@ export function NegotiationAnalytics({ userId }: NegotiationAnalyticsProps) {
                 Your deal-making statistics and trends
               </CardDescription>
             </div>
-            <Badge 
-              variant={mockStats.recentTrend === "up" ? "default" : "secondary"}
-              className={mockStats.recentTrend === "up" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : ""}
-            >
-              {mockStats.recentTrend === "up" ? (
-                <ArrowUpRight className="w-3 h-3 mr-1" />
-              ) : (
-                <ArrowDownRight className="w-3 h-3 mr-1" />
-              )}
-              {mockStats.recentTrend === "up" ? "Improving" : "Declining"}
-            </Badge>
+            {hasHistory ? (
+              <Badge
+                variant={stats.recentTrend === "up" ? "default" : "secondary"}
+                className={stats.recentTrend === "up" ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400" : ""}
+              >
+                {stats.recentTrend === "up" ? (
+                  <ArrowUpRight className="w-3 h-3 mr-1" />
+                ) : stats.recentTrend === "down" ? (
+                  <ArrowDownRight className="w-3 h-3 mr-1" />
+                ) : (
+                  <Scale className="w-3 h-3 mr-1" />
+                )}
+                {stats.recentTrend === "up" ? "Improving" : stats.recentTrend === "down" ? "Declining" : "Stable"}
+              </Badge>
+            ) : (
+              <Badge variant="secondary">Awaiting activity</Badge>
+            )}
           </div>
         </CardHeader>
         <CardContent>
@@ -133,42 +185,31 @@ export function NegotiationAnalytics({ userId }: NegotiationAnalyticsProps) {
             <StatCard
               icon={<Target className="w-5 h-5 text-green-500" />}
               label="Success Rate"
-              value={`${mockStats.successRate}%`}
+              value={`${stats.successRate}%`}
               subtext="of negotiations closed"
-              trend={mockStats.successRate > 70 ? "good" : "neutral"}
+              trend={stats.successRate > 70 ? "good" : "neutral"}
             />
             <StatCard
               icon={<Scale className="w-5 h-5 text-blue-500" />}
               label="Avg Counters"
-              value={mockStats.averageCounters.toFixed(1)}
+              value={stats.averageCounters.toFixed(1)}
               subtext="per negotiation"
               trend="neutral"
             />
             <StatCard
               icon={<Clock className="w-5 h-5 text-amber-500" />}
               label="Time to Close"
-              value={`${mockStats.averageTimeToClose.toFixed(1)}d`}
+              value={`${stats.averageTimeToClose.toFixed(1)}d`}
               subtext="average days"
-              trend={mockStats.averageTimeToClose < 5 ? "good" : "neutral"}
+              trend={stats.averageTimeToClose < 5 ? "good" : "neutral"}
             />
             <StatCard
               icon={<DollarSign className="w-5 h-5 text-primary" />}
-              label="Best Savings"
-              value={`$${(mockStats.bestDealSaved / 1000).toFixed(0)}k`}
-              subtext="on a single deal"
-              trend="good"
+              label="Largest Recorded Savings"
+              value={`$${stats.bestDealSaved.toLocaleString()}`}
+              subtext="from stored negotiation history"
+              trend={stats.bestDealSaved > 0 ? "good" : "neutral"}
             />
-          </div>
-
-          <div className="mt-6">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium">Strategy Score</span>
-              <span className="text-sm text-muted-foreground">{mockStats.strategyScore}/100</span>
-            </div>
-            <Progress value={mockStats.strategyScore} className="h-2" />
-            <p className="text-xs text-muted-foreground mt-1">
-              Based on timing, counter frequency, and close rate
-            </p>
           </div>
         </CardContent>
       </Card>
@@ -177,20 +218,37 @@ export function NegotiationAnalytics({ userId }: NegotiationAnalyticsProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Lightbulb className="w-5 h-5 text-amber-500" />
-            AI Insights
+            Recorded-pattern notes
           </CardTitle>
           <CardDescription>
-            Personalized recommendations to improve your negotiations
+            Notes returned by the verified negotiation-history service
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {mockInsights.map((insight, index) => (
-            <InsightCard key={index} insight={insight} />
-          ))}
+          {insightsLoading ? (
+            <p className="py-5 text-center text-sm text-muted-foreground" role="status">Loading recorded pattern notes…</p>
+          ) : insightsUnavailable ? (
+            <PrivateDataError
+              title="Negotiation notes unavailable"
+              description="The pattern-notes request failed; this is not an empty-insights result."
+              onRetry={() => void refetchInsights()}
+              isRetrying={insightsFetching}
+              testId="state-negotiation-insights-error"
+            />
+          ) : displayInsights.length > 0 ? (
+            displayInsights.map((insight, index) => (
+              <InsightCard key={index} insight={insight} />
+            ))
+          ) : (
+            <div className="rounded-lg border border-dashed p-5 text-center">
+              <p className="font-medium">No evidence-backed insights yet.</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Recommendations will appear after enough completed negotiation activity exists.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
-
-      <SuccessFactorsCard stats={mockStats} />
     </div>
   );
 }
@@ -253,46 +311,6 @@ function InsightCard({ insight }: { insight: NegotiationInsight }) {
         </div>
       </div>
     </div>
-  );
-}
-
-function SuccessFactorsCard({ stats }: { stats: NegotiationStats }) {
-  const factors = [
-    { label: "Response Speed", score: 88, tip: "You respond within 2 hours on average" },
-    { label: "Offer Quality", score: 75, tip: "Your initial offers are competitive" },
-    { label: "Counter Strategy", score: 82, tip: "Smart use of incremental counters" },
-    { label: "Closing Rate", score: stats.successRate, tip: "Your deals close successfully" },
-  ];
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Award className="w-5 h-5 text-amber-500" />
-          Success Factors
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        {factors.map((factor, index) => (
-          <div key={index}>
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-sm font-medium">{factor.label}</span>
-              <span className={`text-sm font-medium ${
-                factor.score >= 80 ? "text-green-600" :
-                factor.score >= 60 ? "text-amber-600" : "text-red-600"
-              }`}>
-                {factor.score}%
-              </span>
-            </div>
-            <Progress 
-              value={factor.score} 
-              className="h-1.5"
-            />
-            <p className="text-xs text-muted-foreground mt-1">{factor.tip}</p>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
   );
 }
 

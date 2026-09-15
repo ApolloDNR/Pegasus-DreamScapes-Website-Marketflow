@@ -7,7 +7,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, authenticatedRequest } from "@/lib/queryClient";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/use-seo";
@@ -66,6 +66,7 @@ export default function StrategyLabLibraryPage() {
   const [pendingFullShareConfirm, setPendingFullShareConfirm] = useState(false);
   const [shareToken, setShareToken] = useState<string | null>(null);
   const [shareCopied, setShareCopied] = useState(false);
+  const [pdfPendingId, setPdfPendingId] = useState<number | null>(null);
 
   const { data, isLoading } = useQuery<AnalysisRow[]>({
     queryKey: ["/api/property-analyses"],
@@ -135,6 +136,40 @@ export default function StrategyLabLibraryPage() {
     }
   };
 
+  const downloadPdf = async (row: AnalysisRow) => {
+    setPdfPendingId(row.id);
+    try {
+      const response = await authenticatedRequest(
+        `/api/pdf/strategy-snapshot/by-id/${row.id}`,
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`);
+      }
+
+      const objectUrl = window.URL.createObjectURL(await response.blob());
+      const link = document.createElement("a");
+      const safeAddress = (row.address || "strategy-snapshot")
+        .replace(/[^a-zA-Z0-9-_]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 60);
+      link.href = objectUrl;
+      link.download = `pegasus-${safeAddress || "strategy-snapshot"}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.setTimeout(() => window.URL.revokeObjectURL(objectUrl), 1_000);
+      toast({ title: "PDF downloaded" });
+    } catch (error) {
+      toast({
+        title: "Could not generate PDF",
+        description: error instanceof Error ? error.message : "Try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setPdfPendingId(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <section className="border-b border-[hsl(var(--rule))]">
@@ -198,11 +233,17 @@ export default function StrategyLabLibraryPage() {
                     >
                       <Share2 className="w-3.5 h-3.5" /> Share
                     </button>
-                    <a href={`/api/pdf/strategy-snapshot/by-id/${row.id}`} target="_blank" rel="noopener noreferrer"
-                       className="text-xs bg-[hsl(var(--ink))] text-[hsl(var(--paper))] px-3 py-2 font-supporting font-semibold inline-flex items-center gap-1.5"
-                       data-testid={`btn-pdf-${row.id}`}>
-                      <Download className="w-3.5 h-3.5" /> PDF
-                    </a>
+                    <button
+                      type="button"
+                      onClick={() => downloadPdf(row)}
+                      disabled={pdfPendingId === row.id}
+                      aria-busy={pdfPendingId === row.id}
+                      className="text-xs bg-[hsl(var(--ink))] text-[hsl(var(--paper))] px-3 py-2 font-supporting font-semibold inline-flex items-center gap-1.5 disabled:opacity-60"
+                      data-testid={`btn-pdf-${row.id}`}
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      {pdfPendingId === row.id ? "Preparing…" : "PDF"}
+                    </button>
                     <button
                       onClick={() => {
                         if (confirm("Remove this snapshot from your library?")) deleteMutation.mutate(row.id);

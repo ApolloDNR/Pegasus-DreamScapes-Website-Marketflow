@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { useSEO } from "@/hooks/use-seo";
 import { useToast } from "@/hooks/use-toast";
+import { PrivateDataError } from "@/components/private-data-state";
 
 type Submission = {
   id: number;
@@ -50,6 +51,19 @@ type AdminPayload = {
   recentTouchpoints: Touchpoint[];
 };
 
+function isAdminPayload(value: unknown): value is AdminPayload {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const candidate = value as Partial<AdminPayload>;
+  return Boolean(
+    typeof candidate.sinceDays === "number" &&
+    candidate.funnel &&
+    Array.isArray(candidate.submissions) &&
+    Array.isArray(candidate.orders) &&
+    typeof candidate.escalatedCount === "number" &&
+    Array.isArray(candidate.recentTouchpoints),
+  );
+}
+
 const STATUS_OPTIONS = ["received", "in_review", "reviewed", "routed", "escalated"] as const;
 
 export default function AdminStrategyLabPage() {
@@ -79,18 +93,56 @@ export default function AdminStrategyLabPage() {
   const [tab, setTab] = useState<"submissions" | "orders" | "touchpoints">("submissions");
 
   if (adminQuery.isLoading) {
-    return <div className="p-12 text-center text-sm text-muted-foreground">Loading…</div>;
+    return <div className="p-12 text-center text-sm text-muted-foreground" role="status">Loading verified Strategy Lab activity…</div>;
   }
-  if (adminQuery.error) {
+  if (adminQuery.isError) {
+    const status =
+      adminQuery.error &&
+      typeof adminQuery.error === "object" &&
+      "status" in adminQuery.error
+        ? Number((adminQuery.error as { status?: unknown }).status)
+        : null;
+
+    if (status === 401 || status === 403) {
+      return (
+        <div className="p-12 text-center" role="alert" data-testid="state-strategy-admin-access-error">
+          <div className="text-sm text-[hsl(8_65%_45%)] font-semibold">
+            {status === 401 ? "Admin sign-in required." : "Admin access denied."}
+          </div>
+          <div className="text-xs text-muted-foreground mt-2">
+            This response came from the authenticated admin access check.
+          </div>
+        </div>
+      );
+    }
+
     return (
-      <div className="p-12 text-center">
-        <div className="text-sm text-[hsl(8_65%_45%)] font-semibold">Admin access required.</div>
-        <div className="text-xs text-muted-foreground mt-2">Sign in with an admin account to view the funnel.</div>
+      <div className="mx-auto max-w-3xl p-6 sm:p-12">
+        <PrivateDataError
+          title="Strategy Lab admin data unavailable"
+          description="The request failed before Pegasus could verify submissions, orders, or activity. This is a data-availability problem, not evidence that your account lacks access."
+          onRetry={() => void adminQuery.refetch()}
+          isRetrying={adminQuery.isFetching}
+          testId="state-strategy-admin-error"
+        />
       </div>
     );
   }
 
   const data = adminQuery.data;
+  if (!isAdminPayload(data)) {
+    return (
+      <div className="mx-auto max-w-3xl p-6 sm:p-12">
+        <PrivateDataError
+          title="Strategy Lab admin data unavailable"
+          description="The server returned no verified admin payload. No empty funnel or submission counts are shown."
+          onRetry={() => void adminQuery.refetch()}
+          isRetrying={adminQuery.isFetching}
+          testId="state-strategy-admin-error"
+        />
+      </div>
+    );
+  }
   const submissions = data?.submissions ?? [];
   const orders = data?.orders ?? [];
   const touchpoints = data?.recentTouchpoints ?? [];
@@ -100,21 +152,16 @@ export default function AdminStrategyLabPage() {
   const quickToFull = funnel["quick_to_full"] ?? 0;
   const fullRun = funnel["full_run"] ?? 0;
   const submit = funnel["submit"] ?? 0;
-  const pct = (num: number, den: number) =>
-    den > 0 ? `${Math.round((num / den) * 100)}%` : "—";
   const conversionSteps: Array<{
     key: string;
     label: string;
     count: number;
-    rateLabel: string;
-    rate: string;
   }> = [
-    { key: "quick_run", label: "Quick Read", count: quickRun, rateLabel: "Start", rate: "100%" },
-    { key: "quick_to_full", label: "Opened Full Path", count: quickToFull, rateLabel: "of Quick", rate: pct(quickToFull, quickRun) },
-    { key: "full_run", label: "Ran Full Path", count: fullRun, rateLabel: "of Quick→Full", rate: pct(fullRun, quickToFull) },
-    { key: "submit", label: "Submitted to Pegasus", count: submit, rateLabel: "of Full Run", rate: pct(submit, fullRun) },
+    { key: "quick_run", label: "Quick Read", count: quickRun },
+    { key: "quick_to_full", label: "Opened Full Path", count: quickToFull },
+    { key: "full_run", label: "Ran Full Path", count: fullRun },
+    { key: "submit", label: "Submitted to Pegasus", count: submit },
   ];
-  const overallRate = pct(submit, quickRun);
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -124,20 +171,17 @@ export default function AdminStrategyLabPage() {
         </div>
         <h1 className="font-serif text-4xl font-semibold tracking-tight mb-2">Funnel review.</h1>
         <p className="text-sm text-muted-foreground mb-8">
-          Last {data?.sinceDays ?? 30} days. Escalated (overdue SLA): {data?.escalatedCount ?? 0}.
+          Last {data.sinceDays} days. Past stored review target: {data.escalatedCount}.
         </p>
 
-        {/* Quick → Full conversion strip */}
+        {/* Raw event-count strip. These are not user-level conversion cohorts. */}
         <div className="mb-10" data-testid="conversion-strip">
           <div className="flex items-baseline justify-between mb-3">
             <div className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">
-              Quick Read → Full Path → Submit
+              Recorded Strategy Lab events
             </div>
             <div className="text-xs text-muted-foreground">
-              Quick → Submit:{" "}
-              <span className="font-semibold text-foreground tabular-nums" data-testid="text-overall-rate">
-                {overallRate}
-              </span>
+              Raw event counts · not a user-level conversion rate
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
@@ -152,12 +196,6 @@ export default function AdminStrategyLabPage() {
                 </div>
                 <div className="font-serif text-3xl tabular-nums mt-1" data-testid={`conversion-count-${step.key}`}>
                   {step.count}
-                </div>
-                <div className="text-xs text-muted-foreground mt-1">
-                  <span className="font-semibold text-foreground tabular-nums" data-testid={`conversion-rate-${step.key}`}>
-                    {step.rate}
-                  </span>{" "}
-                  {step.rateLabel}
                 </div>
               </div>
             ))}
@@ -201,7 +239,7 @@ export default function AdminStrategyLabPage() {
                   <th className="py-2 pr-4">When</th>
                   <th className="py-2 pr-4">Submitter</th>
                   <th className="py-2 pr-4">Lane</th>
-                  <th className="py-2 pr-4">SLA</th>
+                  <th className="py-2 pr-4">Review target</th>
                   <th className="py-2 pr-4">Status</th>
                 </tr>
               </thead>
@@ -230,13 +268,15 @@ export default function AdminStrategyLabPage() {
                           </div>
                         )}
                         {overdue && (
-                          <div className="text-[10px] uppercase tracking-wider text-[hsl(8_65%_45%)]">Priority — escalated</div>
+                          <div className="text-[10px] uppercase tracking-wider text-[hsl(8_65%_45%)]">Past stored target</div>
                         )}
                       </td>
                       <td className="py-3 pr-4 align-top">
                         <select
                           value={s.status}
                           onChange={(e) => updateStatus.mutate({ id: s.id, status: e.target.value })}
+                          aria-label={`Status for submission ${s.id}`}
+                          disabled={updateStatus.isPending}
                           className="border border-[hsl(var(--rule))] bg-background px-2 py-1 text-xs"
                           data-testid={`select-status-${s.id}`}
                         >
