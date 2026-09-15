@@ -5,7 +5,13 @@ import { SUBMISSION_NOTICE } from './public-content';
 import './experience-page.css';
 
 export function PageAction({ href, children, secondary = false }: { href: string; children: ReactNode; secondary?: boolean }) {
-  return <Link href={href} className={secondary ? 'experience-link' : 'experience-button'}>{children}<ArrowRight size={17} aria-hidden="true" /></Link>;
+  const className = secondary ? 'experience-link' : 'experience-button';
+  const content = <>{children}<ArrowRight size={17} aria-hidden="true" /></>;
+  // Same-page anchors need the browser's native scroll and history behavior.
+  if (href.startsWith('#') || /^[a-z][a-z\d+.-]*:/i.test(href)) {
+    return <a href={href} className={className}>{content}</a>;
+  }
+  return <Link href={href} className={className}>{content}</Link>;
 }
 
 export function PageOpening({ title, children, action, image }: {

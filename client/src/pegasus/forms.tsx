@@ -141,6 +141,7 @@ export function LeadForm({
   handoff = null,
   strategy = null,
   preferredRole,
+  onRoleChange,
   roleFieldRef,
 }: {
   cfg: FormCfg;
@@ -149,6 +150,7 @@ export function LeadForm({
   handoff?: PeggyHandoff | null;
   strategy?: StrategyPreview | null;
   preferredRole?: string;
+  onRoleChange?: (role: string) => void;
   roleFieldRef?: React.RefObject<HTMLSelectElement>;
 }) {
   const uid = useId();
@@ -172,15 +174,12 @@ export function LeadForm({
     message: handoff?.message ?? '',
     consentContact: false,
   });
-  const onField = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-    setForm((f) => ({ ...f, [k]: e.target.value }));
-
-  useEffect(() => {
-    if (!preferredRole) return;
-    setForm((current) => current.role === preferredRole
-      ? current
-      : { ...current, role: preferredRole });
-  }, [preferredRole]);
+  const role = preferredRole ?? form.role;
+  const onField = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const value = e.target.value;
+    setForm((f) => ({ ...f, [k]: value }));
+    if (k === 'role') onRoleChange?.(value);
+  };
 
   useEffect(() => {
     if (submitted) successRef.current?.focus({ preventScroll: true });
@@ -198,7 +197,7 @@ export function LeadForm({
     const [firstName, ...rest] = fullName.split(/\s+/);
     const lastName = rest.join(' ');
     const elapsed = Date.now() - startedAt.current;
-    const lane = classifyPegasusLead({ intent: cfg.intent, role: form.role });
+    const lane = classifyPegasusLead({ intent: cfg.intent, role });
     createLead.mutate(
       {
         leadType: 'submit',
@@ -213,7 +212,7 @@ export function LeadForm({
         ts_elapsed_ms: elapsed,
         leadData: {
           lane,
-          role: form.role,
+          role,
           intent: cfg.intent,
           context: form.third.trim() || undefined,
           contextKind: cfg.third?.kind ?? 'context',
@@ -237,7 +236,7 @@ export function LeadForm({
 
   if (submitted) {
     const success = pegasusLeadSuccessCopy(
-      classifyPegasusLead({ intent: cfg.intent, role: form.role }),
+      classifyPegasusLead({ intent: cfg.intent, role }),
     );
     return (
       <div
@@ -292,7 +291,7 @@ export function LeadForm({
         <div className="sm:col-span-1">
           <label htmlFor={`${uid}-role`} className="pg-field-label block mb-2">I am a…</label>
           <div className="relative">
-            <select ref={roleFieldRef} id={`${uid}-role`} className="pg-field pr-8" value={form.role} onChange={onField('role')}>
+            <select ref={roleFieldRef} id={`${uid}-role`} className="pg-field pr-8" value={role} onChange={onField('role')}>
               {(cfg.roleOptions ?? ROLE_OPTIONS).map((o) => <option key={o}>{o}</option>)}
             </select>
             <ChevronDown className="w-4 h-4 absolute right-1 top-3.5 text-[var(--muted)] pointer-events-none" />
@@ -361,6 +360,7 @@ export function LeadSection({
   handoff = null,
   strategy = null,
   preferredRole,
+  onRoleChange,
   roleFieldRef,
   showDecorativeContour = true,
   headingLevel,
@@ -372,6 +372,7 @@ export function LeadSection({
   handoff?: PeggyHandoff | null;
   strategy?: StrategyPreview | null;
   preferredRole?: string;
+  onRoleChange?: (role: string) => void;
   roleFieldRef?: React.RefObject<HTMLSelectElement>;
   showDecorativeContour?: boolean;
   headingLevel?: 1 | 2;
@@ -409,6 +410,7 @@ export function LeadSection({
               handoff={handoff}
               strategy={strategy}
               preferredRole={preferredRole}
+              onRoleChange={onRoleChange}
               roleFieldRef={roleFieldRef}
             />
           </div>

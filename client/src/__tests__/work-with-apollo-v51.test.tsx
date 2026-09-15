@@ -112,6 +112,11 @@ describe("mounted Work With Apollo representation handoff", () => {
     fireEvent.click(screen.getByTestId("apollo-selector-sell"));
     expect(role).toHaveValue(SELLER_ROLE);
 
+    fireEvent.change(role, { target: { value: BUYER_ROLE } });
+    expect(screen.getByTestId("apollo-selector-buy")).toHaveAttribute("aria-pressed", "true");
+    fireEvent.change(role, { target: { value: SELLER_ROLE } });
+    expect(screen.getByTestId("apollo-selector-sell")).toHaveAttribute("aria-pressed", "true");
+
     fireEvent.click(screen.getByTestId("apollo-selector-buy"));
     expect(role).toHaveFocus();
 

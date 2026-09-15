@@ -1531,6 +1531,27 @@ async function exercisePublicDesign(page, route, viewport) {
     await page.locator('[data-hv="plan"]').scrollIntoViewIfNeeded();
     const plan = page.getByTestId('opportunity-plan');
     await plan.waitFor({ state: 'visible' });
+    const planningNeeds = [
+      ['Control', 'Underwriting', 'Establish the right to move forward.', '/deal-partners'],
+      ['Underwriting', 'Capital', 'Make the assumptions visible.', '/strategy-lab'],
+      ['Buyer', 'Disposition', 'Define the possible buyer path.', '/deal-partners'],
+      ['Capital', 'Underwriting', 'Understand the capital question.', '/strategy-lab'],
+      ['Development', 'Local context', 'Connect the scope to the property.', '/development'],
+      ['Local context', 'Development', 'Bring the location into the plan.', '/property-owners'],
+      ['Disposition', 'Buyer', 'Compare the possible exits.', '/strategy-lab'],
+      ['Asset operations', 'Underwriting', 'Read beyond the acquisition.', '/strategy-lab'],
+    ];
+    for (const [label, companion, title, href] of planningNeeds) {
+      const choice = plan.getByRole('button', { name: label, exact: true });
+      await choice.click();
+      await plan.getByRole('heading', { name: title, exact: true }).waitFor({ state: 'visible' });
+      assert(await choice.getAttribute('aria-pressed') === 'true', `${label} selection is not announced`);
+      assert(await plan.locator('.op-next').getAttribute('href') === href, `${label} has an incorrect next step`);
+      assert((await plan.locator('.op-map-node').last().textContent()).includes(companion), `${label} lost its companion question`);
+      await choice.click();
+      await plan.getByRole('heading', { name: 'What needs a closer look?', exact: true }).waitFor({ state: 'visible' });
+      assert(await plan.locator('.op-next').count() === 0, 'Deselecting a need retained a stale action');
+    }
     await plan.getByRole('button', { name: 'Development', exact: true }).click();
     assert(await plan.getByRole('link', { name: 'Explore project planning' }).getAttribute('href') === '/development', 'Development map lost its next step');
     const controls = await plan.locator('.op-choices button, .op-map-node strong').evaluateAll((elements) => elements.map((element) => ({
