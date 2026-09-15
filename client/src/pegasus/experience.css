@@ -23,6 +23,7 @@
 .experience-home :is(h1,h2,h3),.experience-tools :is(h1,h2,h3) { font-family:var(--pg-font-display); font-weight:400; letter-spacing:0; text-wrap:balance; }
 .experience-home h2,.experience-tools h2 { margin:0; font-size:clamp(30px,3.4vw,48px); line-height:1.16; }
 .experience-home p { margin:0; }
+.pg-root h1[tabindex="-1"]:focus { outline:none; }
 .experience-section { padding-block:96px; }
 .experience-actions { display:flex; flex-wrap:wrap; align-items:center; gap:16px 32px; margin-top:32px; }
 .experience-button,.experience-link { display:inline-flex; justify-content:center; align-items:center; gap:12px; min-height:48px; font:500 15px/1.45 var(--pg-font-ui); letter-spacing:0; text-transform:none; text-decoration:none; transition:color 160ms,border-color 160ms,background-color 160ms; }
@@ -43,7 +44,7 @@
 .experience-arrival .experience-button,.experience-invitation .experience-button,.site-nav .experience-button,.site-mobile-menu .experience-button { background:#f4f0e9; border-color:#f4f0e9; color:#0b1d29; }
 .experience-arrival .experience-button:hover,.experience-invitation .experience-button:hover,.site-nav .experience-button:hover,.site-mobile-menu .experience-button:hover { background:#d9a47c; border-color:#d9a47c; }
 .experience-arrival .experience-link,.experience-evidence .experience-link,.experience-invitation .experience-link { color:#efd5be; }
-.experience-arrival .experience-image-notice { position:relative; margin-top:56px; font-size:13px; line-height:1.5; color:#dddeda; }
+.experience-arrival .experience-image-notice { position:relative; margin-inline:auto; margin-top:56px; font-size:13px; line-height:1.5; color:#dddeda; }
 .experience-orientation { background:var(--experience-limestone); padding-block:64px; }
 .experience-orientation h2 { margin-bottom:28px; }
 .experience-path { display:flex; align-items:center; justify-content:space-between; gap:24px; padding:24px 0; border-top:1px solid var(--experience-rule); color:var(--experience-text); text-decoration:none; }

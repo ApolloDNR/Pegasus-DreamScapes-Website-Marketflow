@@ -1788,7 +1788,7 @@ try {
     }
   });
 
-  await runInteraction('mobile navigation destination', { viewport: getViewport('mobile-390'), seedConsent: false }, async (page) => {
+  await runInteraction('mobile navigation destination', { viewport: getViewport('mobile-390'), seedConsent: false }, async (page, health) => {
     await openPage(page, '/');
     const menuButton = page.locator('button[aria-controls="site-mobile-menu"]');
     await menuButton.click();
@@ -1799,6 +1799,7 @@ try {
     await page.getByRole('link', { name: 'Open Strategy Lab', exact: true }).first().click();
     await page.waitForURL(/\/strategy-lab$/);
     await page.locator('h1').first().waitFor({ state: 'attached' });
+    await settleAfterInteraction(page, health);
 
     await openPage(page, '/');
     const banner = page.getByTestId('cookie-consent-banner');
@@ -2568,9 +2569,9 @@ if (releaseRoutes.length !== 17) {
     `Rendered release route inventory contains ${releaseRoutes.length} routes; expected exactly 17`,
   );
 }
-if (fullPublicRoutes.length !== 45) {
+if (fullPublicRoutes.length !== 46) {
   invariantFailures.push(
-    `Rendered full public route inventory contains ${fullPublicRoutes.length} routes; expected exactly 45`,
+    `Rendered full public route inventory contains ${fullPublicRoutes.length} routes; expected exactly 46`,
   );
 }
 if (JSON.stringify(releaseRoutes) !== JSON.stringify(renderedQaReleaseRoutes)) {
@@ -2585,7 +2586,7 @@ if (JSON.stringify(viewports) !== JSON.stringify(renderedQaViewports)) {
 if (JSON.stringify(colorSchemes) !== JSON.stringify(renderedQaColorSchemes)) {
   invariantFailures.push('Rendered QA color schemes drifted from the canonical shard contract');
 }
-const requiredRouteCheckCount = publicRouteCoverage === 'full' ? 360 : 136;
+const requiredRouteCheckCount = publicRouteCoverage === 'full' ? 368 : 136;
 if (!selectedShard && !interactionsOnly && expectedRouteCheckCount !== requiredRouteCheckCount) {
   invariantFailures.push(
     `Rendered ${publicRouteCoverage} matrix produced ${expectedRouteCheckCount} checks; expected exactly ${requiredRouteCheckCount}`,
@@ -2655,10 +2656,10 @@ if (
   screenshotDir
   && !selectedShard
   && publicRouteCoverage === 'full'
-  && expectedScreenshotCount !== 399
+  && expectedScreenshotCount !== 407
 ) {
   invariantFailures.push(
-    `Rendered QA full coverage expected exactly 399 screenshots; computed ${expectedScreenshotCount}`,
+    `Rendered QA full coverage expected exactly 407 screenshots; computed ${expectedScreenshotCount}`,
   );
 }
 if (screenshotDir && screenshotCount !== expectedScreenshotCount) {
@@ -2718,7 +2719,7 @@ if (result === 'failed') {
 if (selectedShard?.kind === 'routes') {
   console.log(`[a11y] PASS: ${selectedShard.id} (${routeChecks.length} rendered route checks)`);
 } else if (!interactionsOnly && publicRouteCoverage === 'full') {
-  console.log('[a11y] PASS: 360 rendered route/viewport/theme checks');
+  console.log('[a11y] PASS: 368 rendered route/viewport/theme checks');
 } else if (!interactionsOnly) {
   console.log('[a11y] PASS: 136 rendered route/viewport/theme checks');
 }
