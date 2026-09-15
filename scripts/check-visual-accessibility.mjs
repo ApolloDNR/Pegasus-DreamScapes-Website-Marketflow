@@ -1378,13 +1378,15 @@ async function verifyWideOwnerHero(page, originalViewport) {
         window.scrollTo(0, 0);
         await document.fonts.ready;
         await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-        const hero = document.querySelector('.po-hero');
-        const copy = hero?.querySelector('.po-hero-copy');
-        const figure = hero?.querySelector('figure.po-hero-figure');
-        const title = copy?.querySelector('h1.po-title');
-        const lead = copy?.querySelector('.po-hero-lead');
-        const actions = [...(copy?.querySelectorAll('.po-hero-actions > a, .po-hero-actions > button') ?? [])];
-        if (!hero || !copy || !figure || !title || !lead || !actions.length) return null;
+        const hero = document.querySelector('.po .ep-opening');
+        const copy = hero?.querySelector('.ep-opening-copy');
+        const choices = document.querySelector('.po .ep-choice-layout');
+        const figure = choices?.lastElementChild;
+        const controls = choices?.firstElementChild;
+        const title = copy?.querySelector('h1');
+        const lead = copy?.querySelector('.ep-intro');
+        const actions = [...(copy?.querySelectorAll('.experience-actions > a') ?? [])];
+        if (!hero || !copy || !figure || !controls || !title || !lead || !actions.length) return null;
 
         const bounds = (element) => {
           const { left, right, top, bottom, width, height } = element.getBoundingClientRect();
@@ -1419,23 +1421,23 @@ async function verifyWideOwnerHero(page, originalViewport) {
           hero: heroBounds,
           copy: copyBounds,
           figure: bounds(figure),
+          controls: bounds(controls),
           text,
         };
       });
       const context = `Property Owners ${viewport.width}px: ${JSON.stringify(geometry)}`;
       assert(geometry, `Owner hero is missing its copy, figure, or action: ${context}`);
-      assert(geometry.copy.width >= 420 && geometry.figure.width >= 420, `Owner desktop columns collapsed: ${context}`);
-      assert(geometry.copy.right <= geometry.figure.left + 2
-        && Math.min(geometry.copy.bottom, geometry.figure.bottom) > Math.max(geometry.copy.top, geometry.figure.top),
-      `Owner desktop columns overlap or lost their side-by-side layout: ${context}`);
+      assert(geometry.copy.width >= 640 && geometry.copy.width <= 1280, `Owner opening escaped the content grid: ${context}`);
+      assert(geometry.controls.width >= 400 && geometry.figure.width >= 400, `Owner choice columns collapsed: ${context}`);
+      assert(geometry.controls.right <= geometry.figure.left + 2, `Owner choice columns overlap: ${context}`);
       assert(geometry.hero.height <= 900, `Owner hero became excessively tall: ${context}`);
       assert(geometry.text.every(({ box, overflow, clipped }) => box.width > 0 && box.height > 0 && !overflow && !clipped),
         `Owner hero text or actions are clipped: ${context}`);
-      const primary = page.locator('.po-hero .po-hero-actions').getByRole('link', { name: 'Tell Us About the Property', exact: true });
+      const primary = page.locator('.po .ep-opening .experience-actions').getByRole('link', { name: 'Tell us about the property', exact: true });
       const primaryBox = await primary.boundingBox();
       assert(primaryBox && primaryBox.width >= 44 && primaryBox.height >= 44,
         `Owner primary action is too small: ${context}`);
-      assert(await primary.getAttribute('href') === '/bring-an-opportunity', 'Owner hero lost its intake destination');
+      assert(await primary.getAttribute('href') === '/bring-an-opportunity?intent=property', 'Owner hero lost its intake destination');
       await primary.click({ trial: true, timeout: 5_000 });
       console.log(`[design] owner wide-desktop PASS ${context}`);
     }
@@ -1450,13 +1452,30 @@ let fatalFailure = null;
 // screenshot. Every viewport/theme therefore checks the meaningful selected
 // state, including the mobile diagram that originally lost its labels.
 async function exercisePublicDesign(page, route, viewport) {
+  if (viewport.width === 1440 && ['/', '/property-owners', '/work-with-apollo', '/strategy-lab'].includes(route)) {
+    try {
+      for (const width of [320, 360, 430]) {
+        await page.setViewportSize({ width, height: 844 });
+        await page.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
+        const geometry = await page.evaluate(() => {
+          const main = document.querySelector('main');
+          const heading = main?.querySelector('h1');
+          return { width: innerWidth, scrollWidth: document.documentElement.scrollWidth, heading: heading?.getBoundingClientRect().toJSON(), font: heading ? getComputedStyle(heading).fontSize : null };
+        });
+        assert(geometry.scrollWidth <= width + 2, `Narrow reflow overflow ${route}: ${JSON.stringify(geometry)}`);
+        assert(geometry.heading && geometry.heading.left >= 0 && geometry.heading.right <= width + 2, `Narrow heading clipped ${route}: ${JSON.stringify(geometry)}`);
+        console.log(`[design] narrow reflow PASS ${route} ${JSON.stringify(geometry)}`);
+      }
+    } finally { await page.setViewportSize(viewport); }
+  }
+
   const arrivalActions = {
-    '/buyers': { hero: '.pg-page-hero', label: 'Choose your buyer path', href: '#audience-options' },
-    '/operators': { hero: '.pg-page-hero', label: 'Open the vendor application', href: '/vendor-network#vendor-form' },
-    '/referral': { hero: '.pg-page-hero', label: 'Share an introduction', href: '/bring-an-opportunity?intent=referral' },
-    '/capital': { hero: '.pg-page-hero', label: 'Read the introduction guidelines', href: '#relationship-guidelines' },
-    '/development': { hero: '.pg-page-hero', label: 'Explore the project framework', href: '#development-framework' },
-    '/how-we-operate': { hero: '.hwo-hero', label: 'Explore the process', href: '#operating-sequence' },
+    '/buyers': { hero: '.ep-opening', label: 'Choose your buyer path', href: '#audience-options' },
+    '/operators': { hero: '.ep-opening', label: 'Open the vendor application', href: '/vendor-network#vendor-form' },
+    '/referral': { hero: '.ep-opening', label: 'Share an introduction', href: '#category-inquiry' },
+    '/capital': { hero: '.ep-opening', label: 'Continue an introduction', href: '#capital-introduction' },
+    '/development': { hero: '.ep-opening', label: 'Discuss a project', href: '/bring-an-opportunity?intent=explore' },
+    '/how-we-operate': { hero: '.ep-opening', label: 'Bring an Opportunity', href: '/bring-an-opportunity' },
   };
   const arrival = arrivalActions[route];
   if (arrival) {
@@ -1505,7 +1524,7 @@ async function exercisePublicDesign(page, route, viewport) {
     for (const href of ['/work-with-apollo', '/bring-an-opportunity?intent=buyer', '/marketflow/access']) {
       assert(await paths.locator(`a[href="${href}"]`).count() === 1, `Buyers lost the separate ${href} path`);
     }
-    assert(await page.getByRole('link', { name: /See the Nelson Drive project/ }).getAttribute('href') === '/our-work',
+    assert(await page.getByRole('link', { name: /Explore the case study/ }).getAttribute('href') === '/projects/nelson-dr',
       'Buyers project evidence no longer leads to the documented work');
   }
   if (route === '/') {
@@ -1548,7 +1567,7 @@ async function exercisePublicDesign(page, route, viewport) {
     assert(await page.getByTestId('faq-q-submitting-a-property-3').count() === 1, 'FAQ answer search lost stable question identity');
     await page.getByRole('button', { name: 'Clear search' }).click();
   }
-  if (route === '/our-work') {
+  if (route === '/projects/nelson-dr') {
     console.log('[design] gallery: open photograph');
     await page.getByRole('button', { name: 'Enlarge the kitchen, before' }).click({ timeout: 5_000 });
     const viewer = page.locator('.ow-gallery-viewer');
@@ -1562,8 +1581,7 @@ async function exercisePublicDesign(page, route, viewport) {
     console.log('[design] gallery: dismissed');
   }
   if (route === '/contact' && viewport.width <= 980) {
-    await page.getByLabel('Choose your starting point').selectOption('deal-finder');
-    assert(await page.getByTestId('link-connect-active-deal-finder').getAttribute('href') === '/deal-partners', 'Mobile contact selection lost its destination');
+    assert(await page.getByTestId('link-connect-deal-finder').getAttribute('href') === '/deal-partners', 'Mobile contact lost its direct destination');
   }
 }
 
@@ -1955,11 +1973,20 @@ try {
     await homepagePrimaryCta.click();
     await page.waitForURL(/\/bring-an-opportunity$/);
     const destinationHeading = page.getByRole('heading', {
-      name: 'Bring the property, the contract, the project, or the plan.',
+      name: 'Start with what you have.',
       level: 1,
       exact: true,
     });
     await destinationHeading.waitFor({ state: 'visible' });
+    await page.goBack();
+    await page.locator('.experience-paths a[href="/work-with-apollo"]').click();
+    await page.getByRole('heading', { name: 'Buy or sell with Apollo.', exact: true }).waitFor({ state: 'visible' });
+    assert((await page.locator('main').textContent()).includes('Pegasus Dreamscapes Corp. is not a real estate brokerage.'), 'Representation lost its brokerage separation');
+    await page.getByTestId('apollo-selector-buy').click();
+    assert(await page.getByLabel('I am a…').inputValue() === 'Buy a home (Buyer representation)', 'Buyer selection did not carry into the representation form');
+    await page.getByTestId('apollo-selector-sell').click();
+    assert(await page.getByLabel('I am a…').inputValue() === 'List my property (Seller representation)', 'Seller selection did not update the representation form');
+
   });
 
   for (const [intakeViewportName, intakeViewport] of viewports) {
@@ -1991,12 +2018,12 @@ try {
           propertyType: 'Single-family',
           occupancyStatus: 'Vacant',
           condition: 'Moderate repairs',
-          situation: 'Just exploring',
+          situation: 'Inherited / probate',
           goal: 'Not sure',
           urgency: 'No immediate deadline',
           estimatedValue: 650000,
           estimatedDebt: 225000,
-          notes: 'Rendered QA exact-safe submission.',
+          notes: 'Intake intent: property \u2014 Owner situation: Inherited property \u2014 Rendered QA exact-safe submission.',
           consentAccepted: true,
         };
         const expectedPayloadKeys = [...Object.keys(expectedPayload), 'ts_elapsed_ms'].sort();
@@ -2034,13 +2061,20 @@ try {
           await route.fulfill({
             status: 201,
             contentType: 'application/json',
-            body: JSON.stringify({ id: 'rendered-qa-opportunity' }),
+            body: JSON.stringify({ id: 'rendered-qa-opportunity', status: 'New' }),
           });
         });
 
-        await openPage(page, '/bring-an-opportunity');
-        await page.getByRole('button', { name: /^A property I own/ }).click();
-        await page.getByRole('button', { name: 'Continue', exact: true }).click();
+
+        await openPage(page, '/');
+        await page.locator('a[href="/property-owners"]').filter({ hasText: 'I own a property' }).click();
+        if (intakeViewport.width <= 900) await page.getByRole('combobox', { name: 'Common owner situations' }).selectOption('2');
+        else await page.getByRole('group', { name: 'Common owner situations' }).getByRole('button', { name: 'Inherited property', exact: true }).click();
+        await page.getByRole('link', { name: 'Start with this situation', exact: true }).click();
+        await page.getByLabel('Property address').waitFor({ state: 'visible' });
+        await page.goBack();
+        await page.locator('#owner-path').getByRole('heading', { name: 'Inherited property', exact: true }).waitFor({ state: 'visible' });
+        await page.getByRole('link', { name: 'Start with this situation', exact: true }).click();
 
         await page.getByLabel('Property address').fill('291 Pegasus Way');
         await page.getByLabel('City').fill('Richmond');
@@ -2054,7 +2088,7 @@ try {
         await page.getByLabel('Anything urgent?').fill('No immediate deadline');
         await page.getByRole('button', { name: 'Continue', exact: true }).click();
 
-        await page.getByRole('button', { name: 'Just exploring', exact: true }).click();
+        assert(await page.getByRole('button', { name: 'Inherited / probate', exact: true }).getAttribute('aria-pressed') === 'true', 'Owner situation was lost on intake');
         await page.getByRole('button', { name: 'Continue', exact: true }).click();
         await page.getByRole('button', { name: 'Not sure', exact: true }).click();
         await page.getByRole('button', { name: 'Continue', exact: true }).click();
@@ -2155,7 +2189,22 @@ try {
   }
 
   await runInteraction('Strategy Lab primary interaction', {}, async (page) => {
-    await openPage(page, '/strategy-lab');
+
+    await openPage(page, '/tools');
+    await page.getByRole('link', { name: 'Open Strategy Lab', exact: true }).first().click();
+    await page.getByLabel('Property address or city').fill('291 Pegasus Way, Richmond');
+    await page.getByRole('button', { name: /02\s*Assumptions/ }).click();
+    await page.getByLabel('Acquisition or current basis ($)').fill('600000');
+    await page.getByLabel('Scope / improvement budget ($)').fill('105000');
+    await page.getByLabel('Projected exit value ($)').fill('840000');
+    await page.getByRole('button', { name: /03\s*Compare/ }).click();
+    await page.getByRole('heading', { name: 'Compare the possible paths.', exact: true }).waitFor({ state: 'visible' });
+    await page.getByRole('button', { name: /04\s*Summary/ }).click();
+    await page.getByRole('button', { name: 'Carry this brief into intake', exact: true }).click();
+    await page.getByLabel('Property address').waitFor({ state: 'visible' });
+    assert((await page.getByLabel('Property address').inputValue()).includes('291 Pegasus Way'), 'Tool handoff discarded the supported property context');
+    await page.goBack();
+    await page.getByRole('heading', { name: 'Strategy Lab.', exact: true }).waitFor({ state: 'visible' });
     await page.getByRole('button', { name: /Open calculators/ }).click();
     const calculators = page.getByRole('region', { name: /Decision calculators/ });
     await calculators.waitFor({ state: 'visible' });
@@ -2193,7 +2242,7 @@ try {
     assert(await page.getByTestId('button-sidebar-toggle').count() === 0, 'Operator sidebar chrome rendered anonymously');
 
     await openPage(page, '/marketflow');
-    await page.getByRole('button', { name: /Request pilot access/ }).click();
+    await page.getByRole('link', { name: 'Request Access', exact: true }).first().click();
     await page.waitForURL(/\/marketflow\/access$/);
     await page.locator('h1').first().waitFor({ state: 'attached' });
   });
@@ -2439,14 +2488,8 @@ try {
 
   await runInteraction('contact chooser routing', {}, async (page) => {
     await openPage(page, '/contact');
-    await page.getByRole('heading', { name: /The right door, before the wrong conversation/i }).waitFor({ state: 'visible' });
-    await page.getByTestId('button-connect-lane-deal-finder').click();
-    const activeLane = page.getByTestId('connect-active-lane');
-    assert(await activeLane.getByText('I have a deal or lead', { exact: true }).count() === 1, 'Contact chooser did not activate the deal-finder lane');
-    assert(
-      await page.getByTestId('link-connect-active-deal-finder').getAttribute('href') === '/deal-partners',
-      'Contact chooser active lane did not preserve the canonical deal-partner route',
-    );
+    await page.getByRole('heading', { name: /Let’s understand what you have in mind/i }).waitFor({ state: 'visible' });
+    assert(await page.getByTestId('link-connect-deal-finder').getAttribute('href') === '/deal-partners', 'Contact lost its direct deal-partner path');
     assert(
       await page.getByTestId('link-connect-not-sure').getAttribute('href') === 'mailto:apollo@pegasusdreamscapes.com',
       'Contact chooser lost the direct plain-note fallback',

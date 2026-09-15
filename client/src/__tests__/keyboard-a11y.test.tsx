@@ -447,11 +447,9 @@ describe("Tab order matches reading order (Task #143)", () => {
     });
     expect(connectLinks).toHaveLength(8);
     for (const link of connectLinks) {
-      const cls = link.getAttribute("class") ?? "";
-      expect(
-        cls.includes("connect-lane-row"),
-        `connect routing button ${link.getAttribute("data-testid")} must use the lane-row focus treatment`,
-      ).toBe(true);
+      expect(link.tagName).toBe('A');
+      expect(link.closest('.ep-link-list')).not.toBeNull();
+      expect(link.closest('.experience-page')).not.toBeNull();
     }
   });
 

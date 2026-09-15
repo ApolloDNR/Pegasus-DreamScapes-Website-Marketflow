@@ -62,17 +62,10 @@ function linkForTestId(testId: string): HTMLAnchorElement {
 afterEach(() => cleanup());
 
 describe("mounted public CTAs use the canonical opportunity route", () => {
-  it("routes both Contact chooser property entry points directly to the canonical intake", () => {
+  it("routes the direct Contact property entry to the canonical intake", () => {
     renderPage("/contact", <ConnectChooser />);
 
-    expect(linkForTestId("link-connect-submit")).toHaveAttribute(
-      "href",
-      "/bring-an-opportunity?intent=property",
-    );
-    expect(linkForTestId("link-connect-active-property-situation")).toHaveAttribute(
-      "href",
-      "/bring-an-opportunity?intent=property",
-    );
+    expect(linkForTestId("link-connect-property-situation")).toHaveAttribute("href", "/bring-an-opportunity?intent=property");
   });
 
   it("routes the Projects fallback CTA directly to the canonical intake", () => {
@@ -89,9 +82,9 @@ describe("mounted public CTAs use the canonical opportunity route", () => {
   it("routes the Nelson case-study CTA directly to the canonical intake", () => {
     renderPage("/projects/nelson-dr", <NelsonDrPage />);
 
-    expect(linkForTestId("button-nelson-review")).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Discuss a property" })).toHaveAttribute(
       "href",
-      "/bring-an-opportunity",
+      "/bring-an-opportunity?intent=property",
     );
   });
 });

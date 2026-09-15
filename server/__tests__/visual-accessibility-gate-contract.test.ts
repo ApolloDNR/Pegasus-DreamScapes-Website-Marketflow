@@ -770,7 +770,7 @@ describe("rendered visual-accessibility gate contract", () => {
     );
 
     expect(interaction).toContain(
-      "getByRole('button', { name: /Request pilot access/ })",
+      "getByRole('link', { name: 'Request Access', exact: true }).first()",
     );
     expect(interaction).toContain("waitForURL(/\\/marketflow\\/access$/)");
     expect(interaction).not.toContain("Request reviewed access");
@@ -782,8 +782,8 @@ describe("rendered visual-accessibility gate contract", () => {
       "await runInteraction('cookie preference choice'",
     );
 
-    expect(interaction).toContain("button-connect-lane-deal-finder");
-    expect(interaction).toContain("link-connect-active-deal-finder");
+    expect(interaction).toContain("Let’s understand what you have in mind");
+    expect(interaction).toContain("link-connect-deal-finder");
     expect(interaction).toContain("'/deal-partners'");
     expect(interaction).toContain("link-connect-not-sure");
     expect(interaction).toContain("mailto:apollo@pegasusdreamscapes.com");
@@ -875,7 +875,7 @@ describe("rendered visual-accessibility gate contract", () => {
     expect(interaction).toContain("/bring-an-opportunity");
     expect(interaction).toContain("await homepagePrimaryCta.click()");
     expect(interaction).toContain("await page.waitForURL(/\\/bring-an-opportunity$/)");
-    expect(interaction).toContain("name: 'Bring the property, the contract, the project, or the plan.'");
+    expect(interaction).toContain("name: 'Start with what you have.'");
     expect(interaction).toContain("destinationHeading.waitFor({ state: 'visible' })");
     expect(interaction).not.toContain("nav a[");
   });

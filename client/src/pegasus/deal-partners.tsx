@@ -1,17 +1,9 @@
 import React, { useState } from 'react';
-import { useLocation } from 'wouter';
+import { Link } from 'wouter';
 import { ArrowRight } from 'lucide-react';
 import type { Nav } from './theme';
 import { ResponsiveChoiceList } from './responsive-choice-list';
-
-/* ================================================================
-   DEAL PARTNERS — Master Blueprint v5.1 (§10, §32.3)
-   Hero from §10. Signature moment: the "what is missing?" composer —
-   name the missing piece, read the capacity Pegasus can take and
-   what stays yours. The wholesaler and GP lanes render statically.
-   The source-attribution compliance note is preserved verbatim
-   (issue #22 requirement carried forward by §21).
-   ================================================================ */
+import { PageAction, PageOpening, PageClosing } from './experience-page';
 
 type Missing = { label: string; records: string; limit: string };
 
@@ -26,128 +18,38 @@ const MISSING: Missing[] = [
   { label: 'Disposition or asset operations', records: 'Describe the proposed exit or hold path and the facts supporting that assumption.', limit: 'Submission does not create a listing, placement, refinance, management role, operating plan, or outcome split.' },
 ];
 
-export function DealPartnersPage({ go }: { go: Nav }) {
-  const [, setLocation] = useLocation();
-  const toDeal = (e: React.MouseEvent) => { e.preventDefault(); setLocation('/bring-an-opportunity?intent=deal-jv'); };
-  const toPartnership = (e: React.MouseEvent) => { e.preventDefault(); setLocation('/bring-an-opportunity?intent=partnership'); };
+export function DealPartnersPage({ go: _go }: { go: Nav }) {
   const [idx, setIdx] = useState(0);
   const pick = MISSING[idx];
-
-  return (
-    <div className="dp">
-      {/* Hero — v5.1 §10 locked promise */}
-      <section className="dp-hero hv-grain">
-        <div className="dp-hero-media" aria-hidden="true">
-          <img src="/images/pegasus-craft-blueprint.webp" alt="" loading="eager" decoding="async" />
-        </div>
-        <div className="hv-wrap">
-          <div className="hv-rule" />
-          <div className="pg-label hv-eyebrow">Deal Partners</div>
-          <h1 className="hwo-h1 font-serif-display">
-            Bring the deal. Define the role that moves it forward.
-          </h1>
-          <p className="hv-lead">
-            A property, contract, or project may need a clearer strategy, operating role, or transaction
-            structure. Share the opportunity, what you bring, and what is missing. Pegasus considers
-            project participation case by case, subject to diligence, capacity, and written terms.
-          </p>
-          <div className="hv-cta-row">
-            <a href="/bring-an-opportunity?intent=deal-jv" onClick={toDeal}
-              className="btn-solid-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px] group">
-              Submit a Deal <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-            </a>
-            <a href="/bring-an-opportunity?intent=partnership" onClick={toPartnership} className="hv-hero-link">
-              Share a Partnership Proposal
-            </a>
-          </div>
-          <p className="dp-hero-caption">Strategy, scope, and execution &middot; Illustrative planning image</p>
-        </div>
-      </section>
-
-      {/* Signature: the "what is missing?" composer */}
-      <section className="dp-composer hv-pad" data-testid="missing-composer">
-        <div className="hv-wrap">
-          <div className="pg-label hv-eyebrow-copper">Define the unresolved piece</div>
-          <h2 className="hv-h2 font-serif-display">What does the deal need next?</h2>
-          <div className="dp-composer-grid reveal">
-            <ResponsiveChoiceList id="partner-need" label="What the deal is missing" options={MISSING}
-              value={idx} onChange={setIdx} controls="partner-answer" className="dp-missing" itemClassName="dp-missing-item" />
-            <div className="dp-answer" id="partner-answer" aria-live="polite" aria-atomic="true">
-              <h3 className="pg-choice-title font-serif-display">{pick.label}</h3>
-              <div className="dp-answer-block">
-                <div className="pg-label hv-eyebrow-copper">What to document</div>
-                <p>{pick.records}</p>
-              </div>
-              <div className="dp-answer-block">
-                <div className="pg-label hv-eyebrow-copper">What this does not establish</div>
-                <p>{pick.limit}</p>
-              </div>
-              <a href="/bring-an-opportunity?intent=deal-jv" onClick={toDeal} className="hv-proof-link">
-                Bring this opportunity <ArrowRight className="inline h-3.5 w-3.5" />
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Wholesaler lane */}
-      <section className="dp-lane hv-pad-lg hv-grain">
-        <div className="hv-wrap dp-lane-grid reveal">
-          <div>
-            <div className="pg-label hv-eyebrow">Deal finders and wholesalers</div>
-            <h2 className="hv-h2-cream font-serif-display">One submission. One clear record.</h2>
-            <p className="hv-lead-dim">
-              The intake can record a proposed principal, joint-venture, disposition, operating,
-              brokerage, or referral role. Actual involvement would depend on capacity, diligence,
-              applicable law, and separate written terms; receipt creates none of those relationships.
-            </p>
-          </div>
-          <div className="dp-lane-note">
-            <div className="pg-label hv-eyebrow-copper">On the record</div>
-            <p>
-              The intake records the submitter and the information provided. Any joint venture,
-              assignment, referral, distribution, representation, or compensation arrangement would
-              require a separate written agreement before anyone relies on it.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* GP / operator lane */}
-      <section className="dp-gp hv-pad">
-        <div className="hv-wrap">
-          <div className="pg-label hv-eyebrow-copper">Sponsors and operators</div>
-          <h2 className="hv-h2 font-serif-display">Define what is in place and what remains unresolved.</h2>
-          <p className="hv-muted">
-            A proposal can describe sourcing, market, development, underwriting, project-control,
-            disposition, asset-operation, or infrastructure needs. It should not assume Pegasus fills
-            any role. A role exists only after diligence, legal compliance, capacity review, and signed terms.
-          </p>
-          <a href="/bring-an-opportunity?intent=partnership" onClick={toPartnership} className="hv-proof-link hv-link-ink">
-            Share a Partnership Proposal <ArrowRight className="inline h-3.5 w-3.5" />
-          </a>
-        </div>
-      </section>
-
-      {/* Boundary + close */}
-      <section className="dp-close hv-pad-lg hv-grain">
-        <div className="hv-wrap">
-          <h2 className="hv-h2-cream font-serif-display">Start with the opportunity and the proposed partnership.</h2>
-          <p className="hv-lead-dim">
-            No response, buyer, written terms, distribution, funding, or closing is promised.
-            Brokerage activity, if any, requires the appropriate separately documented licensed relationship.
-          </p>
-          <div className="ow-close-ctas">
-            <a href="/bring-an-opportunity?intent=deal-jv" onClick={toDeal}
-              className="btn-solid-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px] group">
-              Submit a Deal <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-            </a>
-            <button type="button" className="hv-hero-link" onClick={() => go('ourwork')}>
-              Review the Nelson Drive record
-            </button>
-          </div>
-        </div>
-      </section>
-    </div>
-  );
+  return <article className="experience-page dp">
+    <PageOpening title="Bring the deal. Define the role." action={{ label: 'Bring a deal', href: '/bring-an-opportunity?intent=deal-jv' }}>
+      <p>Share the property or project, what you bring, and what is missing. Pegasus considers participation case by case, subject to diligence, capacity, and written terms.</p>
+      <PageAction href="/bring-an-opportunity?intent=partnership" secondary>Share a partnership proposal</PageAction>
+    </PageOpening>
+    <section className="ep-section" data-testid="missing-composer"><div className="experience-wrap">
+      <h2>What does the deal need next?</h2>
+      <div className="ep-choice-layout">
+        <ResponsiveChoiceList id="partner-need" label="What the deal is missing" options={MISSING} value={idx} onChange={setIdx} controls="partner-answer" className="ep-choices" itemClassName="ep-choice" />
+        <div className="ep-choice-answer" id="partner-answer" aria-live="polite" aria-atomic="true"><h3>{pick.label}</h3><p>{pick.records}</p><PageAction href="/bring-an-opportunity?intent=deal-jv">Bring this opportunity</PageAction><p className="ep-notice">{pick.limit}</p></div>
+      </div>
+    </div></section>
+    <section className="ep-section ep-dark"><div className="experience-wrap ep-split">
+      <div><h2>Put the proposal on the record.</h2><p>The intake can record a proposed principal, joint-venture, disposition, operating, brokerage, or referral role. Actual involvement would depend on capacity, diligence, applicable law, and separate written terms; receipt creates none of those relationships.</p></div>
+      <div><ol className="ep-rows ep-numbered">
+        <li><div><h3>Identify the opportunity.</h3><p>Include the property, known facts, current control, and relevant dates.</p></div></li>
+        <li><div><h3>Define your contribution.</h3><p>Explain your role, authority, and the unresolved decisions.</p></div></li>
+        <li><div><h3>Establish terms separately.</h3><p>A role exists only after diligence, legal compliance, capacity review, and signed terms.</p></div></li>
+      </ol><p className="ep-notice ep-rule">The intake records the submitter and the information provided. Any joint venture, assignment, referral, distribution, representation, or compensation arrangement would require a separate written agreement before anyone relies on it.</p></div>
+    </div></section>
+    <section className="ep-section"><div className="experience-wrap ep-split">
+      <h2>Find the relevant conversation.</h2>
+      <div className="ep-link-list">{[
+        ['/operators', 'Operators', 'Project responsibilities and operating experience.'],
+        ['/capital', 'Capital relationships', 'Existing relationships and personal introductions.'],
+        ['/vendor-network', 'Vendors and specialists', 'Qualifications, eligibility, and project-specific roles.'],
+        ['/referral', 'Referrals', 'Permissions, boundaries, and separate written terms.'],
+      ].map(([href,label,note]) => <Link key={href} href={href}><span><strong>{label}</strong><small>{note}</small></span><ArrowRight aria-hidden="true" /></Link>)}</div>
+    </div></section>
+    <PageClosing title="Bring the facts and your proposed role." href="/bring-an-opportunity?intent=deal-jv" label="Bring a deal"><p className="ep-notice">No response, buyer, written terms, distribution, funding, or closing is promised. Brokerage activity, if any, requires the appropriate separately documented licensed relationship.</p></PageClosing>
+  </article>;
 }

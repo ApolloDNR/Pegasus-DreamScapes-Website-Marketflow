@@ -27,7 +27,6 @@ describe("saved workspace", () => {
 
     expect(screen.getByRole("heading", { name: "19 Bay View Avenue" })).toBeVisible();
     expect(screen.queryByText("Obsolete profit card")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: /Resume in Strategy Lab/i }));
-    expect(go).toHaveBeenCalledWith("strategylab");
+    expect(screen.getByRole("link", { name: /Resume in Strategy Lab/i })).toHaveAttribute("href", "/strategy-lab");
   });
 });

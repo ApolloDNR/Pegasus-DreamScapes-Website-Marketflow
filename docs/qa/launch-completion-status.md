@@ -1,5 +1,20 @@
 # Pegasus website continuation status
 
+## September 15: approved homepage direction extended through visitor journeys
+
+Baseline: `73f50c0074eaa6afd5f1c63921317eddd1d250aa`, existing recovery branch and PR #26. Apollo approved the homepage direction and instructed us to develop the remaining site. The six-section homepage and approved imagery stay in place.
+
+Keep: canonical hero and brand assets, real founder and Nelson photographs, eight Opportunity Plan needs, calculation engine, route and intake enums, consent requirements, private-access protections, and legal text.
+Change: shared supporting-page composition, direct Contact and representation paths, compact Property Owners arrival with a stable wide-screen grid, real Nelson detail gallery and sourced financial record, About and specialist pages, tool workspace presentation, readable Peggy controls, and a final intake review.
+Remove: repeated hero pitches, generic illustrative images on evidence pages, the Contact select-then-Go step, and false receipt handling. Property review remains request-based. No paid catalog is activated.
+
+The Lead, MarketFlow access, vendor, and canonical opportunity forms now require their expected HTTP 201 record before showing receipt. Duplicate submission guards preserve entered values through a failed request. The owner situation is retained in the page URL and mapped through the existing intake adapter. Refreshed forms disclose when leaving or refreshing clears the draft.
+
+Test expectations change only for intentional blueprint headings, direct-link semantics, relocated Nelson proof, readable control typography, and actual server receipt contracts. Existing tests remain; new tests reject arbitrary 200 responses, redirects, malformed receipts, and duplicate requests. Rendered journeys now include Home → owner → selected situation → intake → error/retry, the separately disclosed buyer/seller path, and Tools → modeled assumptions → supported intake handoff.
+
+Current-source preview and rendered verification are required before acceptance. The existing protected-preview authorization persists. Production activation remains gated by the separate website backend, verified integrations, legal/identity/asset approval, and approval of the actual rendered design. The preview cannot certify live receipt or delivery while its backend is unavailable.
+
+
 Updated 2026-09-14. Scope: `docs/WEBSITE_EXECUTION_BRIEF.md`.
 
 ## Launch verification continuation

@@ -48,10 +48,7 @@ describe("capital relationship introduction", () => {
     expect(screen.getByRole("button", { name: /send relationship context/i })).toBeInTheDocument();
     expect(section).not.toHaveTextContent(/capital range|allocation|accredited|projected return|invest now/i);
 
-    const scrollIntoView = vi.fn();
-    section!.scrollIntoView = scrollIntoView;
-    fireEvent.click(screen.getByRole("button", { name: /continue an introduction/i }));
-    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: "smooth", block: "start" });
+    expect(screen.getByRole("link", { name: /continue an introduction/i })).toHaveAttribute('href', '#capital-introduction');
   });
 
   it("submits explicit contact consent and relationship context through the gated lead intake", async () => {

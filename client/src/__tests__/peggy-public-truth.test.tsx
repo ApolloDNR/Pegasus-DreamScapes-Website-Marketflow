@@ -130,8 +130,8 @@ describe("public Peggy capability truth", () => {
 
     expect(ecosystemText).toMatch(/available on the website in private training/i);
     expect(ecosystemText).toMatch(/phone and voice remain in development/i);
-    expect(peggyText).toMatch(/current experience is website intake only/i);
-    expect(peggyText).toMatch(/Web early access · voice in development/i);
+    expect(peggyText).toMatch(/AI intake assistant/i);
+    expect(peggyText).toMatch(/Website early access/i);
     expect(peggyText).toMatch(/phone and voice remain in development/i);
   });
 

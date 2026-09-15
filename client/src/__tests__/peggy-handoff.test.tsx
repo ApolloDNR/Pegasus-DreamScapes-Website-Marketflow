@@ -139,7 +139,7 @@ describe("Peggy — handoff action buttons", () => {
       "/privacy",
     );
     expect(screen.getByTestId("peggy-send-disclosure")).toHaveClass(
-      "text-[11px]",
+      "text-[13px]",
       "text-[var(--cream)]/80",
     );
   });

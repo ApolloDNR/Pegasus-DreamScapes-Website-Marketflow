@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
+import { readOpportunityReceipt } from "@/lib/lead-receipt";
 import { trackEvent } from "@/lib/analytics";
 import { useSEO } from "@/hooks/use-seo";
 import {
@@ -194,8 +195,8 @@ const EMPTY: FormState = {
 
 const field =
   "w-full rounded-none border-0 border-b border-[#bdb09d] dark:border-[#415066] bg-transparent " +
-  "px-0 py-3 text-[16px] text-[#171f2a] dark:text-[#f4efe6] outline-none " +
-  "focus:border-[#9c5a24] focus:ring-0 transition-colors disabled:cursor-not-allowed disabled:opacity-60";
+  "px-0 py-3 text-[16px] text-[#0b1d29] dark:text-[#fcfaf6] outline-none " +
+  "focus:border-[#975735] focus:ring-0 transition-colors disabled:cursor-not-allowed disabled:opacity-60";
 
 function Label({ children, htmlFor }: { children: React.ReactNode; htmlFor?: string }) {
   return (
@@ -218,12 +219,12 @@ function ChoiceGrid({ options, value, onPick, cols = 2 }:
         const active = value === label;
         return (
           <button key={label} type="button" onClick={() => onPick(label)} aria-pressed={active}
-            className={`group relative flex flex-col items-start justify-start border-x-0 border-t-0 border-b px-0 py-4 pr-9 text-left transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#9c5a24] dark:focus-visible:outline-[#c88a5d] ${
+            className={`group relative flex flex-col items-start justify-start border-x-0 border-t-0 border-b px-0 py-4 pr-9 text-left transition-colors duration-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#975735] dark:focus-visible:outline-[#c88a5d] ${
               active
-                ? "border-[#9c5a24] bg-transparent"
-                : "border-[#c9bead] bg-transparent hover:border-[#9c5a24] dark:border-[#35455a] dark:hover:border-[#c88a5d]"
+                ? "border-[#975735] bg-transparent"
+                : "border-[#c9bead] bg-transparent hover:border-[#975735] dark:border-[#35455a] dark:hover:border-[#c88a5d]"
             }`}>
-            <span className={`block text-[16px] font-medium leading-snug ${active ? "text-[#171f2a] dark:text-[#f4efe6]" : "text-[#454b55] dark:text-[#cfc5b4]"}`}>
+            <span className={`block text-[16px] font-medium leading-snug ${active ? "text-[#0b1d29] dark:text-[#fcfaf6]" : "text-[#454b55] dark:text-[#cfc5b4]"}`}>
               {label}
             </span>
             {desc && (
@@ -233,7 +234,7 @@ function ChoiceGrid({ options, value, onPick, cols = 2 }:
             )}
             <span aria-hidden="true"
               className={`absolute right-0 top-4 flex h-5 w-5 items-center justify-center rounded-full border transition-all duration-200 ${
-                active ? "border-[#b47645] bg-[#9c5a24]" : "border-[#8b7a66] group-hover:border-[#9c5a24] dark:border-[#7d8ba0] dark:group-hover:border-[#c88a5d]"
+                active ? "border-[#b47645] bg-[#975735]" : "border-[#8b7a66] group-hover:border-[#975735] dark:border-[#7d8ba0] dark:group-hover:border-[#c88a5d]"
               }`}>
               {active && <Check className="h-3 w-3 text-white" strokeWidth={3} />}
             </span>
@@ -326,6 +327,7 @@ export default function SubmitPropertyPage() {
     setContactValidationMessage("");
   };
 
+  const submitInFlight = useRef(false);
   const submit = useMutation({
     mutationFn: async () => {
       const mapped = VISITOR_VALUE_MAP[form.visitorType];
@@ -395,8 +397,9 @@ export default function SubmitPropertyPage() {
         ].filter(Boolean).join(" — ") || undefined,
         consentAccepted: form.consentAccepted,
       });
-      return res.json();
+      return readOpportunityReceipt(res);
     },
+    onSettled: () => { submitInFlight.current = false; },
     onSuccess: (data: { id: string }) => {
       trackEvent("submit_property_completed", { visitor_type: form.visitorType });
       setRetrying(false);
@@ -426,12 +429,16 @@ export default function SubmitPropertyPage() {
   }, [result]);
 
   const beginSubmission = () => {
+    if (submitInFlight.current) return;
+    submitInFlight.current = true;
     setRetrying(false);
     setAnnouncement("Recording your opportunity for possible consideration.");
     submit.mutate();
   };
 
   const retrySubmission = () => {
+    if (submitInFlight.current) return;
+    submitInFlight.current = true;
     setRetrying(true);
     setAnnouncement("Retrying your submission.");
     submit.mutate();
@@ -488,41 +495,41 @@ export default function SubmitPropertyPage() {
         {announcement}
       </p>
       {result ? (
-      <div className="min-h-screen bg-[#f4efe6] dark:bg-[#091421] pt-32 pb-24 px-6">
+      <div className="min-h-screen bg-[#fcfaf6] dark:bg-[#0b1d29] pt-32 pb-24 px-6">
         <div className="mx-auto max-w-2xl text-center">
           <div className="mx-auto mb-8 flex h-16 w-16 items-center justify-center rounded-full border-2 border-[#b47645]">
-            <Check className="h-7 w-7 text-[#8b5a36] dark:text-[#c88a5d]" strokeWidth={2.4} />
+            <Check className="h-7 w-7 text-[#975735] dark:text-[#c88a5d]" strokeWidth={2.4} />
           </div>
           <h1
             ref={successRef}
             tabIndex={-1}
-            className="font-serif text-4xl text-[#171f2a] dark:text-[#f4efe6] mb-6"
+            className="font-serif text-4xl text-[#0b1d29] dark:text-[#fcfaf6] mb-6"
           >
             Received.
           </h1>
           <p className="text-[17px] leading-relaxed text-[#454b55] dark:text-[#cfc5b4]">{CONFIRMATION_COPY}</p>
           <p className="mt-6 text-sm text-[#6b5f4d] dark:text-[#b9a888]">Reference: {result.id}</p>
-          <a href="/" className="mt-10 inline-block border border-[#9c5a24] bg-[#9c5a24] px-8 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-white hover:bg-[#8b5a36] transition-colors">
+          <a href="/" className="mt-10 inline-block border border-[#975735] bg-[#975735] px-8 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-white hover:bg-[#975735] transition-colors">
             Back to Pegasus
           </a>
         </div>
       </div>
       ) : (
-    <div className="min-h-screen bg-[#f4efe6] dark:bg-[#091421] pt-28 pb-24 px-6">
+    <div className="intake-page min-h-screen bg-[#fcfaf6] dark:bg-[#0b1d29] pt-28 pb-24 px-6">
       <div className="mx-auto max-w-5xl">
         <div className="mb-10 max-w-3xl">
-          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.22em] text-[#8b5a36] dark:text-[#c88a5d]">
+          <p className="mb-3 text-[13px] font-semibold uppercase tracking-[0.22em] text-[#975735] dark:text-[#c88a5d]">
             Bring an Opportunity
           </p>
-          <h1 className="font-serif text-4xl sm:text-5xl leading-tight text-[#171f2a] dark:text-[#f4efe6]">
-            Bring the property, the contract, the project, or the plan.
+          <h1 className="font-serif text-4xl sm:text-5xl leading-tight text-[#0b1d29] dark:text-[#fcfaf6]">
+            Start with what you have.
           </h1>
           <p className="mt-4 max-w-2xl text-[16px] leading-relaxed text-[#454b55] dark:text-[#cfc5b4]">
-            This intake records what you know for possible consideration. Partial information is fine;
-            review and response are not promised.
+            Share a property, contract, project, or plan. Partial information is fine; review and response are not promised.
           </p>
         </div>
 
+        <p className="intake-draft-note">Your entries stay on this page as you move between steps. Refreshing or leaving clears this form.</p>
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_290px] lg:items-start lg:gap-12">
         <div className="min-w-0">
         {/* progress */}
@@ -533,10 +540,10 @@ export default function SubmitPropertyPage() {
                 className="block w-full text-left disabled:cursor-default"
                 aria-label={i < step ? `Return to ${s}` : s}
                 aria-current={i === step ? "step" : undefined}>
-                <div className={`h-1 rounded-full transition-colors ${i <= step ? "bg-[#9c5a24]" : "bg-[#d8cdbc] dark:bg-[#2a3a4e]"}`} />
-                <span className={`mt-2 inline-flex items-center gap-1 text-[12px] font-medium sm:text-[13px] ${
-                  i === step ? "text-[#8b5a36] dark:text-[#c88a5d]" : i < step ? "text-[#6b5f4d] hover:text-[#8b5a36] dark:text-[#b9a888] dark:hover:text-[#c88a5d]" : "text-[#6e6455] dark:text-[#9aa6b7]"}`}>
-                  {i < step && <Check className="hidden h-3 w-3 text-[#8b5a36] dark:text-[#c88a5d] sm:block" strokeWidth={3} />}{s}
+                <div className={`h-1 rounded-full transition-colors ${i <= step ? "bg-[#975735]" : "bg-[#d8cdbc] dark:bg-[#2a3a4e]"}`} />
+                <span className={`mt-2 inline-flex items-center gap-1 text-[13px] font-medium sm:text-[13px] ${
+                  i === step ? "text-[#975735] dark:text-[#c88a5d]" : i < step ? "text-[#6b5f4d] hover:text-[#975735] dark:text-[#b9a888] dark:hover:text-[#c88a5d]" : "text-[#6e6455] dark:text-[#9aa6b7]"}`}>
+                  {i < step && <Check className="hidden h-3 w-3 text-[#975735] dark:text-[#c88a5d] sm:block" strokeWidth={3} />}{s}
                 </span>
               </button>
             </li>
@@ -567,7 +574,7 @@ export default function SubmitPropertyPage() {
                 ref={stepPromptRef}
                 tabIndex={-1}
                 data-testid="intake-step-heading"
-                className="font-serif text-2xl text-[#171f2a] dark:text-[#f4efe6] mb-6"
+                className="font-serif text-2xl text-[#0b1d29] dark:text-[#fcfaf6] mb-6"
               >
                 What are you bringing to Pegasus?
               </legend>
@@ -583,7 +590,7 @@ export default function SubmitPropertyPage() {
                 ref={stepPromptRef}
                 tabIndex={-1}
                 data-testid="intake-step-heading"
-                className="font-serif text-2xl text-[#171f2a] dark:text-[#f4efe6] mb-2"
+                className="font-serif text-2xl text-[#0b1d29] dark:text-[#fcfaf6] mb-2"
               >
                 The property.
               </legend>
@@ -635,7 +642,7 @@ export default function SubmitPropertyPage() {
                 ref={stepPromptRef}
                 tabIndex={-1}
                 data-testid="intake-step-heading"
-                className="font-serif text-2xl text-[#171f2a] dark:text-[#f4efe6] mb-6"
+                className="font-serif text-2xl text-[#0b1d29] dark:text-[#fcfaf6] mb-6"
               >
                 The situation.
               </legend>
@@ -649,7 +656,7 @@ export default function SubmitPropertyPage() {
                 ref={stepPromptRef}
                 tabIndex={-1}
                 data-testid="intake-step-heading"
-                className="font-serif text-2xl text-[#171f2a] dark:text-[#f4efe6] mb-6"
+                className="font-serif text-2xl text-[#0b1d29] dark:text-[#fcfaf6] mb-6"
               >
                 The goal.
               </legend>
@@ -663,10 +670,19 @@ export default function SubmitPropertyPage() {
                 ref={stepPromptRef}
                 tabIndex={-1}
                 data-testid="intake-step-heading"
-                className="font-serif text-2xl text-[#171f2a] dark:text-[#f4efe6] mb-2"
+                className="font-serif text-2xl text-[#0b1d29] dark:text-[#fcfaf6] mb-2"
               >
                 How do we reach you?
               </legend>
+              <details className="intake-review" open>
+                <summary>Review your inquiry</summary>
+                <dl>{[
+                  ['Bringing', VISITOR_TYPES.find(item => item.value === form.visitorType)?.label || form.visitorType, 0],
+                  ['Property or area', (form.propertyAddress || form.city || form.zipCode) ? [form.propertyAddress, form.city, form.state, form.zipCode].filter(Boolean).join(', ') : 'Not provided', 1],
+                  ['Situation', form.situation || 'Not provided', 2],
+                  ['Goal', form.goal || 'Not provided', 3],
+                ].map(([label,value,target]) => <div key={String(label)}><dt>{label}</dt><dd>{value}</dd><button type="button" onClick={() => moveToStep(Number(target))} aria-label={`Edit ${label}`}>Edit</button></div>)}</dl>
+              </details>
               <p id="sp-contact-requirements" className="text-sm leading-relaxed text-[#6b5f4d] dark:text-[#b9a888]">
                 Full name, email, and contact consent are required. Phone and scheduling details are optional.
               </p>
@@ -800,13 +816,13 @@ export default function SubmitPropertyPage() {
 
           <div className="mt-10 flex items-center justify-between gap-4">
             <button type="button" disabled={submit.isPending} onClick={() => moveToStep(Math.max(0, step - 1))}
-              className={`inline-flex min-h-12 items-center gap-2 text-[15px] font-medium text-[#6b5f4d] transition-colors hover:text-[#8b5a36] disabled:cursor-not-allowed disabled:opacity-45 dark:text-[#b9a888] dark:hover:text-[#c88a5d] ${step === 0 ? "invisible" : ""}`}>
+              className={`inline-flex min-h-12 items-center gap-2 text-[15px] font-medium text-[#6b5f4d] transition-colors hover:text-[#975735] disabled:cursor-not-allowed disabled:opacity-45 dark:text-[#b9a888] dark:hover:text-[#c88a5d] ${step === 0 ? "invisible" : ""}`}>
               <ArrowLeft className="h-4 w-4" /> Back
             </button>
             <button type="submit" disabled={(step < 4 && !canNext) || submit.isPending}
               aria-busy={submit.isPending || undefined}
               aria-describedby={step === 4 ? "sp-contact-requirements sp-contact-validation" : undefined}
-              className="inline-flex min-h-12 items-center justify-center gap-2 border border-[#9c5a24] bg-[#9c5a24] px-6 py-3.5 text-[15px] font-semibold text-white transition-colors hover:bg-[#8b5a36] disabled:cursor-not-allowed disabled:opacity-45 sm:px-8">
+              className="inline-flex min-h-12 items-center justify-center gap-2 border border-[#975735] bg-[#975735] px-6 py-3.5 text-[15px] font-semibold text-white transition-colors hover:bg-[#975735] disabled:cursor-not-allowed disabled:opacity-45 sm:px-8">
               {submit.isPending ? <Loader2 className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" /> : null}
               {submit.isPending ? "Recording…" : step < 4 ? "Continue" : "Record Opportunity"}
               {step < 4 && !submit.isPending && <ArrowRight className="h-4 w-4" aria-hidden="true" />}
@@ -829,28 +845,28 @@ export default function SubmitPropertyPage() {
         {/* Submission boundaries remain in view while the visitor works. */}
         <aside className="mt-10 hidden lg:sticky lg:top-28 lg:mt-0 lg:block" aria-label="What happens next">
           <div className="border-l border-[#bdb09d] bg-transparent py-1 pl-6 dark:border-[#415066]">
-            <p className="text-[12px] font-semibold uppercase tracking-[0.12em] text-[#8b5a36] dark:text-[#c88a5d]">What happens next</p>
+            <p className="text-[13px] font-semibold uppercase tracking-[0.12em] text-[#975735] dark:text-[#c88a5d]">What happens next</p>
             <ol className="mt-5 space-y-5">
               {[
-                ["Received", "Your submission creates a private record — never a public listing."],
+                ["Received", "A valid receipt confirms a private record, not a public listing."],
                 ["Possible consideration", "Pegasus may assess fit, information needs, and current capacity."],
                 ["Possible next step", "If Pegasus elects to proceed, it may request information or discuss a lane."],
                 ["Separate terms", "Any analysis, offer, service, representation, referral, or transaction requires its own terms."],
               ].map(([t, d], i) => (
                 <li key={t} className="flex gap-3">
-                  <span className="mt-px font-serif text-[15px] leading-none text-[#8b5a36] dark:text-[#c88a5d]">{`0${i + 1}`}</span>
+                  <span className="mt-px font-serif text-[15px] leading-none text-[#975735] dark:text-[#c88a5d]">{`0${i + 1}`}</span>
                   <span className="min-w-0">
-                    <span className="block text-[13px] font-semibold text-[#171f2a] dark:text-[#f4efe6]">{t}</span>
-                    <span className="mt-0.5 block text-[12.5px] leading-relaxed text-[#6b5f4d] dark:text-[#b9a888]">{d}</span>
+                    <span className="block text-[13px] font-semibold text-[#0b1d29] dark:text-[#fcfaf6]">{t}</span>
+                    <span className="mt-0.5 block text-[14px] leading-relaxed text-[#6b5f4d] dark:text-[#b9a888]">{d}</span>
                   </span>
                 </li>
               ))}
             </ol>
             <div className="mt-6 border-t border-[#d8cdbc] pt-5 dark:border-[#2a3a4e]">
-              <ul className="space-y-2 text-[12px] leading-relaxed text-[#6b5f4d] dark:text-[#b9a888]">
-                <li className="flex gap-2"><span aria-hidden="true" className="mt-1.5 h-1 w-1 rounded-full bg-[#9c5a24]" />No review or response-time commitment</li>
-                <li className="flex gap-2"><span aria-hidden="true" className="mt-1.5 h-1 w-1 rounded-full bg-[#9c5a24]" />No agency created by submitting</li>
-                <li className="flex gap-2"><span aria-hidden="true" className="mt-1.5 h-1 w-1 rounded-full bg-[#9c5a24]" />Data use follows the privacy notice</li>
+              <ul className="space-y-2 text-[13px] leading-relaxed text-[#6b5f4d] dark:text-[#b9a888]">
+                <li className="flex gap-2"><span aria-hidden="true" className="mt-1.5 h-1 w-1 rounded-full bg-[#975735]" />No review or response-time commitment</li>
+                <li className="flex gap-2"><span aria-hidden="true" className="mt-1.5 h-1 w-1 rounded-full bg-[#975735]" />No agency created by submitting</li>
+                <li className="flex gap-2"><span aria-hidden="true" className="mt-1.5 h-1 w-1 rounded-full bg-[#975735]" />Data use follows the privacy notice</li>
               </ul>
             </div>
           </div>

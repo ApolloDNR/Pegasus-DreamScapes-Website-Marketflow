@@ -23,7 +23,7 @@ export function ProjectGallery({ pairs, finishes }: { pairs: Pair[]; finishes: A
   };
 
   return <Dialog.Root open={active !== null} onOpenChange={(isOpen) => { if (!isOpen) setActive(null); }}>
-    <p className="ow-gallery-hint"><Expand aria-hidden="true" />Select a photograph to view it in full.</p>
+    <div className="project-gallery"><p className="ow-gallery-hint"><Expand aria-hidden="true" />Select a photograph to view it in full.</p>
     <div className="ow-pairs">
       {pairs.map((pair, index) => <figure key={pair.title} className="ow-pair">
         <div className="ow-pair-heading"><span>0{index + 1}</span><h3 className="font-serif-display">{pair.title}</h3></div>
@@ -43,7 +43,7 @@ export function ProjectGallery({ pairs, finishes }: { pairs: Pair[]; finishes: A
     <div className="ow-strip">
       {finishes.map(([src, alt], index) => <button type="button" key={src} onClick={(event) => open(event, pairs.length * 2 + index)} aria-label={`Enlarge: ${alt}`}><img src={src} alt={alt} loading="lazy" /><Expand className="ow-expand" aria-hidden="true" /></button>)}
     </div>
-    <Dialog.Portal>
+    </div><Dialog.Portal>
       <Dialog.Overlay className="ow-gallery-overlay" />
       <Dialog.Content className="ow-gallery-viewer" onCloseAutoFocus={(event) => { event.preventDefault(); triggerRef.current?.focus(); }}
         onKeyDown={(event) => { if (event.key === 'ArrowRight' || event.key === 'ArrowLeft') { event.preventDefault(); move(event.key === 'ArrowRight' ? 1 : -1); } }}>

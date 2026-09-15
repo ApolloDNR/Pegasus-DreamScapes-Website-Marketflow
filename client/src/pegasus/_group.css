@@ -3162,14 +3162,17 @@ select.pg-field option { color: #1b1712; }
   width: min(408px, calc(100vw - 32px));
   background: var(--navy-deep);
   border: 1px solid rgba(239, 231, 218, 0.14);
-  border-radius: 18px;
-  overflow: hidden;
+  border-radius: 4px;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  max-height: min(760px, calc(var(--peggy-viewport-height, 100dvh) - 112px));
   box-shadow: 0 28px 70px -16px rgba(8, 18, 31, 0.7);
   opacity: 0;
   transform: translateY(16px) scale(0.97);
   transform-origin: bottom right;
   pointer-events: none;
-  transition: opacity 0.4s ease, transform 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 200ms ease, transform 200ms ease;
 }
 .pg-cookie-visible .peggy-panel {
   bottom: 152px;
@@ -3186,6 +3189,7 @@ select.pg-field option { color: #1b1712; }
 }
 
 .peggy-head {
+  flex-shrink:0;
   display: flex;
   align-items: center;
   gap: 13px;
@@ -3216,7 +3220,9 @@ select.pg-field option { color: #1b1712; }
   flex-direction: column;
   gap: 12px;
   padding: 18px;
-  max-height: min(46vh, 420px);
+  flex: 1 1 auto;
+  min-height: 100px;
+  max-height: none;
   overflow-y: auto;
   scroll-behavior: smooth;
   scrollbar-width: thin;
@@ -3283,12 +3289,13 @@ select.pg-field option { color: #1b1712; }
 .peggy-action.is-ghost:hover { border-color: var(--accent-bright); box-shadow: none; }
 .peggy-chip {
   font-family: var(--pg-font-ui);
-  font-size: 0.78rem;
+  font-size: 14px;
   color: var(--cream);
   background: rgba(239, 231, 218, 0.06);
   border: 1px solid rgba(239, 231, 218, 0.18);
-  border-radius: 9999px;
-  padding: 8px 14px;
+  border-radius: 3px;
+  padding: 10px 14px;
+  min-height: 44px;
   cursor: pointer;
   transition: border-color 0.35s ease, background-color 0.35s ease, color 0.35s ease;
 }
@@ -3297,14 +3304,16 @@ select.pg-field option { color: #1b1712; }
   background: rgba(222, 154, 88, 0.16);
   color: #fff;
 }
+.peggy-head > button { min-width:44px; min-height:44px; }
 .peggy-input {
+  flex-shrink:0;
   display: flex;
   align-items: center;
   gap: 8px;
   margin: 0 18px 14px;
   background: rgba(239, 231, 218, 0.06);
   border: 1px solid rgba(239, 231, 218, 0.16);
-  border-radius: 9999px;
+  border-radius: 3px;
   padding: 5px 5px 5px 18px;
   transition: border-color 0.35s ease;
 }
@@ -3314,22 +3323,23 @@ select.pg-field option { color: #1b1712; }
   background: transparent;
   border: 0;
   outline: none;
+  min-width: 0;
   color: var(--cream);
   font-family: var(--pg-font-ui);
-  font-size: 0.88rem;
+  font-size: 16px;
   padding: 8px 0;
 }
 .peggy-input input::placeholder { color: rgba(239, 231, 218, 0.4); }
 .peggy-input button {
-  width: 38px;
-  height: 38px;
-  border-radius: 9999px;
+  width: 44px;
+  height: 44px;
+  border-radius: 3px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  color: #fbf7f0;
+  background: #d9a47c;
+  color: #0b1d29;
   border: 0;
   cursor: pointer;
   transition: transform 0.35s ease;
@@ -3341,10 +3351,10 @@ select.pg-field option { color: #1b1712; }
   .peggy-fab-label { display:none; }
   .peggy-panel {
     right: 16px;
-    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px) + var(--peggy-keyboard-offset, 0px));
     display: flex;
     flex-direction: column;
-    max-height: calc(100dvh - 32px - env(safe-area-inset-bottom, 0px));
+    max-height: calc(var(--peggy-viewport-height, 100dvh) - 32px - env(safe-area-inset-bottom, 0px));
   }
   .peggy-thread {
     min-height: 0;
@@ -3356,7 +3366,7 @@ select.pg-field option { color: #1b1712; }
   }
   .pg-cookie-visible .peggy-panel {
     bottom: calc(116px + env(safe-area-inset-bottom, 0px));
-    max-height: calc(100dvh - 132px - env(safe-area-inset-bottom, 0px));
+    max-height: calc(var(--peggy-viewport-height, 100dvh) - 132px - env(safe-area-inset-bottom, 0px));
   }
 }
 

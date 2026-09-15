@@ -101,7 +101,7 @@ describe("Bring an Opportunity interaction states", () => {
   });
 
   it("names the pending state and locks every step-navigation control", async () => {
-    const request = deferred<{ json: () => Promise<{ id: string }> }>();
+    const request = deferred<{ status: number; redirected: boolean; json: () => Promise<{ id: string; status: string }> }>();
     apiRequestMock.mockReturnValueOnce(request.promise);
     renderPage();
     advanceToContact();
@@ -132,7 +132,7 @@ describe("Bring an Opportunity interaction states", () => {
       "Recording your opportunity for possible consideration",
     );
 
-    request.resolve({ json: async () => ({ id: "opportunity-42" }) });
+    request.resolve({ status: 201, redirected: false, json: async () => ({ id: "opportunity-42", status: "New" }) });
 
     const success = await screen.findByRole("heading", { name: "Received." });
     await waitFor(() => expect(success).toHaveFocus());
@@ -142,7 +142,7 @@ describe("Bring an Opportunity interaction states", () => {
   });
 
   it("shows the API failure, keeps Retry focus stable, and finishes on success", async () => {
-    const retryRequest = deferred<{ json: () => Promise<{ id: string }> }>();
+    const retryRequest = deferred<{ status: number; redirected: boolean; json: () => Promise<{ id: string; status: string }> }>();
     apiRequestMock
       .mockRejectedValueOnce(new Error("upstream unavailable"))
       .mockReturnValueOnce(retryRequest.promise);
@@ -186,7 +186,7 @@ describe("Bring an Opportunity interaction states", () => {
       );
     }
 
-    retryRequest.resolve({ json: async () => ({ id: "opportunity-retry" }) });
+    retryRequest.resolve({ status: 201, redirected: false, json: async () => ({ id: "opportunity-retry", status: "New" }) });
 
     const success = await screen.findByRole("heading", { name: "Received." });
     await waitFor(() => expect(success).toHaveFocus());

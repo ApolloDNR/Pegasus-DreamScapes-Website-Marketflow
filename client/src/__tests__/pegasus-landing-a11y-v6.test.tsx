@@ -172,29 +172,29 @@ type SignatureRoute = {
 const SIGNATURE_ROUTES: SignatureRoute[] = [
   {
     path: "/how-we-operate",
-    pageHeading: /Complex opportunities fail when the pieces are fragmented/i,
+    pageHeading: /From property to plan to execution/i,
     groupName: "The five operating stages",
     initialChoice: "Originate",
     nextChoice: "Structure",
-    outputSelector: ".hwo-stage",
+    outputSelector: "#operating-stage",
     nextOutput: /Compare possible roles, strategies, and required terms/i,
   },
   {
     path: "/property-owners",
-    pageHeading: /A complex property needs a clear plan/i,
+    pageHeading: /A clear next step for your property/i,
     groupName: "Common owner situations",
     initialChoice: "Significant repairs",
     nextChoice: "Inherited property",
-    outputSelector: ".po-path",
+    outputSelector: "#owner-path",
     nextOutput: /Record the known ownership, probate or trust status, decision-makers, and timing/i,
   },
   {
     path: "/deal-partners",
-    pageHeading: /Bring the deal. Define the role that moves it forward/i,
+    pageHeading: /Bring the deal. Define the role/i,
     groupName: "What the deal is missing",
     initialChoice: "Seller access or negotiation",
     nextChoice: "Underwriting",
-    outputSelector: ".dp-answer",
+    outputSelector: "#partner-answer",
     nextOutput: /Separate supported property facts from visitor-entered scope/i,
   },
 ];
@@ -399,11 +399,11 @@ describe("Pegasus Strategy Lab workspace accessibility", () => {
     const main = container.querySelector("main")!;
 
     await within(main).findByRole("heading", {
-      name: /Turn one property into a decision you can defend/i,
+      name: /Strategy Lab\./i,
     });
 
     expect(
-      within(main).getByText("Directional, not an offer", { exact: true }),
+      within(main).getByText(/Explore a property’s costs, assumptions, and possible next steps/),
     ).toBeInTheDocument();
     expect(
       within(main).queryByLabelText(/Strategy Lab operating record/i),
@@ -422,21 +422,21 @@ describe("Pegasus Strategy Lab workspace accessibility", () => {
     const { container } = renderLanding("/strategy-lab");
 
     await screen.findByRole("heading", {
-      name: /Turn one property into a decision you can defend/i,
+      name: /Strategy Lab\./i,
     });
     const main = container.querySelector("main");
     expect(main).toBeTruthy();
 
-    const basisStep = within(main!).getByRole("button", { name: /02\s*Basis/i });
+    const basisStep = within(main!).getByRole("button", { name: /02\s*Assumptions/i });
     fireEvent.click(basisStep);
 
     const heading = await within(main!).findByRole("heading", {
-      name: /Strategy Lab Basis step/i,
+      name: /Strategy Lab Assumptions step/i,
     });
     await waitFor(() => expect(heading).toHaveFocus());
     expect(
       within(main!).getByRole("heading", {
-        name: /Make every material assumption visible/i,
+        name: /Set the assumptions/i,
       }),
     ).toBeInTheDocument();
     expect(basisStep).toHaveAttribute("aria-current", "step");
@@ -447,7 +447,7 @@ describe("Pegasus Strategy Lab workspace accessibility", () => {
     const { container } = renderLanding("/strategy-lab");
     const main = container.querySelector("main")!;
 
-    await user.click(within(main).getByRole("button", { name: /02\s*Basis/i }));
+    await user.click(within(main).getByRole("button", { name: /02\s*Assumptions/i }));
     const acquisition = within(main).getByRole("textbox", {
       name: /Acquisition or current basis/i,
     });
@@ -466,9 +466,9 @@ describe("Pegasus Strategy Lab workspace accessibility", () => {
 
     expect(ltv).toHaveAttribute("aria-invalid", "true");
     expect(within(main).getByText(/Use a percentage from 0 to 100/i)).toBeInTheDocument();
-    expect(within(main).getAllByText("—").length).toBeGreaterThan(0);
+    expect(within(main).getAllByText("Not entered").length).toBeGreaterThan(0);
 
-    await user.click(within(main).getByRole("button", { name: /03\s*Paths/i }));
+    await user.click(within(main).getByRole("button", { name: /03\s*Compare/i }));
     expect(
       within(main).getByRole("status", { name: /More inputs required/i }),
     ).toHaveTextContent(/Decision brief not generated/i);
@@ -477,7 +477,7 @@ describe("Pegasus Strategy Lab workspace accessibility", () => {
       within(main).getByRole("button", { name: /Carry this brief into intake/i }),
     ).toBeDisabled();
 
-    await user.click(within(main).getByRole("button", { name: /04\s*Brief/i }));
+    await user.click(within(main).getByRole("button", { name: /04\s*Summary/i }));
     expect(
       within(main).getByRole("status", { name: /Decision brief unavailable/i }),
     ).toHaveTextContent(/needs valid inputs/i);
@@ -493,7 +493,7 @@ describe("Pegasus Strategy Lab workspace accessibility", () => {
       within(main).getByRole("textbox", { name: /Property address or city/i }),
       "19 Bay View Ave, Walnut Creek",
     );
-    await user.click(within(main).getByRole("button", { name: /02\s*Basis/i }));
+    await user.click(within(main).getByRole("button", { name: /02\s*Assumptions/i }));
     expect(within(main).queryByText(/02 · Basis ledger/i)).not.toBeInTheDocument();
 
     const acquisition = within(main).getByRole("textbox", {
@@ -513,16 +513,16 @@ describe("Pegasus Strategy Lab workspace accessibility", () => {
     await user.type(exitValue, "840000");
     await user.type(marketRent, "4500");
 
-    await user.click(within(main).getByRole("button", { name: /03\s*Paths/i }));
+    await user.click(within(main).getByRole("button", { name: /03\s*Compare/i }));
     expect(
-      within(main).getByRole("heading", { name: /Read the leading paths/i }),
+      within(main).getByRole("heading", { name: /Compare the possible paths/i }),
     ).toBeInTheDocument();
     expect(within(main).getByText(/View all nine paths/i)).toBeInTheDocument();
     expect(
       within(main).getByRole("button", { name: /Carry this brief into intake/i }),
     ).toBeEnabled();
 
-    await user.click(within(main).getByRole("button", { name: /04\s*Brief/i }));
+    await user.click(within(main).getByRole("button", { name: /04\s*Summary/i }));
     expect(
       within(main).getByRole("region", { name: /Decision brief/i }),
     ).toBeInTheDocument();
@@ -653,17 +653,17 @@ describe("Pegasus v6 live About routing", () => {
     const { container } = renderLanding("/about");
 
     await screen.findByRole("heading", {
-      name: /A single, accountable point of view/i,
+      name: /Apollo Duran/i,
     });
     const main = container.querySelector("main");
     expect(main).toBeTruthy();
 
     const links = within(main!).getAllByRole("link", {
-      name: /Bring an Opportunity/i,
+      name: /Start a conversation|Contact Apollo/i,
     });
     expect(links).toHaveLength(2);
     for (const link of links) {
-      expect(link).toHaveAttribute("href", "/bring-an-opportunity");
+      expect(link).toHaveAttribute("href", "/contact");
     }
 
     expect(

@@ -17,23 +17,19 @@ function renderContactChooser() {
 
 afterEach(() => cleanup());
 
-describe("Contact chooser route card", () => {
-  it("starts on the property route and updates when a lane is selected", () => {
+describe("Contact direct paths", () => {
+  it("makes all eight destinations available in a single activation", () => {
     renderContactChooser();
-
-    const activeLane = screen.getByTestId("connect-active-lane");
-    expect(within(activeLane).getByText("PROPERTY READ")).toBeInTheDocument();
-    expect(
-      within(activeLane).getByText("I need to sell or solve a property situation"),
-    ).toBeInTheDocument();
-
-    fireEvent.click(screen.getByTestId("button-connect-lane-buyer-investor"));
-
-    expect(within(activeLane).getByText("BUYER READ")).toBeInTheDocument();
-    expect(within(activeLane).getByText("I am buying or investing")).toBeInTheDocument();
-    expect(screen.getByTestId("link-connect-active-buyer-investor")).toHaveAttribute(
-      "href",
-      "/buyers",
-    );
+    const paths = {
+      'property-situation': '/bring-an-opportunity?intent=property',
+      representation: '/work-with-apollo', 'buyer-investor': '/buyers',
+      'deal-finder': '/deal-partners', build: '/development', capital: '/capital',
+      vendor: '/vendor-network', 'not-sure': 'mailto:apollo@pegasusdreamscapes.com',
+    };
+    for (const [id, href] of Object.entries(paths)) {
+      expect(screen.getByTestId(`link-connect-${id}`)).toHaveAttribute('href', href);
+    }
+    expect(screen.getByRole('link', { name: /Tools.*Model/ })).toHaveAttribute('href', '/tools');
+    expect(screen.queryByTestId('connect-active-lane')).not.toBeInTheDocument();
   });
 });

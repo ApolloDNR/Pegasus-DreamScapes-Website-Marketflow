@@ -77,7 +77,7 @@ export default function FAQ() {
       <section className="relative overflow-hidden bg-[hsl(var(--charcoal))] text-cream">
         <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[70%] text-primary opacity-[0.12] pointer-events-none" />
         <div className="faq-wrap relative pt-32 pb-16">
-          <p className="text-[11px] uppercase tracking-[0.32em] text-[hsl(var(--warm-glow))] font-supporting font-semibold mb-6">
+          <p className="text-[13px] uppercase tracking-[0.32em] text-[hsl(var(--warm-glow))] font-supporting font-semibold mb-6">
             Questions &amp; Answers
           </p>
           <h1 className="font-serif text-4xl sm:text-5xl lg:text-6xl font-normal text-white leading-tight mb-6">
@@ -127,7 +127,7 @@ export default function FAQ() {
                     <Icon className="w-5 h-5" strokeWidth={1.6} />
                   </span>
                   <div>
-                    <h2 className="text-[11px] uppercase tracking-[0.2em] text-primary font-supporting font-semibold">
+                    <h2 className="text-[13px] uppercase tracking-[0.2em] text-primary font-supporting font-semibold">
                       {section.eyebrow}
                     </h2>
                     <p className="text-xs text-muted-foreground/80 mt-1 font-supporting">

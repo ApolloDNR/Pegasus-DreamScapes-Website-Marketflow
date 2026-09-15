@@ -113,7 +113,6 @@ describe("mounted Work With Apollo representation handoff", () => {
     expect(role).toHaveValue(SELLER_ROLE);
 
     fireEvent.click(screen.getByTestId("apollo-selector-buy"));
-    fireEvent.click(screen.getByTestId("button-apollo-selector-cta"));
     expect(role).toHaveFocus();
 
     fillRequiredForm();
@@ -166,7 +165,6 @@ describe("mounted Work With Apollo representation handoff", () => {
       "I want to buy",
     );
 
-    fireEvent.click(screen.getByTestId("button-apollo-selector-cta"));
     expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({
       behavior: "auto",
       block: "start",
@@ -187,11 +185,9 @@ describe("mounted Work With Apollo representation handoff", () => {
     ]);
 
     fireEvent.click(screen.getByTestId("apollo-selector-situation"));
-    fireEvent.click(screen.getByTestId("button-apollo-selector-cta"));
     expect(history.at(-1)).toBe("/bring-an-opportunity?intent=property");
 
     fireEvent.click(screen.getByTestId("apollo-selector-deal"));
-    fireEvent.click(screen.getByTestId("button-apollo-selector-cta"));
     expect(history.at(-1)).toBe("/bring-an-opportunity?intent=deal-jv");
 
     expect(container).toHaveTextContent("CA DRE #02333658");
@@ -231,8 +227,8 @@ describe("mounted Work With Apollo representation handoff", () => {
   });
 
   it("announces and focuses the successful handoff", async () => {
-    const json = vi.fn().mockResolvedValue({ id: "lead-1", accepted: true });
-    apiRequestMock.mockImplementationOnce(async () => ({ json }));
+    const json = vi.fn().mockResolvedValue({ id: 101, stage: "new" });
+    apiRequestMock.mockImplementationOnce(async () => ({ json, status: 201, redirected: false }));
     renderPage();
     fillRequiredForm();
     submitRepresentationRequest();
@@ -250,13 +246,32 @@ describe("mounted Work With Apollo representation handoff", () => {
     expect(success).toHaveTextContent("Property details received.");
   });
 
+  it("does not turn an arbitrary 200 response into success and retains the form", async () => {
+    apiRequestMock.mockResolvedValueOnce(new Response(JSON.stringify({ ok: true }), { status: 200 }));
+    renderPage();
+    fillRequiredForm();
+    submitRepresentationRequest();
+    await screen.findByRole('alert');
+    expect(screen.getByLabelText('Email')).toHaveValue('ada@example.com');
+    expect(screen.queryByRole('heading', { name: 'Property details received.' })).not.toBeInTheDocument();
+    expect(trackEventMock).not.toHaveBeenCalled();
+  });
+
+  it("sends only one request when the visitor submits twice before pending renders", async () => {
+    renderPage();
+    fillRequiredForm();
+    submitRepresentationRequest();
+    submitRepresentationRequest();
+    await waitFor(() => expect(apiRequestMock).toHaveBeenCalledTimes(1));
+  });
+
   it("uses one portrait-backed page identity without the duplicate blueprint hero or contour art", () => {
     const { container } = renderPage();
 
     expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
     expect(
-      screen.getByRole("img", { name: /Paolo.*Apollo.*Duran/i }),
-    ).toHaveAttribute("src", expect.stringContaining("founder/apollo-1200.jpg"));
+      screen.getByRole("img", { name: /Apollo Duran/i }),
+    ).toHaveAttribute("src", expect.stringContaining("founder/apollo.webp"));
     expect(
       container.querySelector('img[src*="pegasus-craft-blueprint.webp"]'),
     ).toBeNull();

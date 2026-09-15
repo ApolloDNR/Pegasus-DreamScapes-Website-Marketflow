@@ -446,7 +446,7 @@ describe("MarketFlow access explicit contact consent", () => {
     vi.spyOn(Date, "now").mockImplementation(() => now);
     apiRequestMock
       .mockRejectedValueOnce(new Error("offline"))
-      .mockResolvedValueOnce({ ok: true });
+      .mockResolvedValueOnce(new Response(JSON.stringify({ id: 101, stage: "new" }), { status: 201 }));
     renderWithQueryClient(<MarketflowAccessPage />);
     fillMarketflowAccessForm();
     now = 115_000;
@@ -464,7 +464,7 @@ describe("MarketFlow access explicit contact consent", () => {
   it("renders a receipt without promising review, approval, invitation, or response", async () => {
     let now = 120_000;
     vi.spyOn(Date, "now").mockImplementation(() => now);
-    apiRequestMock.mockResolvedValueOnce({ ok: true });
+    apiRequestMock.mockResolvedValueOnce(new Response(JSON.stringify({ id: 101, stage: "new" }), { status: 201 }));
     Object.defineProperty(window, "scrollTo", {
       configurable: true,
       value: vi.fn(),

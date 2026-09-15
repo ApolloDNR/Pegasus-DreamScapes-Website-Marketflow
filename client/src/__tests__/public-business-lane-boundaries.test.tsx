@@ -49,7 +49,7 @@ describe("public business-lane boundaries", () => {
     const { container } = renderPublic(<ContactPage />, "/contact");
 
     expect(
-      screen.getByRole("heading", { name: /the right door, before the wrong conversation/i }),
+      screen.getByRole("heading", { name: /Let’s understand what you have in mind/i }),
     ).toBeInTheDocument();
     expect(container.querySelector('a[href="/bring-an-opportunity?intent=property"]')).not.toBeNull();
     expect(container.querySelector('a[href="/work-with-apollo"]')).not.toBeNull();
@@ -65,15 +65,14 @@ describe("public business-lane boundaries", () => {
 
     const capitalLane = screen.getByTestId("link-connect-capital");
     expect(capitalLane).toHaveAttribute("href", "/capital");
-    expect(capitalLane).toHaveTextContent(/existing relationship or personal introduction/i);
+    expect(capitalLane).toHaveTextContent(/Existing relationships and personal introductions/i);
     expect(capitalLane).toHaveTextContent(/not a general application/i);
 
     const dealLane = screen.getByTestId("link-connect-deal-finder");
-    fireEvent.focus(dealLane);
-    const activeLane = screen.getByTestId("connect-active-lane");
-    expect(activeLane).toHaveTextContent(/separate signed terms/i);
-    expect(activeLane).toHaveTextContent(/does not create.*non-circumvention/i);
-    expect(activeLane).not.toHaveTextContent(/protect the source|taking someone'?s lead around/i);
+    expect(dealLane).toHaveAttribute('href', '/deal-partners');
+    expect(dealLane).not.toHaveTextContent(/protect the source|taking someone'?s lead around/i);
+    // Detailed source and agreement boundaries are checked on the destination.
+
   });
 
   it("routes the three Buyers lanes to representation, investor intake, and pilot access", () => {

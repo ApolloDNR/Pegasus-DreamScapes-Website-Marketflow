@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { useSEO } from "@/hooks/use-seo";
 import { apiRequest } from "@/lib/queryClient";
+import { readLeadReceipt } from "@/lib/lead-receipt";
 import { trackEvent } from "@/lib/analytics";
 import { AlertCircle, ArrowRight, FileCheck2, Loader2, LockKeyhole, ShieldCheck } from "lucide-react";
 import { SuccessView } from "@/components/success-view";
@@ -105,6 +106,7 @@ export default function MarketflowAccessPage() {
   }, []);
 
   const [submitted, setSubmitted] = useState(false);
+  const inFlightRef = useRef(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   // Server-side anti-spam parity with /submit: include honeypot + time-on-form.
   const formMountedAt = useRef<number>(Date.now());
@@ -141,7 +143,7 @@ export default function MarketflowAccessPage() {
         throw new Error("Form submitted too fast. Please try again.");
       }
       const [first, ...rest] = data.name.trim().split(/\s+/);
-      return apiRequest("POST", "/api/leads", {
+      const response = await apiRequest("POST", "/api/leads", {
         leadType: "marketflow_access",
         source: "marketflow_access_page",
         firstName: first || "",
@@ -159,7 +161,9 @@ export default function MarketflowAccessPage() {
           ts_elapsed_ms: elapsedMs,
         },
       });
+      return readLeadReceipt(response);
     },
+    onSettled: () => { inFlightRef.current = false; },
     onSuccess: () => {
       trackEvent("marketflow_access_requested");
       setSubmitError(null);
@@ -177,6 +181,8 @@ export default function MarketflowAccessPage() {
   });
 
   const submitRequest = (data: AccessValues) => {
+    if (inFlightRef.current) return;
+    inFlightRef.current = true;
     setSubmitError(null);
     mutation.mutate(data);
   };

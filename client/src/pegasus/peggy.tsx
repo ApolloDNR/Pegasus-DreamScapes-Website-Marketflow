@@ -38,11 +38,11 @@ function SaveChatButton({ turns }: { turns: ChatTurn[] }) {
   return (
     <button type="button" onClick={onClick} disabled={saveState === 'saved'}
       aria-label={saveState === 'error' ? 'Retry saving this conversation' : 'Save this conversation'}
-      className="ml-auto inline-flex items-center gap-1.5 pg-label !text-[8px] !tracking-[0.16em] text-[var(--cream)]/70 hover:text-[var(--cream)] transition-colors disabled:opacity-70">
+      className="ml-auto inline-flex items-center gap-1.5 pg-label !text-[13px] !tracking-normal text-[var(--cream)]/70 hover:text-[var(--cream)] transition-colors disabled:opacity-70">
       {saveState === 'saved' ? (
         <><BookmarkCheck className="w-3.5 h-3.5" strokeWidth={1.8} /> Saved</>
       ) : saveState === 'error' ? (
-        <><Bookmark className="w-3.5 h-3.5" strokeWidth={1.8} /> <span role="status">Save failed — retry</span></>
+        <><Bookmark className="w-3.5 h-3.5" strokeWidth={1.8} /> <span role="status">Save failed. Retry</span></>
       ) : (
         <><Bookmark className="w-3.5 h-3.5" strokeWidth={1.8} /> Save chat</>
       )}
@@ -91,6 +91,7 @@ export function Peggy({
   const panelId = useId();
   const fabRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const conversationAccessRef =
@@ -122,6 +123,20 @@ export function Peggy({
     const id = requestAnimationFrame(() => inputRef.current?.focus());
     return () => { document.removeEventListener('keydown', onKey); cancelAnimationFrame(id); };
   }, [open, setOpen]);
+
+  // Match the visible viewport when a mobile soft keyboard reduces usable space.
+  useEffect(() => {
+    if (!open || !window.visualViewport) return;
+    const viewport = window.visualViewport;
+    const update = () => {
+      panelRef.current?.style.setProperty('--peggy-viewport-height', `${viewport.height}px`);
+      panelRef.current?.style.setProperty('--peggy-keyboard-offset', `${Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)}px`);
+    };
+    update();
+    viewport.addEventListener('resize', update);
+    viewport.addEventListener('scroll', update);
+    return () => { viewport.removeEventListener('resize', update); viewport.removeEventListener('scroll', update); };
+  }, [open]);
 
   // Keep the transcript scrolled to the latest turn.
   useEffect(() => {
@@ -257,16 +272,16 @@ export function Peggy({
         {!open && <span className="peggy-fab-label">Talk to Peggy</span>}
       </button>
 
-      <div id={panelId} className={`peggy-panel ${open ? 'is-open' : ''}`} role="dialog" aria-modal="false"
+      <div ref={panelRef} id={panelId} className={`peggy-panel ${open ? 'is-open' : ''}`} role="dialog" aria-modal="false"
         aria-label="Peggy, the Pegasus intake concierge" aria-hidden={!open} {...(!open ? { inert: '' } : {})}>
         <div className="peggy-head">
           <div className="peggy-avatar"><BrandMark boxClassName="w-full h-full" onDark /></div>
           <div className="leading-none">
             <div className="font-serif-display text-2xl text-[var(--cream)]">Peggy</div>
-            <div className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--accent-bright)] mt-1.5">Guided Intake Concierge</div>
+            <div className="pg-label !text-[13px] !tracking-normal text-[var(--accent-bright)] mt-1.5">AI intake assistant</div>
             <div className="flex items-center gap-1.5 mt-1.5" data-testid="peggy-status">
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-bright)]" aria-hidden="true" />
-              <span className="pg-label !text-[8px] !tracking-[0.18em] normal-case text-[var(--cream)]/55">{PEGGY_STATUS}</span>
+              <span className="pg-label !text-[13px] !tracking-normal normal-case text-[var(--cream)]/55">{PEGGY_STATUS}</span>
             </div>
           </div>
           {conversationStarted && <SaveChatButton turns={transcriptTurns(messages)} />}
@@ -305,7 +320,7 @@ export function Peggy({
 
           {!conversationStarted && !pickedRole && (
             <>
-              <div className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--cream)]/45 mt-1 mb-2.5">First, who am I helping?</div>
+              <div className="pg-label !text-[13px] !tracking-normal text-[var(--cream)]/45 mt-1 mb-2.5">First, who am I helping?</div>
               <div className="flex flex-col gap-2">
                 {PEGGY_ROLES.map((r) => (
                   <button key={r.role} type="button" onClick={() => setPickedRole(r.role)} className="peggy-chip text-left">{r.label}</button>
@@ -316,7 +331,7 @@ export function Peggy({
 
           {!conversationStarted && pickedRole && (
             <>
-              <div className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--cream)]/45 mt-1 mb-2.5">Try one of these, or just type</div>
+              <div className="pg-label !text-[13px] !tracking-normal text-[var(--cream)]/45 mt-1 mb-2.5">Try one of these, or just type</div>
               <div className="flex flex-col gap-2">
                 {(PEGGY_ROLES.find((r) => r.role === pickedRole)?.chips ?? []).map((c) => (
                   <button key={c} type="button" onClick={() => send(c)} className="peggy-chip text-left">{c}</button>
@@ -343,24 +358,8 @@ export function Peggy({
               </button>
             </div>
           )}
-        </div>
-
-        <form className="peggy-input" onSubmit={(e) => { e.preventDefault(); send(draft); }}>
-          <input ref={inputRef} type="text" aria-label="Talk to Peggy" placeholder="Describe your deal..."
-            value={draft} onChange={(e) => setDraft(e.target.value)} disabled={streaming} />
-          <button type="submit" aria-label="Send" disabled={streaming || !draft.trim()}>
-            {streaming ? <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2} /> : <Send className="w-4 h-4" strokeWidth={1.7} />}
-          </button>
-        </form>
-        <p
-          className="text-[11px] leading-relaxed normal-case text-[var(--cream)]/80 px-5 pt-2 text-center"
-          data-testid="peggy-send-disclosure"
-        >
-          By sending, your message is stored and processed by an AI service to generate Peggy&apos;s response. See{" "}
-          <a className="underline underline-offset-2 hover:text-[var(--cream)]" href="/privacy">Privacy Policy</a>.
-        </p>
         <div className="px-5 pt-1 pb-2">
-          <div className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--cream)]/40 mb-2">Or go straight to</div>
+          <div className="pg-label !text-[13px] !tracking-normal text-[var(--cream)]/40 mb-2">Or go straight to</div>
           <div className="flex flex-wrap gap-2">
             <button type="button" data-testid="peggy-route-strategylab" className="peggy-chip !py-1.5 !px-3"
               onClick={() => { toStrategyLab(); setOpen(false); }}>Strategy Lab</button>
@@ -372,12 +371,29 @@ export function Peggy({
               onClick={() => { go('marketflow'); setOpen(false); }}>MarketFlow</button>
           </div>
         </div>
-        <div className="pg-label !text-[8px] !tracking-[0.14em] normal-case text-[var(--cream)]/45 px-5 pt-1 text-center" data-testid="peggy-compliance">
+        <div className="pg-label !text-[13px] !tracking-normal normal-case text-[var(--cream)]/45 px-5 pt-1 text-center" data-testid="peggy-compliance">
           {PEGGY_COMPLIANCE}
         </div>
-        <div className="pg-label !text-[8px] !tracking-[0.14em] normal-case text-[var(--cream)]/35 px-5 pb-4 pt-2 text-center">
+        <div className="pg-label !text-[13px] !tracking-normal normal-case text-[var(--cream)]/35 px-5 pb-4 pt-2 text-center">
           {PEGGY_SLA}
         </div>
+        </div>
+
+        <form className="peggy-input" onSubmit={(e) => { e.preventDefault(); send(draft); }}>
+          <input ref={inputRef} type="text" aria-label="Talk to Peggy" placeholder="Describe your deal..."
+            value={draft} onChange={(e) => setDraft(e.target.value)} disabled={streaming} />
+          <button type="submit" aria-label="Send" disabled={streaming || !draft.trim()}>
+            {streaming ? <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2} /> : <Send className="w-4 h-4" strokeWidth={1.7} />}
+          </button>
+        </form>
+        <p
+          className="text-[13px] leading-relaxed normal-case text-[var(--cream)]/80 px-5 pt-2 text-center"
+          data-testid="peggy-send-disclosure"
+        >
+          By sending, your message is stored and processed by an AI service to generate Peggy&apos;s response. See{" "}
+          <a className="underline underline-offset-2 hover:text-[var(--cream)]" href="/privacy">Privacy Policy</a>.
+        </p>
+
       </div>
     </>
   );

@@ -36,24 +36,13 @@ describe("mounted MarketFlow public shell", () => {
   it("ships a truthful controlled-pilot surface without a fictional sample record", () => {
     renderMarketFlow();
 
-    expect(screen.getByText("Controlled private pilot")).toBeInTheDocument();
+    expect(screen.getByText(/MarketFlow is Pegasus’s controlled private pilot/)).toBeInTheDocument();
     expect(screen.getByText(/No live opportunities or inventory/i)).toBeInTheDocument();
     expect(screen.getByText(/not a securities or investment platform/i)).toBeInTheDocument();
     expect(screen.getByText(/no securities are offered/i)).toBeInTheDocument();
 
-    const anatomy = screen.getByRole("list", {
-      name: "Fields in a possible authorized MarketFlow record",
-    });
-    for (const label of [
-      "Property context",
-      "Source authority",
-      "Review basis",
-      "Current permission",
-      "Intended recipient",
-      "Written terms",
-    ]) {
-      expect(within(anatomy).getByText(label)).toBeInTheDocument();
-    }
+    expect(screen.getByText(/Source authority and permitted visibility would need verification/)).toBeInTheDocument();
+    expect(screen.getByText(/Any future introduction depends on consent/)).toBeInTheDocument();
 
     expect(screen.queryByText("Illustrative opportunity record")).not.toBeInTheDocument();
     expect(screen.queryByText("MF · 0007")).not.toBeInTheDocument();
@@ -79,7 +68,7 @@ describe("mounted MarketFlow public shell", () => {
     expect(panel).toHaveAttribute("aria-live", "polite");
     expect(within(panel).getByRole("heading", { name: title })).toBeInTheDocument();
 
-    await user.click(within(panel).getByRole("button", { name: /request access in this role/i }));
+    await user.click(within(panel).getByRole("link", { name: /request access in this role/i }));
     expect(history.at(-1)).toBe(`/marketflow/access?role=${role}`);
   });
 
@@ -87,13 +76,13 @@ describe("mounted MarketFlow public shell", () => {
     const user = userEvent.setup({ delay: null });
     const { history, go } = renderMarketFlow();
 
-    await user.click(screen.getByRole("button", { name: "Request pilot access" }));
+    await user.click(screen.getAllByRole("link", { name: "Request Access" })[0]);
     expect(history.at(-1)).toBe("/marketflow/access");
 
-    await user.click(screen.getByRole("button", { name: "Read public criteria" }));
+    await user.click(screen.getByRole("link", { name: "Read public criteria" }));
     expect(history.at(-1)).toBe("/marketflow/buyboxes");
 
-    await user.click(screen.getByRole("button", { name: "Start in Strategy Lab" }));
-    expect(go).toHaveBeenCalledWith("strategylab");
+    await user.click(screen.getByRole("link", { name: "Start in Strategy Lab" }));
+    expect(history.at(-1)).toBe("/strategy-lab");
   });
 });

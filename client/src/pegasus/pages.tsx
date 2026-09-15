@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocation } from 'wouter';
+import { Link, useLocation } from 'wouter';
 import { ArrowRight, ConciergeBell, Check, Send, Calculator, Compass, Ruler, Landmark } from 'lucide-react';
 import type { Nav, Theme, PeggyHandoff } from './theme';
 import { IMG, SectionHead, ContourLines, BrandMark } from './primitives';
@@ -18,6 +18,7 @@ import {
 import { PremiumStrategyLab } from './strategy-lab-experience';
 import { PremiumMarketFlow } from './marketflow-experience';
 import { ConnectChooser } from '@/pages/connect';
+import { PageAction, PageOpening, PageClosing, ProjectEvidence } from './experience-page';
 
 export { CategoryPage } from './category-page';
 export { CapitalPage } from './capital-page';
@@ -114,62 +115,34 @@ export function DealStrategyPage({ go, openPeggy }: { go: Nav; openPeggy: () => 
 /* ================================================================
    INVESTMENTS
    ================================================================ */
-export function InvestmentsPage({ go, openPeggy }: { go: Nav; openPeggy: () => void }) {
-  return (
-    <>
-      <PageHero eyebrow="Pillar 01 · Investments"
-        title={<>How a possible acquisition <span className="italic text-[var(--accent-bright)]">is considered.</span></>}
-        image={IMG('pegasus-after.png')}
-        scrimTop
-        lead="Distressed, dated, and overlooked property may be submitted for consideration. No purchase, project work, capital, or exit is promised." />
-      <PillarSection p={INVESTMENTS} go={go} />
-      <Qualifier forYou={CATEGORIES.capital.forYou} notFit={CATEGORIES.capital.notFit} />
-      <NextStep go={go} label="Review capital-discussion boundaries" route="capital" />
-      <LeadSection cfg={INVESTMENTS_FORM} eyebrow="Share investment context" tone="navy" />
-    </>
-  );
+export function InvestmentsPage({ go: _go, openPeggy: _openPeggy }: { go: Nav; openPeggy: () => void }) {
+  return <article className="experience-page">
+    <PageOpening title="How a possible acquisition is considered." action={{ href: '/bring-an-opportunity?intent=property', label: 'Discuss a property' }}><p>Distressed, dated, and overlooked property may be submitted for consideration. No purchase, project work, capital, or exit is promised.</p></PageOpening>
+    <section className="ep-section"><div className="experience-wrap ep-split"><h2>Start with the property and the facts.</h2><div><p>Condition, ownership, proposed terms, timing, and the assumptions behind a possible acquisition all matter. Any transaction requires property-specific diligence, capacity, and accepted written terms.</p><PageAction href="/strategy-lab" secondary>Explore the assumptions in Strategy Lab</PageAction></div></div></section>
+    <ProjectEvidence />
+    <section className="ep-section ep-dark"><div className="experience-wrap ep-split"><h2>Capital conversations have a separate path.</h2><div><p>Existing relationships and personal introductions only. The public site does not offer an investment, project access, or a funding commitment.</p><PageAction href="/capital" secondary>Review capital-discussion boundaries</PageAction></div></div></section>
+    <div className="ep-form-section"><LeadSection cfg={INVESTMENTS_FORM} eyebrow="Share investment context" tone="page" headingLevel={2} /></div>
+  </article>;
 }
 
 /* ================================================================
    DEVELOPMENT
    ================================================================ */
-export function DevelopmentPage({ go }: { go: Nav }) {
-  return (
-    <>
-      <PageHero eyebrow="Pillar 02 · Development"
-        title={<>Define project work <span className="italic text-[var(--accent-bright)]">before it begins.</span></>}
-        image={IMG('nelson/nelson-kitchen-1280.jpg')}
-        lead="A framework for renovation or ground-up scopes: budget, schedule, qualified providers, permits, change control, and written completion criteria."
-        action={{ label: 'Explore the project framework', href: '#development-framework' }}
-        imageCaption="Nelson Drive · completed renovation · real project photography" />
-      <section id="development-framework" tabIndex={-1} className="pg-development-plan">
-        <div className="hv-wrap pg-development-grid">
-          <div className="pg-development-intro">
-            <div className="pg-label text-[var(--accent)]">Before a project starts</div>
-            <h2 className="font-serif-display">Make the scope clear. Make the responsibilities explicit.</h2>
-            <p className="text-[var(--muted)] leading-relaxed">
-              Use these four areas to organize the project conversation, from the first assumptions to the final handoff.
-            </p>
-          </div>
-          <ol className="pg-development-controls">
-            <li><span>01</span><div><h3>Scope &amp; budget</h3><p>Identify the proposed work, exclusions, available plans, cost assumptions, and decisions that would change the budget.</p></div></li>
-            <li><span>02</span><div><h3>Providers &amp; permissions</h3><p>Document the roles, applicable licenses, permit status, and qualifications that the specific property and scope require.</p></div></li>
-            <li><span>03</span><div><h3>Schedule &amp; change control</h3><p>Separate target dates from verified dependencies. Define who approves changes, how they are priced, and how they are recorded.</p></div></li>
-            <li><span>04</span><div><h3>Completion &amp; handoff</h3><p>Agree the acceptance criteria, inspections, outstanding items, handoff records, and remedies in the project documents.</p></div></li>
-          </ol>
-        </div>
-        <div className="hv-wrap pg-development-boundary">
-          <p className="text-[var(--muted)] leading-relaxed">
-            This page does not claim an in-house construction team or guaranteed capacity. A future project would require property-specific diligence, qualified providers, applicable licenses and permits, and a signed agreement defining scope, budget, schedule, changes, completion, and remedies.
-          </p>
-          <button type="button" onClick={() => go('contact')} data-testid="button-development-connect"
-            className="btn-primary px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
-            Start a build conversation <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-          </button>
-        </div>
-      </section>
-    </>
-  );
+export function DevelopmentPage({ go: _go }: { go: Nav }) {
+  return <article className="experience-page">
+    <PageOpening title="A practical plan for the work ahead." action={{ href: '/bring-an-opportunity?intent=explore', label: 'Discuss a project' }}><p>Start with the property, proposed scope, budget, and constraints. Renovation and ground-up work each need clearly defined responsibilities.</p></PageOpening>
+    <section id="development-framework" className="ep-section"><div className="experience-wrap ep-split">
+      <h2>Define the work before it starts.</h2>
+      <ol className="ep-rows ep-numbered">
+        <li><div><h3>Scope &amp; budget</h3><p>Identify the proposed work, exclusions, available plans, cost assumptions, and decisions that would change the budget.</p></div></li>
+        <li><div><h3>Providers &amp; permissions</h3><p>Document the roles, applicable licenses, permit status, and qualifications that the specific property and scope require.</p></div></li>
+        <li><div><h3>Schedule &amp; change control</h3><p>Separate target dates from verified dependencies. Define who approves changes, how they are priced, and how they are recorded.</p></div></li>
+        <li><div><h3>Completion &amp; handoff</h3><p>Agree the acceptance criteria, inspections, outstanding items, handoff records, and remedies in the project documents.</p></div></li>
+      </ol>
+    </div></section>
+    <ProjectEvidence title="A documented residential transformation." />
+    <PageClosing title="Discuss the work you have in mind." href="/bring-an-opportunity?intent=explore" label="Discuss a project"><p className="ep-notice">This page does not claim an in-house construction team or guaranteed capacity. A future project would require property-specific diligence, qualified providers, applicable licenses and permits, and a signed agreement defining scope, budget, schedule, changes, completion, and remedies.</p></PageClosing>
+  </article>;
 }
 
 /* ================================================================
@@ -258,63 +231,19 @@ function ApolloSelector({
   roleFieldRef: React.RefObject<HTMLSelectElement>;
 }) {
   const [, setLocation] = useLocation();
-  const active = APOLLO_SELECTOR.find((s) => s.key === selectedKey) ?? APOLLO_SELECTOR[0];
-  const onCta = () => {
-    if (active.mode === 'form') {
-      const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
-      leadRef.current?.scrollIntoView({
-        behavior: reduceMotion ? 'auto' : 'smooth',
-        block: 'start',
-      });
-      roleFieldRef.current?.focus({ preventScroll: true });
-    } else if (active.href) {
-      setLocation(active.href);
-    }
+  const choose = (path: typeof APOLLO_SELECTOR[number]) => {
+    onSelect(path.key);
+    if (path.mode === 'link') { setLocation(path.href); return; }
+    leadRef.current?.scrollIntoView({ behavior: 'auto', block: 'start' });
+    roleFieldRef.current?.focus({ preventScroll: true });
   };
-  return (
-    <section className="apollo-paths" data-testid="section-apollo-selector">
-      <div className="apollo-paths__inner">
-        <div className="pg-label text-[var(--accent-ink)]">Choose the right conversation</div>
-        <h2 className="font-serif-display">What brings you here?</h2>
-        <div className="apollo-paths__rail" role="group" aria-label="What brings you here?" data-testid="apollo-selector">
-          {APOLLO_SELECTOR.map((s) => {
-            const isActive = s.key === selectedKey;
-            return (
-              <button
-                key={s.key}
-                type="button"
-                aria-pressed={isActive}
-                onClick={() => onSelect(s.key)}
-                data-testid={`apollo-selector-${s.key}`}
-                className={isActive ? 'is-active' : undefined}
-              >
-                <span>{s.label}</span>
-                <ArrowRight aria-hidden="true" />
-              </button>
-            );
-          })}
-        </div>
-        <p
-          role="status"
-          aria-label="Selected path"
-          aria-live="polite"
-          aria-atomic="true"
-          className="apollo-paths__status"
-          data-testid="text-apollo-selector-blurb"
-        >
-          <strong>Selected path: {active.label}.</strong> {active.blurb}
-        </p>
-        <button
-          type="button"
-          onClick={onCta}
-          data-testid="button-apollo-selector-cta"
-          className="btn-primary px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group"
-        >
-          {active.cta} <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-        </button>
-      </div>
-    </section>
-  );
+  return <section className="ep-section" id="apollo-paths" data-testid="section-apollo-selector"><div className="experience-wrap ep-split">
+    <div><h2>Buying or selling?</h2><p>Choose the conversation. Your selection carries into the representation form.</p><PageAction href="/buyers" secondary>Explore the buyer paths</PageAction></div>
+    <div className="ep-rep-paths" role="group" aria-label="What brings you here?" data-testid="apollo-selector">
+      {APOLLO_SELECTOR.map((path) => <button key={path.key} type="button" aria-pressed={path.key === selectedKey} onClick={() => choose(path)} data-testid={`apollo-selector-${path.key}`}><span>{path.label}</span><ArrowRight aria-hidden="true" /></button>)}
+    </div>
+    <p className="sr-only" role="status" aria-live="polite" aria-label="Selected path">{APOLLO_SELECTOR.find(path => path.key === selectedKey)?.label}. {APOLLO_SELECTOR.find(path => path.key === selectedKey)?.blurb}</p>
+  </div></section>;
 }
 
 export function WorkWithApolloPage({ go }: { go: Nav }) {
@@ -330,63 +259,39 @@ export function WorkWithApolloPage({ go }: { go: Nav }) {
   };
 
   return (
-    <>
-      <ApolloBlock go={go} showCta={false} variant="work" />
-      <section className="apollo-representation">
-        <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
-          <SectionHead eyebrow="Representation lanes" title="Ask about current availability."
-            copy="Seller or buyer representation may be available only after current license and broker verification, fit review, and a separate written brokerage agreement." />
-          <div className="apollo-representation__lanes">
-            <RepLane rep={APOLLO_REP.seller} />
-            <RepLane rep={APOLLO_REP.buyer} />
-          </div>
-          <div className="apollo-representation__disclosure reveal">
-            <p>{APOLLO_DISCLOSURE}</p>
-            <p>
-              Equal Housing Opportunity. If representation is offered, the policy is to provide it without unlawful discrimination, subject to the signed brokerage agreement.
-            </p>
-          </div>
-        </div>
-      </section>
-      <ApolloSelector
-        selectedKey={selectorKey}
-        onSelect={selectPath}
-        leadRef={leadRef}
-        roleFieldRef={roleFieldRef}
-      />
-      <div ref={leadRef} id="apollo-lead" className="scroll-mt-24">
-        <LeadSection
-          cfg={APOLLO_FORM}
-          eyebrow="Represent with Apollo"
-          tone="navy"
-          showRole
-          preferredRole={preferredRole}
-          roleFieldRef={roleFieldRef}
-          showDecorativeContour={false}
-        />
+    <article className="experience-page ep-representation">
+      <PageOpening title="Buy or sell with Apollo." image={{ src: '/images/founder/apollo.webp', alt: 'Apollo Duran', width: 1100, height: 1375, portrait: true }} action={{ href: '#apollo-paths', label: 'Discuss representation' }}>
+        <p>Ask about current buyer or seller representation with Apollo Duran. Start with your plans, location, and timing.</p>
+        <p className="ep-notice">CA DRE #02333658 · Responsible broker: BMP Realty Inc DBA Keller Williams Realty-East Bay. Verify current status. Pegasus Dreamscapes Corp. is not a real estate brokerage.</p>
+      </PageOpening>
+      <ApolloSelector selectedKey={selectorKey} onSelect={selectPath} leadRef={leadRef} roleFieldRef={roleFieldRef} />
+      <section className="ep-section ep-warm"><div className="experience-wrap ep-split">
+        <div><h2>Agree the scope together.</h2><p>Seller or buyer representation may be available only after current license and broker verification, fit review, and a separate written brokerage agreement.</p></div>
+        <div className="ep-rows"><RepLane rep={APOLLO_REP.seller} /><RepLane rep={APOLLO_REP.buyer} /></div>
+      </div></section>
+      <section className="ep-section"><div className="experience-wrap ep-split"><h2>A clearly documented relationship.</h2><div><p>{APOLLO_DISCLOSURE}</p><p className="ep-notice">Equal Housing Opportunity. If representation is offered, the policy is to provide it without unlawful discrimination, subject to the signed brokerage agreement.</p></div></div></section>
+      <div ref={leadRef} id="apollo-lead" className="ep-form-section">
+        <LeadSection cfg={APOLLO_FORM} eyebrow="Represent with Apollo" tone="page" headingLevel={2} showRole preferredRole={preferredRole} roleFieldRef={roleFieldRef} showDecorativeContour={false} />
       </div>
-    </>
+    </article>
   );
 }
 
 /* ================================================================
    ECOSYSTEM
    ================================================================ */
-export function EcosystemPage({ go, openPeggy }: { go: Nav; openPeggy: () => void }) {
-  return (
-    <>
-      <PageHero eyebrow="Systems · The Ecosystem"
-        title={<>One framework. <span className="italic text-[var(--accent-bright)]">Clear boundaries between parts.</span></>}
-        image={IMG('pegasus-closing.png')}
-        lead="Educational modeling, intake, licensed representation, project work, capital, and MarketFlow each have separate roles, qualifications, and written terms." />
-      <EcosystemBlock go={go} openPeggy={openPeggy} />
-      <ThreePillarsBlock go={go} />
-      <MarketFlowBlock go={go} dark />
-      <CTABand go={go} openPeggy={openPeggy}
-        title="Plug into the whole machine."
-        text="Each lane has separate eligibility, diligence, professional duties, and written terms. The public framework does not merge those responsibilities." />
-    </>
-  );
+export function EcosystemPage({ go: _go, openPeggy: _openPeggy }: { go: Nav; openPeggy: () => void }) {
+  return <article className="experience-page">
+    <PageOpening title="The right path for each part of the work."><p>Property planning, licensed representation, and private network access each have separate roles, qualifications, and written terms.</p></PageOpening>
+    <section className="ep-section"><div className="experience-wrap ep-split"><h2>Find what you need.</h2><div className="ep-link-list">{[
+      ['Property planning', 'Explore the practical questions about a property or proposed project.', '/property-owners'],
+      ['Licensed representation', 'Discuss a separately documented buyer or seller relationship with Apollo.', '/work-with-apollo'],
+      ['Tools', 'Use the existing Strategy Lab or resume a browser draft.', '/tools'],
+      ['MarketFlow', 'Understand the controlled private pilot and reviewed access path.', '/marketflow'],
+      ['Project partners', 'Clarify a possible operator, vendor, or specialist role.', '/deal-partners'],
+    ].map(([title, detail, href]) => <Link key={href} href={href}><span><strong>{title}</strong><small>{detail}</small></span><ArrowRight aria-hidden="true" /></Link>)}</div></div></section>
+    <PageClosing title="Need help choosing a path?" href="/contact" label="Contact Apollo"><p>The public framework does not merge professional duties, promise capacity, or create an engagement.</p></PageClosing>
+  </article>;
 }
 
 /* ================================================================
@@ -397,116 +302,15 @@ const PEGGY_PAGE_ROLES = PEGGY_PAGE_ROLE_KEYS
   .map((k) => PEGGY_ROLES.find((r) => r.role === k))
   .filter((r): r is (typeof PEGGY_ROLES)[number] => Boolean(r));
 
-export function PeggyPage({ go, openPeggy }: { go: Nav; openPeggy: (role?: string, prompt?: string) => void }) {
+export function PeggyPage({ go: _go, openPeggy }: { go: Nav; openPeggy: (role?: string, prompt?: string) => void }) {
   const [prompt, setPrompt] = React.useState('');
-  return (
-    <>
-      <PageHero eyebrow="Systems · The front door · Early access"
-        title={<>Meet <span className="italic text-[var(--accent-bright)]">Peggy.</span></>}
-        image={IMG('pegasus-interior-v2.png')}
-        lead="Describe a deal or situation in plain language. Peggy can explain public paths and help create an intake record. It cannot recommend, promise routing, or provide licensed advice. Phone and voice remain in development." />
-      <section className="py-24 lg:py-28">
-        <div className="max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-12 lg:gap-16 items-start">
-          <div className="lg:col-span-5 reveal">
-            <div className="pg-label text-[var(--accent-ink)] mb-5">How Peggy helps</div>
-            <h2 className="font-serif-display text-4xl md:text-[3rem] leading-[1.05] tracking-normal text-[var(--text)] mb-7">
-              A guided way to understand the public paths.
-            </h2>
-            <p className="text-[var(--muted)] leading-relaxed mb-8 max-w-md">
-              Not sure where to start? Peggy can explain the public intake, Strategy Lab, and audience pages. The current experience is website intake only; Peggy does not answer the main line and cannot promise a human handoff or response.
-            </p>
-            <ul className="space-y-4 mb-10">
-              {['Open the website assistant without an account', 'Plain-language orientation, not advice', 'Human follow-up is not guaranteed'].map((t) => (
-                <li key={t} className="flex gap-3.5 text-[var(--text-2)] leading-relaxed">
-                  <Check className="w-4 h-4 text-[var(--accent-ink)] mt-1 shrink-0" strokeWidth={2} /><span>{t}</span>
-                </li>
-              ))}
-            </ul>
-            <button type="button" onClick={() => openPeggy()} className="btn-primary px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
-              <ConciergeBell className="w-3.5 h-3.5" strokeWidth={1.7} /> Open Peggy
-            </button>
-          </div>
-          <div className="lg:col-span-7 reveal delay-100">
-            <div className="rounded-[3px] bg-[var(--navy)] text-[var(--cream)] p-8 lg:p-10 peggy-shadow overflow-hidden relative">
-              <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[55%] text-[var(--accent-2)] opacity-[0.1]" />
-              <div className="relative">
-                <div className="flex items-center gap-3 mb-7">
-                  <div className="peggy-avatar"><BrandMark boxClassName="w-full h-full" onDark /></div>
-                  <div className="leading-none">
-                    <div className="font-serif-display text-2xl text-[var(--cream)]">Peggy</div>
-                    <div className="flex items-center gap-2.5 mt-2">
-                      <span className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--accent-bright)]">Pegasus intake concierge</span>
-                      <span className="inline-flex items-center gap-1.5 pg-label !text-[7px] !tracking-[0.16em] px-2 py-0.5 rounded-full border border-[var(--accent-bright)]/40 text-[var(--accent-bright)]" data-testid="badge-peggy-status">
-                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-bright)]" aria-hidden="true" /> Web early access · voice in development
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                <p className="peggy-msg mb-6">
-                  I&rsquo;m Peggy. Tell me what you are exploring and I can explain the relevant public paths or help start an intake record.
-                </p>
-                <div className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--cream)]/45 mb-3">Pick where you fit and Peggy starts there</div>
-                <div className="flex flex-col gap-2.5 mb-8">
-                  {PEGGY_PAGE_ROLES.map((r) => (
-                    <button key={r.role} type="button" onClick={() => openPeggy(r.role)} data-testid={`button-peggy-role-${r.role}`} className="peggy-chip text-left inline-flex items-center justify-between gap-3 group">
-                      <span>{r.label}</span>
-                      <ArrowRight className="w-3.5 h-3.5 shrink-0 opacity-60 group-hover:translate-x-0.5 group-hover:opacity-100 transition" />
-                    </button>
-                  ))}
-                </div>
-                <form
-                  className="peggy-input !relative !rounded-[3px]"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    const initialPrompt = prompt.trim();
-                    if (initialPrompt) openPeggy(undefined, initialPrompt);
-                  }}
-                >
-                  <input
-                    type="text"
-                    aria-label="Describe your deal"
-                    placeholder="Describe your deal..."
-                    value={prompt}
-                    onChange={(event) => setPrompt(event.target.value)}
-                  />
-                  <button type="submit" aria-label="Open Peggy" disabled={!prompt.trim()}><Send className="w-4 h-4" strokeWidth={1.7} /></button>
-                </form>
-                <div className="pg-label !text-[8px] !tracking-[0.14em] normal-case text-[var(--cream)]/40 mt-4 text-center">{PEGGY_SLA}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-      <section className="relative py-20 lg:py-24 border-t border-[var(--line-soft)] overflow-hidden">
-        <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12">
-          <div className="max-w-2xl mb-14 reveal">
-            <div className="pg-label text-[var(--accent-ink)] mb-5">What Peggy can actually do</div>
-            <h2 className="font-serif-display text-4xl md:text-[3rem] leading-[1.05] tracking-normal text-[var(--text)]">
-              Fluent in the deal, not just the chat.
-            </h2>
-          </div>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-px bg-[var(--line-soft)] rounded-[3px] overflow-hidden">
-            {[
-              { icon: Calculator, title: 'Explains inputs', desc: 'Defines basis, ARV, improvement budget, carry, and exit-cost concepts without valuing a property.' },
-              { icon: Compass, title: 'Explains public lanes', desc: 'Describes possible sale, project, capital, representation, or introduction paths without recommending one.' },
-              { icon: Ruler, title: 'Explains scope concepts', desc: 'Defines draw, schedule, change-control, and completion concepts without promising project services.' },
-              { icon: Landmark, title: 'States its limits', desc: 'Refuses licensed advice and commitments. A contact path may be shown, but handoff and response are not promised.' },
-            ].map((c, i) => (
-              <div key={c.title} className={`bg-[var(--bg)] p-8 lg:p-9 reveal`} style={{ transitionDelay: `${i * 70}ms` }}>
-                <div className="w-11 h-11 rounded-[3px] bg-[rgba(213,127,46,0.1)] flex items-center justify-center mb-6">
-                  <c.icon className="w-5 h-5 text-[var(--accent-ink)]" strokeWidth={1.7} />
-                </div>
-                <div className="font-serif-display text-xl text-[var(--text)] mb-3">{c.title}</div>
-                <p className="text-[var(--muted)] text-[0.92rem] leading-relaxed">{c.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-      <DoorsBlock go={go} openPeggy={openPeggy} />
-      <LeadSection cfg={CONTACT_FORM} eyebrow="Prefer a person?" tone="navy" />
-    </>
-  );
+  return <article className="experience-page">
+    <PageOpening title="Meet Peggy."><p>Peggy is Pegasus’s AI intake assistant. Ask about public paths, explain a property situation, or get help understanding Strategy Lab.</p><p className="ep-notice">Website early access. Peggy does not approve deals, make offers, or provide legal, tax, lending, or investment advice. Phone and voice remain in development.</p></PageOpening>
+    <section className="ep-section"><div className="experience-wrap ep-split"><div><h2>Start in your own words.</h2><p>You can prepare a question here, then review it in Peggy before sending.</p><form className="ep-peggy-prompt" onSubmit={event => { event.preventDefault(); if (prompt.trim()) openPeggy(undefined, prompt.trim()); }}><label htmlFor="peggy-page-prompt">Describe your deal</label><textarea id="peggy-page-prompt" placeholder="What are you considering?" value={prompt} onChange={event => setPrompt(event.target.value)} rows={4} /><button type="submit" className="experience-button" disabled={!prompt.trim()}>Open Peggy <ArrowRight size={17} aria-hidden="true" /></button></form></div>
+      <div><h3>Or choose a starting point.</h3><div className="ep-rep-paths">{PEGGY_PAGE_ROLES.map(role => <button type="button" key={role.role} onClick={() => openPeggy(role.role)} data-testid={`button-peggy-role-${role.role}`}><span>{role.label}</span><ArrowRight aria-hidden="true" /></button>)}</div></div>
+    </div></section>
+    <section className="ep-section ep-dark"><div className="experience-wrap ep-split"><h2>Prefer to contact Apollo?</h2><div><p>The current assistant provides orientation and intake support. Human review, follow-up, and response timing are not promised.</p><PageAction href="/contact">Contact Apollo</PageAction></div></div></section>
+  </article>;
 }
 
 /* ================================================================

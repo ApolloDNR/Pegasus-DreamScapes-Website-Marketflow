@@ -24,13 +24,13 @@ export default function Terms() {
   });
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="legal-page min-h-screen bg-background">
       <section className="relative pt-32 pb-16 lg:pt-40 lg:pb-20 bg-[hsl(var(--charcoal))] text-cream overflow-hidden">
         <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[70%] text-primary opacity-[0.12] pointer-events-none" />
         <div className="relative max-w-4xl mx-auto px-6 lg:px-12">
           <div className="flex items-center gap-4 mb-6">
             <div className="h-px w-16 bg-gradient-to-r from-primary to-transparent" />
-            <p className="text-[11px] uppercase tracking-[0.3em] text-[#e3a463] font-supporting font-semibold">
+            <p className="text-[13px] uppercase tracking-[0.3em] text-[#e3a463] font-supporting font-semibold">
               Terms · Plain language
             </p>
           </div>
@@ -52,7 +52,7 @@ export default function Terms() {
 
       <section className="py-16 lg:py-20 bg-muted/30 border-b border-border">
         <div className="max-w-4xl mx-auto px-6 lg:px-12">
-          <p className="text-[10px] uppercase tracking-[0.3em] text-[#8a5122] dark:text-primary font-supporting font-semibold mb-4">
+          <p className="text-[13px] uppercase tracking-[0.3em] text-[#8a5122] dark:text-primary font-supporting font-semibold mb-4">
             Jump to a section
           </p>
           <nav aria-label="On-page navigation" className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2">
@@ -73,7 +73,7 @@ export default function Terms() {
 
       <section className="py-20 lg:py-28">
         <div className="max-w-5xl mx-auto px-6 lg:px-12">
-          <div className="grid lg:grid-cols-2 gap-x-12 gap-y-14">
+          <div className="grid gap-y-12">
             <LegalBlock id="agreement" idx={0} icon={SECTIONS[0].icon} kicker={SECTIONS[0].kicker} title={SECTIONS[0].title}>
               <p>
                 This page is an operator-prepared draft pending qualified legal review. It states the
@@ -209,7 +209,7 @@ function LegalBlock({
         <span className="inline-flex items-center justify-center w-11 h-11 shrink-0 rounded-full border border-primary/40 bg-primary/5 text-[#8a5122] dark:text-primary">
           <Icon className="w-5 h-5" aria-hidden="true" />
         </span>
-        <p className="text-[10px] uppercase tracking-[0.3em] text-[#8a5122] dark:text-primary font-supporting font-semibold">
+        <p className="text-[13px] uppercase tracking-[0.3em] text-[#8a5122] dark:text-primary font-supporting font-semibold">
           {kicker}
         </p>
       </div>

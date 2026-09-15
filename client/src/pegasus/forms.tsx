@@ -3,6 +3,7 @@ import { useLocation } from 'wouter';
 import { ArrowRight, Check, ChevronDown, Mail, Phone, MapPin, ConciergeBell, AlertCircle, Loader2, Bookmark, BookmarkCheck } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
+import { readLeadReceipt } from '@/lib/lead-receipt';
 import type { Nav, FormCfg, PeggyHandoff } from './theme';
 import { usd0, SectionHead, ContourLines, BrandMark, IMG } from './primitives';
 import { addStrategy, type StrategyPreview } from './savedStore';
@@ -32,7 +33,7 @@ function SaveStrategyButton({ snapshot, title }: { snapshot: StrategyPreview; ti
   return (
     <button type="button" disabled={saved}
       onClick={() => { addStrategy(title, snapshot); setSaved(true); }}
-      className="btn-line-light px-7 py-4 pg-label !text-[10px] inline-flex items-center gap-2.5 disabled:opacity-60">
+      className="btn-line-light px-7 py-4 pg-label !text-[15px] !tracking-normal !normal-case inline-flex items-center gap-2.5 disabled:opacity-60">
       {saved ? (
         <><BookmarkCheck className="w-3.5 h-3.5" strokeWidth={1.8} /> Saved to your workspace</>
       ) : (
@@ -154,11 +155,12 @@ export function LeadForm({
   const [submitted, setSubmitted] = useState(false);
   const successRef = useRef<HTMLDivElement>(null);
   const startedAt = useRef(Date.now());
+  const inFlightRef = useRef(false);
   const [hpCompany, setHpCompany] = useState('');
   const createLead = useMutation({
     mutationFn: async (payload: Record<string, unknown>) => {
       const res = await apiRequest('POST', '/api/leads', payload);
-      return res.json();
+      return readLeadReceipt(res);
     },
   });
   const [form, setForm] = useState({
@@ -190,7 +192,8 @@ export function LeadForm({
   const source = strategy ? 'strategy-lab' : transcript.length > 0 ? 'peggy' : 'form';
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.consentContact) return;
+    if (!form.consentContact || inFlightRef.current) return;
+    inFlightRef.current = true;
     const fullName = form.name.trim();
     const [firstName, ...rest] = fullName.split(/\s+/);
     const lastName = rest.join(' ');
@@ -223,6 +226,7 @@ export function LeadForm({
         },
       },
       {
+        onSettled: () => { inFlightRef.current = false; },
         onSuccess: () => {
           trackEvent(PRD_EVENT_BY_INTENT[cfg.intent] ?? 'lead_submitted', { intent: cfg.intent });
           setSubmitted(true);
@@ -255,7 +259,7 @@ export function LeadForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="grid sm:grid-cols-2 gap-x-8 gap-y-7">
+    <form onSubmit={onSubmit} className="ep-lead-form grid sm:grid-cols-2 gap-x-8 gap-y-7">
       <input
         type="text"
         name="hp_company"
@@ -337,7 +341,7 @@ export function LeadForm({
       </label>
       <div className="sm:col-span-2 mt-2">
         <button type="submit" disabled={createLead.isPending} aria-busy={createLead.isPending}
-          className={`${onNavy ? 'btn-solid-light' : 'btn-primary'} w-full sm:w-auto px-10 py-4 pg-label !text-[10px] inline-flex items-center justify-center gap-3 group disabled:opacity-60 disabled:cursor-not-allowed`}>
+          className={`${onNavy ? 'btn-solid-light' : 'btn-primary'} w-full sm:w-auto px-10 py-4 pg-label !text-[15px] !tracking-normal !normal-case inline-flex items-center justify-center gap-3 group disabled:opacity-60 disabled:cursor-not-allowed`}>
           {createLead.isPending ? (
             <>Sending your request… <Loader2 aria-hidden="true" className="w-3.5 h-3.5 animate-spin" /></>
           ) : (
@@ -359,6 +363,7 @@ export function LeadSection({
   preferredRole,
   roleFieldRef,
   showDecorativeContour = true,
+  headingLevel,
 }: {
   cfg: FormCfg;
   eyebrow: string;
@@ -369,12 +374,13 @@ export function LeadSection({
   preferredRole?: string;
   roleFieldRef?: React.RefObject<HTMLSelectElement>;
   showDecorativeContour?: boolean;
+  headingLevel?: 1 | 2;
 }) {
   const navy = tone === 'navy';
   const ic = navy ? 'text-[var(--accent-bright)]' : 'text-[var(--accent-ink)]';
-  const Heading = navy ? 'h2' : 'h1';
+  const Heading = headingLevel === 2 || navy ? 'h2' : 'h1';
   return (
-    <section className={`relative overflow-hidden ${navy ? 'py-24 lg:py-28 bg-[var(--navy)] text-[var(--cream)]' : 'pt-28 lg:pt-40 pb-24 lg:pb-28'}`}>
+    <section className={`ep-lead-section relative overflow-hidden ${navy ? 'py-24 lg:py-28 bg-[var(--navy)] text-[var(--cream)]' : 'pt-28 lg:pt-40 pb-24 lg:pb-28'}`}>
       {navy && showDecorativeContour && <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[70%] text-[var(--accent-2)] opacity-[0.1] float-slow" />}
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-12 lg:gap-20 items-start">
         <div className="lg:col-span-5 reveal">
@@ -385,7 +391,7 @@ export function LeadSection({
               ['--accent' as string]: navy ? 'var(--accent-bright)' : 'var(--accent-ink)',
             }}>{cfg.heading}</Heading>
           <p className={`leading-relaxed mb-10 max-w-md ${navy ? 'text-[var(--cream)]/75' : 'text-[var(--muted)]'}`}>{cfg.lead}</p>
-          <div className={`space-y-5 pg-label !text-[11px] !tracking-[0.16em] ${navy ? 'text-[var(--cream)]/80' : 'text-[var(--text-2)]'}`}>
+          <div className={`space-y-5 pg-label !text-[14px] !tracking-normal !normal-case ${navy ? 'text-[var(--cream)]/80' : 'text-[var(--text-2)]'}`}>
             <a href="mailto:apollo@pegasusdreamscapes.com" className="link-underline flex items-center gap-3"><Mail className={`w-4 h-4 ${ic}`} /> apollo@pegasusdreamscapes.com</a>
             <a href="tel:9257448525" className="link-underline flex items-center gap-3"><Phone className={`w-4 h-4 ${ic}`} /> 925-744-8525</a>
             <div className="flex items-center gap-3"><MapPin className={`w-4 h-4 ${ic}`} /> East Bay · California</div>
@@ -574,10 +580,10 @@ export function StrategyCommandBoard({
             Directional only. Not an offer, appraisal, legal advice, tax advice, financial advice, lending commitment, or investment recommendation.
           </p>
           <div className="strategy-command-actions">
-            <button type="button" onClick={jumpToConsole} className="btn-solid-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px] group">
+            <button type="button" onClick={jumpToConsole} className="btn-solid-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[15px] !tracking-normal !normal-case group">
               Enter the Cockpit <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
             </button>
-            <button type="button" onClick={() => go('submit')} className="btn-line-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px] group">
+            <button type="button" onClick={() => go('submit')} className="btn-line-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[15px] !tracking-normal !normal-case group">
               Send to Pegasus <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
             </button>
           </div>
@@ -907,7 +913,7 @@ export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }
                   data-testid="input-console-address" />
               </div>
               <button type="button" onClick={autofill}
-                className="btn-line px-6 py-3.5 pg-label !text-[10px] whitespace-nowrap" data-testid="button-console-autofill">
+                className="btn-line px-6 py-3.5 pg-label !text-[15px] !tracking-normal !normal-case whitespace-nowrap" data-testid="button-console-autofill">
                 Use an example property
               </button>
             </div>
@@ -990,12 +996,12 @@ export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }
                   )}
                 </div>
                 <button type="button" onClick={() => go(lane.route)}
-                  className="btn-primary w-full justify-center px-7 py-4 pg-label !text-[10px] inline-flex items-center gap-2.5 group mb-3"
+                  className="btn-primary w-full justify-center px-7 py-4 pg-label !text-[15px] !tracking-normal !normal-case inline-flex items-center gap-2.5 group mb-3"
                   data-testid="button-console-lane">
                   {lane.label} <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" strokeWidth={1.8} />
                 </button>
                 <button type="button" onClick={() => go('submit')}
-                  className="btn-line-light w-full justify-center px-7 py-3.5 pg-label !text-[10px] inline-flex items-center gap-2.5"
+                  className="btn-line-light w-full justify-center px-7 py-3.5 pg-label !text-[15px] !tracking-normal !normal-case inline-flex items-center gap-2.5"
                   data-testid="button-console-review">
                   Submit for a Property Read
                 </button>
@@ -1117,7 +1123,7 @@ export function StrategyCalculator({ go, model }: { go: Nav; model: StrategyMode
                   <p className="text-[var(--cream)]/70 text-[0.92rem] leading-relaxed mb-7">{read.note}</p>
                   <div className="flex flex-col sm:flex-row flex-wrap gap-3">
                     <button type="button" onClick={() => go('submit')}
-                      className="btn-solid-light px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
+                      className="btn-solid-light px-8 py-4 pg-label !text-[15px] !tracking-normal !normal-case inline-flex items-center gap-3 group">
                       Carry to opportunity intake <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                     </button>
                     <SaveStrategyButton snapshot={model.snapshot}
@@ -1186,11 +1192,11 @@ export function StrategyTierStrip() {
               {t.action ? (
                 <button type="button" onClick={t.action}
                   data-testid={`button-tier-${t.key}`}
-                  className={`${t.emphasis ? 'btn-primary' : 'btn-line'} w-full justify-center px-6 py-3.5 pg-label !text-[10px] inline-flex items-center gap-2.5 group`}>
+                  className={`${t.emphasis ? 'btn-primary' : 'btn-line'} w-full justify-center px-6 py-3.5 pg-label !text-[15px] !tracking-normal !normal-case inline-flex items-center gap-2.5 group`}>
                   {t.cta} <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" strokeWidth={1.8} />
                 </button>
               ) : (
-                <div className="w-full text-center px-6 py-3.5 pg-label !text-[10px] text-[var(--muted)] border border-dashed border-[var(--line)] rounded-[3px]">
+                <div className="w-full text-center px-6 py-3.5 pg-label !text-[15px] !tracking-normal !normal-case text-[var(--muted)] border border-dashed border-[var(--line)] rounded-[3px]">
                   {t.cta}
                 </div>
               )}

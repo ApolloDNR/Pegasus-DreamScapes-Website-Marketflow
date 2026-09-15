@@ -1,5 +1,5 @@
 /* Blueprint v1.1. One public system for the review candidate. */
-.pg-root {
+.pg-root, .public-reading-surface {
   --experience-midnight:#0b1d29;
   --experience-navy:#132a38;
   --experience-paper:#fcfaf6;
@@ -10,7 +10,7 @@
   --experience-rule:#d2c7ba;
   --experience-gutter:24px;
 }
-.pg-root[data-theme='dark'] {
+.pg-root[data-theme='dark'], .public-reading-surface[data-theme='dark'] {
   --experience-paper:#0b1d29;
   --experience-limestone:#132a38;
   --experience-text:#fcfaf6;
@@ -154,8 +154,8 @@
 .experience-tool-review { max-width:760px; margin-top:48px; }
 .experience-tool-review h2 { font-size:32px; }
 .experience-tool-review p { margin:20px 0; color:var(--experience-muted); }
-@media(min-width:768px) { .pg-root { --experience-gutter:40px; } }
-@media(min-width:1440px) { .pg-root { --experience-gutter:64px; } }
+@media(min-width:768px) { .pg-root, .public-reading-surface { --experience-gutter:40px; } }
+@media(min-width:1440px) { .pg-root, .public-reading-surface { --experience-gutter:64px; } }
 @media(max-width:1199px) { .site-brand-caption { display:none; } .site-wordmark { font-size:20px; } .site-desktop-links { gap:16px; } .site-nav-inner { gap:20px; } }
 @media(max-width:1099px) { .site-desktop-links,.site-header-action { display:none; } .site-menu-button { display:inline-flex; } .site-nav-inner { min-height:76px; } .site-wordmark { font-size:23px; } .site-footer-top { grid-template-columns:repeat(3,minmax(0,1fr)); } .site-footer-identity { grid-column:1/-1; max-width:440px; } .experience-section { padding-block:72px; } .experience-founder-layout { gap:40px; } }
 @media(max-width:900px) { .experience-plan-host,.experience-plan-placeholder { min-height:900px; } }

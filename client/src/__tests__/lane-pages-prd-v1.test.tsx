@@ -78,31 +78,31 @@ afterEach(() => cleanup());
 const LANES: [string, string[], string, string | null][] = [
   [
     "/property-owners",
-    ["A complex property needs a clear plan."],
+    ["A clear next step for your property."],
     "Repairs, inherited ownership, unfinished work, or a difficult timeline",
     null,
   ],
   [
     "/deal-partners",
-    ["Bring the deal. Define the role that moves it forward."],
-    "A property, contract, or project may need a clearer strategy",
+    ["Bring the deal. Define the role."],
+    "Share the property or project, what you bring, and what is missing.",
     "Any joint venture, assignment, referral, distribution, representation, or compensation arrangement would require a separate written agreement before anyone relies on it.",
   ],
   [
     "/buyers",
-    ["Buy with a strategy,", "not just a search."],
+    ["Find a property with a plan."],
     "licensed buyer representation, investor-interest intake, or discretionary access to the controlled MarketFlow pilot",
     null,
   ],
   [
     "/capital",
-    ["Capital should", "follow discipline."],
+    ["Start with the project and the relationship."],
     "Pegasus begins these conversations only through an existing relationship or a personal introduction.",
     "This page records relationship context; it does not present project terms or create access, eligibility, or an agreement.",
   ],
   [
     "/operators",
-    ["Know the standard", "before the scope."],
+    ["Define the standard before the scope."],
     "Formal applications are accepted only through the Vendor Network.",
     null,
   ],

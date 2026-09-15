@@ -103,7 +103,7 @@ describe("Peggy saved conversation storage", () => {
         screen.getByRole("button", { name: "Retry saving this conversation" }),
       ).toBeEnabled();
     });
-    expect(screen.getByRole("status")).toHaveTextContent("Save failed — retry");
+    expect(screen.getByRole("status")).toHaveTextContent("Save failed. Retry");
     expect(screen.queryByText(/^Saved$/)).not.toBeInTheDocument();
   });
 

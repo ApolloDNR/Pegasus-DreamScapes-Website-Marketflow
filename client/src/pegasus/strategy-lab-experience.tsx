@@ -26,7 +26,8 @@ import {
 import type { CalcTabKey } from '@/components/strategy-lab/calculator-tools-panel';
 import { useOptionalPeggyContext } from '@/contexts/peggy-context';
 import type { Nav } from './theme';
-import { IMG } from './primitives';
+import './experience-page.css';
+import './strategy-lab.css';
 import { writeStrategyLabHandoff } from './strategy-lab-handoff';
 
 const CalculatorToolsPanel = React.lazy(() =>
@@ -79,9 +80,9 @@ const INITIAL: LabState = {
 
 const STEPS: Array<{ key: LabStep; num: string; label: string; hint: string }> = [
   { key: 'property', num: '01', label: 'Property', hint: 'Situation and facts' },
-  { key: 'basis', num: '02', label: 'Basis', hint: 'Economics and assumptions' },
-  { key: 'strategy', num: '03', label: 'Paths', hint: 'Nine modeled routes' },
-  { key: 'review', num: '04', label: 'Brief', hint: 'Decision record' },
+  { key: 'basis', num: '02', label: 'Assumptions', hint: 'Costs and financing' },
+  { key: 'strategy', num: '03', label: 'Compare', hint: 'Nine modeled paths' },
+  { key: 'review', num: '04', label: 'Summary', hint: 'Planning record' },
 ];
 
 const PROPERTY_TYPES = ['Single-family residence', 'Condo or townhome', '2–4 units', 'Small multifamily', 'Land or development site', 'Commercial or mixed-use'];
@@ -551,22 +552,11 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
   };
 
   return (
-    <div className="px-lab" data-testid="premium-strategy-lab">
-      <section className="px-lab-masthead">
-        <img src={IMG('pegasus-architecture.png')} alt="Architectural model and planning instruments on a Pegasus worktable" />
-        <div className="px-lab-masthead-scrim" aria-hidden="true" />
-        <div className="px-lab-masthead-inner">
-          <div className="px-lab-masthead-copy">
-            <p className="px-kicker">Pegasus Strategy Lab · Private working desk</p>
-            <h1>Turn one property into a decision you can defend.</h1>
-            <p>Build the facts once, compare nine paths with a visitor-controlled automated model, and carry the same unverified brief into Peggy or the opportunity intake.</p>
-          </div>
-          <div className="px-lab-masthead-entry">
-            <span><ShieldCheck aria-hidden="true" /> Directional, not an offer</span>
-            <button type="button" onClick={openInstruments}>Open calculators <SlidersHorizontal aria-hidden="true" /></button>
-          </div>
-        </div>
-      </section>
+    <div className="px-lab experience-page" data-testid="premium-strategy-lab">
+      <header className="ep-lab-opening"><div className="experience-wrap">
+        <div><h1>Strategy Lab.</h1><p>Explore a property’s costs, assumptions, and possible next steps. Your inputs drive the model.</p></div>
+        <button type="button" onClick={openInstruments}>Open calculators <SlidersHorizontal aria-hidden="true" /></button>
+      </div></header>
 
       <section ref={workspaceRef} className="px-lab-workspace" aria-labelledby="lab-workspace-title" data-testid="strategy-lab-workspace">
         <div className="px-lab-progress" aria-label="Strategy Lab steps">
@@ -592,7 +582,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
 
             {step === 'property' && (
               <div className="px-lab-step">
-                <StepHeading title="Start with the situation, not a score." copy="These visitor-entered facts shape the automated memo, risk register, and modeled paths. The address stays in this browser unless you choose to carry the brief forward." />
+                <StepHeading title="Start with the property." copy="Add the facts you know and review the starting selections. The address stays in this browser unless you choose to carry the brief forward." />
                 <div className="px-lab-form-grid">
                   <div className="px-lab-wide"><TextField label="Property address or city" value={state.address} onChange={(value) => set('address', value)} placeholder="East Bay property or city" /></div>
                   <SelectField label="Property type" value={state.propertyType} onChange={(value) => set('propertyType', value)} options={PROPERTY_TYPES} />
@@ -607,12 +597,12 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
 
             {step === 'basis' && (
               <div className="px-lab-step">
-                <StepHeading title="Make every material assumption visible." copy="The engine uses the entered basis, condition, occupancy, financing, rent, and exit evidence. Empty inputs remain empty; the desk does not quietly invent property facts." />
+                <StepHeading title="Set the assumptions." copy="Enter costs and an exit value or market rent. Empty amounts stay missing. Review the financing and operating assumptions below." />
                 <div className="px-lab-form-grid">
-                  <TextField label="Acquisition or current basis" value={state.acquisition} onChange={(value) => set('acquisition', value)} placeholder="$600,000" inputMode="decimal" error={errors.acquisition} />
-                  <TextField label="Scope / improvement budget" value={state.scope} onChange={(value) => set('scope', value)} placeholder="$105,000" inputMode="decimal" error={errors.scope} />
-                  <TextField label="Projected exit value" value={state.arv} onChange={(value) => set('arv', value)} placeholder="$840,000" inputMode="decimal" error={errors.arv} hint="Visitor-entered until supported by market evidence." />
-                  <TextField label="Projected monthly market rent" value={state.marketRent} onChange={(value) => set('marketRent', value)} placeholder="$4,500" inputMode="decimal" error={errors.marketRent} hint="Optional, but required for hold-path economics." />
+                  <TextField label="Acquisition or current basis ($)" value={state.acquisition} onChange={(value) => set('acquisition', value)} placeholder="$600,000" inputMode="decimal" error={errors.acquisition} />
+                  <TextField label="Scope / improvement budget ($)" value={state.scope} onChange={(value) => set('scope', value)} placeholder="$105,000" inputMode="decimal" error={errors.scope} />
+                  <TextField label="Projected exit value ($)" value={state.arv} onChange={(value) => set('arv', value)} placeholder="$840,000" inputMode="decimal" error={errors.arv} hint="Visitor-entered until supported by market evidence." />
+                  <TextField label="Projected monthly market rent ($)" value={state.marketRent} onChange={(value) => set('marketRent', value)} placeholder="$4,500" inputMode="decimal" error={errors.marketRent} hint="Optional, but required for hold-path economics." />
                 </div>
                 <details className="px-lab-assumptions">
                   <summary>Financing and operating assumptions <ChevronDown aria-hidden="true" /></summary>
@@ -642,9 +632,9 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
                   </div>
                 </details>
                 <div className="px-lab-ledger">
-                  <div><span>Purchase assumption</span><strong>{!errors.acquisition && acquisition ? money(acquisition) : '—'}</strong><small>Visitor-entered</small></div>
-                  <div><span>Improvement scope</span><strong>{!errors.scope && scope ? money(scope) : '—'}</strong><small>Visitor-entered</small></div>
-                  <div><span>Modeled cash in</span><strong>{!hasNumericErrors && acquisition ? money(snapshot.totalCashIn) : '—'}</strong><small>Down payment + scope + reserve</small></div>
+                  <div><span>Purchase assumption</span><strong>{!errors.acquisition && acquisition ? money(acquisition) : 'Not entered'}</strong><small>Visitor-entered</small></div>
+                  <div><span>Improvement scope</span><strong>{!errors.scope && scope ? money(scope) : 'Not entered'}</strong><small>Visitor-entered</small></div>
+                  <div><span>Modeled cash in</span><strong>{!hasNumericErrors && acquisition ? money(snapshot.totalCashIn) : 'Not entered'}</strong><small>Down payment + scope + reserve</small></div>
                   <div className="is-total"><span>Exit evidence</span><strong>{!errors.arv && arv ? money(arv) : !errors.marketRent && marketRent ? `${money(marketRent)}/mo` : 'Missing'}</strong><small>ARV or market rent</small></div>
                 </div>
                 <p className="sr-only" role="status">Basis assumptions updated. Modeled cash in is {!hasNumericErrors && acquisition ? money(snapshot.totalCashIn) : 'not available'}.</p>
@@ -653,7 +643,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
 
             {step === 'strategy' && (
               <div className="px-lab-step">
-                <StepHeading title="Read the leading paths—and their weak points." copy="The automated model ranks nine educational paths from the same visitor-entered facts. No bare score is shown: the evidence, sensitivity, and missing inputs remain attached to each conclusion." />
+                <StepHeading title="Compare the possible paths." copy="Nine educational paths use the same inputs. Examine the assumptions, sensitivities, and missing information beside each result." />
                 <div className="px-lab-form-grid px-lab-objective">
                   <div className="px-lab-wide"><SelectField label="Decision lens" value={state.objective} onChange={(value) => set('objective', value)} options={OBJECTIVES} hint="Used to frame the brief; it does not alter the underwriting math." /></div>
                 </div>
@@ -669,7 +659,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
                         with an error before the Lab compares paths.
                       </p>
                       <button type="button" onClick={() => moveToStep('basis')}>
-                        Complete the basis ledger <ArrowRight aria-hidden="true" />
+                        Complete the assumptions <ArrowRight aria-hidden="true" />
                       </button>
                     </div>
                   </section>
@@ -717,7 +707,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
 
             {step === 'review' && (
               <div className="px-lab-step">
-                <StepHeading title="A concise brief, with uncertainty left visible." copy="This record is generated from the same versioned engine used for the path comparison. It is planning material—not a valuation, approval, or recommendation." />
+                <StepHeading title="Review your planning summary." copy="This summary uses your current assumptions and the same calculation engine. It is planning material, not a valuation, approval, or recommendation." />
                 {!hasDecisionBasis ? (
                   <section className="px-lab-needs-inputs" role="status" aria-label="Decision brief unavailable">
                     <CircleAlert aria-hidden="true" />
@@ -730,7 +720,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
                         memo, stress case, Peggy handoff, or intake brief is generated.
                       </p>
                       <button type="button" onClick={() => moveToStep('basis')}>
-                        Return to the basis ledger <ArrowRight aria-hidden="true" />
+                        Return to the assumptions <ArrowRight aria-hidden="true" />
                       </button>
                     </div>
                   </section>
@@ -768,7 +758,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
                     <dl>
                       <div><dt>Current leading path</dt><dd>{laneDisplayName(topLane)}</dd></div>
                       <div><dt>Engine verdict</dt><dd>{topLane?.verdictLabel ?? 'Needs more data'}</dd></div>
-                      <div><dt>{topLane?.economics.primaryMetric ?? 'Primary metric'}</dt><dd>{topLane?.economics.primaryValue ?? '—'}</dd></div>
+                      <div><dt>{topLane?.economics.primaryMetric ?? 'Primary metric'}</dt><dd>{topLane?.economics.primaryValue ?? 'Not entered'}</dd></div>
                       <div><dt>Modeled cash in</dt><dd>{acquisition ? money(snapshot.totalCashIn) : 'Needs basis'}</dd></div>
                     </dl>
                   </section>
@@ -814,9 +804,9 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
             </footer>
           </article>
 
-          <aside className="px-lab-brief" aria-label="Live decision brief">
+          <aside className="px-lab-brief" aria-label="Current planning summary">
             <div className="px-lab-brief-head">
-              <span>Live decision brief</span>
+              <span>Current planning summary</span>
               <strong>{readiness}</strong>
             </div>
             <div className="px-lab-brief-property">
@@ -826,7 +816,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
             <dl>
               <div><dt>Leading path</dt><dd>{hasDecisionBasis ? laneDisplayName(topLane) : 'Awaiting basis'}</dd></div>
               <div><dt>Verdict</dt><dd>{hasDecisionBasis ? topLane?.verdictLabel : 'Needs inputs'}</dd></div>
-              <div><dt>Cash-in model</dt><dd>{hasDecisionBasis ? money(snapshot.totalCashIn) : '—'}</dd></div>
+              <div><dt>Cash-in model</dt><dd>{hasDecisionBasis ? money(snapshot.totalCashIn) : 'Not entered'}</dd></div>
               <div><dt>Open questions</dt><dd>{openQuestions.length}</dd></div>
               <div><dt>Decision lens</dt><dd>{state.objective}</dd></div>
             </dl>

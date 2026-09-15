@@ -72,6 +72,7 @@ const KNOWN_EXTRA_PATHS = [
   // Explicit notice-at-collection links and the dedicated controlled-pilot desk.
   "/privacy",
   "/marketflow/access",
+  "/marketflow/buyboxes",
   "/vendor-network",
 ];
 const KNOWN_PATHS = new Set<string>([
@@ -371,13 +372,8 @@ describe("Programmatic setLocation CTAs resolve to a real route + valid intent (
 
     const navTargets: string[] = [];
     for (const tab of tabs) {
-      fireEvent.click(tab);
-      const cta = container.querySelector<HTMLButtonElement>(
-        '[data-testid="button-apollo-selector-cta"]',
-      );
-      expect(cta, "ApolloSelector CTA button not found").toBeTruthy();
       const before = history.length;
-      fireEvent.click(cta!);
+      fireEvent.click(tab);
       // A link-mode option pushes a navigation; a form-mode option only scrolls.
       if (history.length > before) navTargets.push(history[history.length - 1]);
     }

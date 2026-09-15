@@ -35,7 +35,7 @@ beforeEach(() => {
     "",
     "/bring-an-opportunity?intent=blueprint&address=19%20Bay%20View%20Ave&ref=apollo-partner",
   );
-  apiRequestMock.mockResolvedValue({ json: async () => ({ id: "opportunity-1" }) });
+  apiRequestMock.mockResolvedValue({ status: 201, redirected: false, json: async () => ({ id: "opportunity-1", status: "New" }) });
 });
 
 afterEach(() => {

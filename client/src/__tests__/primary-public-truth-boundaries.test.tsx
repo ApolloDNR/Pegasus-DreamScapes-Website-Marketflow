@@ -7,6 +7,7 @@ import { memoryLocation } from "wouter/memory-location";
 import Terms from "@/pages/terms";
 import { DealPartnersPage } from "@/pegasus/deal-partners";
 import { OurWorkPage } from "@/pegasus/our-work";
+import NelsonDrPage from "@/pages/project-nelson-dr";
 import { PropertyOwnersPage } from "@/pegasus/property-owners";
 
 afterEach(cleanup);
@@ -81,16 +82,16 @@ describe("primary public truth boundaries", () => {
 
   it("limits Nelson Drive proof to the documented financial record", () => {
     const { container } = renderPublicPage(
-      <OurWorkPage go={noop} />,
-      "/our-work",
+      <NelsonDrPage />,
+      "/projects/nelson-dr",
     );
     const text = normalizedText(container);
 
-    expect(text).toMatch(/Richmond \/ El Sobrante Area/i);
+    expect(text).toMatch(/4369 Nelson Drive, Richmond, CA 94803/i);
     expect(text).toMatch(/Acquisition.*\$600,000/i);
     expect(text).toMatch(/Improvement budget.*\$105,000/i);
     expect(text).toMatch(/Sale.*\$840,000/i);
-    expect(text).toMatch(/\$135,000 gross spread/i);
+    expect(text).toMatch(/Gross spread before other costs\$135,000/i);
     expect(text).toMatch(/not net profit or return/i);
     expect(text).toMatch(/does not assign those services to Pegasus or any individual/i);
     expect(text).not.toMatch(

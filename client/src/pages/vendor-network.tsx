@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
 import { EditorialSections } from "@/components/editorial-sections";
 import "@/pegasus/editorial-pages.css";
@@ -22,6 +22,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/use-seo";
 import { ScrollReveal } from "@/components/animations";
 import { apiRequest } from "@/lib/queryClient";
+import { readLeadReceipt } from "@/lib/lead-receipt";
+import { PageOpening, PageAction } from "@/pegasus/experience-page";
 import { type InsertLead } from "@shared/schema";
 import { HeroPicture } from "@/components/hero-picture";
 import { CardSurface } from "@/components/ui/card-primitives";
@@ -104,64 +106,10 @@ export default function VendorNetwork() {
 }
 
 function HeroSection() {
-  return (
-    <section className="relative min-h-[55vh] flex items-center overflow-hidden pt-20">
-      <motion.div
-        className="absolute inset-0 scale-105"
-      >
-        <HeroPicture
-          alt="Pegasus DreamScapes Vendor Network"
-          className="absolute inset-0 w-full h-full object-cover"
-          priority
-        />
-      </motion.div>
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/70 to-black/85" />
-
-      <div className="relative z-10 w-full py-20">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12 text-left">
-          <motion.div
-            className="flex items-center gap-4 mb-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            <div className="h-px w-10 bg-primary" />
-            <p className="text-[11px] sm:text-xs uppercase tracking-[0.28em] text-primary font-semibold font-supporting">
-              Private Vendor Network
-            </p>
-            <div className="h-px w-10 bg-primary" />
-          </motion.div>
-
-          <motion.h1
-            className="font-serif text-3xl sm:text-4xl lg:text-6xl font-normal text-white leading-[1.12] tracking-normal mb-8"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.3 }}
-            data-testid="text-vendor-hero"
-          >
-            Vendor applications.<br />
-            <span className="bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">
-              Considered case by case.
-            </span>
-          </motion.h1>
-
-          <motion.p
-            className="text-base sm:text-lg text-white/80 max-w-2xl leading-relaxed font-light"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.55 }}
-          >
-            This page collects vendor profiles that may be considered for a future scope. It is not a directory, roster of approved vendors, employment portal, or promise of active work.
-          </motion.p>
-          <div className="mt-8 flex flex-wrap items-center gap-6">
-            <a href="#vendor-form" className="editorial-button editorial-button-light">Start your application <ArrowRight size={16} aria-hidden="true" /></a>
-            <a href="#vendor-standards" className="editorial-hero-link">Review the standards <ArrowRight size={16} aria-hidden="true" /></a>
-          </div>
-        </div>
-      </div>
-      <div className="brand-stripe absolute bottom-0 left-0 right-0" aria-hidden="true" />
-    </section>
-  );
+  return <div className="experience-page"><PageOpening title="Work with Pegasus." action={{ href: '#vendor-form', label: 'Start your application' }}>
+    <p>This page collects vendor profiles that may be considered for a future scope. It is not a directory, roster of approved vendors, employment portal, or promise of active work.</p>
+    <PageAction href="#vendor-standards" secondary>Review the standards</PageAction>
+  </PageOpening></div>;
 }
 
 const VENDOR_CATEGORIES = [
@@ -204,7 +152,7 @@ function CategoriesSection() {
         <ScrollReveal className="max-w-3xl mb-10">
           <div className="flex items-center gap-4 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
-            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Profile Categories</p>
+            <p className="text-[13px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Profile Categories</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
           <h2 className="font-serif text-3xl sm:text-4xl font-normal tracking-normal mb-5">
@@ -284,7 +232,7 @@ function PegasusStandardSection() {
         <ScrollReveal className="max-w-3xl mb-10">
           <div className="flex items-center gap-4 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
-            <p className="text-[11px] uppercase tracking-[0.3em] text-champagne font-supporting font-semibold">The Dreamscaper Standard</p>
+            <p className="text-[13px] uppercase tracking-[0.3em] text-champagne font-supporting font-semibold">The Dreamscaper Standard</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
           <h2 className="font-serif text-3xl sm:text-4xl font-normal tracking-normal mb-5 text-white">
@@ -320,7 +268,7 @@ function HowToJoinSection() {
         <ScrollReveal className="max-w-3xl mb-10">
           <div className="flex items-center gap-4 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
-            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">How to Join</p>
+            <p className="text-[13px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">How to Join</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
           <h2 className="font-serif text-3xl sm:text-4xl font-normal tracking-normal mb-5">
@@ -357,6 +305,8 @@ function HowToJoinSection() {
 function VendorFormSection() {
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
+  const inFlightRef = useRef(false);
+  const [submitError, setSubmitError] = useState(false);
 
   const form = useForm<VendorFormValues>({
     resolver: zodResolver(vendorFormSchema),
@@ -412,12 +362,15 @@ function VendorFormSection() {
         consentCcpaAcknowledged: data.consentContact,
       };
 
-      return await apiRequest("POST", "/api/leads", payload);
+      return readLeadReceipt(await apiRequest("POST", "/api/leads", payload));
     },
+    onSettled: () => { inFlightRef.current = false; },
     onSuccess: () => {
+      setSubmitError(false);
       setSubmitted(true);
     },
     onError: () => {
+      setSubmitError(true);
       toast({
         title: "Something went wrong",
         description: "Please try again or email apollo@pegasusdreamscapes.com directly.",
@@ -438,7 +391,7 @@ function VendorFormSection() {
         <ScrollReveal className="text-center max-w-2xl mx-auto mb-12">
           <div className="flex items-center gap-4 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
-            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Vendor Intake</p>
+            <p className="text-[13px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Vendor Intake</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
           <h2 id="vendor-form-title" className="font-serif text-3xl sm:text-4xl font-normal tracking-normal mb-5">
@@ -462,10 +415,11 @@ function VendorFormSection() {
           <CardSurface className="vendor-form-surface p-5 sm:p-8 lg:p-10 border-border/70 shadow-sm">
             <Form {...form}>
               <form
-                onSubmit={form.handleSubmit((d) => mutation.mutate(d))}
+                onSubmit={form.handleSubmit((d) => { if (inFlightRef.current) return; inFlightRef.current = true; setSubmitError(false); mutation.mutate(d); })}
                 className="space-y-7"
               >
                 <p className="text-sm text-muted-foreground">All fields are required unless marked optional.</p>
+                {submitError && <p role="alert" className="text-destructive">We could not confirm receipt. Your entries are still here. Try again or email Apollo directly.</p>}
                 <fieldset className="vendor-fieldset">
                   <legend><span>01</span> Your details</legend>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -660,7 +614,7 @@ function VendorFormSection() {
                   )}
                 </Button>
 
-                <p className="pt-2 text-[11px] leading-relaxed text-muted-foreground/80 text-center">
+                <p className="pt-2 text-[13px] leading-relaxed text-muted-foreground/80 text-center">
                   Submitting creates an application record only. It is not a hiring guarantee, approval, placement, or offer of work.
                 </p>
               </form>
