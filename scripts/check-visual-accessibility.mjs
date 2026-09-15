@@ -1461,6 +1461,11 @@ let fatalFailure = null;
 // screenshot. Every viewport/theme therefore checks the meaningful selected
 // state, including the mobile diagram that originally lost its labels.
 async function exercisePublicDesign(page, route, viewport, health) {
+  if (['/property-owners', '/deal-partners'].includes(route) && viewport.width > 900) {
+    const rowsFillColumn = await page.locator('.pg-choice-desktop button').evaluateAll(buttons => buttons.length > 0 && buttons.every(button =>
+      Math.abs(button.getBoundingClientRect().width - button.parentElement.getBoundingClientRect().width) <= 2));
+    assert(rowsFillColumn, `${route} choices do not provide full-width selection rows`);
+  }
   if (viewport.width === 1440 && ['/', '/property-owners', '/work-with-apollo', '/strategy-lab'].includes(route)) {
     try {
       for (const width of [320, 360, 430]) {
