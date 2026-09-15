@@ -294,7 +294,7 @@ function HowToJoinSection() {
           ))}
         </div>
 
-        <p className="mt-12 text-center text-xs text-muted-foreground/80 max-w-2xl mx-auto leading-relaxed">
+        <p className="mt-12 text-center text-[13px] text-muted-foreground max-w-2xl mx-auto leading-relaxed">
           Submitting does not guarantee review, approval, placement, work, volume, compensation, or a future response.
         </p>
       </div>
@@ -614,7 +614,7 @@ function VendorFormSection() {
                   )}
                 </Button>
 
-                <p className="pt-2 text-[13px] leading-relaxed text-muted-foreground/80 text-center">
+                <p className="pt-2 text-[13px] leading-relaxed text-muted-foreground text-center">
                   Submitting creates an application record only. It is not a hiring guarantee, approval, placement, or offer of work.
                 </p>
               </form>

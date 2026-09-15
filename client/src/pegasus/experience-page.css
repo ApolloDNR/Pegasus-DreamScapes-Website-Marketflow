@@ -28,7 +28,6 @@
 .ep-section-title { display:grid; grid-template-columns:1fr 1fr; gap:64px; align-items:end; margin-bottom:32px; }
 .ep-section-title h2,.ep-section-title p { margin-bottom:0; }
 .ep-choice-layout { display:grid; grid-template-columns:minmax(280px,.9fr) minmax(0,1.1fr); gap:64px; margin-top:32px; align-items:start; }
-.ep-choices { display:grid; }
 .ep-choice { display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:56px; padding:16px 0; border-bottom:1px solid var(--experience-rule); text-align:left; font:400 16px/1.45 var(--pg-font-ui); color:var(--experience-text); }
 .ep-choice:first-child { border-top:1px solid var(--experience-rule); }
 .ep-choice svg { width:18px; height:18px; flex:none; color:var(--experience-copper); }

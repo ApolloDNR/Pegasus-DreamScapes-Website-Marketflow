@@ -130,7 +130,7 @@ export default function FAQ() {
                     <h2 className="text-[13px] uppercase tracking-[0.2em] text-primary font-supporting font-semibold">
                       {section.eyebrow}
                     </h2>
-                    <p className="text-xs text-muted-foreground/80 mt-1 font-supporting">
+                    <p className="text-[13px] text-muted-foreground mt-1 font-supporting">
                       {section.items.length} question{section.items.length === 1 ? "" : "s"}
                     </p>
                   </div>

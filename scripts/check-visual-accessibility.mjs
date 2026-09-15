@@ -1440,6 +1440,15 @@ async function verifyWideOwnerHero(page, originalViewport) {
       assert(await primary.getAttribute('href') === '/bring-an-opportunity?intent=property', 'Owner hero lost its intake destination');
       await primary.click({ trial: true, timeout: 5_000 });
       console.log(`[design] owner wide-desktop PASS ${context}`);
+      if (screenshotDir) {
+        // Supplemental wide-screen evidence accompanies the canonical PNG matrix.
+        const filename = `property-owners-${viewport.width}-${geometry.theme}.jpg`;
+        const bytes = await page.screenshot({ path: path.join(screenshotDir, filename), fullPage: true, type: 'jpeg', quality: 90 });
+        await writeFile(path.join(screenshotDir, filename.replace('.jpg', '.json')), JSON.stringify({
+          ...qaLineage, viewport, geometry, filename, bytes: bytes.length,
+          sha256: createHash('sha256').update(bytes).digest('hex'),
+        }, null, 2));
+      }
     }
   } finally {
     await page.setViewportSize(originalViewport);
@@ -1568,6 +1577,7 @@ async function exercisePublicDesign(page, route, viewport, health) {
     assert(controls.filter(control => control.visible).every((control) => control.width > 0 && !control.overflow && (!control.button || control.height >= 44)), `Diagram labels or touch targets failed: ${JSON.stringify(controls)}`);
   }
   if (route === '/property-owners') {
+    assert(await page.getByRole('group', { name: 'Common owner situations', includeHidden: true }).isVisible() === (viewport.width > 900), 'Owner situations show both mobile and desktop controls');
     if (viewport.width === 1440) await verifyWideOwnerHero(page, viewport);
     if (viewport.width <= 900) await page.getByRole('combobox', { name: 'Common owner situations' }).selectOption('2');
     else await page.getByRole('group', { name: 'Common owner situations' }).getByRole('button', { name: 'Inherited property' }).click();
@@ -1575,6 +1585,7 @@ async function exercisePublicDesign(page, route, viewport, health) {
     assert((await page.getByRole('link', { name: 'Start with this situation' }).getAttribute('href')).includes('owner_situation=Inherited%20property'), 'Owner selection lost the intake prefill');
   }
   if (route === '/deal-partners') {
+    assert(await page.getByRole('group', { name: 'What the deal is missing', includeHidden: true }).isVisible() === (viewport.width > 900), 'Partner needs show both mobile and desktop controls');
     if (viewport.width <= 900) await page.getByRole('combobox', { name: 'What the deal is missing' }).selectOption('2');
     else await page.getByRole('group', { name: 'What the deal is missing' }).getByRole('button', { name: 'Underwriting', exact: true }).click();
     assert(await page.locator('#partner-answer').getByRole('heading', { name: 'Underwriting', exact: true }).count() === 1, 'Partner answer did not update');
@@ -1621,7 +1632,9 @@ try {
           reducedMotion: 'reduce',
         });
         try {
-
+          await context.addInitScript(() => localStorage.setItem('pegasus-cookie-consent', JSON.stringify({
+            essential: true, analytics: false, marketing: false, decidedAt: '2026-01-01T00:00:00.000Z',
+          })));
           for (const route of routes) {
             const blockedEgressStart = blockedEgress.length;
             const page = await context.newPage();
