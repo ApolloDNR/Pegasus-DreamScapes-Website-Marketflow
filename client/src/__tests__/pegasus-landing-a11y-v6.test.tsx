@@ -204,7 +204,7 @@ describe("Pegasus public-shell navigation accessibility", () => {
     const { container } = renderLanding("/");
 
     await screen.findByRole("heading", {
-      name: /Complex real estate, made executable/i,
+      name: /Complex real estate, a clear way forward/i,
     });
 
     const nav = container.querySelector("nav");
