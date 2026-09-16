@@ -10,20 +10,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Landing } from "@/pegasus/Landing";
 
-// Homepage contract — Master Blueprint v5.1 (§7, §31, §32.1, §32.2).
-//
-// v5.1 locks the homepage to seven narrative movements in a fixed order:
-//   1. Arrival  2. Visitor Router  3. Proof (Nelson Drive)  4. Pegasus Method
-//   5. Opportunity Plan (signature)  6. Partner Proposition
-//   7. Founder Trust + Final Invitation
-// It also locks the public positioning ("Complex real estate, made executable."),
-// the primary CTA ("Bring an Opportunity" → /bring-an-opportunity), and the
-// evidence-bounded framing of the canonical Nelson figures (never "profit"
-// and never an unsupported attribution of project or brokerage roles).
-//
-// This suite renders the real prototype shell at "/" and pins the locked
-// copy and the movement order so a refactor cannot silently drift the
-// homepage away from the blueprint. Supersedes the issue-#22 contract.
+// Homepage contract: experience blueprint v1.1 and its approved parchment refinement.
+// Six sections: arrival, visitor paths, Nelson evidence, founder, optional plan,
+// and invitation. The owner-approved clearer headline supersedes the older
+// "made executable" wording; the original image hash, action destinations,
+// evidence boundaries and representation disclosures remain locked.
 
 vi.mock("@/lib/analytics", () => ({
   initAnalytics: () => () => {},
@@ -104,7 +95,7 @@ describe("Homepage premium editorial contract", () => {
   it("uses the specified arrival copy and two real links", () => {
     const { container } = renderHome();
     const arrival = within(container.querySelector<HTMLElement>('[data-hv="arrival"]')!);
-    expect(arrival.getByRole('heading', { level:1 })).toHaveTextContent('Complex real estate, made executable.');
+    expect(arrival.getByRole('heading', { level:1 })).toHaveTextContent('Complex real estate, a clear way forward.');
     expect(arrival.getAllByRole('link').map(link => link.getAttribute('href'))).toEqual(['/bring-an-opportunity','/our-work']);
     expect(arrival.getByText(/Property strategy, renovation insight/)).toBeInTheDocument();
   });

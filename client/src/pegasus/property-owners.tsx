@@ -33,7 +33,9 @@ export function PropertyOwnersPage({ go: _go }: { go: Nav }) {
   };
   const selectedSituationHref = `/bring-an-opportunity?intent=property&owner_situation=${encodeURIComponent(SITUATIONS[idx].label)}`;
   return <article className="experience-page po">
-    <PageOpening title="A clear next step for your property." action={{ label: 'Tell us about the property', href: '/bring-an-opportunity?intent=property' }}>
+    <PageOpening title="A clear next step for your property."
+      image={{ src:'/images/nelson/nelson-exterior-1280.webp', alt:'Completed Nelson Drive home and landscaped front garden', width:1280, height:853, caption:'Nelson Drive · Completed project' }}
+      action={{ label: 'Tell us about the property', href: '/bring-an-opportunity?intent=property' }}>
       <p>Repairs, inherited ownership, unfinished work, or a difficult timeline. Start with your situation and what you want to resolve.</p>
     </PageOpening>
     <section className="ep-section" data-testid="situation-stepper">

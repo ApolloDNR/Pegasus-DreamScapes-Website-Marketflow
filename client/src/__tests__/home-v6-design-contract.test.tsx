@@ -12,11 +12,11 @@ function renderHome() {
   return { ...result, history: memory.history as string[] };
 }
 describe('Blueprint v1.1 mounted homepage', () => {
-  it('preserves the approved photograph and headline with exactly two arrival actions', () => {
+  it('preserves the approved photograph and refined headline with exactly two arrival actions', () => {
     const { container } = renderHome();
     const arrival = within(container.querySelector<HTMLElement>('[data-hv="arrival"]')!);
     expect(arrival.getByTestId('approved-home-hero-image')).toHaveAttribute('src', '/images/hero/pegasus-v6-arrival.webp');
-    expect(arrival.getByRole('heading', { level: 1 })).toHaveTextContent('Complex real estate, made executable.');
+    expect(arrival.getByRole('heading', { level: 1 })).toHaveTextContent('Complex real estate, a clear way forward.');
     expect(arrival.getAllByRole('link').map(link => link.textContent)).toEqual(['Bring an Opportunity', 'See Our Work']);
     expect(arrival.getByText(/Property strategy, renovation insight/)).toHaveTextContent('Led by Apollo Duran.');
     expect(arrival.getByText(/Architectural vision/)).toBeInTheDocument();

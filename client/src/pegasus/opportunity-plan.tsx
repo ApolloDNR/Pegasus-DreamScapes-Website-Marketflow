@@ -5,12 +5,12 @@ import './opportunity-plan.css';
 
 const NEEDS = [
   { key: 'control', question: 'Can the property move forward?', label: 'Control', companion: 'Underwriting', title: 'Establish the right to move forward.', caption: 'Test whether contract terms, access, and decision rights support further diligence.', href: '/deal-partners', action: 'Explore the partner path' },
-  { key: 'underwriting', question: 'Do the assumptions hold up?', label: 'Underwriting', companion: 'Capital', title: 'Make the assumptions visible.', caption: 'Organize supplied assumptions around price, scope, carry, exit, and unresolved evidence.', href: '/strategy-lab', action: 'Work through the numbers' },
+  { key: 'underwriting', question: 'Do the numbers make sense?', label: 'Underwriting', companion: 'Capital', title: 'Make the assumptions visible.', caption: 'Organize supplied assumptions around price, scope, carry, exit, and unresolved evidence.', href: '/strategy-lab', action: 'Work through the numbers' },
   { key: 'buyer', question: 'Who is the potential buyer?', label: 'Buyer', companion: 'Disposition', title: 'Define the possible buyer path.', caption: 'Identify what a potential buyer path would require; no buyer, introduction, or closing is promised.', href: '/deal-partners', action: 'Explore the partner path' },
   { key: 'capital', question: 'What would funding require?', label: 'Capital', companion: 'Underwriting', title: 'Understand the capital question.', caption: 'Map the capital question without implying funding, solicitation, matching, or availability.', href: '/strategy-lab', action: 'Model the assumptions' },
   { key: 'development', question: 'What work needs to happen?', label: 'Development', companion: 'Local context', title: 'Connect the scope to the property.', caption: 'Frame scope, budget, permits, and specialist roles that would need project-specific verification.', href: '/development', action: 'Explore project planning' },
   { key: 'local', question: 'What does the location change?', label: 'Local context', companion: 'Development', title: 'Bring the location into the plan.', caption: 'Surface location-specific constraints without promising field work or project management.', href: '/property-owners', action: 'Explore the property path' },
-  { key: 'disposition', question: 'How could the project exit?', label: 'Disposition', companion: 'Buyer', title: 'Compare the possible exits.', caption: 'Compare possible sale, listing, refinance, or hold scenarios without recommending an outcome.', href: '/strategy-lab', action: 'Compare the modeled paths' },
+  { key: 'disposition', question: 'Sell, refinance, or keep it?', label: 'Disposition', companion: 'Buyer', title: 'Compare the possible exits.', caption: 'Compare possible sale, listing, refinance, or hold scenarios without recommending an outcome.', href: '/strategy-lab', action: 'Compare the modeled paths' },
   { key: 'assetops', question: 'What would ownership involve?', label: 'Asset operations', companion: 'Underwriting', title: 'Read beyond the acquisition.', caption: 'List the operating questions a hold scenario would need to answer.', href: '/strategy-lab', action: 'Explore a hold scenario' },
 ] as const;
 
@@ -24,11 +24,11 @@ export function OpportunityPlan() {
       <div className="op-plan-bar"><h3>Opportunity Plan</h3><span>Planning guide</span></div>
       <div className="op-plan-body">
         <div className="op-choice-column">
-          <p className="op-plan-intro">Choose a need to explore the connected question.</p>
+          <p className="op-plan-intro">Pick a question to explore. No finished plan needed.</p>
           <div className="op-choices" role="group" aria-label="What is your deal missing?">
             {NEEDS.map(need => <button key={need.key} type="button" aria-label={need.label} aria-pressed={active === need.key}
-              aria-controls={resultId} onClick={() => setActive(active === need.key ? null : need.key)}>
-              <span><strong>{need.label}</strong><small>{need.question}</small></span>
+              aria-controls={resultId} aria-describedby={`${resultId}-${need.key}-question`} onClick={() => setActive(active === need.key ? null : need.key)}>
+              <span><small id={`${resultId}-${need.key}-question`}>{need.question}</small><strong>{need.label}</strong></span>
               {active === need.key ? <Check aria-hidden="true" /> : <span className="op-choice-mark" aria-hidden="true" />}
             </button>)}
           </div>

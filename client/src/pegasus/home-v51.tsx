@@ -4,6 +4,7 @@ import { ArrowRight } from 'lucide-react';
 import type { Nav } from './theme';
 import { HOME_PATHS, PUBLIC_ACTIONS, REPRESENTATION_NOTICE, SUBMISSION_NOTICE } from './public-content';
 import './experience.css';
+import './arrival-refinement.css';
 
 const OpportunityPlan = lazy(() => import('./opportunity-plan').then(module => ({ default: module.OpportunityPlan })));
 
@@ -20,7 +21,7 @@ function DeferredOpportunityPlan() {
   }, []);
   const fallback = <div className="experience-plan-placeholder">
     <h3>Opportunity Plan</h3>
-    <p>Choose a need to explore its connected planning question.</p>
+    <p>Pick the question closest to your situation. Exploring is optional.</p>
     <button type="button" className="experience-link" onClick={() => setReady(true)}>Open the planning guide <ArrowRight aria-hidden="true" size={17} /></button>
   </div>;
   return <div ref={host} className="experience-plan-host">{ready ? <Suspense fallback={fallback}><OpportunityPlan /></Suspense> : fallback}</div>;
@@ -33,7 +34,7 @@ export function HomePageV51(_props: { go: Nav; openPeggy: () => void }) {
         width={1672} height={941} alt="" loading="eager" decoding="async" {...{ fetchpriority: 'high' }} />
       <div className="experience-wrap experience-arrival-copy">
         <p className="experience-geography">Contra Costa &amp; Alameda</p>
-        <h1>Complex real estate,<br /> <em>made executable.</em></h1>
+        <h1>Complex real estate,<br /> <em>a clear way forward.</em></h1>
         <p className="experience-intro">Property strategy, renovation insight, and execution for East Bay owners and partners. Led by Apollo Duran.</p>
         <div className="experience-actions">
           <Link href={PUBLIC_ACTIONS.opportunity.href} className="experience-button">{PUBLIC_ACTIONS.opportunity.label}<ArrowRight aria-hidden="true" size={18} /></Link>
@@ -72,13 +73,13 @@ export function HomePageV51(_props: { go: Nav; openPeggy: () => void }) {
     </section>
     <section className="experience-usefulness experience-section" data-hv="plan" aria-labelledby="home-tool-title">
       <div className="experience-wrap">
-        <div className="experience-section-head"><h2 id="home-tool-title">A clearer view<br /> of the next move.</h2><p>Start with the missing piece. Explore the connected questions, then continue into Strategy Lab.</p></div>
+        <div className="experience-section-head"><h2 id="home-tool-title">A clearer view<br /> of the next move.</h2><p>Not sure where to begin? Pick a question below, or go straight to Strategy Lab.</p></div>
         <DeferredOpportunityPlan />
         <div className="experience-actions"><Link href={PUBLIC_ACTIONS.lab.href} className="experience-button">{PUBLIC_ACTIONS.lab.label}<ArrowRight aria-hidden="true" size={18} /></Link><Link href={PUBLIC_ACTIONS.tools.href} className="experience-link">{PUBLIC_ACTIONS.tools.label}<ArrowRight aria-hidden="true" size={17} /></Link></div>
       </div>
     </section>
     <section className="experience-invitation experience-section" data-hv="final" aria-labelledby="home-invitation-title">
-      <div className="experience-wrap"><h2 id="home-invitation-title">Start with what you have.</h2><p>Tell us about your property, deal, or project.</p>
+      <div className="experience-wrap"><h2 id="home-invitation-title">Start with what you have.</h2><p>A property, a challenge, or an idea. You don’t need a finished plan.</p>
         <div className="experience-actions"><Link href={PUBLIC_ACTIONS.opportunity.href} className="experience-button">{PUBLIC_ACTIONS.opportunity.label}<ArrowRight aria-hidden="true" size={18} /></Link><Link href={PUBLIC_ACTIONS.contact.href} className="experience-link">{PUBLIC_ACTIONS.contact.label}<ArrowRight aria-hidden="true" size={17} /></Link></div>
         <p className="experience-notice">{SUBMISSION_NOTICE}</p>
       </div>
