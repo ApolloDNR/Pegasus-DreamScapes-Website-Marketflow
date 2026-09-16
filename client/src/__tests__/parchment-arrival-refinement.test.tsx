@@ -55,7 +55,8 @@ describe('Approved parchment arrival refinement', () => {
     const opening = within(container.querySelector<HTMLElement>('.ep-opening')!);
     expect(opening.getByRole('heading', { level: 1 })).toHaveTextContent('A clear next step for your property.');
     expect(opening.getByRole('img')).toHaveAttribute('src', '/images/nelson/nelson-exterior-1280.webp');
-    expect(opening.getByText(/Completed project/)).toBeInTheDocument();
+    // PageOpening uppercases captions; assert the factual label, not its casing.
+    expect(opening.getByText(/Completed project/i)).toBeInTheDocument();
     expect(opening.getByRole('link', { name: 'Tell us about the property' })).toHaveAttribute('href', '/bring-an-opportunity?intent=property');
   });
 });
