@@ -4,6 +4,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { readOpportunityReceipt } from "@/lib/lead-receipt";
 import { trackEvent } from "@/lib/analytics";
 import { useSEO } from "@/hooks/use-seo";
+import { normalizePartnerNeed } from "@/pegasus/partner-intake-context";
 import {
   clearStrategyLabHandoff,
   formatStrategyLabHandoffSummary,
@@ -263,6 +264,9 @@ export default function SubmitPropertyPage() {
       preVisitor: INTENT_TO_VISITOR[intent] ?? "",
       ownerSituation: ownerSituation.situation,
       ownerSituationLabel: ownerSituation.sourceLabel,
+      partnerNeed: ["deal-jv", "deal"].includes(intent)
+        ? normalizePartnerNeed(p.get("partner_need"))
+        : "",
     };
   }, []);
   const [strategyLabBrief] = useState<StrategyLabHandoffBrief | null>(() =>
@@ -391,6 +395,7 @@ export default function SubmitPropertyPage() {
           mapped?.tag,
           utm.intent ? `Intake intent: ${utm.intent}` : undefined,
           utm.ownerSituationLabel ? `Owner situation: ${utm.ownerSituationLabel}` : undefined,
+          utm.partnerNeed ? `Partner need: ${utm.partnerNeed}` : undefined,
           utm.referralReference ? `Referral reference: ${utm.referralReference}` : undefined,
           strategyLabSummary,
           form.notes,
@@ -527,6 +532,11 @@ export default function SubmitPropertyPage() {
           <p className="mt-4 max-w-2xl text-[16px] leading-relaxed text-[#454b55] dark:text-[#cfc5b4]">
             Share a property, contract, project, or plan. Partial information is fine; review and response are not promised.
           </p>
+          {utm.partnerNeed && (
+            <p className="mt-3 text-sm leading-relaxed text-[#6b5f4d] dark:text-[#b9a888]">
+              From Deal Partners: {utm.partnerNeed}
+            </p>
+          )}
         </div>
 
         <p className="intake-draft-note">Your entries stay on this page as you move between steps. Refreshing or leaving clears this form.</p>

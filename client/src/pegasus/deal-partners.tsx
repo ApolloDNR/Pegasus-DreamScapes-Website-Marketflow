@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
-import { Link } from 'wouter';
+import React, { useEffect, useState } from 'react';
+import { Link, useLocation, useSearch } from 'wouter';
 import { ArrowRight } from 'lucide-react';
 import type { Nav } from './theme';
 import { ResponsiveChoiceList } from './responsive-choice-list';
 import { PageAction, PageOpening, PageClosing } from './experience-page';
+import { normalizePartnerNeed, type PartnerNeed } from './partner-intake-context';
 
-type Missing = { label: string; records: string; limit: string };
+type Missing = { label: PartnerNeed; records: string; limit: string };
 
 const MISSING: Missing[] = [
   { label: 'Seller access or negotiation', records: 'Identify who has authority, who is represented, and the current communication status.', limit: 'Submission does not appoint Pegasus as principal, broker, negotiator, or representative.' },
@@ -19,18 +20,31 @@ const MISSING: Missing[] = [
 ];
 
 export function DealPartnersPage({ go: _go }: { go: Nav }) {
-  const [idx, setIdx] = useState(0);
+  const search = useSearch();
+  const [, setLocation] = useLocation();
+  const requested = normalizePartnerNeed(new URLSearchParams(search).get('partner_need'));
+  const [idx, setIdx] = useState(() => Math.max(0, MISSING.findIndex(item => item.label === requested)));
+  useEffect(() => {
+    setIdx(Math.max(0, MISSING.findIndex(item => item.label === requested)));
+  }, [requested]);
+  const selectNeed = (next: number) => {
+    setIdx(next);
+    const params = new URLSearchParams(search);
+    params.set('partner_need', MISSING[next].label);
+    setLocation(`/deal-partners?${params.toString()}`, { replace: true });
+  };
   const pick = MISSING[idx];
+  const selectedNeedHref = `/bring-an-opportunity?intent=deal-jv&ref=deal-partners&partner_need=${encodeURIComponent(pick.label)}`;
   return <article className="experience-page dp">
     <PageOpening title="Bring the deal. Define the role." action={{ label: 'Bring a deal', href: '/bring-an-opportunity?intent=deal-jv' }}>
       <p>Share the property or project, what you bring, and what is missing. Pegasus considers participation case by case, subject to diligence, capacity, and written terms.</p>
-      <PageAction href="/bring-an-opportunity?intent=partnership" secondary>Share a partnership proposal</PageAction>
+      <PageAction href="/bring-an-opportunity?ref=deal-partners" secondary>Share a partnership proposal</PageAction>
     </PageOpening>
     <section className="ep-section" data-testid="missing-composer"><div className="experience-wrap">
       <h2>What does the deal need next?</h2>
       <div className="ep-choice-layout">
-        <ResponsiveChoiceList id="partner-need" label="What the deal is missing" options={MISSING} value={idx} onChange={setIdx} controls="partner-answer" className="ep-choices" itemClassName="ep-choice" />
-        <div className="ep-choice-answer" id="partner-answer" aria-live="polite" aria-atomic="true"><h3>{pick.label}</h3><p>{pick.records}</p><PageAction href="/bring-an-opportunity?intent=deal-jv">Bring this opportunity</PageAction><p className="ep-notice">{pick.limit}</p></div>
+        <ResponsiveChoiceList id="partner-need" label="What the deal is missing" options={MISSING} value={idx} onChange={selectNeed} controls="partner-answer" className="ep-choices" itemClassName="ep-choice" />
+        <div className="ep-choice-answer" id="partner-answer" aria-live="polite" aria-atomic="true"><h3>{pick.label}</h3><p>{pick.records}</p><PageAction href={selectedNeedHref}>Bring this opportunity</PageAction><p className="ep-notice">{pick.limit}</p></div>
       </div>
     </div></section>
     <section className="ep-section ep-dark"><div className="experience-wrap ep-split">

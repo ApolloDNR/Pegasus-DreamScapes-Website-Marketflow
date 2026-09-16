@@ -13,6 +13,7 @@ vi.mock('@/lib/analytics', () => ({ trackEvent: vi.fn() }));
 vi.mock('@/hooks/use-seo', () => ({ useSEO: vi.fn() }));
 
 function mountPartners(path = '/deal-partners') {
+  window.history.replaceState({}, '', path);
   const memory = memoryLocation({ path, record: true });
   return render(<Router hook={memory.hook}><DealPartnersPage go={() => {}} /></Router>);
 }
