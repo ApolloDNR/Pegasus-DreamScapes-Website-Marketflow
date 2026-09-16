@@ -29,7 +29,8 @@
 .pg-root:not([data-theme='dark']) .experience-arrival::before {
   background: linear-gradient(90deg, #f5efe4 0%, #f5efe4 32%, rgba(245,239,228,.97) 49%, rgba(245,239,228,.87) 61%, rgba(245,239,228,.12) 82%, transparent 100%);
 }
-.pg-root:not([data-theme='dark']) .experience-arrival h1 { font-size: clamp(48px, 4.6vw, 68px); max-width: 760px; }
+/* Keep type and geometry shared: changing appearance must not move the page. */
+.pg-root .experience-arrival h1 { font-size: clamp(48px, 4.6vw, 68px); max-width: 760px; }
 .pg-root:not([data-theme='dark']) .experience-arrival h1 em { color: #8e5030; }
 .pg-root:not([data-theme='dark']) .experience-arrival :is(.experience-intro, .experience-geography, .experience-image-notice) { color: #3c454a; }
 .pg-root:not([data-theme='dark']) .experience-arrival .experience-link { color: #8e5030; }
@@ -49,17 +50,22 @@
 .pg-root:not([data-theme='dark']) .op-plan .op-choices button:hover { background: #eee5d6; border-color: #8e5030; }
 .pg-root:not([data-theme='dark']) .op-plan .op-choices button[aria-pressed='true'] { color: #0b1d29; background: #eee5d6; border-color: #8e5030; box-shadow: inset 2px 0 #8e5030; }
 .pg-root:not([data-theme='dark']) .op-plan .op-choice-mark { border-color: #8b8175; }
-.pg-root:not([data-theme='dark']) .op-plan :is(.op-map-node, .op-map-branches::before) { border-color: #a49989; }
+.pg-root:not([data-theme='dark']) .op-plan .op-map-node,
+.pg-root:not([data-theme='dark']) .op-plan .op-map-branches::before { border-color: #a49989; }
 .pg-root:not([data-theme='dark']) .op-plan .op-map-focus[data-selected='true'] { border-color: #8e5030; }
 .pg-root:not([data-theme='dark']) .op-plan .op-mobile-connection { color: #8e5030 !important; }
 .pg-root:not([data-theme='dark']) .op-plan :is(a, button):focus-visible { outline-color: #8e5030; }
 
+@media (min-width: 1440px) {
+  .pg-root .po .ep-opening-with-image .ep-opening-grid { grid-template-columns: minmax(0, 640px) minmax(0, 1fr); }
+}
 @media (max-width: 700px) {
-  /* Separate photograph and copy instead of laying dark text over the image. */
-  .pg-root:not([data-theme='dark']) .experience-arrival { min-height: 0; padding: 116px 0 0; }
-  .pg-root:not([data-theme='dark']) .experience-arrival::before { background: none; }
-  .pg-root:not([data-theme='dark']) .experience-arrival-copy { order: 1; padding-bottom: 32px; }
-  .pg-root:not([data-theme='dark']) .experience-arrival h1 { font-size: clamp(38px, 8vw, 54px); line-height: 1.12; }
-  .pg-root:not([data-theme='dark']) .experience-hero-image { order: 2; position: relative; inset: auto; z-index: 0; height: 220px; width: 100%; object-position: 74% 54%; }
-  .pg-root:not([data-theme='dark']) .experience-arrival .experience-image-notice { order: 3; margin-top: 0; padding: 16px 0; }
+  /* A shared mobile composition keeps text separate from the photograph in
+     both appearances, avoiding theme-toggle movement or image contrast loss. */
+  .pg-root .experience-arrival { min-height: 0; padding: 116px 0 0; }
+  .pg-root .experience-arrival::before { background: none; }
+  .pg-root .experience-arrival-copy { order: 1; padding-bottom: 32px; }
+  .pg-root .experience-arrival h1 { font-size: clamp(38px, 8vw, 54px); line-height: 1.12; }
+  .pg-root .experience-hero-image { order: 2; position: relative; inset: auto; z-index: 0; height: 220px; width: 100%; object-position: 74% 54%; }
+  .pg-root .experience-arrival .experience-image-notice { order: 3; margin-top: 0; padding: 16px 0; }
 }
