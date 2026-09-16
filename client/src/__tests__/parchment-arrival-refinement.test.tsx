@@ -25,6 +25,9 @@ describe('Approved parchment arrival refinement', () => {
     expect(invitation.getByText(/Submission does not create representation/)).toBeInTheDocument();
   });
 
+  // Eight select/deselect pairs perform sixteen full accessible-state checks.
+  // Keep every assertion while bounding this exhaustive test independently of
+  // the suite's one-second default, which was exceeded on a shared CI runner.
   it('describes each stable planner control with its visible everyday question', () => {
     const { container } = mount(<OpportunityPlan />);
     const plan = within(container);
@@ -48,7 +51,7 @@ describe('Approved parchment arrival refinement', () => {
     }
     fireEvent.click(plan.getByRole('button', { name: 'Capital' }));
     expect(plan.getByText(/without implying funding/)).toBeInTheDocument();
-  });
+  }, 5_000);
 
   it('balances the owner opening with real project evidence while preserving the property intake', () => {
     const { container } = mount(<PropertyOwnersPage go={() => {}} />, '/property-owners');
