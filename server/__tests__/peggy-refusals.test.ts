@@ -36,6 +36,7 @@ describe("Peggy refusal triggers", () => {
       expect(FAIR_HOUSING_REFUSAL).toContain("property's merits");
       expect(FAIR_HOUSING_REFUSAL).toContain("apollo@pegasusdreamscapes.com");
       expect(FAIR_HOUSING_REFUSAL).toContain("925-744-8525");
+      expect(FAIR_HOUSING_REFUSAL).not.toMatch(/Pegasus reviews every property/i);
     });
   });
 
@@ -88,7 +89,8 @@ describe("Peggy post-output voice guard", () => {
   it("rewrites '20+ years' attributed to Pegasus", () => {
     const { sanitized, violations } = applyPostOutputGuard("Pegasus has 20+ years of construction experience.");
     expect(violations).toContain("decade_claim");
-    expect(sanitized).toContain("decades of East Bay construction in the team");
+    expect(sanitized).toMatch(/cannot verify that experience claim/i);
+    expect(sanitized).not.toMatch(/decades|Moises Duran/i);
   });
 
   it("strips spaced em-dashes", () => {
@@ -102,6 +104,14 @@ describe("Peggy post-output voice guard", () => {
     const { sanitized, violations } = applyPostOutputGuard(clean);
     expect(violations).toEqual([]);
     expect(sanitized).toBe(clean);
+  });
+
+  it("blocks invented review, response, and turnaround promises", () => {
+    const dirty = "Every property gets a team review within 48 hours, and someone will write back.";
+    const { sanitized, violations } = applyPostOutputGuard(dirty);
+    expect(violations).toContain("service_promise");
+    expect(sanitized).toMatch(/does not guarantee review, response, routing, an offer, or a timeline/i);
+    expect(sanitized).not.toMatch(/every property|48 hours|will write back/i);
   });
 });
 
@@ -125,11 +135,62 @@ describe("Peggy system prompt locks", () => {
     expect(PEGGY_SYSTEM_PROMPT).toMatch(/Do not.*20\+? years/i);
   });
 
-  it("routes to canonical URLs (/bring-an-opportunity, /capital, /library, /strategy-lab)", () => {
+  it("routes education only to Strategy Lab and never to retired library paths", () => {
     expect(PEGGY_SYSTEM_PROMPT).toContain("/bring-an-opportunity");
     expect(PEGGY_SYSTEM_PROMPT).toContain("/capital");
-    expect(PEGGY_SYSTEM_PROMPT).toContain("/library");
     expect(PEGGY_SYSTEM_PROMPT).toContain("/strategy-lab");
+    expect(PEGGY_SYSTEM_PROMPT).not.toContain("/library");
+    expect(PEGGY_SYSTEM_PROMPT).not.toContain("/resources");
+  });
+
+  it("keeps intake and modeled paths separate from human commitments", () => {
+    expect(PEGGY_SYSTEM_PROMPT).toMatch(
+      /does not guarantee review, response, routing, an offer, representation, a referral, an introduction, or a timeline/i,
+    );
+    for (const unsupported of [
+      "Every property gets a serious review",
+      "No lead dies",
+      "free, written Pegasus read",
+      "after a team read",
+      "Pegasus buys",
+      "Pegasus contracts and assigns",
+      "vetted buyer",
+      "trusted operator",
+      "Most submissions are reviewed within 48 hours",
+      "missed-window reviews",
+      "fastest way to get a real read",
+    ]) {
+      expect(PEGGY_SYSTEM_PROMPT).not.toContain(unsupported);
+    }
+    expect(PEGGY_SYSTEM_PROMPT).not.toMatch(/Moises Duran|decades of East Bay construction/i);
+  });
+
+  it("does not turn private product context into investment or negotiation advice", () => {
+    const privatePrompt = buildSystemPrompt({
+      page: "marketflow-capital-detail",
+      dealType: "capital",
+      dealId: 17,
+    });
+    expect(privatePrompt).toMatch(/explain displayed fields and general concepts/i);
+    expect(privatePrompt).toMatch(/not recommend participation, returns, terms, pricing, or an offer/i);
+    expect(privatePrompt).not.toMatch(/how to make an investment commitment|help them understand and evaluate this specific opportunity/i);
+  });
+
+  it("keeps the prepare mode free of turnaround and escalation commitments", () => {
+    const preparePrompt = buildSystemPrompt({
+      page: "strategy-lab",
+      labMode: "prepare",
+    });
+    expect(preparePrompt).toMatch(/possible consideration/i);
+    expect(preparePrompt).toMatch(/does not guarantee review, response, routing, an offer, or a timeline/i);
+    expect(preparePrompt).not.toMatch(/reviewed within 48 hours|priority review|missed-window/i);
+  });
+
+  it("keeps legacy investing context educational and non-promotional", () => {
+    const investingPrompt = buildSystemPrompt({ page: "invest" });
+    expect(investingPrompt).toMatch(/general educational concepts/i);
+    expect(investingPrompt).toMatch(/no current project, security, allocation, or return is offered/i);
+    expect(investingPrompt).not.toMatch(/Explain capital project investments, returns/i);
   });
 
   it("consumes the bounded Strategy Lab memo, inputs, and next step", () => {

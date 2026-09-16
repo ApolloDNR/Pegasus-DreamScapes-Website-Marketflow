@@ -1,8 +1,7 @@
-import { useState, useEffect } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useState } from "react";
+import { useMutation } from "@tanstack/react-query";
 import { useRoute, Link, useLocation } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAnalytics } from "@/hooks/use-analytics";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,7 +23,6 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { useDealAction } from "@/contexts/deal-action-context";
 import {
   Home,
   Heart,
@@ -34,7 +32,6 @@ import {
   Ruler,
   Calendar,
   ChevronLeft,
-  Share2,
   FileText,
   DollarSign,
   Building2,
@@ -43,41 +40,81 @@ import {
   Clock,
 } from "lucide-react";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
+import { useDealAction } from "@/contexts/deal-action-context";
+import { useAuthenticatedQuery } from "@/hooks/use-authenticated-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
-import type { RetailListing, InsertBuyerOffer } from "@shared/schema";
-import { AskPeggyButton } from "@/components/ask-peggy-button";
+import { buildMarketplaceListingMailto } from "@/lib/listing-inquiry";
+import { ShareButtons } from "@/components/share-buttons";
 
-export default function MarketplacePropertyDetailPage() {
+interface MarketplaceListingDetail {
+  id: string | number;
+  title?: string;
+  propertyAddress: string;
+  city?: string;
+  state?: string;
+  zipCode?: string;
+  propertyType?: string;
+  listingType: string;
+  listPrice: number;
+  bedrooms?: number;
+  bathrooms?: number | string;
+  sqft?: number;
+  lotSize?: string;
+  yearBuilt?: number;
+  description?: string;
+  features?: string[];
+  highlights?: string[];
+  amenities?: string[];
+  images?: string[];
+  status: string;
+}
+
+export default function MarketplacePropertyDetailPage({
+  inventorySource = "supabase",
+}: {
+  inventorySource?: "supabase" | "legacy";
+}) {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
-        <PropertyDetailContent />
+        <PropertyDetailContent inventorySource={inventorySource} />
       </div>
     </div>
   );
 }
 
-function PropertyDetailContent() {
-  const [, params] = useRoute("/marketflow/properties/:id");
+function PropertyDetailContent({
+  inventorySource,
+}: {
+  inventorySource: "supabase" | "legacy";
+}) {
+  const routePattern = inventorySource === "legacy"
+    ? "/marketflow/listings/:id"
+    : "/marketflow/properties/:id";
+  const [, params] = useRoute(routePattern);
   const propertyId = params?.id || null;
+  const isReviewedLegacyListing = inventorySource === "legacy";
+  const listingQueryRoot = isReviewedLegacyListing
+    ? "/api/listings"
+    : "/api/supabase/listings";
+  const backHref = isReviewedLegacyListing
+    ? "/marketflow/deals"
+    : "/marketflow/properties";
+  const backLabel = isReviewedLegacyListing
+    ? "Back to MarketFlow"
+    : "Back to Properties";
   const { isAuthenticated } = useSupabaseAuth();
-  const { toast } = useToast();
   const { openDealAction } = useDealAction();
+  const { toast } = useToast();
   const [, navigate] = useLocation();
   const [showOfferModal, setShowOfferModal] = useState(false);
-  const { trackListingView } = useAnalytics();
 
-  const { data: listing, isLoading, error } = useQuery<RetailListing>({
-    queryKey: ["/api/supabase/listings", propertyId],
-    enabled: !!propertyId,
-  });
-
-  useEffect(() => {
-    if (listing?.id) {
-      trackListingView(typeof listing.id === 'string' ? parseInt(listing.id) : listing.id);
-    }
-  }, [listing?.id, trackListingView]);
+  const { data: listing, isLoading, error } =
+    useAuthenticatedQuery<MarketplaceListingDetail>(
+      [listingQueryRoot, propertyId],
+      { enabled: !!propertyId },
+    );
 
   const toggleSaveMutation = useMutation({
     mutationFn: async () => {
@@ -133,10 +170,10 @@ function PropertyDetailContent() {
   if (error || !listing) {
     return (
       <div className="space-y-6">
-        <Link href="/marketflow/properties">
+        <Link href={backHref}>
           <Button variant="ghost" data-testid="button-back">
             <ChevronLeft className="h-4 w-4 mr-2" />
-            Back to Properties
+            {backLabel}
           </Button>
         </Link>
         <Card>
@@ -175,15 +212,28 @@ function PropertyDetailContent() {
     }
   };
 
-  const canMakeOffer = listing.status === "active";
+  const canMakeOffer =
+    !isReviewedLegacyListing && listing.status === "active";
+  const detailFeatures =
+    listing.features ?? listing.highlights ?? listing.amenities ?? [];
+  const requestInfoHref = buildMarketplaceListingMailto({
+    listingId: String(listing.id),
+    propertyAddress: listing.propertyAddress,
+    intent: "info",
+  });
+  const scheduleShowingHref = buildMarketplaceListingMailto({
+    listingId: String(listing.id),
+    propertyAddress: listing.propertyAddress,
+    intent: "showing",
+  });
 
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <Link href="/marketflow/properties">
+        <Link href={backHref}>
           <Button variant="ghost" data-testid="button-back">
             <ChevronLeft className="h-4 w-4 mr-2" />
-            Back to Properties
+            {backLabel}
           </Button>
         </Link>
         <div className="flex items-center gap-2">
@@ -199,10 +249,10 @@ function PropertyDetailContent() {
             <Heart className="h-4 w-4" />
             <span className="sr-only">Save</span>
           </Button>
-          <Button variant="outline" size="icon" data-testid="button-share" aria-label="Share property">
-            <Share2 className="h-4 w-4" />
-            <span className="sr-only">Share</span>
-          </Button>
+          <ShareButtons
+            title={listing.title || listing.propertyAddress}
+            description={`Property at ${listing.propertyAddress}, ${listing.city || ""} ${listing.state || ""}`.trim()}
+          />
         </div>
       </div>
 
@@ -222,9 +272,6 @@ function PropertyDetailContent() {
             )}
             <div className="absolute top-4 left-4 flex items-center gap-2">
               {getStatusBadge(listing.status)}
-              {listing.featured && (
-                <Badge className="bg-primary text-primary-foreground">Featured</Badge>
-              )}
             </div>
           </div>
 
@@ -293,11 +340,11 @@ function PropertyDetailContent() {
                 </div>
               )}
 
-              {listing.features && listing.features.length > 0 && (
+              {detailFeatures.length > 0 && (
                 <div>
                   <h4 className="font-medium mb-2">Features</h4>
                   <div className="flex flex-wrap gap-2">
-                    {listing.features.map((feature, index) => (
+                    {detailFeatures.map((feature, index) => (
                       <Badge key={index} variant="outline">{feature}</Badge>
                     ))}
                   </div>
@@ -341,28 +388,50 @@ function PropertyDetailContent() {
                     {isAuthenticated ? "Make an Offer" : "Login to Make Offer"}
                   </Button>
                 )}
-                {propertyId && (
+                {propertyId && isReviewedLegacyListing ? (
                   <>
                     <Button
                       variant="outline"
                       className="w-full"
-                      onClick={() => openDealAction(Number(propertyId), "listing_request_info")}
+                      onClick={() =>
+                        openDealAction(propertyId, "listing_request_info")
+                      }
                       data-testid="button-request-info"
                     >
-                      <Phone className="h-4 w-4 mr-2" />
+                      <Mail className="h-4 w-4 mr-2" />
                       Request Info
                     </Button>
                     <Button
                       variant="outline"
                       className="w-full"
-                      onClick={() => openDealAction(Number(propertyId), "listing_schedule_tour")}
+                      onClick={() =>
+                        openDealAction(propertyId, "listing_schedule_tour")
+                      }
                       data-testid="button-schedule-showing"
                     >
                       <Calendar className="h-4 w-4 mr-2" />
                       Schedule Showing
                     </Button>
                   </>
-                )}
+                ) : propertyId ? (
+                  <>
+                    <Button variant="outline" className="w-full" asChild>
+                      <a href={requestInfoHref} data-testid="button-request-info">
+                        <Mail className="h-4 w-4 mr-2" />
+                        Request Info
+                      </a>
+                    </Button>
+                    <Button variant="outline" className="w-full" asChild>
+                      <a
+                        href={scheduleShowingHref}
+                        data-testid="button-schedule-showing"
+                      >
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Schedule Showing
+                      </a>
+                    </Button>
+                  </>
+                ) : null}
                 <Button
                   variant="ghost"
                   className="w-full"
@@ -373,14 +442,6 @@ function PropertyDetailContent() {
                   <Heart className="h-4 w-4 mr-2" />
                   {isAuthenticated ? "Save Listing" : "Login to Save"}
                 </Button>
-                {propertyId && (
-                  <AskPeggyButton
-                    dealType="retail"
-                    dealId={propertyId}
-                    dealLabel={listing.propertyAddress}
-                    fullWidth
-                  />
-                )}
               </div>
             </CardContent>
           </Card>
@@ -391,17 +452,30 @@ function PropertyDetailContent() {
               <CardDescription>Questions about this property?</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {propertyId && (
+              {propertyId && isReviewedLegacyListing ? (
                 <Button
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={() => openDealAction(Number(propertyId), "listing_request_info")}
+                  onClick={() =>
+                    openDealAction(propertyId, "listing_request_info")
+                  }
                   data-testid="button-contact"
                 >
-                  <Phone className="h-4 w-4 mr-2" />
+                  <Mail className="h-4 w-4 mr-2" />
                   Request Info
                 </Button>
-              )}
+              ) : propertyId ? (
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  asChild
+                >
+                  <a href={requestInfoHref} data-testid="button-contact">
+                    <Mail className="h-4 w-4 mr-2" />
+                    Request Info
+                  </a>
+                </Button>
+              ) : null}
               <a
                 href="mailto:apollo@pegasusdreamscapes.com"
                 className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
@@ -420,7 +494,7 @@ function PropertyDetailContent() {
               </a>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Clock className="h-4 w-4" />
-                <span>Response within 24 hours</span>
+                <span>Direct follow-up when appropriate</span>
               </div>
             </CardContent>
           </Card>
@@ -458,7 +532,7 @@ function PropertyDetailSkeleton() {
 interface OfferModalProps {
   open: boolean;
   onClose: () => void;
-  listing: RetailListing;
+  listing: MarketplaceListingDetail;
   formatCurrency: (amount: number) => string;
 }
 
@@ -589,4 +663,3 @@ function OfferModal({ open, onClose, listing, formatCurrency }: OfferModalProps)
     </Dialog>
   );
 }
-

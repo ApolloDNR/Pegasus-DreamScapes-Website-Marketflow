@@ -2,10 +2,10 @@
  * Strategy Lab — Tier strip render + routing guard (Task #176).
  *
  * Locks in the premium planning-depth upgrade:
- *   1. All three tiers (Instant Strategy Preview / Property Read /
- *      Deal Blueprint) render.
- *   2. The "Property Read" CTA routes to the canonical intake.
- *   3. The "Deal Blueprint" CTA preserves its Blueprint intent.
+ *   1. All three tiers (Instant Strategy Preview / Opportunity Intake /
+ *      Deal Blueprint request) render.
+ *   2. The Opportunity Intake CTA routes to the canonical intake.
+ *   3. The Deal Blueprint request CTA preserves its Blueprint intent.
  *   4. The free "Instant Strategy Preview" tier has no CTA button.
  */
 import React from "react";
@@ -43,8 +43,8 @@ describe("StrategyTierStrip — three-tier pricing strip", () => {
     expect(screen.getByTestId("tier-blueprint")).toBeInTheDocument();
 
     expect(screen.getByText("Instant Strategy Preview")).toBeInTheDocument();
-    expect(screen.getByText("Property Read")).toBeInTheDocument();
-    expect(screen.getByText("Deal Blueprint")).toBeInTheDocument();
+    expect(screen.getByText("Opportunity Intake")).toBeInTheDocument();
+    expect(screen.getByText("Deal Blueprint request")).toBeInTheDocument();
   });
 
   it("the free Instant Strategy Preview tier has no CTA button", () => {
@@ -52,7 +52,7 @@ describe("StrategyTierStrip — three-tier pricing strip", () => {
     expect(screen.queryByTestId("button-tier-preview")).toBeNull();
   });
 
-  it("the Property Read CTA routes to the canonical intake", () => {
+  it("the Opportunity Intake CTA routes to the canonical intake", () => {
     const history = renderStrip();
     fireEvent.click(screen.getByTestId("button-tier-snapshot"));
     expect(history[history.length - 1]).toBe("/bring-an-opportunity");

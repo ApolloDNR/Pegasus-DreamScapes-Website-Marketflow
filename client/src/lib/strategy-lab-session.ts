@@ -1,12 +1,11 @@
 /**
  * Strategy Lab — anonymous session helpers (Task #84).
  *
- * Anonymous Lab users get a localStorage- AND cookie-persisted sessionId so
- * that (a) we can claim their saved analyses on signup via
- * /api/property-analyses/claim and (b) we can throttle a soft account wall
- * after FREE_RUN_LIMIT engine runs. The cookie copy survives localStorage
- * clears in the same browser session; a soft fingerprint (UA + screen + tz)
- * recovers the run count when both are wiped. Save / Share / Export PDF /
+ * Anonymous Lab users get a random localStorage sessionId so that saved
+ * analyses can be claimed on signup via /api/property-analyses/claim. The
+ * FREE_RUN_LIMIT counter is intentionally scoped to sessionStorage: it lasts
+ * only for the current browsing session and is never recovered from browser
+ * characteristics or a persistent cookie. Save / Share / Export PDF /
  * Submit-to-Pegasus always require auth.
  */
 
@@ -15,9 +14,8 @@ export const FREE_RUN_LIMIT = 3;
 const SESSION_KEY = "pegasus.lab.sessionId";
 const RUNS_KEY = "pegasus.lab.runCount";
 const FP_KEY_PREFIX = "pegasus.lab.fp.";
-const COOKIE_MAX_AGE_DAYS = 30;
 
-function safeStorage(): Storage | null {
+function safeLocalStorage(): Storage | null {
   try {
     if (typeof window === "undefined") return null;
     return window.localStorage;
@@ -26,38 +24,38 @@ function safeStorage(): Storage | null {
   }
 }
 
-function readCookie(name: string): string | null {
-  if (typeof document === "undefined") return null;
-  const match = document.cookie.split("; ").find((c) => c.startsWith(`${name}=`));
-  return match ? decodeURIComponent(match.slice(name.length + 1)) : null;
-}
-
-function writeCookie(name: string, value: string): void {
-  if (typeof document === "undefined") return;
-  const maxAge = COOKIE_MAX_AGE_DAYS * 24 * 60 * 60;
-  document.cookie = `${name}=${encodeURIComponent(value)}; Max-Age=${maxAge}; Path=/; SameSite=Lax`;
-}
-
-/**
- * Soft, non-cryptographic browser fingerprint. Used only to recover the
- * anonymous run counter when localStorage AND the run cookie were both
- * cleared in the same session. Not used for tracking, identification, or
- * cross-site correlation.
- */
-function softFingerprint(): string {
-  if (typeof navigator === "undefined" || typeof window === "undefined") return "node";
-  const parts = [
-    navigator.userAgent || "",
-    navigator.language || "",
-    String(window.screen?.width ?? 0),
-    String(window.screen?.height ?? 0),
-    String(new Date().getTimezoneOffset()),
-  ].join("|");
-  let h = 0;
-  for (let i = 0; i < parts.length; i++) {
-    h = (h * 31 + parts.charCodeAt(i)) | 0;
+function safeSessionStorage(): Storage | null {
+  try {
+    if (typeof window === "undefined") return null;
+    return window.sessionStorage;
+  } catch {
+    return null;
   }
-  return `fp${(h >>> 0).toString(36)}`;
+}
+
+/** Remove artifacts written by the previous persistent/fingerprint scheme. */
+function cleanupLegacyPersistence(): void {
+  const local = safeLocalStorage();
+  if (local) {
+    try {
+      local.removeItem(RUNS_KEY);
+      for (let index = local.length - 1; index >= 0; index -= 1) {
+        const key = local.key(index);
+        if (key?.startsWith(FP_KEY_PREFIX)) local.removeItem(key);
+      }
+    } catch {
+      // Storage may be unavailable under hardened browser settings.
+    }
+  }
+
+  if (typeof document !== "undefined") {
+    try {
+      document.cookie = `${RUNS_KEY}=; Max-Age=0; Path=/; SameSite=Lax`;
+      document.cookie = `${SESSION_KEY}=; Max-Age=0; Path=/; SameSite=Lax`;
+    } catch {
+      // Cookie access may be blocked in sandboxed or hardened contexts.
+    }
+  }
 }
 
 function randomId(): string {
@@ -74,38 +72,48 @@ export function freeRunsRemaining(): number {
 }
 
 export function getOrCreateLabSessionId(): string {
-  const ls = safeStorage();
-  const cookieId = readCookie(SESSION_KEY);
-  let id = ls?.getItem(SESSION_KEY) ?? cookieId ?? null;
+  cleanupLegacyPersistence();
+  const local = safeLocalStorage();
+  let id: string | null = null;
+  try {
+    id = local?.getItem(SESSION_KEY) ?? null;
+  } catch {
+    // Continue with a generated ID when local storage is unavailable.
+  }
   if (!id) id = randomId();
-  ls?.setItem(SESSION_KEY, id);
-  if (cookieId !== id) writeCookie(SESSION_KEY, id);
+  try {
+    local?.setItem(SESSION_KEY, id);
+  } catch {
+    // Claim continuity is best effort under hardened browser settings.
+  }
   return id;
 }
 
 export function getLabRunCount(): number {
-  const ls = safeStorage();
-  // Take the MAX of localStorage, cookie, and fingerprint-keyed slot so
-  // clearing any single store cannot reset the soft wall.
-  const lsCount = Number(ls?.getItem(RUNS_KEY) || "0");
-  const cookieCount = Number(readCookie(RUNS_KEY) || "0");
-  const fpCount = Number(ls?.getItem(FP_KEY_PREFIX + softFingerprint()) || "0");
-  const candidates = [lsCount, cookieCount, fpCount].filter(Number.isFinite);
-  return candidates.length ? Math.max(...candidates) : 0;
+  cleanupLegacyPersistence();
+  try {
+    const count = Number(safeSessionStorage()?.getItem(RUNS_KEY) || "0");
+    return Number.isFinite(count) ? Math.max(0, count) : 0;
+  } catch {
+    return 0;
+  }
 }
 
 export function bumpLabRunCount(): number {
   const next = getLabRunCount() + 1;
-  const ls = safeStorage();
-  ls?.setItem(RUNS_KEY, String(next));
-  ls?.setItem(FP_KEY_PREFIX + softFingerprint(), String(next));
-  writeCookie(RUNS_KEY, String(next));
+  try {
+    safeSessionStorage()?.setItem(RUNS_KEY, String(next));
+  } catch {
+    // The soft wall is best effort when session storage is unavailable.
+  }
   return next;
 }
 
 export function clearLabRunCount(): void {
-  const ls = safeStorage();
-  ls?.removeItem(RUNS_KEY);
-  ls?.removeItem(FP_KEY_PREFIX + softFingerprint());
-  writeCookie(RUNS_KEY, "0");
+  cleanupLegacyPersistence();
+  try {
+    safeSessionStorage()?.removeItem(RUNS_KEY);
+  } catch {
+    // Nothing else to clear when session storage is unavailable.
+  }
 }

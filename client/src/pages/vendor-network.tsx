@@ -1,5 +1,7 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "wouter";
+import { EditorialSections } from "@/components/editorial-sections";
+import "@/pegasus/editorial-pages.css";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -20,6 +22,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/use-seo";
 import { ScrollReveal } from "@/components/animations";
 import { apiRequest } from "@/lib/queryClient";
+import { readLeadReceipt } from "@/lib/lead-receipt";
+import { PageOpening, PageAction } from "@/pegasus/experience-page";
 import { type InsertLead } from "@shared/schema";
 import { HeroPicture } from "@/components/hero-picture";
 import { CardSurface } from "@/components/ui/card-primitives";
@@ -53,6 +57,18 @@ const vendorFormSchema = z.object({
   references: z.string().optional(),
   portfolio: z.string().optional(),
   notes: z.string().optional(),
+  consentContact: z.boolean().refine((value) => value, {
+    message: "Please agree before submitting.",
+  }),
+  referenceAuthorization: z.boolean(),
+}).superRefine((data, ctx) => {
+  if (data.references?.trim() && !data.referenceAuthorization) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ["referenceAuthorization"],
+      message: "Confirm you are authorized to share reference information.",
+    });
+  }
 });
 
 type VendorFormValues = z.infer<typeof vendorFormSchema>;
@@ -61,14 +77,26 @@ export default function VendorNetwork() {
   useSEO({
     title: "Vendor Network",
     description:
-      "Apply to the Pegasus DreamScapes Corp. private vendor network. Vetted contractors, lenders, agents, and operators routed to active deal flow.",
+      "Submit a vendor profile for possible future project consideration. Application does not promise review, approval, placement, work, volume, or compensation.",
     image: "/og/default.png",
   });
 
+  useEffect(() => {
+    if (window.location.hash !== "#vendor-form") return;
+    // The destination mounts after the app shell resets route scroll. Restore
+    // the requested section after that reset, including a direct URL arrival.
+    const frame = requestAnimationFrame(() => {
+      const formSection = document.getElementById("vendor-form");
+      formSection?.scrollIntoView({ block: "start", behavior: "auto" });
+      formSection?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, []);
+
   return (
-    <div className="min-h-screen">
-      <h1 className="sr-only">Pegasus Vendor Network</h1>
+    <div className="pg-editorial vendor-editorial min-h-screen">
       <HeroSection />
+      <EditorialSections items={[["vendor-categories", "Vendor lanes"], ["vendor-standards", "Standards"], ["vendor-process", "Process"], ["vendor-form", "Application"]]} />
       <CategoriesSection />
       <PegasusStandardSection />
       <HowToJoinSection />
@@ -78,70 +106,17 @@ export default function VendorNetwork() {
 }
 
 function HeroSection() {
-  return (
-    <section className="relative min-h-[55vh] flex items-center overflow-hidden pt-20">
-      <motion.div
-        className="absolute inset-0 scale-105"
-        initial={{ scale: 1.1 }}
-        animate={{ scale: 1.05 }}
-        transition={{ duration: 20, repeat: Infinity, repeatType: "reverse", ease: "linear" }}
-      >
-        <HeroPicture
-          alt="Pegasus DreamScapes Vendor Network"
-          className="absolute inset-0 w-full h-full object-cover"
-          priority
-        />
-      </motion.div>
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/70 to-black/85" />
-
-      <div className="relative z-10 w-full py-20">
-        <div className="max-w-5xl mx-auto px-6 lg:px-12 text-center">
-          <motion.div
-            className="flex items-center justify-center gap-4 mb-6"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-          >
-            <div className="h-px w-10 bg-primary" />
-            <p className="text-[11px] sm:text-xs uppercase tracking-[0.28em] text-primary font-semibold font-supporting">
-              Private Vendor Network
-            </p>
-            <div className="h-px w-10 bg-primary" />
-          </motion.div>
-
-          <motion.h1
-            className="font-serif text-5xl sm:text-6xl lg:text-7xl font-semibold text-white leading-[0.95] tracking-[-0.02em] mb-8"
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.7, delay: 0.3 }}
-            data-testid="text-vendor-hero"
-          >
-            Operators we trust.<br />
-            <span className="bg-gradient-to-r from-[#E8DBC5] via-[#D4B483] to-[#C17A4A] bg-clip-text text-transparent">
-              Routed to real work.
-            </span>
-          </motion.h1>
-
-          <motion.p
-            className="text-base sm:text-lg text-white/80 max-w-2xl mx-auto leading-relaxed font-light"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.55 }}
-          >
-            The Pegasus Vendor Network is how we line up the contractors, lenders, agents, and specialists behind every project. Vetted intake, real references, and a private list. Not a public marketplace.
-          </motion.p>
-        </div>
-      </div>
-      <div className="brand-stripe absolute bottom-0 left-0 right-0" aria-hidden="true" />
-    </section>
-  );
+  return <div className="experience-page"><PageOpening title="Work with Pegasus." action={{ href: '#vendor-form', label: 'Start your application' }}>
+    <p>This page collects vendor profiles that may be considered for a future scope. It is not a directory, roster of approved vendors, employment portal, or promise of active work.</p>
+    <PageAction href="#vendor-standards" secondary>Review the standards</PageAction>
+  </PageOpening></div>;
 }
 
 const VENDOR_CATEGORIES = [
   {
     icon: HardHat,
     title: "General Contractors",
-    desc: "Full-scope GCs for ADUs, flips, and ground-up. License + insurance required.",
+    desc: "General-contractor profiles for possible future scopes; applicable licenses and insurance may be requested.",
   },
   {
     icon: Wrench,
@@ -172,38 +147,28 @@ const VENDOR_CATEGORIES = [
 
 function CategoriesSection() {
   return (
-    <section className="py-24 lg:py-32 bg-background">
+    <section id="vendor-categories" className="editorial-section bg-background">
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <ScrollReveal className="text-center max-w-2xl mx-auto mb-16">
-          <div className="flex items-center justify-center gap-4 mb-4">
+        <ScrollReveal className="max-w-3xl mb-10">
+          <div className="flex items-center gap-4 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
-            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Trades We Work With</p>
+            <p className="text-[13px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Profile Categories</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
-            Six lanes. Real standards.
+          <h2 className="font-serif text-3xl sm:text-4xl font-normal tracking-normal mb-5">
+            Six possible vendor lanes.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed">
-            We keep a short list per trade. Every vendor is referenced, insured where required, and matched to projects we're actively running.
+            These categories describe profiles Pegasus may consider. They are not an approved roster, evidence of current project demand, or a promise of matching or work.
           </p>
         </ScrollReveal>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="vendor-lanes">
           {VENDOR_CATEGORIES.map((cat, i) => (
-            <motion.div
-              key={i}
-              whileHover={{ y: -4 }}
-              transition={{ duration: 0.25 }}
-            >
-              <CardSurface
-                className="group h-full p-7 border-border/40 hover:border-primary/30 transition-all duration-300"
-                data-testid={`vendor-category-${i}`}
-              >
-                <cat.icon className="w-7 h-7 text-primary/70 mb-5 group-hover:text-primary transition-colors" />
-                <h3 className="font-serif text-xl font-semibold mb-3 tracking-tight">{cat.title}</h3>
-                <p className="text-sm text-muted-foreground leading-relaxed">{cat.desc}</p>
-              </CardSurface>
-            </motion.div>
+            <article key={cat.title} data-testid={`vendor-category-${i}`}>
+              <cat.icon size={23} aria-hidden="true" />
+              <div><h3>{cat.title}</h3><p>{cat.desc}</p></div>
+            </article>
           ))}
         </div>
       </div>
@@ -221,14 +186,14 @@ const JOIN_STEPS = [
   {
     icon: ShieldCheck,
     step: "02",
-    title: "Vetting & references",
-    desc: "We review credentials, call references, and look at past work. Vendors are flagged Submitted, Under Review, Approved, or Preferred internally.",
+    title: "Possible diligence",
+    desc: "For a specific future scope, Pegasus may request credentials, licenses, insurance, references, and work samples.",
   },
   {
     icon: Handshake,
     step: "03",
-    title: "Routed to active work",
-    desc: "Approved vendors get matched to scopes inside live Pegasus projects. Preferred vendors are first call on the lanes they fit.",
+    title: "Separate scope, if offered",
+    desc: "Any invitation, diligence, scope, schedule, payment, or relationship exists only in later written terms.",
   },
 ];
 
@@ -238,20 +203,20 @@ const PEGASUS_STANDARDS = [
     desc: "Current GL coverage, workers' comp where applicable, and an active license on file for any trade that requires one.",
   },
   {
-    title: "Real references, recently checked",
-    desc: "We call 2–3 recent references: clients, GCs, or capital partners who can speak to scope, schedule, and behavior on site.",
+    title: "References may be checked",
+    desc: "A future scope may require recent references who can speak to work quality, schedule, and site conduct.",
   },
   {
     title: "Clear scope, written change orders",
     desc: "Quotes are itemized. Change orders are written, not verbal. Surprise invoices break trust and end the relationship.",
   },
   {
-    title: "Communication on a project clock",
-    desc: "Same-day acknowledgement, next-day answers. If a date is going to slip, we want to hear it before the date, not after.",
+    title: "Communication terms in writing",
+    desc: "A future scope can set acknowledgement, update, escalation, and delay-notice expectations in writing.",
   },
   {
     title: "Safe sites, clean handoffs",
-    desc: "PPE, lien waivers, permits where required, and a broom-clean handoff. We document the standard with photos at each milestone.",
+    desc: "A future scope may require PPE, lien waivers, permits, site records, milestone photos, and handoff criteria.",
   },
   {
     title: "Aligned with the doctrine",
@@ -261,20 +226,20 @@ const PEGASUS_STANDARDS = [
 
 function PegasusStandardSection() {
   return (
-    <section className="py-24 lg:py-32 bg-navy text-white relative overflow-hidden">
+    <section id="vendor-standards" className="editorial-section bg-navy text-white relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-b from-navy via-navy to-charcoal opacity-95" />
       <div className="relative max-w-7xl mx-auto px-6 lg:px-12">
-        <ScrollReveal className="text-center max-w-2xl mx-auto mb-16">
-          <div className="flex items-center justify-center gap-4 mb-4">
+        <ScrollReveal className="max-w-3xl mb-10">
+          <div className="flex items-center gap-4 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
-            <p className="text-[11px] uppercase tracking-[0.3em] text-champagne font-supporting font-semibold">The Dreamscaper Standard</p>
+            <p className="text-[13px] uppercase tracking-[0.3em] text-champagne font-supporting font-semibold">The Dreamscaper Standard</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5 text-white">
-            The bar we hold every vendor to.
+          <h2 className="font-serif text-3xl sm:text-4xl font-normal tracking-normal mb-5 text-white">
+            Criteria a future scope may require.
           </h2>
           <p className="text-base text-cream/85 leading-relaxed">
-            Scope it right, price it straight, finish what you start. Vendors who hold that bar get routed to real work, repeatedly.
+            These are example expectations, not evidence of an approved bench or a promise of work. The signed project agreement controls.
           </p>
         </ScrollReveal>
 
@@ -282,11 +247,11 @@ function PegasusStandardSection() {
           {PEGASUS_STANDARDS.map((s, i) => (
             <div
               key={i}
-              className="p-7 bg-black/40 backdrop-blur-xl rounded-lg border border-champagne/20"
+              className="py-6 pr-4 border-t border-champagne/30"
               data-testid={`pegasus-standard-${i}`}
             >
               <CheckCircle2 className="w-6 h-6 text-primary mb-4" />
-              <h3 className="font-serif text-xl font-semibold mb-3 tracking-tight text-white">{s.title}</h3>
+              <h3 className="font-serif text-xl font-normal mb-3 tracking-normal text-white">{s.title}</h3>
               <p className="text-sm text-cream/80 leading-relaxed">{s.desc}</p>
             </div>
           ))}
@@ -298,19 +263,19 @@ function PegasusStandardSection() {
 
 function HowToJoinSection() {
   return (
-    <section className="py-24 lg:py-32 bg-card border-y border-border/40">
+    <section id="vendor-process" className="editorial-section bg-card border-y border-border/40">
       <div className="max-w-7xl mx-auto px-6 lg:px-12">
-        <ScrollReveal className="text-center max-w-2xl mx-auto mb-16">
-          <div className="flex items-center justify-center gap-4 mb-4">
+        <ScrollReveal className="max-w-3xl mb-10">
+          <div className="flex items-center gap-4 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
-            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">How to Join</p>
+            <p className="text-[13px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">How to Join</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+          <h2 className="font-serif text-3xl sm:text-4xl font-normal tracking-normal mb-5">
             Three steps. No pay-to-play.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed">
-            We don't sell directory listings. The list is short on purpose so we can keep the bar high.
+            The application creates a profile only. Pegasus may decline, request more information, or take no action.
           </p>
         </ScrollReveal>
 
@@ -318,19 +283,19 @@ function HowToJoinSection() {
           {JOIN_STEPS.map((s, i) => (
             <CardSurface
               key={i}
-              className="relative p-8 bg-background border-border/40"
+              className="relative p-6 bg-background border-border/60 shadow-none"
               data-testid={`vendor-step-${i}`}
             >
-              <p className="font-serif text-6xl text-primary/15 absolute top-4 right-6 leading-none">{s.step}</p>
+              <p className="font-serif text-3xl text-primary absolute top-6 right-6 leading-none">{s.step}</p>
               <s.icon className="w-7 h-7 text-primary mb-5" />
-              <h3 className="font-serif text-xl font-semibold mb-3 tracking-tight">{s.title}</h3>
+              <h3 className="font-serif text-xl font-normal mb-3 tracking-normal">{s.title}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">{s.desc}</p>
             </CardSurface>
           ))}
         </div>
 
-        <p className="mt-12 text-center text-xs text-muted-foreground/80 max-w-2xl mx-auto leading-relaxed">
-          Submitting an application doesn't guarantee approval, placement, or volume. Vendor status is reviewed on an ongoing basis.
+        <p className="mt-12 text-center text-[13px] text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+          Submitting does not guarantee review, approval, placement, work, volume, compensation, or a future response.
         </p>
       </div>
     </section>
@@ -340,6 +305,8 @@ function HowToJoinSection() {
 function VendorFormSection() {
   const { toast } = useToast();
   const [submitted, setSubmitted] = useState(false);
+  const inFlightRef = useRef(false);
+  const [submitError, setSubmitError] = useState(false);
 
   const form = useForm<VendorFormValues>({
     resolver: zodResolver(vendorFormSchema),
@@ -357,6 +324,8 @@ function VendorFormSection() {
       references: "",
       portfolio: "",
       notes: "",
+      consentContact: false,
+      referenceAuthorization: false,
     },
   });
 
@@ -366,7 +335,10 @@ function VendorFormSection() {
       const firstName = nameParts[0] || "";
       const lastName = nameParts.slice(1).join(" ") || "";
 
-      const payload: Partial<InsertLead> = {
+      const payload: Partial<InsertLead> & {
+        consentContact: boolean;
+        consentCcpaAcknowledged: boolean;
+      } = {
         leadType: "vendor",
         source: "vendor_network_page",
         firstName,
@@ -383,16 +355,22 @@ function VendorFormSection() {
           availability: data.availability,
           references: data.references,
           portfolio: data.portfolio,
+          referenceAuthorization: data.referenceAuthorization,
         },
         notes: data.notes,
+        consentContact: data.consentContact,
+        consentCcpaAcknowledged: data.consentContact,
       };
 
-      return await apiRequest("POST", "/api/leads", payload);
+      return readLeadReceipt(await apiRequest("POST", "/api/leads", payload));
     },
+    onSettled: () => { inFlightRef.current = false; },
     onSuccess: () => {
+      setSubmitError(false);
       setSubmitted(true);
     },
     onError: () => {
+      setSubmitError(true);
       toast({
         title: "Something went wrong",
         description: "Please try again or email apollo@pegasusdreamscapes.com directly.",
@@ -402,19 +380,25 @@ function VendorFormSection() {
   });
 
   return (
-    <section id="vendor-form" className="py-28 lg:py-36 bg-background scroll-mt-24">
+    <section
+      id="vendor-form"
+      tabIndex={-1}
+      aria-labelledby="vendor-form-title"
+      className="editorial-section bg-background scroll-mt-24"
+      data-testid="vendor-form"
+    >
       <div className="max-w-4xl mx-auto px-6 lg:px-12">
         <ScrollReveal className="text-center max-w-2xl mx-auto mb-12">
-          <div className="flex items-center justify-center gap-4 mb-4">
+          <div className="flex items-center gap-4 mb-4">
             <div className="h-px w-12 bg-gradient-to-r from-transparent to-primary" />
-            <p className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Vendor Intake</p>
+            <p className="text-[13px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold">Vendor Intake</p>
             <div className="h-px w-12 bg-gradient-to-l from-transparent to-primary" />
           </div>
-          <h2 className="font-serif text-4xl sm:text-5xl font-semibold tracking-[-0.02em] mb-5">
+          <h2 id="vendor-form-title" className="font-serif text-3xl sm:text-4xl font-normal tracking-normal mb-5">
             Apply to be considered.
           </h2>
           <p className="text-base text-muted-foreground leading-relaxed">
-            Real numbers, real references, real availability. The more specific, the faster we can route you.
+            Vendor Network is the only formal application of record for operators and vendors. Share accurate credentials, references, and availability; completeness does not create review or routing priority.
           </p>
         </ScrollReveal>
 
@@ -428,24 +412,28 @@ function VendorFormSection() {
             }}
           />
         ) : (
-          <CardSurface className="p-8 lg:p-10 border-border/50 shadow-md">
+          <CardSurface className="vendor-form-surface p-5 sm:p-8 lg:p-10 border-border/70 shadow-sm">
             <Form {...form}>
               <form
-                onSubmit={form.handleSubmit((d) => mutation.mutate(d))}
-                className="space-y-5"
+                onSubmit={form.handleSubmit((d) => { if (inFlightRef.current) return; inFlightRef.current = true; setSubmitError(false); mutation.mutate(d); })}
+                className="space-y-7"
               >
+                <p className="text-sm text-muted-foreground">All fields are required unless marked optional.</p>
+                {submitError && <p role="alert" className="text-destructive">We could not confirm receipt. Your entries are still here. Try again or email Apollo directly.</p>}
+                <fieldset className="vendor-fieldset">
+                  <legend><span>01</span> Your details</legend>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <FormField control={form.control} name="name" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Full Name</FormLabel>
-                      <FormControl><Input placeholder="Jane Smith" {...field} data-testid="input-vendor-name" /></FormControl>
+                      <FormControl><Input autoComplete="name" placeholder="Jane Smith" {...field} data-testid="input-vendor-name" /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="company" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Company</FormLabel>
-                      <FormControl><Input placeholder="Smith Construction Inc." {...field} data-testid="input-vendor-company" /></FormControl>
+                      <FormControl><Input autoComplete="organization" placeholder="Smith Construction Inc." {...field} data-testid="input-vendor-company" /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
@@ -455,19 +443,22 @@ function VendorFormSection() {
                   <FormField control={form.control} name="email" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Email</FormLabel>
-                      <FormControl><Input type="email" placeholder="jane@example.com" {...field} data-testid="input-vendor-email" /></FormControl>
+                      <FormControl><Input type="email" autoComplete="email" placeholder="jane@example.com" {...field} data-testid="input-vendor-email" /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
                   <FormField control={form.control} name="phone" render={({ field }) => (
                     <FormItem>
                       <FormLabel>Phone</FormLabel>
-                      <FormControl><Input placeholder="Best callback number" {...field} data-testid="input-vendor-phone" /></FormControl>
+                      <FormControl><Input type="tel" autoComplete="tel" placeholder="Best callback number" {...field} data-testid="input-vendor-phone" /></FormControl>
                       <FormMessage />
                     </FormItem>
                   )} />
                 </div>
 
+                </fieldset>
+                <fieldset className="vendor-fieldset">
+                  <legend><span>02</span> Work and credentials</legend>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                   <FormField control={form.control} name="trade" render={({ field }) => (
                     <FormItem>
@@ -519,12 +510,15 @@ function VendorFormSection() {
                   )} />
                 </div>
 
+                </fieldset>
+                <fieldset className="vendor-fieldset">
+                  <legend><span>03</span> Supporting information</legend>
                 <FormField control={form.control} name="references" render={({ field }) => (
                   <FormItem>
                     <FormLabel>References (optional)</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder="2–3 recent client / GC references with phone or email."
+                        placeholder="Names and professional relationship. Add contact details only with permission."
                         className="min-h-24 resize-none"
                         {...field}
                         value={field.value ?? ""}
@@ -559,6 +553,53 @@ function VendorFormSection() {
                   </FormItem>
                 )} />
 
+                </fieldset>
+
+                <FormField control={form.control} name="consentContact" render={({ field }) => (
+                  <FormItem className="rounded-md border border-border/60 bg-muted/20 p-4">
+                    <div className="flex items-start gap-3">
+                      <FormControl>
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={(event) => field.onChange(event.target.checked)}
+                          className="mt-1 h-4 w-4 shrink-0 accent-primary"
+                          data-testid="checkbox-vendor-consent"
+                        />
+                      </FormControl>
+                      <FormLabel className="text-sm font-normal leading-relaxed">
+                        I agree Pegasus Dreamscapes may contact me about this vendor application.
+                        Pegasus may use the submitted profile and share it with service providers
+                        that operate the site as described in the <a className="underline underline-offset-2" href="/privacy">Privacy Policy</a>.
+                        Submission does not promise review, approval, placement, work, or payment.
+                      </FormLabel>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
+                <FormField control={form.control} name="referenceAuthorization" render={({ field }) => (
+                  <FormItem className="rounded-md border border-border/60 bg-muted/20 p-4">
+                    <div className="flex items-start gap-3">
+                      <FormControl>
+                        <input
+                          type="checkbox"
+                          checked={field.value}
+                          onChange={(event) => field.onChange(event.target.checked)}
+                          className="mt-1 h-4 w-4 shrink-0 accent-primary"
+                          data-testid="checkbox-vendor-reference-authorization"
+                        />
+                      </FormControl>
+                      <FormLabel className="text-sm font-normal leading-relaxed">
+                        If I included another person's reference information, I confirm I am
+                        authorized to share it for this application and understand Pegasus may
+                        contact that person only if it considers the profile for a specific scope.
+                      </FormLabel>
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+
                 <Button
                   type="submit"
                   size="lg"
@@ -573,8 +614,8 @@ function VendorFormSection() {
                   )}
                 </Button>
 
-                <p className="pt-2 text-[11px] leading-relaxed text-muted-foreground/80 text-center">
-                  Vendor Network intake follows the v1.3.1 blueprint, section 14. This is not a hiring guarantee and not an offer of work.
+                <p className="pt-2 text-[13px] leading-relaxed text-muted-foreground text-center">
+                  Submitting creates an application record only. It is not a hiring guarantee, approval, placement, or offer of work.
                 </p>
               </form>
             </Form>

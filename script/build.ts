@@ -46,19 +46,41 @@ async function buildAll() {
   ];
   const externals = allDeps.filter((dep) => !allowlist.includes(dep));
 
-  await esbuild({
-    entryPoints: ["server/index.ts"],
+  const sharedServerBuild = {
     platform: "node",
     bundle: true,
-    format: "cjs",
-    outfile: "dist/index.cjs",
     define: {
       "process.env.NODE_ENV": '"production"',
     },
     minify: true,
     external: externals,
     logLevel: "info",
-  });
+  } as const;
+
+  await Promise.all([
+    esbuild({
+      ...sharedServerBuild,
+      entryPoints: ["server/index.ts"],
+      format: "cjs",
+      outfile: "dist/index.cjs",
+    }),
+    esbuild({
+      ...sharedServerBuild,
+      entryPoints: ["server/vercel-entry.ts"],
+      format: "esm",
+      outfile: "dist/vercel-server.mjs",
+      banner: {
+        js: [
+          'import { fileURLToPath as __pegasusFileURLToPath } from "node:url";',
+          'import { dirname as __pegasusDirname } from "node:path";',
+          'import { createRequire as __pegasusCreateRequire } from "node:module";',
+          "const require = __pegasusCreateRequire(import.meta.url);",
+          "const __filename = __pegasusFileURLToPath(import.meta.url);",
+          "const __dirname = __pegasusDirname(__filename);",
+        ].join("\n"),
+      },
+    }),
+  ]);
 }
 
 buildAll().catch((err) => {

@@ -72,6 +72,8 @@ const KNOWN_EXTRA_PATHS = [
   // Explicit notice-at-collection links and the dedicated controlled-pilot desk.
   "/privacy",
   "/marketflow/access",
+  "/marketflow/buyboxes",
+  "/vendor-network",
 ];
 const KNOWN_PATHS = new Set<string>([
   ...Object.values(ROUTE_TO_URL),
@@ -216,26 +218,14 @@ describe("Public Pegasus CTAs never point at a dead destination (Task #201)", ()
 describe("Click harness actually exercises navigation (Task #201)", () => {
   // Guards against a vacuous pass: if the harness stopped triggering the
   // page's onClick wiring, this asserts Home still produces real navigations.
-  it("Home routes its CTAs through go() to real destinations", () => {
-    const { go, calls } = makeGo();
-    const { container } = renderPage(
-      <HomePageV51 go={go} openPeggy={noop} />,
-      "/",
-    );
-    clickAll(container);
-
-    expect(calls.length, "Home triggered no go() navigations").toBeGreaterThan(2);
-    // v5.1: the Visitor Router + Proof movements must route to real pages.
-    expect(calls, "Home router must offer the owner lane").toContain("sellers");
-    expect(calls, "Home proof must route to Our Work").toContain("ourwork");
-    for (const r of calls) {
-      expect(VALID_ROUTES.has(r), `Home routed to unknown key '${r}'`).toBe(true);
-    }
-    // §31: the primary CTA is a real link to the canonical intake URL.
-    const primary = Array.from(container.querySelectorAll("a")).find((a) =>
-      a.textContent?.includes("Bring an Opportunity"),
-    );
-    expect(primary?.getAttribute("href")).toBe("/bring-an-opportunity");
+  it("Home links actually navigate to the advertised public routes", () => {
+    const memory = memoryLocation({path:'/',record:true});
+    const {container} = render(<Router hook={memory.hook}><HomePageV51 go={noop} openPeggy={noop} /></Router>);
+    const links = Array.from(container.querySelectorAll<HTMLAnchorElement>('[data-hv="router"] a, [data-hv="proof"] a'));
+    expect(links).toHaveLength(4);
+    for (const link of links) { fireEvent.click(link); expect(memory.history?.at(-1)).toBe(link.getAttribute('href')); }
+    expect(memory.history).toContain('/property-owners');
+    expect(memory.history).toContain('/projects/nelson-dr');
   });
 });
 
@@ -382,13 +372,8 @@ describe("Programmatic setLocation CTAs resolve to a real route + valid intent (
 
     const navTargets: string[] = [];
     for (const tab of tabs) {
-      fireEvent.click(tab);
-      const cta = container.querySelector<HTMLButtonElement>(
-        '[data-testid="button-apollo-selector-cta"]',
-      );
-      expect(cta, "ApolloSelector CTA button not found").toBeTruthy();
       const before = history.length;
-      fireEvent.click(cta!);
+      fireEvent.click(tab);
       // A link-mode option pushes a navigation; a form-mode option only scrolls.
       if (history.length > before) navTargets.push(history[history.length - 1]);
     }

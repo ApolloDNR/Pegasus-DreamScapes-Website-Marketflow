@@ -164,37 +164,37 @@ interface ToneFrame {
 }
 
 const FALLBACK_FRAMING =
-  "Reading this property through the Pegasus lens:";
+  "Reading the visitor-entered assumptions through an automated model:";
 
 function frameForOwner(status: LabDealStatus): ToneFrame {
   if (status === "listed") {
     return {
       framing:
-        "You're already on the market, so this read is your second-opinion price-and-path check.",
+        "The visitor marked the property listed, so the model compares listing and off-market assumptions without providing a price opinion.",
       nextStep:
-        "Save the Snapshot. With the property already listed, we can compare the listing path to a clean off-market sale before your next price adjustment.",
+        "Save the Snapshot and verify listing status, pricing, representation, and offer questions with appropriately licensed professionals.",
     };
   }
   if (status === "pending") {
     return {
       framing:
-        "You have a pending sale, so this read is a backup-plan stress test in case the deal falls out.",
+        "The visitor marked a pending sale, so the model functions only as an unverified contingency comparison.",
       nextStep:
-        "Save the Snapshot. If the pending sale falls through, we can step in with a backup offer at the lane price.",
+        "Save the Snapshot and verify the existing contract, contingencies, representation, and alternatives independently.",
     };
   }
   if (status === "off_market" || status === "owner_submitted") {
     return {
       framing:
-        "You're working this off-market, so the read is centered on the path that fits your timeline best.",
+        "The visitor marked an off-market or owner-submitted situation, so the model compares possible paths against the entered timeline.",
       nextStep:
-        "Save the Snapshot. We can route this to a referral, a direct purchase, or a listing path depending on your timeline.",
+        "Save the Snapshot, verify the facts independently, and choose whether to carry the unverified brief into intake.",
     };
   }
   return {
     framing: FALLBACK_FRAMING,
     nextStep:
-      "Save the Snapshot. A human reviewer will route the property to the path that matches your timeline.",
+      "Save the Snapshot, verify the facts independently, and choose whether to carry the unverified brief into intake.",
   };
 }
 
@@ -202,24 +202,24 @@ function frameForWholesaler(status: LabDealStatus): ToneFrame {
   if (status === "wholesale" || status === "off_market") {
     return {
       framing:
-        "You have it under contract for assignment, so this read prices the spread your buyer needs to see.",
+        "The visitor marked an assignment or off-market context, so the model tests fee headroom without confirming assignability or a buyer.",
       nextStep:
-        "Save the Snapshot and pass it to your buyer pool with the assignment-fee math attached. If the spread holds, we'll co-sign on the assignment.",
+        "Save the Snapshot and verify contract authority, disclosure duties, assignability, costs, and buyer demand independently.",
     };
   }
   if (status === "listed") {
     return {
       framing:
-        "It's listed, so assignment math is tighter and disclosure on the seller side matters.",
+        "The visitor marked the property listed, so the assignment model remains subject to representation, disclosure, and contract restrictions.",
       nextStep:
-        "Save the Snapshot. Assignment math is tighter on listed property — confirm the seller has agreed to assignment before marketing.",
+        "Save the Snapshot and seek qualified legal and licensed advice before relying on assignment assumptions.",
     };
   }
   return {
     framing:
-      "Wholesale lane only opens once you have a real lock-up. Read this as your buyer-side pricing draft.",
+      "The wholesale comparison is educational and does not establish contract control, assignability, a buyer, or a fee.",
     nextStep:
-      "Save the Snapshot. Wholesale lane only works once you have a lock-up the buyer can rely on.",
+      "Save the Snapshot and verify contract authority, assignability, costs, and demand independently.",
   };
 }
 
@@ -227,24 +227,24 @@ function frameForInvestorBuyer(status: LabDealStatus): ToneFrame {
   if (status === "listed" || status === "pending") {
     return {
       framing:
-        "You're underwriting against a listed price, so the read tells you where your offer should land.",
+        "The visitor marked a listed or pending property, so the model compares entered price assumptions without recommending an offer.",
       nextStep:
-        "Save the Snapshot and re-run with your true financing terms before submitting the offer through the listing agent.",
+        "Save the Snapshot, re-run with verified financing inputs, and consult appropriately licensed professionals before acting.",
     };
   }
   if (status === "off_market" || status === "wholesale" || status === "pocket") {
     return {
       framing:
-        "You have an off-market shot. The read tells you what diligence has to clear before you sign.",
+        "The visitor marked an off-market context, so the model highlights unverified assumptions and diligence questions.",
       nextStep:
-        "Save the Snapshot. Lock the contract first, then re-run with your true financing terms before clearing diligence.",
+        "Save the Snapshot and independently verify title, condition, authority, financing, and contract terms before acting.",
     };
   }
   return {
     framing:
-      "You're underwriting a buy-side opportunity. The read tells you where the math sits before you commit.",
+      "This is an educational buy-side comparison based on visitor-entered assumptions, not underwriting or an offer recommendation.",
     nextStep:
-      "Save the Snapshot and re-run with your true financing terms before signing the LOI.",
+      "Save the Snapshot, re-run with verified inputs, and seek qualified advice before acting or signing anything.",
   };
 }
 
@@ -252,24 +252,24 @@ function frameForAgent(status: LabDealStatus): ToneFrame {
   if (status === "listed") {
     return {
       framing:
-        "You represent the listing. Read this as a buyer-side BPO and a seller-side price reality check.",
+        "The visitor marked an agent and listed-property context. This automated output is not a BPO, CMA, appraisal, or agency instruction.",
       nextStep:
-        "Save the Snapshot. Use the lane read with your seller before the next price adjustment, or as a buyer-side BPO.",
+        "Save the Snapshot and use appropriately licensed, broker-approved methods for pricing, disclosure, and client advice.",
     };
   }
   if (status === "pocket" || status === "off_market") {
     return {
       framing:
-        "You have a pocket listing. Read this as the choice between routing to off-market acquisition or a network buyer.",
+        "The visitor marked a pocket or off-market context. The model does not provide distribution, acquisition, a buyer, or representation.",
       nextStep:
-        "Save the Snapshot. We can route to off-market acquisition or refer to a buyer in the network — your choice.",
+        "Save the Snapshot and verify representation, marketing authority, disclosure, pricing, and distribution obligations independently.",
     };
   }
   return {
     framing:
-      "You're representing the seller. Read this as the speed-vs-price tradeoff matrix for the next conversation.",
+      "The visitor marked an agent context. This model compares entered speed and price assumptions without creating agency advice.",
     nextStep:
-      "Save the Snapshot. If your seller wants speed, we can route to off-market acquisition; otherwise stay on the listing path.",
+      "Save the Snapshot and use appropriately licensed, broker-approved analysis before advising a client.",
   };
 }
 
@@ -277,16 +277,16 @@ function frameForCapitalPartner(status: LabDealStatus): ToneFrame {
   if (status === "wholesale" || status === "off_market") {
     return {
       framing:
-        "You're evaluating capital deployment against a tight window. Read this as the lane fit gating your structure choice.",
+        "The visitor marked a capital and tight-window context. The model is educational and does not offer a security, funding, allocation, or terms.",
       nextStep:
-        "Save the Snapshot. If the lane fit holds after a deeper review, we can structure debt or JV equity around it before the lock-up expires.",
+        "Save the Snapshot and verify risk, suitability, authority, terms, and timing with qualified legal and financial professionals.",
     };
   }
   return {
     framing:
-      "You're evaluating capital deployment. Read this as the lane fit gating debt vs equity structure.",
+      "The visitor marked a capital context. The model is educational and does not offer a security, funding, allocation, return, or terms.",
     nextStep:
-      "Save the Snapshot. If the lane fit holds after a deeper review, we can structure debt or JV equity around it.",
+      "Save the Snapshot and verify risk, suitability, authority, and terms with qualified legal and financial professionals.",
   };
 }
 

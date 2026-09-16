@@ -34,6 +34,12 @@ export type SavedChat = {
   createdAt: string;
 };
 
+type SavedStoreFailure = { ok: false; error: Error };
+
+export type SavedStoreResult<T> =
+  | { ok: true; value: T }
+  | SavedStoreFailure;
+
 const STRATEGIES_KEY = 'pg:saved:strategies';
 const CHATS_KEY = 'pg:saved:chats';
 const EVENT = 'pg:saved:changed';
@@ -43,6 +49,20 @@ const listeners = new Set<() => void>();
 function emit() {
   listeners.forEach((l) => l());
   if (typeof window !== 'undefined') window.dispatchEvent(new Event(EVENT));
+}
+
+function normalizeStorageError(cause: unknown): Error {
+  if (cause instanceof Error) return cause;
+  const record = cause && typeof cause === 'object'
+    ? (cause as { message?: unknown; name?: unknown })
+    : null;
+  const error = new Error(
+    typeof record?.message === 'string'
+      ? record.message
+      : 'Browser storage write failed',
+  );
+  if (typeof record?.name === 'string') error.name = record.name;
+  return error;
 }
 
 // useSyncExternalStore requires getSnapshot to return a STABLE reference when
@@ -64,7 +84,10 @@ function read<T>(key: string): T[] {
   if (cached && cached.raw === raw) return cached.value as T[];
   let value: T[];
   try {
-    value = raw ? (JSON.parse(raw) as T[]) : (EMPTY as unknown as T[]);
+    const parsed: unknown = raw ? JSON.parse(raw) : EMPTY;
+    value = Array.isArray(parsed)
+      ? (parsed as T[])
+      : (EMPTY as unknown as T[]);
   } catch {
     value = EMPTY as unknown as T[];
   }
@@ -72,14 +95,20 @@ function read<T>(key: string): T[] {
   return value;
 }
 
-function write<T>(key: string, value: T[]) {
-  if (typeof window === 'undefined') return;
+function write<T>(key: string, value: T[]): SavedStoreResult<void> {
+  if (typeof window === 'undefined') {
+    return { ok: false, error: new Error('Browser storage is unavailable') };
+  }
   try {
     window.localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    /* storage full or unavailable - fail silently */
+  } catch (cause) {
+    return {
+      ok: false,
+      error: normalizeStorageError(cause),
+    };
   }
   emit();
+  return { ok: true, value: undefined };
 }
 
 const newId = () =>
@@ -95,24 +124,30 @@ export function listChats(): SavedChat[] {
   return read<SavedChat>(CHATS_KEY);
 }
 
-export function addStrategy(title: string, model: StrategyPreview): SavedStrategy {
+export function addStrategy(
+  title: string,
+  model: StrategyPreview,
+): SavedStoreResult<SavedStrategy> {
   const row: SavedStrategy = { id: newId(), title, model, createdAt: new Date().toISOString() };
-  write(STRATEGIES_KEY, [row, ...listStrategies()]);
-  return row;
+  const result = write(STRATEGIES_KEY, [row, ...listStrategies()]);
+  return result.ok ? { ok: true, value: row } : result;
 }
 
-export function addChat(title: string, transcript: ChatTurn[]): SavedChat {
+export function addChat(
+  title: string,
+  transcript: ChatTurn[],
+): SavedStoreResult<SavedChat> {
   const row: SavedChat = { id: newId(), title, transcript, createdAt: new Date().toISOString() };
-  write(CHATS_KEY, [row, ...listChats()]);
-  return row;
+  const result = write(CHATS_KEY, [row, ...listChats()]);
+  return result.ok ? { ok: true, value: row } : result;
 }
 
-export function deleteStrategy(id: string) {
-  write(STRATEGIES_KEY, listStrategies().filter((s) => s.id !== id));
+export function deleteStrategy(id: string): SavedStoreResult<void> {
+  return write(STRATEGIES_KEY, listStrategies().filter((s) => s.id !== id));
 }
 
-export function deleteChat(id: string) {
-  write(CHATS_KEY, listChats().filter((c) => c.id !== id));
+export function deleteChat(id: string): SavedStoreResult<void> {
+  return write(CHATS_KEY, listChats().filter((c) => c.id !== id));
 }
 
 function subscribe(cb: () => void): () => void {

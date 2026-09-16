@@ -1,0 +1,25 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "express",
+  "buildCommand": "npm run build",
+  "functions": {
+    "server.mjs": {
+      "includeFiles": "dist/public/**"
+    }
+  },
+  "env": {
+    "APP_ENV": "preview",
+    "SITE_INDEXABLE": "false"
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow, noarchive, nosnippet"
+        }
+      ]
+    }
+  ]
+}

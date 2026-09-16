@@ -26,6 +26,7 @@ export const BUYBOXES: Buybox[] = [
     ticketSize: PRIVATE_CRITERIA_COPY,
     notes:
       "Scope envelope and exit lane are read before the property is matched to anyone on this list.",
+    publicReady: false,
   },
   {
     id: "adu-east-bay",
@@ -36,6 +37,7 @@ export const BUYBOXES: Buybox[] = [
     ticketSize: PRIVATE_CRITERIA_COPY,
     notes:
       "Reviewed for zoning fit and lot geometry before any buyer in this profile is notified.",
+    publicReady: false,
   },
   {
     id: "estates-probate",
@@ -46,6 +48,7 @@ export const BUYBOXES: Buybox[] = [
     ticketSize: PRIVATE_CRITERIA_COPY,
     notes:
       "We work the situation first. Subscribers see the property only after the path is clean.",
+    publicReady: false,
   },
   {
     id: "small-multifamily",
@@ -65,4 +68,4 @@ export const PUBLIC_BUYBOXES = BUYBOXES.filter((buybox) => buybox.publicReady !=
 // Free buyer interest list framed as "Request Notification." This is not a
 // paid subscription product. Copy that implies a paid tier should not be added.
 export const BUYBOX_DISCLOSURE =
-  "Subscribing means Pegasus will contact you via the contact method on your account when we have a deal matching this buybox profile. All opportunities are reviewed by Pegasus before being shared. There is no obligation to buy. You can unsubscribe at any time from your account dashboard.";
+  "Pegasus has not published buyer criteria or activated buybox notifications. A MarketFlow access request only registers interest in the controlled pilot; it does not create access, membership, inventory rights, matching, or a promise of future contact.";

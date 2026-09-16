@@ -42,11 +42,11 @@ const ROLE_OPENERS: Record<SubmitterRole, string> = {
 };
 
 const NEXT_STEPS = {
-  strong: "Save the Snapshot and Submit to Pegasus for a structured review.",
+  strong: "Save the Snapshot, verify the assumptions independently, and decide whether to carry the brief into intake.",
   possible: "Refine the inputs (rent comps, rehab walk) and re-run before pushing it forward.",
-  weak: "Tighten price or scope before this is worth Pegasus time.",
+  weak: "Tighten the price or scope assumptions before relying on this modeled path.",
   needs_more_data: "Fill in the missing inputs flagged above and re-run.",
-  not_recommended: "This lane does not fit. Review the alternates ranked in the Lane Board.",
+  not_recommended: "This modeled lane does not fit the entered assumptions. Review the alternatives ranked in the Lane Board.",
 };
 
 export function composeDecisionMemo(args: MemoArgs): DecisionMemo {
@@ -64,13 +64,13 @@ export function composeDecisionMemo(args: MemoArgs): DecisionMemo {
   // Sentence 3 — sensitivity / stress.
   let s3 = "";
   if (worst.annualCashFlow < 0 && (topLane.lane === "rental_hold" || topLane.lane === "brrrr")) {
-    s3 = `Worst case loses ${fmtDollars(-worst.annualCashFlow)} per year, so the upside requires the base assumptions to hold.`;
+    s3 = `The downside model shows negative annual cash flow of ${fmtDollars(-worst.annualCashFlow)}, so the result is sensitive to the base assumptions.`;
   } else if (topLane.confidence.sensitiveFactors[0]) {
     s3 = `Watch the sensitivity: ${topLane.confidence.sensitiveFactors[0]}`;
   } else if (topLane.confidence.supportingFactors[0]) {
     s3 = topLane.confidence.supportingFactors[0];
   } else {
-    s3 = `Base scenario clears with cash flow of ${fmtDollars(base.annualCashFlow)} per year.`;
+    s3 = `Base scenario models cash flow of ${fmtDollars(base.annualCashFlow)} per year from the entered assumptions.`;
   }
 
   // Sentence 4 — risk + override warning, merged into one bounded

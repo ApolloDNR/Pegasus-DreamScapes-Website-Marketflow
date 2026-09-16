@@ -7,8 +7,6 @@ import {
   ChevronDown,
   ChevronRight,
   CircleAlert,
-  Compass,
-  FileText,
   Gauge,
   Hammer,
   Landmark,
@@ -19,7 +17,6 @@ import {
   SlidersHorizontal,
 } from 'lucide-react';
 import {
-  ENGINE_VERSION,
   runStrategyLab,
   type ConditionRating,
   type PropertyInput,
@@ -29,7 +26,8 @@ import {
 import type { CalcTabKey } from '@/components/strategy-lab/calculator-tools-panel';
 import { useOptionalPeggyContext } from '@/contexts/peggy-context';
 import type { Nav } from './theme';
-import { IMG } from './primitives';
+import './experience-page.css';
+import './strategy-lab.css';
 import { writeStrategyLabHandoff } from './strategy-lab-handoff';
 
 const CalculatorToolsPanel = React.lazy(() =>
@@ -76,15 +74,15 @@ const INITIAL: LabState = {
   loanLtv: '75',
   loanRate: '7.5',
   vacancy: '8',
-  objective: 'Understand the strongest executable path',
+  objective: 'Compare the strongest modeled path',
   timing: 'Flexible',
 };
 
 const STEPS: Array<{ key: LabStep; num: string; label: string; hint: string }> = [
   { key: 'property', num: '01', label: 'Property', hint: 'Situation and facts' },
-  { key: 'basis', num: '02', label: 'Basis', hint: 'Economics and assumptions' },
-  { key: 'strategy', num: '03', label: 'Paths', hint: 'Nine executable routes' },
-  { key: 'review', num: '04', label: 'Brief', hint: 'Decision record' },
+  { key: 'basis', num: '02', label: 'Assumptions', hint: 'Costs and financing' },
+  { key: 'strategy', num: '03', label: 'Compare', hint: 'Nine modeled paths' },
+  { key: 'review', num: '04', label: 'Summary', hint: 'Planning record' },
 ];
 
 const PROPERTY_TYPES = ['Single-family residence', 'Condo or townhome', '2–4 units', 'Small multifamily', 'Land or development site', 'Commercial or mixed-use'];
@@ -92,18 +90,18 @@ const SITUATIONS = ['Value-add opportunity', 'Owner needs options', 'Inherited o
 const OCCUPANCIES = ['Vacant', 'Owner occupied', 'Tenant occupied', 'Unknown or needs review'];
 const CONDITIONS = ['Turnkey', 'Light updates', 'Moderate renovation', 'Heavy renovation', 'Full reconstruction'];
 const ROLES = ['Exploring a property', 'Property owner', 'Deal partner or wholesaler', 'Investor or buyer', 'Agent or advisor', 'Capital partner'];
-const OBJECTIVES = ['Understand the strongest executable path', 'Maximize net value', 'Prioritize certainty and timing', 'Preserve control or optionality', 'Find a capital or operating partner'];
+const OBJECTIVES = ['Compare the strongest modeled path', 'Explore net-value sensitivity', 'Prioritize certainty and timing', 'Preserve control or optionality', 'Explore capital or operating assumptions'];
 const TIMINGS = ['Flexible', 'Within 90 days', 'Within 30 days', 'Time-sensitive'];
 
-const INSTRUMENTS: Array<{ key: CalcTabKey; label: string; description: string }> = [
-  { key: 'arv', label: 'ARV + basis', description: 'Reconcile acquisition, rehabilitation, holding, and exit assumptions.' },
-  { key: 'roi', label: 'Return frame', description: 'Read cash invested, financing, and directional return relationships.' },
-  { key: 'brrrr', label: 'BRRRR', description: 'Test refinance proceeds, cash left in, and stabilized operations.' },
-  { key: 'cashflow', label: 'Cash flow', description: 'Separate collected rent, operating expenses, debt service, and reserves.' },
-  { key: 'wholesale', label: 'Assignment', description: 'Frame a maximum allowable offer and buyer-side execution room.' },
-  { key: 'piti', label: 'PITI', description: 'Model principal, interest, taxes, and insurance as one monthly obligation.' },
-  { key: 'ownvsrent', label: 'Own vs. rent', description: 'Compare long-range housing cost and equity assumptions.' },
-  { key: 'hardmoney', label: 'Bridge capital', description: 'Make points, interest, fees, and holding period visible.' },
+const CALCULATOR_TABS: readonly CalcTabKey[] = [
+  'arv',
+  'roi',
+  'brrrr',
+  'cashflow',
+  'wholesale',
+  'piti',
+  'ownvsrent',
+  'hardmoney',
 ];
 
 const USD = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
@@ -288,10 +286,9 @@ function SelectField({ label, value, onChange, options, hint }: {
   );
 }
 
-function StepHeading({ eyebrow, title, copy }: { eyebrow: string; title: string; copy: string }) {
+function StepHeading({ title, copy }: { title: string; copy: string }) {
   return (
     <header className="px-lab-step-heading">
-      <span>{eyebrow}</span>
       <h2>{title}</h2>
       <p>{copy}</p>
     </header>
@@ -325,17 +322,17 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
   const params = React.useMemo(() => new URLSearchParams(search), [search]);
   const calculatorsRequested = params.get('tool') === 'calculators';
   const requestedTab = params.get('tab') as CalcTabKey | null;
-  const initialInstrument = INSTRUMENTS.some((item) => item.key === requestedTab) ? requestedTab! : 'arv';
+  const initialInstrument = requestedTab && CALCULATOR_TABS.includes(requestedTab) ? requestedTab : 'arv';
   const [step, setStep] = React.useState<LabStep>(calculatorsRequested ? 'basis' : 'property');
   const [state, setState] = React.useState<LabState>(INITIAL);
   const [savedNote, setSavedNote] = React.useState('');
   const [confirmReset, setConfirmReset] = React.useState(false);
   const [instrumentsOpen, setInstrumentsOpen] = React.useState(calculatorsRequested);
-  const [detailedInstrumentOpen, setDetailedInstrumentOpen] = React.useState(calculatorsRequested);
   const [instrument, setInstrument] = React.useState<CalcTabKey>(initialInstrument);
   const workspaceHeading = React.useRef<HTMLHeadingElement>(null);
   const workspaceRef = React.useRef<HTMLElement>(null);
   const instrumentsRef = React.useRef<HTMLElement>(null);
+  const instrumentOpenSource = React.useRef<'deeplink' | 'user'>(calculatorsRequested ? 'deeplink' : 'user');
   const focusAfterStepChange = React.useRef(false);
   const peggy = useOptionalPeggyContext();
 
@@ -365,15 +362,19 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
 
   React.useEffect(() => {
     if (!calculatorsRequested) return;
+    if (!instrumentsOpen) instrumentOpenSource.current = 'deeplink';
     setInstrumentsOpen(true);
-    setDetailedInstrumentOpen(true);
-  }, [calculatorsRequested]);
+  }, [calculatorsRequested, instrumentsOpen]);
 
   React.useEffect(() => {
-    if (!calculatorsRequested || !instrumentsOpen) return;
-    window.requestAnimationFrame(() => {
-      instrumentsRef.current?.scrollIntoView?.({ block: 'start', behavior: 'auto' });
+    if (!instrumentsOpen) return;
+    const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const behavior = instrumentOpenSource.current === 'deeplink' || prefersReducedMotion ? 'auto' : 'smooth';
+    const frame = window.requestAnimationFrame(() => {
+      instrumentsRef.current?.scrollIntoView?.({ block: 'start', behavior });
+      instrumentsRef.current?.focus({ preventScroll: true });
     });
+    return () => window.cancelAnimationFrame(frame);
   }, [calculatorsRequested, instrumentsOpen]);
 
   const set = <K extends keyof LabState>(key: K, value: LabState[K]) => {
@@ -505,7 +506,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
         },
       },
     });
-    peggy?.setPendingPrompt(`Explain this Strategy Lab read for ${property.address || 'the property'}, including the leading path, sensitive assumptions, and what Pegasus would need to verify.`);
+    peggy?.setPendingPrompt(`Explain this Strategy Lab read for ${property.address || 'the property'}, including the leading modeled path, sensitive assumptions, and which visitor-entered facts require independent verification.`);
     openPeggy();
   };
 
@@ -531,37 +532,31 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
   };
 
   const openInstruments = () => {
+    instrumentOpenSource.current = 'user';
     setInstrumentsOpen(true);
-    window.requestAnimationFrame(() => instrumentsRef.current?.scrollIntoView?.({ block: 'start', behavior: 'smooth' }));
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('tool', 'calculators');
+      window.history.replaceState({}, '', url.toString());
+    }
+  };
+
+  const closeInstruments = () => {
+    setInstrumentsOpen(false);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('tool');
+      url.searchParams.delete('tab');
+      window.history.replaceState({}, '', url.toString());
+    }
   };
 
   return (
-    <div className="px-lab" data-testid="premium-strategy-lab">
-      <section className="px-lab-masthead">
-        <img src={IMG('pegasus-architecture.png')} alt="Architectural model and planning instruments on a Pegasus worktable" />
-        <div className="px-lab-masthead-scrim" aria-hidden="true" />
-        <div className="px-lab-masthead-inner">
-          <div>
-            <p className="px-kicker">Pegasus Strategy Lab · Private working desk</p>
-            <h1>Turn one property into a decision you can defend.</h1>
-            <p>Build the facts once. Compare nine executable paths through the Pegasus underwriting engine. Carry the same brief into Peggy or a written Property Read.</p>
-          </div>
-          <aside className="px-lab-masthead-record" aria-label="Strategy Lab operating record">
-            <span>Underwriting record · methodology {ENGINE_VERSION}</span>
-            <dl>
-              <div><dt>Method</dt><dd>Pegasus underwriting</dd></div>
-              <div><dt>Paths compared</dt><dd>09</dd></div>
-              <div><dt>Storage</dt><dd>This browser</dd></div>
-            </dl>
-            <button type="button" onClick={openInstruments}>Open instrument library <SlidersHorizontal aria-hidden="true" /></button>
-          </aside>
-          <div className="px-lab-trust" aria-label="Strategy Lab principles">
-            <span><ShieldCheck aria-hidden="true" /> Directional, not an offer</span>
-            <span><FileText aria-hidden="true" /> Assumptions stay visible</span>
-            <span><Compass aria-hidden="true" /> Pegasus review before action</span>
-          </div>
-        </div>
-      </section>
+    <div className="px-lab experience-page" data-testid="premium-strategy-lab">
+      <header className="ep-lab-opening"><div className="experience-wrap">
+        <div><h1>Strategy Lab.</h1><p>Explore a property’s costs, assumptions, and possible next steps. Your inputs drive the model.</p></div>
+        <button type="button" onClick={openInstruments}>Open calculators <SlidersHorizontal aria-hidden="true" /></button>
+      </div></header>
 
       <section ref={workspaceRef} className="px-lab-workspace" aria-labelledby="lab-workspace-title" data-testid="strategy-lab-workspace">
         <div className="px-lab-progress" aria-label="Strategy Lab steps">
@@ -587,7 +582,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
 
             {step === 'property' && (
               <div className="px-lab-step">
-                <StepHeading eyebrow="01 · Property record" title="Start with the situation, not a score." copy="These facts shape the underwriting memo, risk register, and which paths remain credible. The address stays in this browser unless you choose to carry the brief forward." />
+                <StepHeading title="Start with the property." copy="Add the facts you know and review the starting selections. The address stays in this browser unless you choose to carry the brief forward." />
                 <div className="px-lab-form-grid">
                   <div className="px-lab-wide"><TextField label="Property address or city" value={state.address} onChange={(value) => set('address', value)} placeholder="East Bay property or city" /></div>
                   <SelectField label="Property type" value={state.propertyType} onChange={(value) => set('propertyType', value)} options={PROPERTY_TYPES} />
@@ -602,12 +597,12 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
 
             {step === 'basis' && (
               <div className="px-lab-step">
-                <StepHeading eyebrow="02 · Basis ledger" title="Make every material assumption visible." copy="The engine uses the entered basis, condition, occupancy, financing, rent, and exit evidence. Empty inputs remain empty; the desk does not quietly invent property facts." />
+                <StepHeading title="Set the assumptions." copy="Enter costs and an exit value or market rent. Empty amounts stay missing. Review the financing and operating assumptions below." />
                 <div className="px-lab-form-grid">
-                  <TextField label="Acquisition or current basis" value={state.acquisition} onChange={(value) => set('acquisition', value)} placeholder="$600,000" inputMode="decimal" error={errors.acquisition} />
-                  <TextField label="Scope / improvement budget" value={state.scope} onChange={(value) => set('scope', value)} placeholder="$105,000" inputMode="decimal" error={errors.scope} />
-                  <TextField label="Projected exit value" value={state.arv} onChange={(value) => set('arv', value)} placeholder="$840,000" inputMode="decimal" error={errors.arv} hint="Visitor-entered until supported by market evidence." />
-                  <TextField label="Projected monthly market rent" value={state.marketRent} onChange={(value) => set('marketRent', value)} placeholder="$4,500" inputMode="decimal" error={errors.marketRent} hint="Optional, but required for hold-path economics." />
+                  <TextField label="Acquisition or current basis ($)" value={state.acquisition} onChange={(value) => set('acquisition', value)} placeholder="$600,000" inputMode="decimal" error={errors.acquisition} />
+                  <TextField label="Scope / improvement budget ($)" value={state.scope} onChange={(value) => set('scope', value)} placeholder="$105,000" inputMode="decimal" error={errors.scope} />
+                  <TextField label="Projected exit value ($)" value={state.arv} onChange={(value) => set('arv', value)} placeholder="$840,000" inputMode="decimal" error={errors.arv} hint="Visitor-entered until supported by market evidence." />
+                  <TextField label="Projected monthly market rent ($)" value={state.marketRent} onChange={(value) => set('marketRent', value)} placeholder="$4,500" inputMode="decimal" error={errors.marketRent} hint="Optional, but required for hold-path economics." />
                 </div>
                 <details className="px-lab-assumptions">
                   <summary>Financing and operating assumptions <ChevronDown aria-hidden="true" /></summary>
@@ -637,9 +632,9 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
                   </div>
                 </details>
                 <div className="px-lab-ledger">
-                  <div><span>Purchase assumption</span><strong>{!errors.acquisition && acquisition ? money(acquisition) : '—'}</strong><small>Visitor-entered</small></div>
-                  <div><span>Improvement scope</span><strong>{!errors.scope && scope ? money(scope) : '—'}</strong><small>Visitor-entered</small></div>
-                  <div><span>Modeled cash in</span><strong>{!hasNumericErrors && acquisition ? money(snapshot.totalCashIn) : '—'}</strong><small>Down payment + scope + reserve</small></div>
+                  <div><span>Purchase assumption</span><strong>{!errors.acquisition && acquisition ? money(acquisition) : 'Not entered'}</strong><small>Visitor-entered</small></div>
+                  <div><span>Improvement scope</span><strong>{!errors.scope && scope ? money(scope) : 'Not entered'}</strong><small>Visitor-entered</small></div>
+                  <div><span>Modeled cash in</span><strong>{!hasNumericErrors && acquisition ? money(snapshot.totalCashIn) : 'Not entered'}</strong><small>Down payment + scope + reserve</small></div>
                   <div className="is-total"><span>Exit evidence</span><strong>{!errors.arv && arv ? money(arv) : !errors.marketRent && marketRent ? `${money(marketRent)}/mo` : 'Missing'}</strong><small>ARV or market rent</small></div>
                 </div>
                 <p className="sr-only" role="status">Basis assumptions updated. Modeled cash in is {!hasNumericErrors && acquisition ? money(snapshot.totalCashIn) : 'not available'}.</p>
@@ -648,7 +643,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
 
             {step === 'strategy' && (
               <div className="px-lab-step">
-                <StepHeading eyebrow="03 · Path comparison" title="Read the leading paths—and their weak points." copy="The engine ranks nine Pegasus paths from the same facts. No bare score is shown: the evidence, sensitivity, and missing inputs remain attached to each conclusion." />
+                <StepHeading title="Compare the possible paths." copy="Nine educational paths use the same inputs. Examine the assumptions, sensitivities, and missing information beside each result." />
                 <div className="px-lab-form-grid px-lab-objective">
                   <div className="px-lab-wide"><SelectField label="Decision lens" value={state.objective} onChange={(value) => set('objective', value)} options={OBJECTIVES} hint="Used to frame the brief; it does not alter the underwriting math." /></div>
                 </div>
@@ -664,7 +659,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
                         with an error before the Lab compares paths.
                       </p>
                       <button type="button" onClick={() => moveToStep('basis')}>
-                        Complete the basis ledger <ArrowRight aria-hidden="true" />
+                        Complete the assumptions <ArrowRight aria-hidden="true" />
                       </button>
                     </div>
                   </section>
@@ -712,7 +707,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
 
             {step === 'review' && (
               <div className="px-lab-step">
-                <StepHeading eyebrow="04 · Decision record" title="A concise brief, with uncertainty left visible." copy="This record is generated from the same versioned engine used for the path comparison. It is planning material—not a valuation, approval, or recommendation." />
+                <StepHeading title="Review your planning summary." copy="This summary uses your current assumptions and the same calculation engine. It is planning material, not a valuation, approval, or recommendation." />
                 {!hasDecisionBasis ? (
                   <section className="px-lab-needs-inputs" role="status" aria-label="Decision brief unavailable">
                     <CircleAlert aria-hidden="true" />
@@ -725,7 +720,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
                         memo, stress case, Peggy handoff, or intake brief is generated.
                       </p>
                       <button type="button" onClick={() => moveToStep('basis')}>
-                        Return to the basis ledger <ArrowRight aria-hidden="true" />
+                        Return to the assumptions <ArrowRight aria-hidden="true" />
                       </button>
                     </div>
                   </section>
@@ -733,7 +728,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
                   <>
                     <section className="px-lab-decision-record" aria-label="Decision brief">
                   <div>
-                    <span>Recommendation</span>
+                    <span>Leading modeled path</span>
                     <strong>{laneDisplayName(topLane)}</strong>
                     <small>{topLane?.verdictLabel ?? 'Needs more data'}</small>
                   </div>
@@ -745,12 +740,12 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
                   <div>
                     <span>Unresolved risk</span>
                     <strong>{openQuestions[0] ?? 'No core input gap identified'}</strong>
-                    <small>{openQuestions.length > 1 ? `${openQuestions.length - 1} additional questions remain` : 'Pegasus diligence still applies'}</small>
+                    <small>{openQuestions.length > 1 ? `${openQuestions.length - 1} additional questions remain` : 'Independent verification still applies'}</small>
                   </div>
                   <div>
                     <span>Next action</span>
                     <strong>{snapshot.memo.nextStep}</strong>
-                    <small>Pegasus review before execution</small>
+                    <small>Automated suggestion, not an instruction</small>
                   </div>
                 </section>
                 <details className="px-lab-method-note">
@@ -763,13 +758,13 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
                     <dl>
                       <div><dt>Current leading path</dt><dd>{laneDisplayName(topLane)}</dd></div>
                       <div><dt>Engine verdict</dt><dd>{topLane?.verdictLabel ?? 'Needs more data'}</dd></div>
-                      <div><dt>{topLane?.economics.primaryMetric ?? 'Primary metric'}</dt><dd>{topLane?.economics.primaryValue ?? '—'}</dd></div>
+                      <div><dt>{topLane?.economics.primaryMetric ?? 'Primary metric'}</dt><dd>{topLane?.economics.primaryValue ?? 'Not entered'}</dd></div>
                       <div><dt>Modeled cash in</dt><dd>{acquisition ? money(snapshot.totalCashIn) : 'Needs basis'}</dd></div>
                     </dl>
                   </section>
                   <section>
                     <p className="px-lab-label">Open questions</p>
-                    {openQuestions.length ? <ul>{openQuestions.map((risk) => <li key={risk}><CircleAlert aria-hidden="true" />{risk}</li>)}</ul> : <p className="px-lab-complete"><Check aria-hidden="true" /> Core desk inputs are present. Pegasus diligence still applies.</p>}
+                    {openQuestions.length ? <ul>{openQuestions.map((risk) => <li key={risk}><CircleAlert aria-hidden="true" />{risk}</li>)}</ul> : <p className="px-lab-complete"><Check aria-hidden="true" /> Core desk inputs are present. Independent verification still applies.</p>}
                   </section>
                 </div>
                 {marketRent > 0 && (
@@ -790,7 +785,7 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
                   <button type="button" onClick={saveDraft}><Save aria-hidden="true" /> Save in this browser</button>
                   <button type="button" onClick={discussWithPeggy}><MessageCircle aria-hidden="true" /> Ask Peggy about this brief</button>
                   <button type="button" className="is-primary" onClick={carryToIntake}>
-                    Request a written Property Read <ArrowRight aria-hidden="true" />
+                    Carry to opportunity intake <ArrowRight aria-hidden="true" />
                   </button>
                 </div>
                   </>
@@ -809,9 +804,10 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
             </footer>
           </article>
 
-          <aside className="px-lab-brief" aria-label="Live decision brief">
+          <aside className={`px-lab-brief${hasDecisionBasis ? '' : ' px-lab-brief-empty'}`} aria-label="Current planning summary">
+            {hasDecisionBasis ? <>
             <div className="px-lab-brief-head">
-              <span>Live decision brief</span>
+              <span>Current planning summary</span>
               <strong>{readiness}</strong>
             </div>
             <div className="px-lab-brief-property">
@@ -819,50 +815,48 @@ export function PremiumStrategyLab({ go, openPeggy }: { go: Nav; openPeggy: () =
               <div><strong>{state.address || 'Property not entered'}</strong><span>{state.propertyType} · {state.condition}</span></div>
             </div>
             <dl>
-              <div><dt>Leading path</dt><dd>{hasDecisionBasis ? laneDisplayName(topLane) : 'Awaiting basis'}</dd></div>
-              <div><dt>Verdict</dt><dd>{hasDecisionBasis ? topLane?.verdictLabel : 'Needs inputs'}</dd></div>
-              <div><dt>Cash-in model</dt><dd>{hasDecisionBasis ? money(snapshot.totalCashIn) : '—'}</dd></div>
+              <div><dt>Leading path</dt><dd>{laneDisplayName(topLane)}</dd></div>
+              <div><dt>Verdict</dt><dd>{topLane?.verdictLabel}</dd></div>
+              <div><dt>Cash-in model</dt><dd>{money(snapshot.totalCashIn)}</dd></div>
               <div><dt>Open questions</dt><dd>{openQuestions.length}</dd></div>
               <div><dt>Decision lens</dt><dd>{state.objective}</dd></div>
             </dl>
             <div className="px-lab-brief-rule" />
-            <p>One record follows the property from first read to Peggy and the intake desk. Pegasus still verifies market support, title, occupancy, condition, capital, and written terms.</p>
-            <button type="button" onClick={carryToIntake} disabled={!hasDecisionBasis}>Carry this brief into intake <ArrowRight aria-hidden="true" /></button>
+            <p>This browser record can move from the automated model to Peggy and the intake desk. You remain responsible for independently verifying market support, title, occupancy, condition, capital, and written terms.</p>
+            <button type="button" onClick={carryToIntake}>Carry this brief into intake <ArrowRight aria-hidden="true" /></button>
+            </> : <>
+              <span className="px-lab-empty-label">Your comparison</span>
+              <h2>A few facts first.</h2>
+              <p>Add a purchase price and either a projected sale value or monthly rent in Assumptions. Your modeled options will appear here.</p>
+              <p className="px-lab-empty-note">Use the figures you know. Leave unknowns blank and review the starting assumptions.</p>
+            </>}
           </aside>
         </div>
       </section>
 
       {instrumentsOpen && (
-        <section className="px-lab-instruments" ref={instrumentsRef} aria-labelledby="lab-instruments-title">
+        <section
+          className="px-lab-instruments"
+          ref={instrumentsRef}
+          aria-label="Decision calculators"
+          tabIndex={-1}
+        >
           <header>
-            <div><p className="px-kicker">Instrument library · Eight focused worksheets</p><h2 id="lab-instruments-title">Open only the instrument the decision requires.</h2></div>
-            <button type="button" onClick={() => setInstrumentsOpen(false)}>Close library</button>
+            <div><p className="px-kicker">Decision calculators</p><h2>Open the worksheet your decision requires.</h2></div>
+            <button type="button" onClick={closeInstruments}>Close calculators</button>
           </header>
-          <div className="px-lab-instrument-grid" role="group" aria-label="Underwriting instruments">
-            {INSTRUMENTS.map((item) => (
-              <button key={item.key} type="button" aria-pressed={instrument === item.key} onClick={() => chooseInstrument(item.key)}>
-                <span>{item.label}</span><small>{item.description}</small>
-              </button>
-            ))}
+          <div className="px-lab-instrument-detail">
+            <React.Suspense fallback={<p role="status">Preparing the worksheet…</p>}>
+              <CalculatorToolsPanel activeTab={instrument} setActiveTab={chooseInstrument} publicMode />
+            </React.Suspense>
           </div>
-          <div className="px-lab-instrument-launch">
-            <div><span>Selected worksheet</span><strong>{INSTRUMENTS.find((item) => item.key === instrument)?.label}</strong><p>{INSTRUMENTS.find((item) => item.key === instrument)?.description}</p></div>
-            <button type="button" onClick={() => setDetailedInstrumentOpen(true)}>Open detailed worksheet <ArrowRight aria-hidden="true" /></button>
-          </div>
-          {detailedInstrumentOpen && (
-            <div className="px-lab-instrument-detail">
-              <React.Suspense fallback={<p role="status">Preparing the worksheet…</p>}>
-                <CalculatorToolsPanel activeTab={instrument} setActiveTab={chooseInstrument} />
-              </React.Suspense>
-            </div>
-          )}
         </section>
       )}
 
       <section className="px-lab-boundary" data-testid="text-strategy-disclaimer">
         <Hammer aria-hidden="true" />
         <div><p className="px-kicker">The operating boundary</p><h2>The Lab organizes a decision. It does not replace diligence.</h2></div>
-        <p>Strategy Lab outputs are preliminary and directional. They are not legal, tax, lending, accounting, appraisal, engineering, securities, or construction advice. All outputs are subject to a written Pegasus read, market conditions, property condition, title, occupancy, and written agreements.</p>
+        <p>Strategy Lab outputs come from visitor-entered, unverified assumptions and an automated model. They are preliminary and directional, not legal, tax, lending, accounting, appraisal, engineering, securities, construction, or investment advice. Carrying a brief into intake does not guarantee review, response, routing, an offer, or a timeline.</p>
       </section>
     </div>
   );

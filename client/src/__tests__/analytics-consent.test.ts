@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { writeConsent, resetConsent, readConsent, CONSENT_STORAGE_KEY } from "@/lib/consent";
-import { trackEvent, initAnalytics } from "@/lib/analytics";
+import { trackEvent, trackCtaClick, initAnalytics } from "@/lib/analytics";
 
 vi.stubEnv("VITE_PLAUSIBLE_DOMAIN", "pegasusdreamscapes.com");
 
@@ -15,6 +15,8 @@ declare global {
 }
 
 describe("Analytics consent gate (Website Brief v1.0 §11)", () => {
+  const originalSendBeacon = navigator.sendBeacon;
+
   beforeEach(() => {
     resetConsent();
     window.localStorage.removeItem(CONSENT_STORAGE_KEY);
@@ -25,6 +27,10 @@ describe("Analytics consent gate (Website Brief v1.0 §11)", () => {
   afterEach(() => {
     (window as unknown as { __PEGASUS_PLAUSIBLE_DOMAIN__: string }).__PEGASUS_PLAUSIBLE_DOMAIN__ =
       "pegasusdreamscapes.com";
+    Object.defineProperty(navigator, "sendBeacon", {
+      configurable: true,
+      value: originalSendBeacon,
+    });
   });
 
   it("defaults to off — readConsent reports analytics=false before any decision", () => {
@@ -75,5 +81,44 @@ describe("Analytics consent gate (Website Brief v1.0 §11)", () => {
     expect(stub).toHaveBeenCalledTimes(2);
     expect(stub).toHaveBeenNthCalledWith(1, "strategy_lab_started", undefined);
     expect(stub).toHaveBeenNthCalledWith(2, "cta_click", { props: { id: "hero_primary" } });
+  });
+
+  it("does not send first-party CTA telemetry before analytics consent", () => {
+    const sendBeacon = vi.fn(() => true);
+    Object.defineProperty(navigator, "sendBeacon", {
+      configurable: true,
+      value: sendBeacon,
+    });
+
+    trackCtaClick("home_hero", "Bring an opportunity", "/bring-an-opportunity");
+
+    expect(sendBeacon).not.toHaveBeenCalled();
+  });
+
+  it("sends a consented CTA event without a raw referrer", async () => {
+    const sendBeacon = vi.fn(() => true);
+    Object.defineProperty(navigator, "sendBeacon", {
+      configurable: true,
+      value: sendBeacon,
+    });
+    Object.defineProperty(document, "referrer", {
+      configurable: true,
+      value: "https://example.com/private?email=person%40example.com",
+    });
+    writeConsent({ analytics: true, marketing: false });
+
+    trackCtaClick("home_hero", "Bring an opportunity", "/bring-an-opportunity");
+
+    expect(sendBeacon).toHaveBeenCalledTimes(1);
+    const [, body] = sendBeacon.mock.calls[0];
+    expect(body).toBeInstanceOf(Blob);
+    const payload = JSON.parse(await (body as Blob).text()) as Record<string, unknown>;
+    expect(payload).toEqual({
+      source: "home_hero",
+      label: "Bring an opportunity",
+      href: "/bring-an-opportunity",
+      path: window.location.pathname,
+    });
+    expect(payload).not.toHaveProperty("referrer");
   });
 });

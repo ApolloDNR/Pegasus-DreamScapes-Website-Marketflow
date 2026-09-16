@@ -96,6 +96,7 @@ beforeAll(async () => {
   registerOpportunityRoutes(app, {
     isAuthenticated: pass,
     requireStaffRole: pass,
+    publicIntakeRateLimit: pass,
   });
   await new Promise<void>((resolve) => {
     server = app.listen(0, () => resolve());
@@ -240,6 +241,30 @@ describe("POST /api/opportunities — staff notification address", () => {
     expect(testState.sendEmail).toHaveBeenNthCalledWith(
       1,
       expect.objectContaining({ to: "legacy@pegasus.test" }),
+    );
+  });
+});
+
+describe("POST /api/opportunities — submitter receipt truth contract", () => {
+  it("sends the bounded receipt policy without promising review or routing", async () => {
+    const response = await postOpportunity();
+
+    expect(response.status).toBe(201);
+    const submitterReceipt = testState.sendEmail.mock.calls
+      .map(([message]) => message as { to?: string; subject?: string; text?: string })
+      .find((message) => message.to === "taylor@example.com");
+
+    expect(submitterReceipt).toEqual({
+      to: "taylor@example.com",
+      subject: "Pegasus Dreamscapes received your submission",
+      text:
+        "Pegasus Dreamscapes recorded your submission for possible consideration. " +
+        "If Pegasus elects to engage, it will contact you. " +
+        "This receipt does not promise review, routing, a response, an offer, representation, referral, service, or a transaction. " +
+        "No agency or other relationship or agreement is created by submitting this form.",
+    });
+    expect(submitterReceipt?.text).not.toMatch(
+      /will review|appropriate lane|will follow up/i,
     );
   });
 });

@@ -14,6 +14,14 @@ import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useToast } from "@/hooks/use-toast";
 import { OfferStudio, type OfferStudioData } from "@/components/offer-studio";
 import { QuickCounterOffer, type QuickCounterData } from "@/components/quick-counter-offer";
+import { CapitalRelationshipOnlyNotice } from "@/components/capital-relationship-only-notice";
+import {
+  firstMarketflowMoney,
+  formatMarketflowMoney,
+  isPositiveMarketflowMoney,
+  normalizeMarketflowMoney,
+  readWholesaleFinancials,
+} from "@/components/marketflow-financial-truth";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { MarketflowOffer, MarketflowNegotiation, NegotiationMessage } from "@shared/schema";
 import {
@@ -66,7 +74,7 @@ interface Offer {
   timestamp: Date;
   status: "pending" | "accepted" | "rejected" | "countered";
   terms: {
-    offerPrice: number;
+    offerPrice: number | null;
     earnestMoney: number;
     closeDate: string;
     inspectionPeriod: number;
@@ -86,7 +94,10 @@ function transformMarketflowOffer(offer: MarketflowOffer, currentUserId?: string
     timestamp: new Date(offer.createdAt!),
     status: (offer.status as Offer["status"]) || "pending",
     terms: {
-      offerPrice: (payload?.offerPrice as number) || (payload?.assignmentFee as number) || 0,
+      offerPrice: firstMarketflowMoney(
+        payload?.offerPrice,
+        payload?.assignmentFee,
+      ),
       earnestMoney: (payload?.earnestMoney as number) || 0,
       closeDate: (payload?.closeDate as string) || (payload?.closingDate as string) || "",
       inspectionPeriod: (payload?.inspectionPeriod as number) || 10,
@@ -133,22 +144,17 @@ function NegotiationRoom() {
     enabled: !!dealId && lane === "WHOLESALE",
   });
 
-  const { data: capitalProject, isLoading: capitalLoading } = useQuery<any>({
-    queryKey: ['/api/capital-projects', dealId],
-    enabled: !!dealId && lane === "CAPITAL",
-  });
-
   const { data: listing, isLoading: listingLoading } = useQuery<any>({
     queryKey: ['/api/retail-listings', dealId],
     enabled: !!dealId && lane === "LISTING",
   });
 
-  const deal = lane === "WHOLESALE" ? wholesaleDeal : lane === "CAPITAL" ? capitalProject : listing;
+  const deal = lane === "WHOLESALE" ? wholesaleDeal : lane === "LISTING" ? listing : undefined;
   const dealOwnerId = deal?.submittedBy || deal?.operatorId || deal?.createdBy || null;
 
   const { data: dealNegotiations } = useQuery<MarketflowNegotiation[]>({
     queryKey: ['/api/marketflow/negotiations/deal', lane, dealId],
-    enabled: !!dealId && isAuthenticated,
+    enabled: !!dealId && lane !== "CAPITAL" && isAuthenticated,
   });
   
   const currentNegotiation = dealNegotiations?.find(
@@ -157,17 +163,20 @@ function NegotiationRoom() {
 
   const { data: negotiationData, isLoading: negotiationLoading, refetch: refetchNegotiation } = useQuery<NegotiationData>({
     queryKey: ['/api/marketflow/negotiations', currentNegotiation?.id],
-    enabled: !!currentNegotiation?.id && isAuthenticated,
+    enabled: !!currentNegotiation?.id && lane !== "CAPITAL" && isAuthenticated,
   });
 
   const offers = negotiationData?.offers?.map(o => transformMarketflowOffer(o, user?.id)) || [];
   const messages = negotiationData?.messages || [];
-  const isLoading = wholesaleLoading || capitalLoading || listingLoading || negotiationLoading;
+  const isLoading = wholesaleLoading || listingLoading || negotiationLoading;
 
   const createOfferMutation = useMutation({
     mutationFn: async (payload: Record<string, unknown>) => {
       if (!dealId) {
         throw new Error("Deal ID is required to submit an offer");
+      }
+      if (lane === "CAPITAL") {
+        throw new Error("Capital negotiation routes are relationship information only");
       }
       
       const negotiation = currentNegotiation;
@@ -193,7 +202,7 @@ function NegotiationRoom() {
         lane,
         dealId: parsedDealId,
         recipientId,
-        offerKind: lane === "WHOLESALE" ? "WHOLESALE_ASSIGNMENT" : lane === "CAPITAL" ? "CAPITAL_INVESTMENT" : "LISTING_INQUIRY",
+        offerKind: lane === "WHOLESALE" ? "WHOLESALE_ASSIGNMENT" : "LISTING_INQUIRY",
         payload,
       });
       return res.json();
@@ -248,13 +257,7 @@ function NegotiationRoom() {
     },
   });
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0
-    }).format(amount);
-  };
+  const formatCurrency = formatMarketflowMoney;
 
   const getStatusBadge = (status: Offer["status"]) => {
     switch (status) {
@@ -313,12 +316,14 @@ function NegotiationRoom() {
   };
 
   const openCounterOffer = (offer: Offer) => {
+    if (!isPositiveMarketflowMoney(offer.terms.offerPrice)) return;
     setOfferMode("counter");
     setCounterOfferData(offer.terms);
     setOfferDialogOpen(true);
   };
 
   const openQuickCounter = (offer: Offer) => {
+    if (!isPositiveMarketflowMoney(offer.terms.offerPrice)) return;
     setQuickCounterPrevious({
       offerPrice: offer.terms.offerPrice,
       earnestMoney: offer.terms.earnestMoney,
@@ -397,6 +402,25 @@ function NegotiationRoom() {
 
   const latestOffer = offers[offers.length - 1];
   const agreementReached = latestOffer?.status === "accepted";
+  const financials = deal
+    ? readWholesaleFinancials({
+        ...deal,
+        askingPrice: deal.askingPrice ?? deal.listPrice,
+      })
+    : null;
+  const hasRequiredDealFinancials =
+    lane === "LISTING"
+      ? isPositiveMarketflowMoney(financials?.price)
+      : financials?.hasRequiredInputs === true;
+
+  if (lane === "CAPITAL") {
+    return (
+      <CapitalRelationshipOnlyNotice
+        backPath={dealId ? `/marketflow/capital/${dealId}` : "/marketflow/capital"}
+        backLabel={dealId ? "Back to project record" : "Back to projects"}
+      />
+    );
+  }
 
   if (isLoading) {
     return (
@@ -534,7 +558,9 @@ function NegotiationRoom() {
                                 </p>
                               )}
 
-                              {offer.status === "pending" && offer.sender !== "investor" && (
+                              {offer.status === "pending" &&
+                                offer.sender !== "investor" &&
+                                isPositiveMarketflowMoney(offer.terms.offerPrice) && (
                                 <div className="flex gap-2 mt-4">
                                   <Button 
                                     size="sm" 
@@ -572,7 +598,7 @@ function NegotiationRoom() {
                     </div>
                   </ScrollArea>
 
-                  {!agreementReached && (
+                  {!agreementReached && hasRequiredDealFinancials && (
                     <div className="pt-4 border-t">
                       <Button 
                         className="w-full" 
@@ -583,6 +609,16 @@ function NegotiationRoom() {
                         Submit New Offer
                       </Button>
                     </div>
+                  )}
+                  {!hasRequiredDealFinancials && (
+                    <p
+                      className="rounded-lg border border-dashed px-4 py-3 text-center text-sm text-muted-foreground"
+                      data-testid="state-negotiation-financials-incomplete"
+                    >
+                      {lane === "LISTING"
+                        ? "A list or asking price must be provided on the reviewed record before financial actions are available."
+                        : "Price, ARV, and repairs must be provided on the reviewed record before financial actions are available."}
+                    </p>
                   )}
                 </div>
               )}
@@ -653,19 +689,23 @@ function NegotiationRoom() {
                   <div className="grid md:grid-cols-2 gap-4">
                     <div className="p-4 rounded-lg border">
                       <Label className="text-xs text-muted-foreground">ASKING PRICE</Label>
-                      <p className="text-xl font-bold">{formatCurrency(deal.askingPrice || 0)}</p>
+                      <p className="text-xl font-bold" data-testid="text-terms-asking-price">{formatCurrency(normalizeMarketflowMoney(deal.askingPrice ?? deal.listPrice))}</p>
                     </div>
                     <div className="p-4 rounded-lg border">
                       <Label className="text-xs text-muted-foreground">CONTRACT PRICE</Label>
-                      <p className="text-xl font-bold">{formatCurrency(deal.contractPrice || 0)}</p>
+                      <p className="text-xl font-bold" data-testid="text-terms-contract-price">{formatCurrency(normalizeMarketflowMoney(deal.contractPrice))}</p>
                     </div>
                     <div className="p-4 rounded-lg border">
                       <Label className="text-xs text-muted-foreground">ASSIGNMENT FEE</Label>
-                      <p className="text-xl font-bold">{formatCurrency(deal.assignmentFee || 0)}</p>
+                      <p className="text-xl font-bold" data-testid="text-terms-assignment-fee">{formatCurrency(normalizeMarketflowMoney(deal.assignmentFee))}</p>
                     </div>
                     <div className="p-4 rounded-lg border">
                       <Label className="text-xs text-muted-foreground">ARV</Label>
-                      <p className="text-xl font-bold">{formatCurrency(deal.arv || 0)}</p>
+                      <p className="text-xl font-bold" data-testid="text-terms-arv">{formatCurrency(normalizeMarketflowMoney(deal.arv))}</p>
+                    </div>
+                    <div className="p-4 rounded-lg border">
+                      <Label className="text-xs text-muted-foreground">REPAIRS</Label>
+                      <p className="text-xl font-bold" data-testid="text-terms-repairs">{formatCurrency(financials?.repairs)}</p>
                     </div>
                   </div>
 
@@ -805,7 +845,7 @@ function NegotiationRoom() {
                 </div>
                 <div>
                   <p className="font-medium">Wholesaler #{((deal as any).externalWholesalerId || deal.submittedBy)?.slice(-6) || "—"}</p>
-                  <p className="text-xs text-muted-foreground">Verified Seller</p>
+                  <p className="text-xs text-muted-foreground">Seller-side contact</p>
                 </div>
               </div>
               <Badge variant="secondary" className="gap-1">
@@ -815,20 +855,22 @@ function NegotiationRoom() {
             </CardContent>
           </Card>
 
-          <PeggyNegotiationAdvisor 
-            dealInfo={{
-              propertyAddress: deal?.propertyAddress || "",
-              askingPrice: deal?.askingPrice || 0,
-              arv: deal?.arv,
-              lane,
-            }}
-            offers={offers}
-            agreementReached={agreementReached}
-          />
+          {hasRequiredDealFinancials && financials && (
+            <PeggyNegotiationAdvisor
+              dealInfo={{
+                propertyAddress: deal?.propertyAddress || "",
+                askingPrice: financials.price!,
+                arv: financials.arv ?? undefined,
+                lane,
+              }}
+              offers={offers}
+              agreementReached={agreementReached}
+            />
+          )}
         </div>
       </div>
 
-      {deal && (
+      {deal && hasRequiredDealFinancials && financials && (
         <OfferStudio
           open={offerDialogOpen}
           onOpenChange={setOfferDialogOpen}
@@ -836,14 +878,14 @@ function NegotiationRoom() {
           dealInfo={{
             id: dealId || "",
             propertyAddress: deal.propertyAddress || "",
-            askingPrice: deal.askingPrice || 0,
-            arv: deal.arv || undefined,
-            repairCost: (deal as any).repairCosts || (deal as any).repairCost || undefined,
+            askingPrice: financials.price!,
+            arv: financials.arv ?? undefined,
+            repairCost: financials.repairs ?? undefined,
             wholesalerName: `Wholesaler #${((deal as any).externalWholesalerId || deal.submittedBy)?.slice(-6) || "—"}`,
           }}
           previousOffer={counterOfferData ? {
             structureType: "cash",
-            offerPrice: counterOfferData.offerPrice,
+            offerPrice: counterOfferData.offerPrice ?? undefined,
             earnestMoney: counterOfferData.earnestMoney,
             closeDate: counterOfferData.closeDate,
             inspectionPeriod: counterOfferData.inspectionPeriod,
@@ -854,14 +896,14 @@ function NegotiationRoom() {
         />
       )}
 
-      {deal && quickCounterPrevious && (
+      {deal && hasRequiredDealFinancials && financials && quickCounterPrevious && (
         <QuickCounterOffer
           open={quickCounterOpen}
           onOpenChange={setQuickCounterOpen}
           previousOffer={quickCounterPrevious}
           dealInfo={{
             propertyAddress: deal.propertyAddress || "",
-            askingPrice: deal.askingPrice || 0,
+            askingPrice: financials.price!,
           }}
           onSubmit={handleQuickCounter}
         />
@@ -882,11 +924,6 @@ interface PeggyAdvisorProps {
 }
 
 function PeggyNegotiationAdvisor({ dealInfo, offers, agreementReached }: PeggyAdvisorProps) {
-  const [expanded, setExpanded] = useState(false);
-  const [query, setQuery] = useState("");
-  const [aiResponse, setAiResponse] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  
   const latestOffer = offers[offers.length - 1];
   const offerCount = offers.length;
   
@@ -926,53 +963,6 @@ function PeggyNegotiationAdvisor({ dealInfo, offers, agreementReached }: PeggyAd
     ];
   };
 
-  const quickPrompts = [
-    "What's a fair offer for this property?",
-    "How should I counter this offer?",
-    "What due diligence should I do?",
-    "Explain the negotiation timeline",
-  ];
-
-  const handleAskPeggy = async (promptText: string) => {
-    if (!promptText.trim()) return;
-    
-    setIsLoading(true);
-    setAiResponse(null);
-    
-    try {
-      const context = `
-Deal: ${dealInfo.propertyAddress}
-Asking Price: $${dealInfo.askingPrice?.toLocaleString() || "N/A"}
-ARV: ${dealInfo.arv ? `$${dealInfo.arv.toLocaleString()}` : "Not specified"}
-Lane: ${dealInfo.lane}
-Offer Count: ${offerCount}
-${latestOffer ? `Latest Offer: $${latestOffer.terms.offerPrice.toLocaleString()} (${latestOffer.status})` : "No offers yet"}
-Agreement Status: ${agreementReached ? "Reached" : "In negotiation"}
-
-User Question: ${promptText}
-      `.trim();
-
-      const res = await fetch("/api/peggy-ai/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: promptText,
-          context,
-          mode: "negotiation_advisor",
-        }),
-      });
-      
-      if (!res.ok) throw new Error("Failed to get response");
-      
-      const data = await res.json();
-      setAiResponse(data.response || data.message || "I can help you with this negotiation. Could you provide more details?");
-    } catch (error) {
-      setAiResponse("I'm having trouble connecting right now. Please try again or check your connection.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const tips = getContextualTips();
 
   return (
@@ -980,11 +970,11 @@ User Question: ${promptText}
       <CardHeader className="pb-2">
         <CardTitle className="text-lg flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-primary" />
-          Peggy Advisor
-          <Badge variant="secondary" className="ml-auto text-xs">Beta</Badge>
+          Negotiation checklist
+          <Badge variant="secondary" className="ml-auto text-xs">General guidance</Badge>
         </CardTitle>
         <CardDescription className="text-sm">
-          Get real-time negotiation guidance
+          Context for {dealInfo.propertyAddress || "this record"}, based only on the activity shown here.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -999,81 +989,9 @@ User Question: ${promptText}
           </div>
         </div>
 
-        <div className="flex flex-wrap gap-1.5">
-          {quickPrompts.slice(0, expanded ? 4 : 2).map((prompt) => (
-            <Button
-              key={prompt}
-              variant="outline"
-              size="sm"
-              className="text-xs h-7"
-              onClick={() => {
-                setQuery(prompt);
-                setExpanded(true);
-                handleAskPeggy(prompt);
-              }}
-              disabled={isLoading}
-              data-testid={`button-quick-prompt-${prompt.slice(0,10)}`}
-            >
-              {prompt}
-            </Button>
-          ))}
-        </div>
-
-        {!expanded && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="w-full text-xs"
-            onClick={() => setExpanded(true)}
-            data-testid="button-expand-peggy"
-          >
-            <MessageSquare className="w-3 h-3 mr-1" />
-            Ask Peggy a question
-          </Button>
-        )}
-
-        {expanded && (
-          <div className="space-y-2 pt-2 border-t">
-            <div className="flex gap-2">
-              <Textarea
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Ask about this negotiation..."
-                className="min-h-[60px] text-sm resize-none"
-                data-testid="input-peggy-question"
-              />
-            </div>
-            <Button 
-              size="sm" 
-              className="w-full"
-              onClick={() => handleAskPeggy(query)}
-              disabled={isLoading || !query.trim()}
-              data-testid="button-ask-peggy"
-            >
-              {isLoading ? (
-                <>
-                  <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
-                  Thinking...
-                </>
-              ) : (
-                <>
-                  <Send className="w-3 h-3 mr-1" />
-                  Ask Peggy
-                </>
-              )}
-            </Button>
-
-            {aiResponse && (
-              <div className="p-3 bg-background rounded-lg border text-sm space-y-2" data-testid="text-peggy-response">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                  <Sparkles className="w-3 h-3 text-primary" />
-                  Peggy's Response
-                </div>
-                <p className="text-foreground whitespace-pre-wrap">{aiResponse}</p>
-              </div>
-            )}
-          </div>
-        )}
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          This checklist is informational only. Confirm material terms and due diligence with the appropriate licensed or legal professional.
+        </p>
       </CardContent>
     </Card>
   );

@@ -101,7 +101,7 @@ describe("Strategy Lab intake handoff", () => {
     const summary = formatStrategyLabHandoffSummary(brief!);
 
     expect(summary).toContain(
-      "Directional Strategy Lab brief (visitor-entered; requires Pegasus review):",
+      "Directional Strategy Lab brief (visitor-entered; automated and unverified):",
     );
     expect(summary).toContain("Asking price / basis: $600,000");
     expect(summary).toContain("Scope: $105,000");

@@ -20,7 +20,7 @@ describe("Peggy quick-prompt route mapping", () => {
       expect(map["I have a deal or JV idea"]).toBe("/sell");
       expect(map["I want to discuss capital"]).toBe("/invest");
       expect(map["ADU / development"]).toBe("/sell");
-      expect(map["Learn strategies"]).toBe("/resources");
+      expect(map["Learn strategies"]).toBe("/strategy-lab");
       expect(map["Vendor or operator"]).toBe("/vendor-network");
     });
 

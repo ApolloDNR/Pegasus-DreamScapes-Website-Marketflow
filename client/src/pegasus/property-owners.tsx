@@ -1,149 +1,75 @@
-import React, { useState } from 'react';
-import { useLocation } from 'wouter';
-import { ArrowRight } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useLocation, useSearch } from 'wouter';
 import type { Nav } from './theme';
+import { ResponsiveChoiceList } from './responsive-choice-list';
+import { PageAction, PageOpening, PageClosing, ProjectEvidence } from './experience-page';
+import { REPRESENTATION_NOTICE } from './public-content';
 
-/* ================================================================
-   PROPERTY OWNERS — Master Blueprint v5.1 (§9, §32.3)
-   Hero and situations from §9. Signature moment: a calm
-   situation-to-path stepper — pick the situation, read the honest
-   path. The four-step process and the "what we will not promise"
-   restraint block render statically; nothing essential is gated.
-   ================================================================ */
-
-type Situation = { label: string; path: string };
+type Situation = { label: string; path: string; limit: string };
 
 const SITUATIONS: Situation[] = [
-  { label: 'Significant repairs', path: 'We price the real scope, not the fear of it. Often we buy as-is with a project team ready; sometimes the honest answer is a light touch-up and a clean listing.' },
-  { label: 'Vacant property', path: 'An empty house burns money quietly. We move on a short timeline: direct purchase, or a prepared listing with the carrying costs counted honestly.' },
-  { label: 'Inherited property', path: 'Probate timing, siblings, and an old house at once. We map the estate steps with your attorney and hold the property decision until the family is actually ready.' },
-  { label: 'Unfinished construction', path: 'Half-done work scares retail buyers and most investors. We can coordinate the right licensed project team to finish the scope, or buy it standing exactly as it stands.' },
-  { label: 'Tenant or occupancy issues', path: 'Occupied is workable. We buy with tenants in place, respect the tenancy rules, and never ask you to solve the hard part before the sale.' },
-  { label: 'Code or permit concerns', path: 'Open permits and violations are a paperwork problem with a price. We underwrite the cure cost and carry the resolution ourselves after closing.' },
-  { label: 'Time-sensitive sale', path: 'When the calendar is the pressure, certainty beats the last dollar. We give you a written read fast and close on the date the situation needs.' },
-  { label: 'ADU or development potential', path: 'Unbuilt value is real but not automatic. We read the lot against local rules and tell you whether the upside is worth building, selling with, or ignoring.' },
-  { label: 'A listing that is not working', path: 'Expired or sitting still usually means price, prep, or story. We tell you which one, then either fix the listing or make a direct offer.' },
+  { label: 'Significant repairs', path: 'Start with the repairs you know about, whether anyone lives there, and what you want to do next. Existing inspections or estimates can help explain the condition.', limit: 'Those facts can frame questions for possible consideration; they do not establish value, scope, or a Pegasus role.' },
+  { label: 'Vacant property', path: 'How long has it been empty, and what is it costing to hold? Include current access and when you would like to make a change.', limit: 'The intake does not create a sale process or closing commitment.' },
+  { label: 'Inherited property', path: 'Start with who owns the property, who is involved in the decision, and any probate or trust process already underway. Include the timing you have in mind.', limit: 'An attorney or title professional should confirm authority and legal requirements before anyone relies on them.' },
+  { label: 'Unfinished construction', path: 'Show where the work stands and what remains. Plans, permits, invoices, and existing estimates can help explain what has already been done.', limit: 'Submission does not promise a contractor, project team, purchase, budget, or completion path.' },
+  { label: 'Tenant or occupancy issues', path: 'Describe the current occupancy and the question you need to resolve. Include relevant agreements and dates you are authorized to share.', limit: 'Tenancy rights and next steps require qualified legal and property professionals.' },
+  { label: 'Code or permit concerns', path: 'Start with the notice or permit question. Include any records and correspondence you already have, along with a deadline if one applies.', limit: 'The local authority and qualified professionals determine status, cure requirements, cost, and timing.' },
+  { label: 'Time-sensitive sale', path: 'What date matters, and why? Include any title, loan, or occupancy constraints that could affect the next step.', limit: 'A requested date is useful context, not a promised review, response, offer, or closing.' },
+  { label: 'ADU or development potential', path: 'Describe what you would like to explore and the parcel facts you know. Strategy Lab can help compare your own cost and value assumptions.', limit: 'Strategy Lab can model visitor-entered assumptions directionally; local agencies and qualified professionals determine what is allowed.' },
+  { label: 'A listing that is not working', path: 'What would you like to change? Include the listing history, buyer feedback, property condition, and any current representation agreement.', limit: 'The intake cannot diagnose the cause, promise representation, or create an offer.' },
 ];
 
-export function PropertyOwnersPage({ go }: { go: Nav }) {
+export function PropertyOwnersPage({ go: _go }: { go: Nav }) {
+  const search = useSearch();
   const [, setLocation] = useLocation();
-  const toIntake = (e: React.MouseEvent<HTMLAnchorElement>) => {
-    e.preventDefault();
-    setLocation(e.currentTarget.getAttribute('href') ?? '/bring-an-opportunity');
+  const requested = new URLSearchParams(search).get('owner_situation');
+  const [idx, setIdx] = useState(() => Math.max(0, SITUATIONS.findIndex(item => item.label === requested)));
+  useEffect(() => { setIdx(Math.max(0, SITUATIONS.findIndex(item => item.label === requested))); }, [requested]);
+  const selectSituation = (next: number) => {
+    setIdx(next);
+    const params = new URLSearchParams(search);
+    params.set('owner_situation', SITUATIONS[next].label);
+    setLocation(`/property-owners?${params.toString()}`, { replace: true });
   };
-  const [idx, setIdx] = useState(0);
-  const selectedSituationHref =
-    `/bring-an-opportunity?intent=property&owner_situation=${encodeURIComponent(SITUATIONS[idx].label)}`;
-
-  return (
-    <div className="po">
-      {/* Hero — v5.1 §9 locked promise */}
-      <section className="po-hero hv-grain">
-        <div className="po-hero-media" aria-hidden="true">
-          <div className="po-hero-plate">
-            <img
-              src="/images/nelson/nelson-before-exterior-front-1280.jpg"
-              alt=""
-              width="1280"
-              height="941"
-              loading="eager"
-              decoding="async"
-            />
-            <span>Nelson Drive &middot; before renovation &middot; real project record</span>
+  const selectedSituationHref = `/bring-an-opportunity?intent=property&owner_situation=${encodeURIComponent(SITUATIONS[idx].label)}`;
+  return <article className="experience-page po">
+    <PageOpening title="A clear next step for your property."
+      image={{ src:'/images/nelson/nelson-exterior-1280.webp', alt:'Completed Nelson Drive home and landscaped front garden', width:1280, height:853, caption:'Nelson Drive · Completed project' }}
+      action={{ label: 'Tell us about the property', href: '/bring-an-opportunity?intent=property' }}>
+      <p>Repairs, inherited ownership, unfinished work, or a difficult timeline. Start with your situation and what you want to resolve.</p>
+    </PageOpening>
+    <section className="ep-section" data-testid="situation-stepper">
+      <div className="experience-wrap">
+        <h2>What are you working through?</h2>
+        <div className="ep-choice-layout">
+          <ResponsiveChoiceList id="owner-situation" label="Common owner situations" options={SITUATIONS} value={idx} onChange={selectSituation} controls="owner-path" className="ep-choices" itemClassName="ep-choice" />
+          <div className="ep-choice-answer" id="owner-path" aria-live="polite" aria-atomic="true">
+            <h3>{SITUATIONS[idx].label}</h3><p>{SITUATIONS[idx].path}</p>
+            <PageAction href={selectedSituationHref}>Start with this situation</PageAction>
+            <p className="ep-notice">{SITUATIONS[idx].limit}</p>
           </div>
         </div>
-        <div className="hv-wrap">
-          <div className="hv-rule" />
-          <div className="pg-label hv-eyebrow">Property Owners</div>
-          <h1 className="hwo-h1 font-serif-display">
-            A difficult property does not always need a conventional solution.
-          </h1>
-          <p className="hv-lead">
-            Pegasus acquires selected properties directly and reviews situations involving condition,
-            timing, inheritance, occupancy, unfinished work, title complications, or unrealized
-            development potential. You get a straight read before you commit to anything.
-          </p>
-          <div className="hv-cta-row">
-            <a href="/bring-an-opportunity" onClick={toIntake}
-              className="btn-solid-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px] group">
-              Tell Us About the Property <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-            </a>
-            <button type="button" onClick={() => go('strategylab')} className="hv-hero-link">
-              Open Strategy Lab
-            </button>
-          </div>
-          <p className="po-hero-caption">Real project photography &middot; Nelson Drive, before renovation</p>
-        </div>
-      </section>
-
-      {/* Signature: situation → path stepper */}
-      <section className="po-stepper hv-pad" data-testid="situation-stepper">
-        <div className="hv-wrap">
-          <div className="pg-label hv-eyebrow-copper">Start with the situation</div>
-          <h2 className="hv-h2 font-serif-display">Pick the one that sounds like yours.</h2>
-          <div className="po-step-grid reveal">
-            <div className="po-situations" role="group" aria-label="Common owner situations">
-              {SITUATIONS.map((s, i) => (
-                <button key={s.label} type="button" aria-pressed={i === idx}
-                  className="po-situation" data-on={i === idx || undefined}
-                  onClick={() => setIdx(i)}>
-                  {s.label}
-                </button>
-              ))}
-            </div>
-            <div className="po-path" key={SITUATIONS[idx].label} aria-live="polite">
-              <div className="pg-label hv-eyebrow-copper">The honest path</div>
-              <p className="po-path-copy font-serif-display">{SITUATIONS[idx].path}</p>
-              <a href={selectedSituationHref} onClick={toIntake} className="hv-proof-link hv-link-ink">
-                Start with this situation <ArrowRight className="inline h-3.5 w-3.5" />
-              </a>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Process — §9, static */}
-      <section className="po-process hv-pad-lg hv-grain">
-        <div className="hv-wrap">
-          <div className="pg-label hv-eyebrow">What happens next</div>
-          <h2 className="hv-h2-cream font-serif-display">Four steps, no pressure at any of them.</h2>
-          <ol className="po-steps reveal">
-            <li><b>Tell Pegasus about the property.</b> Address, condition, timing, and what you want out of it.</li>
-            <li><b>We review the facts and circumstances.</b> The numbers, the title, the tenancy, the local rules.</li>
-            <li><b>We determine whether a direct purchase or another path fits.</b> Sometimes the answer is a listing, or a wait.</li>
-            <li><b>The role, the economics, and the next steps are explained before commitment.</b> In writing, in plain language.</li>
-          </ol>
-        </div>
-      </section>
-
-      {/* Restraint — §9 "required restraint" as a trust panel (§32.13) */}
-      <section className="po-restraint hv-pad">
-        <div className="hv-wrap">
-          <div className="pg-label hv-eyebrow-copper">What we will not promise</div>
-          <h2 className="hv-h2 font-serif-display">The limits, stated plainly.</h2>
-          <p className="hv-muted">
-            No guaranteed offer. No guaranteed closing date. We do not purchase every property, and a
-            review is not a valuation, an appraisal, or foreclosure rescue. If Pegasus is not the right
-            participant, we say so and point you somewhere better.
-          </p>
-        </div>
-      </section>
-
-      {/* Close */}
-      <section className="po-close hv-pad-lg hv-grain">
-        <div className="hv-wrap">
-          <h2 className="hv-h2-cream font-serif-display">One conversation. A written read. Your decision.</h2>
-          <div className="ow-close-ctas">
-            <a href="/bring-an-opportunity" onClick={toIntake}
-              className="btn-solid-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px] group">
-              Tell Us About the Property <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-            </a>
-            <button type="button" className="hv-hero-link" onClick={() => go('ourwork')}>
-              See a finished project
-            </button>
-          </div>
-        </div>
-      </section>
-    </div>
-  );
+      </div>
+    </section>
+    <section className="ep-section ep-warm"><div className="experience-wrap ep-split">
+      <div><h2>Different paths. Clear roles.</h2><p>Pegasus considers opportunities case by case, with any acquisition, project role, or licensed representation defined separately.</p></div>
+      <div><dl className="ep-rows">
+        <div><dt>A possible direct acquisition</dt><dd>A purchase would require property-specific diligence, capacity, and accepted written terms.</dd></div>
+        <div><dt>A project or renovation conversation</dt><dd>Scope, qualifications, permits, responsibilities, and availability must be established for the specific work.</dd></div>
+        <div><dt>Selling with representation</dt><dd>Discuss a separately documented brokerage relationship with Apollo.</dd></div>
+      </dl><PageAction href="/work-with-apollo" secondary>Buy or sell with Apollo</PageAction><p className="ep-notice ep-rule">{REPRESENTATION_NOTICE}</p></div>
+    </div></section>
+    <ProjectEvidence />
+    <section className="ep-section ep-process"><div className="experience-wrap">
+      <h2>Start with what you know.</h2>
+      <ol className="ep-rows ep-numbered">
+        <li><div><h3>Describe the property.</h3><p>Add the address, condition, occupancy, and what you want to resolve.</p></div></li>
+        <li><div><h3>Add the context.</h3><p>Identify estimates and unknowns. Share only what you are authorized to share; supporting files remain subject to the site privacy terms.</p></div></li>
+        <li><div><h3>Review before submitting.</h3><p>Any later role, economics, or service requires separate diligence and written terms.</p></div></li>
+      </ol>
+    </div></section>
+    <PageClosing title="Tell us about the property." href={selectedSituationHref} label="Tell us about the property">
+      <p className="ep-notice">Submission may be considered, but no written review, response, route, or offer is promised. It is not a valuation, appraisal, legal opinion, foreclosure-rescue service, representation agreement, or closing commitment.</p>
+    </PageClosing>
+  </article>;
 }
