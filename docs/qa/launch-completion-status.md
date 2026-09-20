@@ -1,5 +1,13 @@
 # Pegasus website continuation status
 
+## September 20: first Pegasus Intelligence Desk delivery
+
+The approved Direction C is implemented on the actual public `/strategy-lab` mount with Overview, Assumptions, Scenarios, Risk and Memo. The canonical engine, nine paths, eight calculators, existing draft recovery, intake adapter and disclosures remain. The current brief reaches Peggy's editable composer. Missing or unsupported economics remain explicitly unavailable.
+
+The [Intelligence Desk review](intelligence-desk-review.md) records the actual desktop/mobile captures, current-source verification, eight resolved fresh-review findings and execution rulings. The first desk is ready for owner visual feedback; a broader site rollout is not part of this revision.
+
+The existing preview publication authorization persists. Hosting is currently blocked: the exposed Vercel deploy action returns `Tool deploy_to_vercel not found`, and there is no authenticated local CLI. The previous protected deployment does not contain this work. A working deployment connection or authenticated CLI is needed to publish and inspect this revision on the existing project. Live backend and production readiness remain unproven.
+
 ## September 15: parchment-first refinement and quieter working pages
 
 Baseline `ec9d57305197fb028d3cd758d8d2add53a0fc570`. Fresh hosted browser captures of the arrival, Property Owners selector, and Strategy Lab entry showed near-white reading surfaces, procedural owner copy, and a prominent summary full of missing values before useful modeling inputs existed.

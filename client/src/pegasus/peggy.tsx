@@ -99,6 +99,7 @@ export function Peggy({
 
   const [messages, setMessages] = useState<ChatMessage[]>([{ role: 'assistant', content: GREETING }]);
   const [draft, setDraft] = useState('');
+  const suppliedPromptRef = useRef<string | null>(null);
   const [streaming, setStreaming] = useState(false);
   const [errored, setErrored] = useState(false);
   const [pickedRole, setPickedRole] = useState<string | null>(null);
@@ -108,11 +109,16 @@ export function Peggy({
   useEffect(() => {
     if (open && !messages.some((message) => message.role === 'user')) {
       setPickedRole(typeof initialRole === 'string' && initialRole ? initialRole : null);
-      if (typeof initialPrompt === 'string' && initialPrompt.trim()) {
-        setDraft(initialPrompt.trim());
-      }
     }
   }, [open, initialPrompt, initialRole, messages]);
+
+  useEffect(() => {
+    if (!open) { suppliedPromptRef.current = null; return; }
+    if (initialPrompt?.trim() && initialPrompt !== suppliedPromptRef.current) {
+      suppliedPromptRef.current = initialPrompt;
+      setDraft(initialPrompt.trim());
+    }
+  }, [open, initialPrompt]);
 
   useEffect(() => {
     if (!open) return;

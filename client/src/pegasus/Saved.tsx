@@ -1,12 +1,11 @@
 import { Trash2 } from 'lucide-react';
 import { PageAction, PageOpening } from './experience-page';
 import type { Nav } from './theme';
+import { restoreDraft, STORAGE_KEY } from './intelligence-desk/state';
 import {
   useSavedChats,
   deleteChat,
 } from './savedStore';
-
-const CURRENT_STRATEGY_DRAFT_KEY = 'pegasus.strategy-lab.v3';
 
 type CurrentStrategyDraft = {
   savedAt: string;
@@ -20,18 +19,16 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function readCurrentStrategyDraft(): CurrentStrategyDraft | null {
   if (typeof window === 'undefined') return null;
   try {
-    const raw = window.localStorage.getItem(CURRENT_STRATEGY_DRAFT_KEY);
-    if (!raw) return null;
-    const parsed: unknown = JSON.parse(raw);
-    if (!isRecord(parsed) || parsed.schemaVersion !== 3 || !isRecord(parsed.state)) return null;
-    if (typeof parsed.savedAt !== 'string' || !Number.isFinite(Date.parse(parsed.savedAt))) return null;
-    const address = typeof parsed.state.address === 'string'
-      ? parsed.state.address.replace(/\s+/g, ' ').trim().slice(0, 180)
-      : '';
-    return {
-      savedAt: parsed.savedAt,
-      title: address || 'Untitled property draft',
-    };
+    for (const key of [STORAGE_KEY, 'pegasus.strategy-lab.v3']) {
+      const raw = window.localStorage.getItem(key);
+      if (!raw) continue;
+      const restored = restoreDraft(raw);
+      if (!restored) continue;
+      const parsed: unknown = JSON.parse(raw);
+      if (!isRecord(parsed) || typeof parsed.savedAt !== 'string' || !Number.isFinite(Date.parse(parsed.savedAt))) continue;
+      return { savedAt: parsed.savedAt, title: restored.base.address.replace(/\s+/g, ' ').trim().slice(0, 180) || 'Untitled property draft' };
+    }
+    return null;
   } catch {
     return null;
   }

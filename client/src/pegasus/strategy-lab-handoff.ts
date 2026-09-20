@@ -24,6 +24,10 @@ export type StrategyLabHandoffInput = {
   memoNextStep?: string;
   engineVersion?: string;
   generatedAt?: string;
+  scenario?: 'base' | 'conservative' | 'upside';
+  modelAssumptions?: string;
+  scopeReported?: boolean;
+  illustrative?: boolean;
 };
 
 export type StrategyLabHandoffBrief = StrategyLabHandoffInput & {
@@ -42,6 +46,7 @@ const TEXT_LIMITS = {
   primaryMetric: 200,
   memoNextStep: 300,
   engineVersion: 80,
+  modelAssumptions: 240,
 } as const satisfies Partial<
   Record<keyof StrategyLabHandoffInput, number>
 >;
@@ -113,6 +118,15 @@ function sanitizeInput(
     const amount = boundedMoney(value[key]);
     if (amount !== undefined) result[key] = amount;
   }
+
+  if (['base', 'conservative', 'upside'].includes(String(value.scenario))) {
+    result.scenario = value.scenario as StrategyLabHandoffInput['scenario'];
+  }
+  if (value.scopeReported === true) {
+    result.scopeReported = true;
+    if (value.rehabBudget === 0) result.rehabBudget = 0;
+  }
+  if (value.illustrative === true) result.illustrative = true;
 
   const generatedAt = isoDate(value.generatedAt);
   if (generatedAt) result.generatedAt = generatedAt;
@@ -206,6 +220,9 @@ export function formatStrategyLabHandoffSummary(
   brief: StrategyLabHandoffBrief,
 ): string {
   const parts: string[] = [];
+  if (brief.scenario) parts.push(`Scenario: ${brief.scenario.charAt(0).toUpperCase()}${brief.scenario.slice(1)}`);
+  if (brief.illustrative) parts.push('Synthetic example with editable assumptions');
+  if (brief.modelAssumptions) parts.push(`Model assumptions: ${brief.modelAssumptions}`);
   if (brief.address) parts.push(`Address: ${brief.address}`);
 
   const facts = [

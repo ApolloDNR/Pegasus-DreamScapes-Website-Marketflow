@@ -3,10 +3,20 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 
 import { SavedPage } from "@/pegasus/Saved";
+import { emptyWorkspace, illustrativeDraft, serializeDraft, STORAGE_KEY } from "@/pegasus/intelligence-desk/state";
 
 describe("saved workspace", () => {
   beforeEach(() => window.localStorage.clear());
   afterEach(cleanup);
+
+  it("resumes the new Intelligence Desk draft ahead of an older saved model", () => {
+    window.localStorage.setItem("pegasus.strategy-lab.v3", JSON.stringify({ schemaVersion: 3, savedAt: "2026-08-30T08:00:00.000Z", state: { address: "Old property" } }));
+    const workspace = { ...emptyWorkspace(), base: { ...illustrativeDraft(), address: "New property" } };
+    window.localStorage.setItem(STORAGE_KEY, serializeDraft(workspace));
+    render(<SavedPage go={vi.fn()} />);
+    expect(screen.getByRole("heading", { name: "New property" })).toBeVisible();
+    expect(screen.queryByRole("heading", { name: "Old property" })).not.toBeInTheDocument();
+  });
 
   it("resumes the current Strategy Lab draft and ignores obsolete model records", () => {
     window.localStorage.setItem(

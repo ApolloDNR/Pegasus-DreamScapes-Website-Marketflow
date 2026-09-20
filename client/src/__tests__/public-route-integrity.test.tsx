@@ -85,7 +85,7 @@ describe("Projects public fallback truth", () => {
 });
 
 describe("Strategy Lab documented calculator deep link", () => {
-  it("opens the premium desk on its Assumptions step for ?tool=calculators", async () => {
+  it("opens the premium desk on its Assumptions view for ?tool=calculators", async () => {
     const originalScrollIntoView = Element.prototype.scrollIntoView;
     const scrollIntoView = vi.fn();
     Element.prototype.scrollIntoView = scrollIntoView;
@@ -95,9 +95,9 @@ describe("Strategy Lab documented calculator deep link", () => {
         search: "?tool=calculators",
       });
 
-      const basisStep = screen.getByRole("button", { name: /02\s*Assumptions/i });
-      expect(basisStep).toHaveAttribute("aria-current", "step");
-      expect(screen.getByLabelText("Acquisition or current basis ($)")).toBeInTheDocument();
+      const basisStep = screen.getByRole("button", { name: "Assumptions" });
+      expect(basisStep).toHaveAttribute("aria-current", "page");
+      expect(screen.getByLabelText("Acquisition or current basis")).toBeInTheDocument();
       expect(screen.getByTestId("strategy-lab-workspace")).toBeInTheDocument();
       expect(screen.getByTestId("text-strategy-disclaimer")).toBeInTheDocument();
       expect(await screen.findByTestId("calculator-tools-panel-stub")).toBeInTheDocument();

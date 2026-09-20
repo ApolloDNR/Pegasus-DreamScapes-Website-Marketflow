@@ -2292,14 +2292,19 @@ try {
 
     await openPage(page, '/tools');
     await page.getByRole('link', { name: 'Open Strategy Lab', exact: true }).first().click();
+    await page.getByRole('button', { name: 'Assumptions', exact: true }).click();
     await page.getByLabel('Property address or city').fill('291 Pegasus Way, Richmond');
-    await page.getByRole('button', { name: /02\s*Assumptions/ }).click();
-    await page.getByLabel('Acquisition or current basis ($)').fill('600000');
-    await page.getByLabel('Scope / improvement budget ($)').fill('105000');
-    await page.getByLabel('Projected exit value ($)').fill('840000');
-    await page.getByRole('button', { name: /03\s*Compare/ }).click();
-    await page.getByRole('heading', { name: 'Compare the possible paths.', exact: true }).waitFor({ state: 'visible' });
-    await page.getByRole('button', { name: /04\s*Summary/ }).click();
+    await page.getByLabel('Acquisition or current basis').fill('600000');
+    await page.getByLabel('Scope / improvement budget').fill('105000');
+    await page.getByLabel('Projected exit value').fill('840000');
+    await page.getByRole('button', { name: 'Overview', exact: true }).click();
+    await page.getByRole('heading', { name: 'Modeled strategy paths', exact: true }).waitFor({ state: 'visible' });
+    await page.getByRole('button', { name: 'Memo', exact: true }).click();
+    await page.emulateMedia({ media: 'print' });
+    assert(await page.locator('.id-memo header').isVisible(), 'Printed brief lost its property and scenario header');
+    assert((await page.locator('.id-memo header').innerText()).includes('291 Pegasus Way'), 'Printed brief lost the current property identity');
+    assert(!(await page.evaluate(() => getComputedStyle(document.body, '::before').content)).includes('Investment Summary'), 'Printed desk inherited an unrelated document title');
+    await page.emulateMedia({ media: 'screen' });
     await page.getByRole('button', { name: 'Carry this brief into intake', exact: true }).click();
     await page.getByLabel('Property address').waitFor({ state: 'visible' });
     assert((await page.getByLabel('Property address').inputValue()).includes('291 Pegasus Way'), 'Tool handoff discarded the supported property context');

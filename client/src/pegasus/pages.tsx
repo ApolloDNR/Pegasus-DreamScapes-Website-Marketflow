@@ -151,7 +151,7 @@ export function DevelopmentPage({ go: _go }: { go: Nav }) {
    Strategy Lab is a private decision desk; MarketFlow is the permissioned
    relationship layer after review.
    ================================================================ */
-export function StrategyLabPage({ go, openPeggy }: { go: Nav; openPeggy: () => void }) {
+export function StrategyLabPage({ go, openPeggy }: { go: Nav; openPeggy: (role?: string, prompt?: string) => void }) {
   return <PremiumStrategyLab go={go} openPeggy={openPeggy} />;
 }
 
