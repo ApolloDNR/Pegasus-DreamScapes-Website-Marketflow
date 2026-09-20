@@ -58,13 +58,13 @@ export function Overview({ draft, analysis, selectedLane, onLane, onView, onExam
   return <>
     <div className="id-overview-grid">
       <aside className="id-read" aria-label="Result inspector" aria-live="polite">
-        <header><h2>Current read</h2><span>{lane.lane === top.lane ? 'Highest modeled fit' : 'Inspecting this path'}</span></header>
+        <header><h2>{lane.lane === top.lane ? 'Leading path' : 'Path in view'}</h2>{lane.lane !== top.lane && <span>Inspecting this path</span>}</header>
         <div className="id-read-main">
           <div><h3 ref={resultHeading} tabIndex={-1}>{laneName(lane)}</h3><p className="id-verdict">{lane.verdictLabel}</p><dl className="id-read-primary"><div><dt>{lane.lane === 'listing_referral' ? 'Exit value above investor allowance' : lane.economics.primaryMetric}</dt><dd>{safeMetric(lane.economics.primaryValue)}</dd></div></dl><p className="id-metric-explanation">{metricExplanation(analysis, lane)}</p></div>
           <div className="id-read-next"><h4>{next.title}</h4><p>{next.detail}</p><button type="button" className="id-text-button" onClick={() => onAction(next)}>{next.label} <ArrowRight aria-hidden="true" /></button><div className="id-fit-reason"><h4>What drives this fit</h4><p>{fitExplanation(lane)}</p></div></div>
         </div>
         <details className="id-read-evidence"><summary>Supporting factors and model detail</summary><div className="id-read-factors"><div><h4>What supports it</h4><p>{lane.confidence.supportingFactors.join(' ') || 'No supporting factor is established by the current inputs.'}</p></div><div><h4>What needs attention</h4><p>{[...lane.confidence.sensitiveFactors, ...lane.confidence.missingInputs].join(' ') || 'Title, permits and market evidence still require independent verification.'}</p></div></div><dl className="id-inspector-metrics">{lane.economics.metrics.map(metric => <div key={metric.label}><dt>{metric.label}</dt><dd>{safeMetric(metric.value)}</dd></div>)}</dl></details>
-        {lane.lane !== top.lane && <p className="id-read-attribution">Highest modeled fit: {laneName(top)}. The Memo summarizes that leading path.</p>}
+        {lane.lane !== top.lane && <p className="id-read-attribution">Leading path: {laneName(top)}. The Memo summarizes that path.</p>}
         <p className="id-read-boundary">Automated model summary. A ranked fit is not a professional recommendation.</p>
       </aside>
       <aside className="id-context" aria-label="Property and model">

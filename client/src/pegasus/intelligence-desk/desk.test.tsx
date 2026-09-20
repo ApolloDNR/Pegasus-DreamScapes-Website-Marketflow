@@ -17,7 +17,7 @@ describe('Public Intelligence Desk', () => {
     desk();
     const nav = await screen.findByRole('navigation', { name: 'Analysis views' });
     expect(within(nav).getAllByRole('button').map(button => button.textContent)).toEqual(['Overview', 'Assumptions', 'Scenarios', 'Risk', 'Memo']);
-    expect(screen.queryByText('Highest modeled fit')).not.toBeInTheDocument();
+    expect(screen.queryByText('Leading path')).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Start a property' }));
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Model assumptions' })).toHaveFocus());
     expect(screen.getByRole('textbox', { name: 'Acquisition or current basis' })).toBeVisible();
@@ -34,7 +34,7 @@ describe('Public Intelligence Desk', () => {
     expect(screen.getByRole('textbox', { name: 'Modeled interest rate' })).toHaveAttribute('aria-invalid', 'true');
     expect(screen.queryByRole('region', { name: 'Key economics' })).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Overview' }));
-    expect(screen.queryByText('Highest modeled fit')).not.toBeInTheDocument();
+    expect(screen.queryByText('Leading path')).not.toBeInTheDocument();
     expect(screen.getByRole('status', { name: 'Analysis unavailable' })).toHaveTextContent('Correct the highlighted inputs');
   });
 
@@ -49,7 +49,7 @@ describe('Public Intelligence Desk', () => {
     expect(within(inspector).getByRole('heading', { name: 'Rental Hold' })).toHaveFocus();
     expect(inspector).toHaveTextContent('Inspecting this path');
     expect(inspector).toHaveTextContent('Rental Hold');
-    expect(inspector).toHaveTextContent('Highest modeled fit: Listing referral');
+    expect(inspector).toHaveTextContent('Leading path: Listing referral');
   });
 
   it('explains the leading metric and opens the exact next assumption with focus', async () => {
@@ -87,7 +87,7 @@ describe('Public Intelligence Desk', () => {
     desk();
     fireEvent.click(await screen.findByRole('button', { name: 'Load illustrative example' }));
     fireEvent.click(screen.getByRole('button', { name: 'Scenarios' }));
-    const conservative = screen.getByRole('region', { name: 'Conservative comparison' });
+    const conservative = screen.getByRole('region', { name: 'Scenario comparison' });
     expect(conservative).toHaveTextContent('Same inputs as Base');
     fireEvent.click(screen.getByRole('button', { name: 'Use Conservative scenario' }));
     expect(conservative).toHaveTextContent('Same inputs as Base');
@@ -95,22 +95,73 @@ describe('Public Intelligence Desk', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Assumptions' }));
     fireEvent.change(screen.getByRole('textbox', { name: 'Acquisition or current basis' }), { target: { value: '600000.01' } });
     fireEvent.click(screen.getByRole('button', { name: 'Scenarios' }));
-    expect(screen.getByRole('region', { name: 'Conservative comparison' })).toHaveTextContent('1 assumption changed');
+    expect(screen.getByRole('region', { name: 'Scenario comparison' })).toHaveTextContent('1 assumption changed');
     fireEvent.click(screen.getByRole('button', { name: 'Assumptions' }));
     fireEvent.change(screen.getByRole('textbox', { name: 'Acquisition or current basis' }), { target: { value: '600000.00' } });
     fireEvent.click(screen.getByRole('button', { name: 'Scenarios' }));
-    expect(screen.getByRole('region', { name: 'Conservative comparison' })).toHaveTextContent('Same inputs as Base');
+    expect(screen.getByRole('region', { name: 'Scenario comparison' })).toHaveTextContent('Same inputs as Base');
     fireEvent.click(screen.getByRole('button', { name: 'Apply Conservative preset' }));
-    const changedScenario = screen.getByRole('region', { name: 'Conservative comparison' });
+    const changedScenario = screen.getByRole('region', { name: 'Scenario comparison' });
     expect(changedScenario).toHaveTextContent('4 assumptions changed');
     expect(changedScenario).toHaveTextContent('$283,500');
     expect(changedScenario).toHaveTextContent('$10,500 more cash than Base');
     expect(changedScenario).toHaveTextContent('lower / month than Base');
-    expect(screen.getByRole('region', { name: 'Base comparison' })).toHaveTextContent('$273,000');
+    expect(within(screen.getByRole('table', { name: 'Scenario results' })).getByRole('row', { name: /Cash required/ })).toHaveTextContent('$273,000');
     fireEvent.click(screen.getByRole('button', { name: 'Reset Conservative to base' }));
     expect(changedScenario).toHaveTextContent('Same inputs as Base');
     expect(changedScenario).toHaveTextContent('$273,000');
     expect(changedScenario).toHaveTextContent('Same as Base');
+  });
+
+  it('previews alternatives without changing the brief or Base, with preset Undo', async () => {
+    desk();
+    fireEvent.click(await screen.findByRole('button', { name: 'Load illustrative example' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Scenarios' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Upside' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Apply Upside preset' }));
+    expect(screen.getByRole('region', { name: 'Scenario comparison' })).toHaveTextContent('Brief uses Base');
+    expect(screen.getByRole('table', { name: 'Scenario results' })).toHaveTextContent('$412');
+    fireEvent.click(screen.getByRole('button', { name: 'Memo' }));
+    expect(screen.getByRole('region', { name: 'Decision brief' })).toHaveTextContent('Base scenario');
+    expect(screen.getByRole('region', { name: 'Decision brief' })).toHaveTextContent('$840,000');
+    fireEvent.click(screen.getByRole('button', { name: 'Scenarios' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Upside' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Use Upside scenario' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Memo' }));
+    expect(screen.getByRole('region', { name: 'Decision brief' })).toHaveTextContent('Upside scenario');
+    expect(screen.getByRole('region', { name: 'Decision brief' })).toHaveTextContent('$882,000');
+    fireEvent.click(screen.getByRole('button', { name: 'Undo' }));
+    expect(screen.getByRole('region', { name: 'Decision brief' })).toHaveTextContent('Base scenario');
+    expect(screen.getByRole('region', { name: 'Decision brief' })).toHaveTextContent('$840,000');
+  });
+
+  it('copies the concise brief with all appendix detail and restores disclosure after printing', async () => {
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText } });
+    desk();
+    fireEvent.click(await screen.findByRole('button', { name: 'Load illustrative example' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Memo' }));
+    const memo = screen.getByRole('region', { name: 'Decision brief' });
+    const appendix = within(memo).getByText('Appendix: assumptions, all paths and evidence').closest('details')!;
+    expect(appendix.open).toBe(false);
+    expect(within(memo).getByRole('heading', { name: 'Next step' })).toBeVisible();
+    fireEvent.click(screen.getByRole('button', { name: 'Copy summary' }));
+    await waitFor(() => expect(writeText).toHaveBeenCalledOnce());
+    const text = writeText.mock.calls[0][0];
+    expect(text.indexOf('Next step:')).toBeLessThan(text.indexOf('APPENDIX'));
+    expect(text).toContain('This gap is not additional sale proceeds.');
+    expect(text).toContain('9.');
+    expect(text).toContain('Rental check (high)');
+    expect(text).toContain('Illustrative example with synthetic inputs.');
+    fireEvent(window, new Event('beforeprint'));
+    expect(appendix.open).toBe(true);
+    fireEvent(window, new Event('afterprint'));
+    expect(appendix.open).toBe(false);
+    fireEvent.click(within(memo).getByText('Appendix: assumptions, all paths and evidence'));
+    appendix.open = true;
+    fireEvent(window, new Event('beforeprint'));
+    fireEvent(window, new Event('afterprint'));
+    expect(appendix.open).toBe(true);
   });
 
   it('reports storage failures without discarding the active model', async () => {
@@ -153,7 +204,7 @@ describe('Public Intelligence Desk', () => {
     const restored = desk();
     expect(await screen.findByRole('region', { name: 'Key economics' })).toHaveTextContent('$283,500');
     fireEvent.click(screen.getByRole('button', { name: 'Memo' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Carry this brief into intake' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Continue with this property' }));
     expect(readStrategyLabHandoff()).toMatchObject({ scenario: 'conservative', askingPrice: 600000, rehabBudget: 115500, arvEstimate: 798000, marketRent: 4275, illustrative: true });
     expect(readStrategyLabHandoff()?.modelAssumptions).toContain('8.5% interest');
     expect(readStrategyLabHandoff()?.memoNextStep).toContain('Validate the exit value');

@@ -1,5 +1,23 @@
 # Pegasus website continuation status
 
+## September 20: six design refinements completed
+
+Apollo authorized the six follow-up refinements identified in the review of `a61c63eb99f979d31005c30e37ebeefe73add7cf`. This continuation uses the same recovery branch and draft PR #26.
+
+- [x] Base and one selected scenario share aligned result and assumption tables, including at 320px. Preview selection and preset application do not silently change the active model. The brief's active scenario is explicit; Base, reset and Undo remain available.
+- [x] The brief leads with the finding, key numbers, critical unknowns and the next check. Full model assumptions, all nine paths, grouped property/rental checks and diligence records remain in an appendix. Copy includes the appendix; printing opens it temporarily and restores the visitor's disclosure state. The checked A4 example has one summary page and two appendix pages.
+- [x] The original mobile homepage photograph is clearly visible below the copy. Image bytes and the light/dark crop and geometry match; desktop composition, palette, labels and all six sections remain.
+- [x] The empty Lab starts with Start a property. Workspace actions and analysis tabs follow the initial guide. Returning-model tools, calculator focus return and deep links remain.
+- [x] The result uses Leading path, or Path in view for another selection. The comparison-gap explanation and non-proceeds limitation stay beside the number.
+- [x] Continue with this property explains that details, the selected assumptions and the model summary proceed to review and consent before submission. The actual handoff and submission contract are unchanged.
+
+The final local rendered review passes 60 layout/accessibility checks across 320, 390, 768 and 1440px in light and dark, including two enlarged-text checks, expanded appendices, calculator focus return, focused assumption editing, scenario isolation and actual PDF generation. Both comparison tables fit without horizontal scrolling. Before/after screenshots were inspected for hierarchy, typography, spacing, palette, assets and responsive behavior. The original hero SHA-256 remains `a1de24393eda3bf7ca0ece805a96b71554b7006aee0fcede5d7c41554d8409a3`.
+
+Current-source TypeScript, all 221 test files / 2,533 tests, the production build, bundle budget and four deployment-entry runtime cases pass locally. Initial JavaScript is 398,542 bytes raw / 119,437 bytes gzip. Hosted CI is recorded on PR #26 and the owner checklist after publication. One initial local full-suite run failed only because the managed runtime injected an experimental-proxy warning into a child process whose test expects empty stderr. The final run filters that specific runtime warning without changing the test or application.
+
+Protected-preview publication remains blocked by the previously verified unavailable Vercel deployment action and absent authenticated CLI. The existing hosted deployment does not represent this revision. Local rendered checks use explicit unavailable-backend fixtures; they do not certify live Peggy, lead delivery or production readiness. No production or DNS changes are included.
+
+
 ## September 20: complete the six design upgrades
 
 Apollo approved the remaining six improvements from the design review. This continuation starts at `7ca814a316b99dea2c986a78f0b6572c6e90f0fa` on the existing branch and PR #26.

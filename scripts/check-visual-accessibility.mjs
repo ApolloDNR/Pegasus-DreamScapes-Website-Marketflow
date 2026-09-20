@@ -2305,7 +2305,7 @@ try {
     assert((await page.locator('.id-memo header').innerText()).includes('291 Pegasus Way'), 'Printed brief lost the current property identity');
     assert(!(await page.evaluate(() => getComputedStyle(document.body, '::before').content)).includes('Investment Summary'), 'Printed desk inherited an unrelated document title');
     await page.emulateMedia({ media: 'screen' });
-    await page.getByRole('button', { name: 'Carry this brief into intake', exact: true }).click();
+    await page.getByRole('button', { name: 'Continue with this property', exact: true }).click();
     await page.getByLabel('Property address').waitFor({ state: 'visible' });
     assert((await page.getByLabel('Property address').inputValue()).includes('291 Pegasus Way'), 'Tool handoff discarded the supported property context');
     await page.goBack();

@@ -60,10 +60,12 @@
   .pg-root .po .ep-opening-with-image .ep-opening-grid { grid-template-columns: minmax(0, 640px) minmax(0, 1fr); }
 }
 @media (max-width: 700px) {
-  /* Retain the approved full-frame photograph and shared geometry. The light
-     overlay protects the complete text column without altering the image. */
+  /* Give the original photograph its own readable band below the mobile copy.
+     Image bytes, crop and layout stay identical between appearances. */
   .pg-root .experience-arrival h1 { font-size: clamp(38px, 8vw, 54px); line-height: 1.12; }
-  .pg-root:not([data-theme='dark']) .experience-arrival::before {
-    background: linear-gradient(110deg, #f5efe4 0%, rgba(245,239,228,.97) 50%, rgba(245,239,228,.86) 100%);
-  }
+  .pg-root .experience-arrival { padding:124px 0 0; min-height:0; }
+  .pg-root .experience-arrival::before { display:none; }
+  .pg-root .experience-arrival-copy { order:1; }
+  .pg-root .experience-hero-image { position:relative; inset:auto; order:2; z-index:0; flex:none; height:clamp(168px,52vw,240px); margin-top:28px; object-position:74% 54%; }
+  .pg-root .experience-arrival .experience-image-notice { order:3; width:100%; max-width:none; margin:0; padding:14px 24px 22px; font-size:12px; }
 }

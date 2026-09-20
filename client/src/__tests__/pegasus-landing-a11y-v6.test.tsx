@@ -461,7 +461,7 @@ describe("Pegasus Strategy Lab workspace accessibility", () => {
         name: "Model assumptions",
       }),
     ).toBeInTheDocument();
-    expect(basisStep).toHaveAttribute("aria-current", "page");
+    expect(within(main!).getByRole("button", { name: "Assumptions" })).toHaveAttribute("aria-current", "page");
   });
 
   it("holds conclusions and intake handoff until the numeric basis is valid", async () => {
@@ -499,7 +499,7 @@ describe("Pegasus Strategy Lab workspace accessibility", () => {
     ).toHaveTextContent(/Correct the highlighted inputs/i);
     expect(within(main).queryByText(/View all nine paths/i)).not.toBeInTheDocument();
     expect(
-      within(main).queryByRole("button", { name: /Carry this brief into intake/i }),
+      within(main).queryByRole("button", { name: /Continue with this property/i }),
     ).not.toBeInTheDocument();
 
     await user.click(within(main).getByRole("button", { name: "Memo" }));
@@ -551,7 +551,7 @@ describe("Pegasus Strategy Lab workspace accessibility", () => {
       within(main).getByRole("region", { name: "Decision brief" }),
     ).toBeInTheDocument();
     const intake = within(main).getByRole("button", {
-      name: /Carry this brief into intake/i,
+      name: /Continue with this property/i,
     });
     expect(intake).toBeEnabled();
     await user.click(intake);
