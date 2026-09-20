@@ -89,7 +89,7 @@ describe('Public Intelligence Desk', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Scenarios' }));
     const conservative = screen.getByRole('region', { name: 'Scenario comparison' });
     expect(conservative).toHaveTextContent('Same inputs as Base');
-    fireEvent.click(screen.getByRole('button', { name: 'Use Conservative scenario' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Use Conservative for brief' }));
     expect(conservative).toHaveTextContent('Same inputs as Base');
     expect(conservative).toHaveTextContent('$273,000');
     fireEvent.click(screen.getByRole('button', { name: 'Assumptions' }));
@@ -107,7 +107,7 @@ describe('Public Intelligence Desk', () => {
     expect(changedScenario).toHaveTextContent('$10,500 more cash than Base');
     expect(changedScenario).toHaveTextContent('lower / month than Base');
     expect(within(screen.getByRole('table', { name: 'Scenario results' })).getByRole('row', { name: /Cash required/ })).toHaveTextContent('$273,000');
-    fireEvent.click(screen.getByRole('button', { name: 'Reset Conservative to base' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Reset Conservative to Base' }));
     expect(changedScenario).toHaveTextContent('Same inputs as Base');
     expect(changedScenario).toHaveTextContent('$273,000');
     expect(changedScenario).toHaveTextContent('Same as Base');
@@ -126,7 +126,7 @@ describe('Public Intelligence Desk', () => {
     expect(screen.getByRole('region', { name: 'Decision brief' })).toHaveTextContent('$840,000');
     fireEvent.click(screen.getByRole('button', { name: 'Scenarios' }));
     fireEvent.click(screen.getByRole('button', { name: 'Upside' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Use Upside scenario' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Use Upside for brief' }));
     fireEvent.click(screen.getByRole('button', { name: 'Memo' }));
     expect(screen.getByRole('region', { name: 'Decision brief' })).toHaveTextContent('Upside scenario');
     expect(screen.getByRole('region', { name: 'Decision brief' })).toHaveTextContent('$882,000');
@@ -178,7 +178,7 @@ describe('Public Intelligence Desk', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Load illustrative example' }));
     fireEvent.click(screen.getByRole('button', { name: 'Scenarios' }));
     fireEvent.click(screen.getByRole('button', { name: 'Apply Conservative preset' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Use Conservative scenario' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Use Conservative for brief' }));
     fireEvent.click(screen.getByRole('button', { name: 'Risk' }));
     expect(screen.getByRole('region', { name: 'Evidence completeness' })).toHaveTextContent('Title: Unreported');
     fireEvent.click(screen.getByRole('button', { name: 'Memo' }));
@@ -198,7 +198,7 @@ describe('Public Intelligence Desk', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Load illustrative example' }));
     fireEvent.click(screen.getByRole('button', { name: 'Scenarios' }));
     fireEvent.click(screen.getByRole('button', { name: 'Apply Conservative preset' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Use Conservative scenario' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Use Conservative for brief' }));
     fireEvent.click(screen.getByRole('button', { name: 'Save locally' }));
     first.unmount();
     const restored = desk();
@@ -243,7 +243,7 @@ describe('Public Intelligence Desk', () => {
     desk();
     fireEvent.click(await screen.findByRole('button', { name: 'Load illustrative example' }));
     fireEvent.click(screen.getByRole('button', { name: 'Scenarios' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Use Conservative scenario' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Use Conservative for brief' }));
     fireEvent.click(screen.getByRole('button', { name: 'Assumptions' }));
     fireEvent.change(screen.getByRole('textbox', { name: 'Modeled loan-to-value' }), { target: { value: '60' } });
     fireEvent.click(screen.getByRole('button', { name: 'Scenarios' }));
@@ -251,7 +251,7 @@ describe('Public Intelligence Desk', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Assumptions' }));
     fireEvent.change(screen.getByRole('textbox', { name: 'Modeled interest rate' }), { target: { value: '101' } });
     fireEvent.click(screen.getByRole('button', { name: 'Scenarios' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Use Base scenario' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Use Base for brief' }));
     expect(screen.getByRole('region', { name: 'Key economics' })).toHaveTextContent('$273,000');
   });
 });
