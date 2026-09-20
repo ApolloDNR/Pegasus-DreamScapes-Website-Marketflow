@@ -2025,18 +2025,34 @@ try {
       const after = await geometryAt();
 
       assert(before.src === after.src, `Theme changed hero source at ${viewport.width}px`);
+      assert(before.src?.endsWith('/images/hero/pegasus-v6-arrival.webp'), 'Hero lost the original architectural image');
       assert(before.objectPosition === after.objectPosition, `Theme changed hero crop at ${viewport.width}px`);
       for (const geometry of [before, after]) {
         const frame = geometry.boxes[0];
         const image = geometry.boxes[1];
         assert(frame && image, `Hero frame or image was missing at ${viewport.width}px`);
-        assert(
-          Math.abs(frame.x - image.x) <= 2
-            && Math.abs(frame.y - image.y) <= 2
-            && Math.abs(frame.width - image.width) <= 2
-            && Math.abs(frame.height - image.height) <= 2,
-          `Hero image did not fill its stable frame at ${viewport.width}px: frame=${JSON.stringify(frame)} image=${JSON.stringify(image)}`,
-        );
+        if (viewport.width <= 700) {
+          const actions = geometry.boxes[4];
+          const notice = geometry.boxes[5];
+          assert(actions && notice, 'Mobile hero lost its actions or architectural-vision label');
+          assert(
+            Math.abs(frame.x - image.x) <= 2
+              && Math.abs(frame.width - image.width) <= 2
+              && image.height >= 168 && image.height <= 242
+              && image.y >= actions.y + actions.height + 16
+              && notice.y >= image.y + image.height - 2
+              && notice.y + notice.height <= frame.y + frame.height + 2,
+            `Mobile hero photo band was clipped, obscured or misplaced: frame=${JSON.stringify(frame)} image=${JSON.stringify(image)}`,
+          );
+        } else {
+          assert(
+            Math.abs(frame.x - image.x) <= 2
+              && Math.abs(frame.y - image.y) <= 2
+              && Math.abs(frame.width - image.width) <= 2
+              && Math.abs(frame.height - image.height) <= 2,
+            `Hero image did not fill its stable frame at ${viewport.width}px: frame=${JSON.stringify(frame)} image=${JSON.stringify(image)}`,
+          );
+        }
       }
       before.boxes.forEach((box, index) => {
         const next = after.boxes[index];

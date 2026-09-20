@@ -402,7 +402,7 @@ describe("Pegasus Strategy Lab workspace accessibility", () => {
     fireEvent.click(await screen.findByRole("button", { name: "Load illustrative example" }));
     fireEvent.click(screen.getByRole("button", { name: "Scenarios" }));
     fireEvent.click(screen.getByRole("button", { name: "Apply Conservative preset" }));
-    fireEvent.click(screen.getByRole("button", { name: "Use Conservative scenario" }));
+    fireEvent.click(screen.getByRole("button", { name: "Use Conservative for brief" }));
     fireEvent.click(screen.getByRole("button", { name: "Memo" }));
     fireEvent.click(screen.getByRole("button", { name: "Discuss with Peggy" }));
     const draft = await screen.findByRole("textbox", { name: "Talk to Peggy" });
