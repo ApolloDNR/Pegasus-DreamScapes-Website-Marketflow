@@ -1,5 +1,19 @@
 # Pegasus website continuation status
 
+## September 20: premium desk refinement
+
+Apollo's visual feedback identified a duplicated start prompt, a result buried behind the diagram, a long phone reading order, indistinguishable initial scenarios and undersized detail text. This pass starts at `4489fa070bfd555a5a0d5a139d6a2dcdc17a3b45` on the existing recovery branch and PR #26.
+
+Overview now leads with the actual inspected path, its primary metric and next diligence step. Supporting evidence and model/funding relationships use explicit disclosures. Selecting a path brings its matching read and keyboard focus into view. The blank desk has one start action and a short input guide; invalid inputs still receive the real validation message. Assumptions presents live feedback after the essential fields on phones and keeps optional property context available on demand.
+
+Scenario comparison names unchanged inputs plainly, counts actual numerical differences rather than formatted strings, and places each explicit preset beside its explanation. Base, scenario isolation, Undo, the nine paths, all eight calculators, draft recovery, print, Peggy and intake contracts remain. The type scale is larger and the dark result panel has a clear edge. The original cream/navy/copper identity and assets remain.
+
+Current-source desktop/phone screenshots of Home, Property Owners, Deal Partners, Our Work, About, Work With Apollo, Contact, intake and Tools were also reviewed. Loaded hero, Nelson and founder images were verified; early lazy-loading captures were not treated as missing-asset defects. These pages retain the approved design.
+
+The local verification checkpoint passed TypeScript, all 221 test files / 2,527 tests, and 70 desk view/theme/width combinations (320, 360, 390, 430, 768, 1024 and 1440px), including expanded model details, enlarged text and print. The final scenario precision/reset/focus review passes all 32 focused desk tests. The production build uses the existing documented `node --import tsx` entry because the ordinary tsx wrapper fails with `EPERM` opening its IPC pipe. Bundle and deployment-entry gates remain required. Final-source build, rendered matrix and CI evidence are recorded on PR #26 after publication.
+
+The managed Browser navigation to the local preview returned `net::ERR_BLOCKED_BY_CLIENT`. The repository-prescribed local Playwright render/accessibility workflow provides the current-source evidence. It does not certify a hosted preview. The exposed Vercel deploy action still lacks an available implementation (`Tool deploy_to_vercel not found`); no repeated deployment attempt or production change is part of this design pass.
+
 ## September 20: first Pegasus Intelligence Desk delivery
 
 The approved Direction C is implemented on the actual public `/strategy-lab` mount with Overview, Assumptions, Scenarios, Risk and Memo. The canonical engine, nine paths, eight calculators, existing draft recovery, intake adapter and disclosures remain. The current brief reaches Peggy's editable composer. Missing or unsupported economics remain explicitly unavailable.

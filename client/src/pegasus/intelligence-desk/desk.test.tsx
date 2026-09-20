@@ -46,9 +46,37 @@ describe('Public Intelligence Desk', () => {
     expect(within(paths).getAllByRole('row')).toHaveLength(10);
     fireEvent.click(within(paths).getByRole('button', { name: 'Inspect Rental Hold' }));
     const inspector = screen.getByRole('complementary', { name: 'Result inspector' });
+    expect(within(inspector).getByRole('heading', { name: 'Rental Hold' })).toHaveFocus();
     expect(inspector).toHaveTextContent('Inspecting this path');
     expect(inspector).toHaveTextContent('Rental Hold');
     expect(inspector).toHaveTextContent('Highest modeled fit: Listing referral');
+  });
+
+  it('makes identical scenarios explicit until a preset is applied and restores that state on reset', async () => {
+    desk();
+    fireEvent.click(await screen.findByRole('button', { name: 'Load illustrative example' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Scenarios' }));
+    const conservative = screen.getByRole('region', { name: 'Conservative comparison' });
+    expect(conservative).toHaveTextContent('Same inputs as Base');
+    fireEvent.click(screen.getByRole('button', { name: 'Use Conservative scenario' }));
+    expect(conservative).toHaveTextContent('Same inputs as Base');
+    expect(conservative).toHaveTextContent('$273,000');
+    fireEvent.click(screen.getByRole('button', { name: 'Assumptions' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Acquisition or current basis' }), { target: { value: '600000.01' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Scenarios' }));
+    expect(screen.getByRole('region', { name: 'Conservative comparison' })).toHaveTextContent('1 assumption changed');
+    fireEvent.click(screen.getByRole('button', { name: 'Assumptions' }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Acquisition or current basis' }), { target: { value: '600000.00' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Scenarios' }));
+    expect(screen.getByRole('region', { name: 'Conservative comparison' })).toHaveTextContent('Same inputs as Base');
+    fireEvent.click(screen.getByRole('button', { name: 'Apply Conservative preset' }));
+    const changedScenario = screen.getByRole('region', { name: 'Conservative comparison' });
+    expect(changedScenario).toHaveTextContent('4 assumptions changed');
+    expect(changedScenario).toHaveTextContent('$283,500');
+    expect(screen.getByRole('region', { name: 'Base comparison' })).toHaveTextContent('$273,000');
+    fireEvent.click(screen.getByRole('button', { name: 'Reset Conservative to base' }));
+    expect(changedScenario).toHaveTextContent('Same inputs as Base');
+    expect(changedScenario).toHaveTextContent('$273,000');
   });
 
   it('reports storage failures without discarding the active model', async () => {
