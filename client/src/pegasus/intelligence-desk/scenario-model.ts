@@ -1,5 +1,17 @@
 import { type Workspace, type ScenarioId, type PlanPhase, type Draft, type ScenarioPatch, type NumericField } from './state';
-import { numericValue } from './model';
+import { numericValue, money } from './model';
+
+const PRECISE_DOLLARS = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
+export function resultDifference(value: number | undefined, base: number | undefined, kind: 'cash' | 'monthly'): string {
+  if (value === undefined || base === undefined || !Number.isFinite(value) || !Number.isFinite(base)) return 'Comparison unavailable';
+  const delta = value - base;
+  if (delta === 0) return 'Same as Base';
+  const amount = Math.abs(delta);
+  const shown = amount < 0.005 ? 'Less than $0.01' : amount < 1 ? PRECISE_DOLLARS.format(amount) : money(amount);
+  return kind === 'cash'
+    ? `${shown} ${delta > 0 ? 'more' : 'less'} cash than Base`
+    : `${shown} ${delta > 0 ? 'higher' : 'lower'} / month than Base`;
+}
 
 export function scenarioDraft(workspace: Workspace, id: ScenarioId): Draft {
   const overrides = id === 'base' ? {} : workspace.variants[id];

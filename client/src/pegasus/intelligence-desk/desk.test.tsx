@@ -52,6 +52,37 @@ describe('Public Intelligence Desk', () => {
     expect(inspector).toHaveTextContent('Highest modeled fit: Listing referral');
   });
 
+  it('explains the leading metric and opens the exact next assumption with focus', async () => {
+    desk();
+    fireEvent.click(await screen.findByRole('button', { name: 'Load illustrative example' }));
+    const inspector = screen.getByRole('complementary', { name: 'Result inspector' });
+    expect(inspector).toHaveTextContent('$840,000 exit value less a $483,000 investor allowance');
+    expect(inspector).toHaveTextContent('This gap is not additional sale proceeds.');
+    expect(inspector).toHaveTextContent('exceeds the model’s $30,000 comparison point');
+    fireEvent.click(within(inspector).getByRole('button', { name: 'Check exit value' }));
+    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Projected exit value' })).toHaveFocus());
+    fireEvent.change(screen.getByRole('textbox', { name: 'Scope / improvement budget' }), { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Overview' }));
+    expect(screen.getByRole('complementary', { name: 'Result inspector' })).toHaveTextContent('Economics unavailable');
+    fireEvent.click(screen.getByRole('button', { name: 'Add scope budget' }));
+    await waitFor(() => expect(screen.getByRole('textbox', { name: 'Scope / improvement budget' })).toHaveFocus());
+  });
+
+  it('opens a closed evidence disclosure and routes unsupported development inputs to diligence', async () => {
+    desk();
+    fireEvent.click(await screen.findByRole('button', { name: 'Load illustrative example' }));
+    fireEvent.click(screen.getByRole('button', { name: 'View all nine paths' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Inspect Joint Venture' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Review financing evidence' }));
+    await waitFor(() => expect(screen.getByRole('combobox', { name: 'Financing evidence' })).toHaveFocus());
+    expect(screen.getByRole('combobox', { name: 'Financing evidence' }).closest('details')).toHaveAttribute('open');
+    fireEvent.click(screen.getByRole('button', { name: 'Overview' }));
+    fireEvent.click(screen.getByRole('button', { name: 'View all nine paths' }));
+    fireEvent.click(screen.getByRole('button', { name: /Inspect ADU/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Open evidence checks' }));
+    await waitFor(() => expect(screen.getByRole('region', { name: 'Next diligence checks' })).toHaveFocus());
+  });
+
   it('makes identical scenarios explicit until a preset is applied and restores that state on reset', async () => {
     desk();
     fireEvent.click(await screen.findByRole('button', { name: 'Load illustrative example' }));
@@ -73,10 +104,13 @@ describe('Public Intelligence Desk', () => {
     const changedScenario = screen.getByRole('region', { name: 'Conservative comparison' });
     expect(changedScenario).toHaveTextContent('4 assumptions changed');
     expect(changedScenario).toHaveTextContent('$283,500');
+    expect(changedScenario).toHaveTextContent('$10,500 more cash than Base');
+    expect(changedScenario).toHaveTextContent('lower / month than Base');
     expect(screen.getByRole('region', { name: 'Base comparison' })).toHaveTextContent('$273,000');
     fireEvent.click(screen.getByRole('button', { name: 'Reset Conservative to base' }));
     expect(changedScenario).toHaveTextContent('Same inputs as Base');
     expect(changedScenario).toHaveTextContent('$273,000');
+    expect(changedScenario).toHaveTextContent('Same as Base');
   });
 
   it('reports storage failures without discarding the active model', async () => {
@@ -122,6 +156,7 @@ describe('Public Intelligence Desk', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Carry this brief into intake' }));
     expect(readStrategyLabHandoff()).toMatchObject({ scenario: 'conservative', askingPrice: 600000, rehabBudget: 115500, arvEstimate: 798000, marketRent: 4275, illustrative: true });
     expect(readStrategyLabHandoff()?.modelAssumptions).toContain('8.5% interest');
+    expect(readStrategyLabHandoff()?.memoNextStep).toContain('Validate the exit value');
     expect(restored.location.history).toContain('/bring-an-opportunity?intent=property&ref=strategy-lab');
   });
 

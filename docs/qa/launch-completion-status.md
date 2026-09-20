@@ -1,5 +1,19 @@
 # Pegasus website continuation status
 
+## September 20: complete the six design upgrades
+
+Apollo approved the remaining six improvements from the design review. This continuation starts at `7ca814a316b99dea2c986a78f0b6572c6e90f0fa` on the existing branch and PR #26.
+
+The current read explains every lane’s primary metric. The listing comparison defines the exit-value/70%-rule allowance gap next to the number and keeps the distinction from additional sale proceeds explicit. A visible factor explains the modeled fit; supporting factors and limitations remain available together.
+
+Next checks prioritize missing economic inputs and relevant reported concerns, then direct the visitor to the exact assumption or evidence checklist. Closed evidence and operating disclosures open before focus moves. Unsupported lot/zoning facts lead to diligence, without inventing input support. The same leading-path guidance follows the active scenario into Memo, copied text, Peggy’s composer and the existing intake adapter.
+
+Scenario results show additional/reduced cash needs, higher/lower monthly rental cash flow and whether the leading path differs from Base. Differences use raw numerical outputs; missing/nonfinite values remain unavailable and sub-dollar changes are not rounded into false equality. Presets, Base isolation, reset and Undo remain. Redundant scenario descriptions, a second result-panel rule and boxed preset notes are removed; the mobile opening is shorter and the numerical result more prominent.
+
+The homepage’s Nelson section now describes the visible galley-to-island kitchen transformation and connects the photographs to the documented budget/sale record. Founder copy describes Apollo’s already-documented operating direction and opportunity-specific written responsibilities. Sources: the original kitchen photographs, `nelson-gallery-data.ts`, `project-nelson-dr.tsx`, `about-v6.tsx`, and `shared/nelson-facts.ts`. No undocumented contractor, permit, brokerage or personal project attribution is added. All six homepage sections and original assets remain.
+
+Local verification passes TypeScript, 221 test files / 2,531 tests (including 36 desk tests), the production build, bundle budget and all four deployment-entry runtime cases. The rendered review passes 70 desk view/width/theme combinations, six homepage checks and four enlarged-text checks, plus nine-path selection, focused evidence actions and print. The 390px result starts at 336px instead of 400px; its specific action ends at 796px. A final adjustment gives the narrowest 320px tabs a second row; its final rendered checks and current-source CI are recorded on PR #26 and the owner checklist. The existing hosted-preview limitation remains: the exposed Vercel deployment action has no implementation. Production or DNS changes are outside this design continuation.
+
 ## September 20: premium desk refinement
 
 Apollo's visual feedback identified a duplicated start prompt, a result buried behind the diagram, a long phone reading order, indistinguishable initial scenarios and undersized detail text. This pass starts at `4489fa070bfd555a5a0d5a139d6a2dcdc17a3b45` on the existing recovery branch and PR #26.

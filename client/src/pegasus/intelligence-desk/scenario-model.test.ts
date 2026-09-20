@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { runStrategyLab } from '@shared/strategy-lab';
 import { emptyWorkspace, illustrativeDraft } from './state';
 import { analyzeDraft } from './model';
-import { applyPreset, scenarioDraft, validatePhases } from './scenario-model';
+import { applyPreset, scenarioDraft, validatePhases, resultDifference } from './scenario-model';
 
 describe('Whole-model scenario experiments', () => {
   const setup = () => ({ ...emptyWorkspace(), base: illustrativeDraft() });
@@ -36,6 +36,23 @@ describe('Whole-model scenario experiments', () => {
     expect(scenarioDraft(conservative, 'conservative').marketRent).toBe('');
     expect(scenarioDraft(conservative, 'conservative').loanRate).toBe('100');
     expect(scenarioDraft(applyPreset(workspace, 'upside'), 'upside').arv).toBe('100000000');
+  });
+});
+
+describe('Readable scenario result differences', () => {
+  it('distinguishes cash needs from monthly cash-flow changes, including negative results', () => {
+    expect(resultDifference(283500, 273000, 'cash')).toBe('$10,500 more cash than Base');
+    expect(resultDifference(250000, 273000, 'cash')).toBe('$23,000 less cash than Base');
+    expect(resultDifference(-412, -576, 'monthly')).toBe('$164 higher / month than Base');
+    expect(resultDifference(-1053, -576, 'monthly')).toBe('$477 lower / month than Base');
+    expect(resultDifference(0, 0, 'cash')).toBe('Same as Base');
+  });
+  it('preserves sub-dollar differences and never turns absent or nonfinite results into zero', () => {
+    expect(resultDifference(273000.01, 273000, 'cash')).toBe('$0.01 more cash than Base');
+    expect(resultDifference(273000.001, 273000, 'cash')).toBe('Less than $0.01 more cash than Base');
+    expect(resultDifference(undefined, 0, 'monthly')).toBe('Comparison unavailable');
+    expect(resultDifference(5, undefined, 'cash')).toBe('Comparison unavailable');
+    expect(resultDifference(Infinity, 0, 'cash')).toBe('Comparison unavailable');
   });
 });
 

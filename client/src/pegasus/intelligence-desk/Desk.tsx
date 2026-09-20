@@ -12,6 +12,7 @@ import { Assumptions } from './Assumptions';
 import { Scenarios } from './Scenarios';
 import { Risk } from './Risk';
 import { Memo, peggyBrief } from './Memo';
+import { nextReadText, type ReadAction } from './read-guidance';
 
 const CalculatorToolsPanel = React.lazy(() => import('@/components/strategy-lab/calculator-tools-panel').then(module => ({ default: module.CalculatorToolsPanel })));
 const CALCULATORS: CalcTabKey[] = ['arv', 'roi', 'brrrr', 'cashflow', 'wholesale', 'piti', 'ownvsrent', 'hardmoney'];
@@ -46,6 +47,7 @@ export function IntelligenceDesk({ openPeggy }: { openPeggy: (role?: string, pro
   const calculatorPanel = React.useRef<HTMLElement>(null);
   const calculatorOpener = React.useRef<HTMLButtonElement>(null);
   const focusView = React.useRef(false);
+  const focusTarget = React.useRef<ReadAction | null>(null);
   const calculatorSource = React.useRef<'deeplink' | 'user'>(initial.calculators ? 'deeplink' : 'user');
   React.useEffect(() => {
     let saved: Workspace | null = null;
@@ -74,8 +76,20 @@ export function IntelligenceDesk({ openPeggy }: { openPeggy: (role?: string, pro
   React.useEffect(() => {
     if (!focusView.current) return;
     focusView.current = false;
-    workspaceElement.current?.scrollIntoView?.({ block: 'start', behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-    const frame = window.requestAnimationFrame(() => heading.current?.focus({ preventScroll: true }));
+    const target = focusTarget.current;
+    focusTarget.current = null;
+    const frame = window.requestAnimationFrame(() => {
+      const control = target ? workspaceElement.current?.querySelector<HTMLElement>(target.evidence ? '[data-desk-evidence]' : `[data-desk-field="${target.field}"]`) : null;
+      if (control) {
+        const disclosure = control.closest('details');
+        if (disclosure) disclosure.open = true;
+        control.scrollIntoView?.({ block: 'center', behavior: 'auto' });
+        control.focus({ preventScroll: true });
+      } else {
+        workspaceElement.current?.scrollIntoView?.({ block: 'start', behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+        heading.current?.focus({ preventScroll: true });
+      }
+    });
     return () => window.cancelAnimationFrame(frame);
   }, [view]);
   React.useEffect(() => {
@@ -125,7 +139,7 @@ export function IntelligenceDesk({ openPeggy }: { openPeggy: (role?: string, pro
     if (analysis.status !== 'ready') { move('assumptions'); return; }
     const { property, presentation: snapshot } = analysis;
     const top = snapshot.lanes[0];
-    const saved = writeStrategyLabHandoff({ address: property.address, propertyType: draft.propertyType, occupancy: draft.occupancy, condition: draft.condition, situation: draft.situation, askingPrice: property.purchasePrice, rehabBudget: property.rehabBudget, arvEstimate: property.arvEstimate, marketRent: property.marketRent, topLaneLabel: laneName(top), topLaneVerdict: top.verdictLabel, primaryMetric: `${top.economics.primaryMetric}: ${safeMetric(top.economics.primaryValue)}`, memoNextStep: `${SCENARIO_NAMES[workspace.activeScenario]} scenario. ${snapshot.memo.nextStep}`, engineVersion: snapshot.engineVersion, generatedAt: snapshot.generatedAt, scenario: workspace.activeScenario, illustrative: draft.illustrative, scopeReported: property.rehabBudget !== undefined, modelAssumptions: `${analysis.options.loanLtvPct}% acquisition LTV; ${analysis.options.loanRatePct}% interest; ${analysis.options.loanTermYears} years; ${analysis.options.closingReservePct}% closing reserve` });
+    const saved = writeStrategyLabHandoff({ address: property.address, propertyType: draft.propertyType, occupancy: draft.occupancy, condition: draft.condition, situation: draft.situation, askingPrice: property.purchasePrice, rehabBudget: property.rehabBudget, arvEstimate: property.arvEstimate, marketRent: property.marketRent, topLaneLabel: laneName(top), topLaneVerdict: top.verdictLabel, primaryMetric: `${top.economics.primaryMetric}: ${safeMetric(top.economics.primaryValue)}`, memoNextStep: `${SCENARIO_NAMES[workspace.activeScenario]} scenario. ${nextReadText(draft, analysis)}`, engineVersion: snapshot.engineVersion, generatedAt: snapshot.generatedAt, scenario: workspace.activeScenario, illustrative: draft.illustrative, scopeReported: property.rehabBudget !== undefined, modelAssumptions: `${analysis.options.loanLtvPct}% acquisition LTV; ${analysis.options.loanRatePct}% interest; ${analysis.options.loanTermYears} years; ${analysis.options.closingReservePct}% closing reserve` });
     if (!saved) { setNotice('This browser blocked the intake handoff. Copy the summary from Memo to keep it.'); return; }
     setLocation('/bring-an-opportunity?intent=property&ref=strategy-lab');
   };
@@ -138,11 +152,11 @@ export function IntelligenceDesk({ openPeggy }: { openPeggy: (role?: string, pro
     catch { setNotice('Clipboard access is unavailable. Select and copy the visible brief, or use Print.'); }
   };
   return <div className="id-desk">
-    <header className="id-opening"><div><h1>Strategy Lab.</h1><p>Pegasus Intelligence Desk</p></div><div className="id-actions"><button type="button" className="id-button" onClick={save}><Save aria-hidden="true" />Save locally</button><button type="button" className="id-text-button" ref={calculatorOpener} onClick={() => { calculatorSource.current = 'user'; setCalculators(true); updateQuery({ tool: 'calculators' }); }}><SlidersHorizontal aria-hidden="true" />Open calculators</button></div></header>
+    <header className="id-opening"><div><h1>Strategy Lab.</h1><p>Pegasus Intelligence Desk</p></div><div className="id-actions"><button type="button" className="id-button" onClick={save}><Save aria-hidden="true" />Save locally</button><button type="button" className="id-text-button" aria-label="Open calculators" ref={calculatorOpener} onClick={() => { calculatorSource.current = 'user'; setCalculators(true); updateQuery({ tool: 'calculators' }); }}><SlidersHorizontal aria-hidden="true" />Calculators</button></div></header>
     <div className="id-command"><div className="id-property"><strong>{draft.address || draft.city || 'New property model'}</strong><span>{SCENARIO_NAMES[workspace.activeScenario]} scenario · {draft.illustrative ? 'Synthetic example' : 'Unverified inputs'}</span></div><nav aria-label="Analysis views">{VIEWS.map(item => <button type="button" key={item} aria-current={view === item ? 'page' : undefined} onClick={() => move(item)}>{VIEW_NAMES[item]}</button>)}</nav></div>
     {confirmation && <div className="id-confirm" role="alert"><p>{confirmation === 'clear' ? 'Clear the working desk and saved browser draft?' : 'Replace your working inputs with a synthetic example? Saved data changes only when you save.'}</p><button type="button" className="id-button" onClick={confirmation === 'clear' ? clear : example}>{confirmation === 'clear' ? 'Confirm clear' : 'Confirm load example'}</button><button type="button" className="id-text-button" onClick={() => setConfirmation(null)}>Cancel</button></div>}
     <section className="id-workspace" ref={workspaceElement} aria-labelledby="desk-view-heading" data-testid="strategy-lab-workspace"><h2 ref={heading} id="desk-view-heading" tabIndex={-1} className={view === 'overview' ? 'sr-only' : 'id-view-title'}>{VIEW_HEADINGS[view]}</h2>
-      {view === 'overview' && <Overview draft={draft} analysis={analysis} selectedLane={selectedLane} onLane={inspect} onView={move} onExample={example} />}
+      {view === 'overview' && <Overview draft={draft} analysis={analysis} selectedLane={selectedLane} onLane={inspect} onView={move} onExample={example} onAction={action => { focusTarget.current = action; move(action.evidence ? 'risk' : 'assumptions'); }} />}
       {view === 'assumptions' && <Assumptions draft={draft} analysis={analysis} scenario={workspace.activeScenario} onChange={change} onOverview={() => move('overview')} />}
       {view === 'scenarios' && <Scenarios workspace={workspace} analysis={analysis} selectedLane={selectedLane} onLane={inspect} onUse={id => setWorkspace(current => ({ ...current, activeScenario: id }))} onPreset={id => replace(applyPreset(workspace, id), `${SCENARIO_NAMES[id]} preset applied. Select that scenario to edit or use its model.`)} onReset={id => replace({ ...workspace, variants: { ...workspace.variants, [id]: {} } }, `${SCENARIO_NAMES[id]} now matches Base.`)} onApply={apply} onEdit={() => move('assumptions')} />}
       {view === 'risk' && <Risk draft={draft} analysis={analysis} diligence={workspace.diligence} phases={workspace.phases} onDiligence={id => setWorkspace(current => ({ ...current, diligence: current.diligence.includes(id) ? current.diligence.filter(item => item !== id) : [...current.diligence, id] }))} onPhase={(id, key, value) => setWorkspace(current => ({ ...current, phases: current.phases.map(phase => phase.id === id ? { ...phase, [key]: value } : phase) }))} onEdit={() => move('assumptions')} />}

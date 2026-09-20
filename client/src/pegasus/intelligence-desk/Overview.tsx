@@ -5,6 +5,7 @@ import { money, laneName, safeMetric, type Analysis, type ReadyAnalysis } from '
 import { type Draft, type DeskView } from './state';
 import { CapitalBreakdown } from './CapitalBreakdown';
 import { DecisionCanvas, stageDetails, type Stage } from './DecisionCanvas';
+import { fitExplanation, metricExplanation, nextReadAction, type ReadAction } from './read-guidance';
 
 export function KeyEconomics({ analysis }: { analysis: ReadyAnalysis }) {
   const total = analysis.presentation.capitalStack.reduce((sum, row) => sum + row.amount, 0);
@@ -21,7 +22,7 @@ export function Unavailable({ analysis, onEdit }: { analysis: Analysis; onEdit: 
   return <div className="id-unavailable" role="status" aria-label="Analysis unavailable"><CircleAlert aria-hidden="true" /><div><h3>{analysis.status === 'invalid' ? 'Check the assumptions.' : 'A few facts first.'}</h3><p>{analysis.status === 'invalid' ? 'Correct the highlighted inputs in Assumptions to restore the analysis.' : 'Add a positive purchase basis and either an exit value or monthly rent. A decision brief needs valid inputs.'}</p><button type="button" className="id-text-button" onClick={onEdit}>Edit assumptions <ArrowRight aria-hidden="true" /></button></div></div>;
 }
 
-export function Overview({ draft, analysis, selectedLane, onLane, onView, onExample }: { draft: Draft; analysis: Analysis; selectedLane: StrategyLane | null; onLane: (lane: StrategyLane) => void; onView: (view: DeskView) => void; onExample: () => void }) {
+export function Overview({ draft, analysis, selectedLane, onLane, onView, onExample, onAction }: { draft: Draft; analysis: Analysis; selectedLane: StrategyLane | null; onLane: (lane: StrategyLane) => void; onView: (view: DeskView) => void; onExample: () => void; onAction: (action: ReadAction) => void }) {
   const [stage, setStage] = React.useState<Stage | null>(null);
   const [allPaths, setAllPaths] = React.useState(false);
   const resultHeading = React.useRef<HTMLHeadingElement>(null);
@@ -46,6 +47,7 @@ export function Overview({ draft, analysis, selectedLane, onLane, onView, onExam
   const snapshot = analysis.presentation;
   const lane = snapshot.lanes.find(item => item.lane === selectedLane) ?? snapshot.lanes[0];
   const top = snapshot.lanes[0];
+  const next = nextReadAction(draft, analysis, lane);
   const detail = stage ? stageDetails(stage, analysis) : null;
   const inspect = (next: StrategyLane) => {
     onLane(next);
@@ -58,10 +60,10 @@ export function Overview({ draft, analysis, selectedLane, onLane, onView, onExam
       <aside className="id-read" aria-label="Result inspector" aria-live="polite">
         <header><h2>Current read</h2><span>{lane.lane === top.lane ? 'Highest modeled fit' : 'Inspecting this path'}</span></header>
         <div className="id-read-main">
-          <div><h3 ref={resultHeading} tabIndex={-1}>{laneName(lane)}</h3><p className="id-verdict">{lane.verdictLabel}</p><dl className="id-read-primary"><div><dt>{lane.economics.primaryMetric}</dt><dd>{safeMetric(lane.economics.primaryValue)}</dd></div></dl></div>
-          <div className="id-read-next"><h4>Next diligence step</h4><p>{lane.lane === top.lane ? snapshot.memo.nextStep : lane.confidence.missingInputs[0] || 'Validate the inputs and sensitive factors for this inspected path.'}</p><button type="button" className="id-text-button" onClick={() => onView('assumptions')}>Edit assumptions <ArrowRight aria-hidden="true" /></button></div>
+          <div><h3 ref={resultHeading} tabIndex={-1}>{laneName(lane)}</h3><p className="id-verdict">{lane.verdictLabel}</p><dl className="id-read-primary"><div><dt>{lane.lane === 'listing_referral' ? 'Exit value above investor allowance' : lane.economics.primaryMetric}</dt><dd>{safeMetric(lane.economics.primaryValue)}</dd></div></dl><p className="id-metric-explanation">{metricExplanation(analysis, lane)}</p></div>
+          <div className="id-read-next"><h4>{next.title}</h4><p>{next.detail}</p><button type="button" className="id-text-button" onClick={() => onAction(next)}>{next.label} <ArrowRight aria-hidden="true" /></button><div className="id-fit-reason"><h4>What drives this fit</h4><p>{fitExplanation(lane)}</p></div></div>
         </div>
-        <details className="id-read-evidence"><summary>Why this path appears</summary><div className="id-read-factors"><div><h4>What supports it</h4><p>{lane.confidence.supportingFactors[0] || 'No supporting factor is established by the current inputs.'}</p></div><div><h4>What needs attention</h4><p>{lane.confidence.sensitiveFactors[0] || lane.confidence.missingInputs[0] || 'Title, permits and market evidence still require independent verification.'}</p></div></div><dl className="id-inspector-metrics">{lane.economics.metrics.slice(0, 2).map(metric => <div key={metric.label}><dt>{metric.label}</dt><dd>{safeMetric(metric.value)}</dd></div>)}</dl></details>
+        <details className="id-read-evidence"><summary>Supporting factors and model detail</summary><div className="id-read-factors"><div><h4>What supports it</h4><p>{lane.confidence.supportingFactors.join(' ') || 'No supporting factor is established by the current inputs.'}</p></div><div><h4>What needs attention</h4><p>{[...lane.confidence.sensitiveFactors, ...lane.confidence.missingInputs].join(' ') || 'Title, permits and market evidence still require independent verification.'}</p></div></div><dl className="id-inspector-metrics">{lane.economics.metrics.map(metric => <div key={metric.label}><dt>{metric.label}</dt><dd>{safeMetric(metric.value)}</dd></div>)}</dl></details>
         {lane.lane !== top.lane && <p className="id-read-attribution">Highest modeled fit: {laneName(top)}. The Memo summarizes that leading path.</p>}
         <p className="id-read-boundary">Automated model summary. A ranked fit is not a professional recommendation.</p>
       </aside>

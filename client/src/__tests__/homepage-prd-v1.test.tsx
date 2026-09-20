@@ -112,7 +112,7 @@ describe("Homepage premium editorial contract", () => {
   it("keeps accounting and role attribution out of the homepage evidence summary", () => {
     const { container } = renderHome();
     const proof = container.querySelector<HTMLElement>('[data-hv="proof"]')!;
-    expect(proof).toHaveTextContent('A completed East Bay residential transformation.');
+    expect(proof).toHaveTextContent('The renovation moved the cooktop to a waterfall island with seating.');
     expect(proof).not.toHaveTextContent(/\$|ROI|profit|sourced the deal/);
     expect(within(proof).getByRole('link')).toHaveAttribute('href','/projects/nelson-dr');
   });

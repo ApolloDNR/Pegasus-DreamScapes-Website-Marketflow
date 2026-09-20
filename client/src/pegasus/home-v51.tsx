@@ -53,19 +53,20 @@ export function HomePageV51(_props: { go: Nav; openPeggy: () => void }) {
     </section>
     <section className="experience-evidence experience-section" data-hv="proof" aria-labelledby="home-proof-title">
       <div className="experience-wrap">
-        <div className="experience-section-head"><h2 id="home-proof-title">Nelson Drive,<br /> before and after.</h2><p>A completed East Bay residential transformation. Explore the property, the decisions, and the documented outcome.</p></div>
+        <div className="experience-section-head"><h2 id="home-proof-title">Nelson Drive,<br /> before and after.</h2><p>The renovation moved the cooktop to a waterfall island with seating. Navy cabinetry and a statement hood give the finished kitchen a clear focal point.</p></div>
         <div className="experience-photo-pair">
           <figure><img src="/images/nelson/kitchen-before.webp" alt="Nelson Drive kitchen before the renovation" width={1600} height={999} loading="lazy" decoding="async" /><figcaption>Before · Original kitchen</figcaption></figure>
           <figure><img src="/images/nelson/kitchen-after.webp" alt="Nelson Drive kitchen after the renovation: navy cabinetry and a waterfall island" width={1600} height={996} loading="lazy" decoding="async" /><figcaption>After · Completed interior</figcaption></figure>
         </div>
-        <Link href="/projects/nelson-dr" className="experience-link">Explore the case study<ArrowRight aria-hidden="true" size={17} /></Link>
+        <div className="experience-proof-note"><p>The useful comparison goes beyond the finishes: follow the original condition, the documented improvement budget, and the sale, with the limits of the record kept in view.</p><Link href="/projects/nelson-dr" className="experience-link">Explore the case study<ArrowRight aria-hidden="true" size={17} /></Link></div>
       </div>
     </section>
     <section className="experience-founder experience-section" data-hv="founder" aria-labelledby="home-founder-title">
       <div className="experience-wrap experience-founder-layout">
         <figure><img src="/images/founder/apollo.webp" alt="Apollo Duran, founder of Pegasus Dreamscapes" width={1100} height={1375} loading="lazy" decoding="async" /></figure>
         <div className="experience-founder-copy"><h2 id="home-founder-title">Apollo Duran</h2><p className="experience-founder-role">Founder, Pegasus Dreamscapes</p>
-          <p>Apollo’s background is in residential construction and real estate operations. Pegasus connects property strategy with the work required to carry it out.</p>
+          <p>Apollo’s background is in residential construction and real estate operations. He sets Pegasus’s operating direction, bringing purchase basis, renovation scope, timing, and the intended sale or hold into the same conversation.</p>
+          <p>Each accepted opportunity defines Pegasus’s role and responsibilities in writing. That is where the property strategy becomes a specific scope of work.</p>
           <Link href="/about" className="experience-link">Meet Apollo<ArrowRight aria-hidden="true" size={17} /></Link>
           <div className="experience-representation"><Link href="/work-with-apollo" className="experience-link">Buy or sell with Apollo<ArrowRight aria-hidden="true" size={17} /></Link><p className="experience-notice">{REPRESENTATION_NOTICE}</p></div>
         </div>

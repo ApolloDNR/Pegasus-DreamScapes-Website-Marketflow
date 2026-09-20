@@ -4,6 +4,8 @@ This file is the standard Codex decision entrypoint for the website repo. Keep d
 
 ## Current Controlling Decisions
 
+- September 20 clarity upgrade: explain the current lane’s primary metric and a scoring factor beside the result. Derive a specific next evidence/input check from the active model; keep that same leading-path guidance in Memo, Peggy and intake. Compare scenario results against Base using unrounded values and explicit units. Preserve the six-section homepage and use only the documented Nelson photographs and existing founder-role facts for richer copy.
+
 - September 20 premium refinement: the Intelligence Desk leads with the actual path read and next diligence step; supporting evidence and funding diagrams are deliberate disclosures. Phone editing brings live feedback after essential inputs. Scenarios explicitly distinguish identical Base inputs from actual numeric overrides; presets remain opt-in. Preserve the established site identity, canonical model, privacy and handoff contracts.
 
 - On 2026-09-15 Apollo requested parchment/cream light mode as the initial appearance. New visitors start in light mode regardless of the OS; a saved explicit light, dark, or system preference is retained. Theme switching stays in the existing menu. This supersedes system-first initialization, not the approved navy hero, footer, imagery, or page structure.
