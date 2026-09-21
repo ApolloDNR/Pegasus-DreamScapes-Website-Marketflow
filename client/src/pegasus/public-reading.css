@@ -1,0 +1,40 @@
+/* Shared reading and form geometry for the established standalone shell. */
+.public-reading-surface { --background:40 50% 98%; --foreground:203 58% 10%; --card:40 50% 98%; --card-foreground:203 58% 10%; --muted:38 33% 93%; --muted-foreground:200 5% 38%; --primary:21 48% 40%; --primary-foreground:40 50% 98%; --border:32 21% 75%; font-family:Inter,system-ui,sans-serif; }
+.public-reading-surface[data-theme='dark'] { --background:203 58% 10%; --foreground:40 50% 98%; --card:203 49% 15%; --card-foreground:40 50% 98%; --muted:203 49% 15%; --muted-foreground:192 9% 77%; --primary:26 55% 67%; --primary-foreground:203 58% 10%; --border:202 13% 37%; }
+.public-reading-surface h1[tabindex='-1']:focus { outline:none; }
+.public-reading-surface :is(input:not([type='checkbox']):not([type='radio']),select,textarea) { font-size:16px; }
+.public-reading-surface :is(section[id],fieldset,legend) { scroll-margin-top:112px; }
+.legal-page > section:first-child { padding-block:144px 48px; background:#0b1d29; }
+.legal-page > section:first-child > :is(svg,.absolute) { display:none; }
+.legal-page h1 { font:400 clamp(36px,4.8vw,64px)/1.15 'Playfair Display',Georgia,serif; letter-spacing:0; max-width:760px; }
+.legal-page h1 > span { display:block; color:#c0c8ca; background:none; font:400 22px/1.5 Inter,system-ui,sans-serif; margin-top:20px; }
+.legal-page h1 br { display:none; }
+.legal-page > section:not(:first-child) { padding-block:40px; }
+.legal-page > section > div { max-width:960px; }
+.legal-page section > div > .grid.lg\:grid-cols-2 { grid-template-columns:1fr; }
+.legal-page h2 { font:400 clamp(26px,3vw,34px)/1.25 'Playfair Display',Georgia,serif; letter-spacing:0; }
+.legal-page nav a { min-height:48px; border-radius:2px; }
+.legal-page p { line-height:1.7; }
+.intake-page { padding-top:136px; background:var(--experience-paper,#f5efe4); color:var(--experience-text,#0b1d29); }
+.intake-page h1 { font:400 clamp(34px,4vw,56px)/1.15 'Playfair Display',Georgia,serif; letter-spacing:0; text-wrap:balance; }
+.intake-opening { margin-bottom:24px; }
+.intake-label { margin-bottom:12px; color:var(--experience-copper,#8e5030); font:500 14px/1.5 Inter,system-ui,sans-serif; }
+.intake-draft-note { max-width:65ch; font-size:14px; line-height:1.65; color:#5c6265; margin:0 0 28px; }
+.intake-page [aria-label='Form progress'] { margin-bottom:24px; }
+.intake-page [aria-label='Form progress'] button { min-height:44px; padding-top:4px; }
+.intake-page [aria-label='Form progress'] button:focus-visible { outline:2px solid var(--experience-copper,#8e5030); outline-offset:4px; }
+.intake-choices > button { min-height:64px; padding-left:12px; }
+.intake-choices > button[aria-pressed='true'] { background:var(--experience-limestone,#eee5d6); box-shadow:inset 2px 0 var(--experience-copper,#8e5030); }
+.intake-choices > button:hover { background:var(--experience-limestone,#eee5d6); }
+.dark .intake-draft-note { color:#c0c8ca; }
+.intake-page label { font-size:14px; }
+.intake-page input:focus-visible,.intake-page select:focus-visible,.intake-page textarea:focus-visible { outline:2px solid #975735; outline-offset:4px; }
+.dark .intake-page input:focus-visible,.dark .intake-page select:focus-visible,.dark .intake-page textarea:focus-visible { outline-color:#d9a47c; }
+.intake-review { border-block:1px solid hsl(var(--border)); margin:24px 0; padding-block:16px; }
+.intake-review summary { cursor:pointer; font-size:16px; min-height:44px; padding-block:8px; }
+.intake-review dl > div { display:grid; grid-template-columns:120px minmax(0,1fr) 44px; gap:16px; align-items:baseline; padding:12px 0; border-top:1px solid hsl(var(--border)); }
+.intake-review dt { font-size:13px; color:hsl(var(--muted-foreground)); }
+.intake-review dd { margin:0; font-size:14px; overflow-wrap:anywhere; }
+.intake-review button { font-size:14px; min-height:44px; color:hsl(var(--primary)); text-decoration:underline; text-underline-offset:4px; }
+@media(max-width:1099px) { .intake-page { padding-top:108px; } .legal-page > section:first-child { padding-top:124px; } }
+@media(max-width:600px) { .intake-review dl > div { grid-template-columns:1fr 44px; gap:4px 16px; } .intake-review dt { grid-column:1; } .intake-review dd { grid-column:1; } .intake-review button { grid-column:2; grid-row:span 2; } }

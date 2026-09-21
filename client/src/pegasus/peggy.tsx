@@ -4,12 +4,16 @@ import type { ChatTurn, PeggyHandoff, Nav } from './theme';
 import { PEGGY_ROLES, PEGGY_FOLLOWUPS, PEGGY_SLA, PEGGY_COMPLIANCE, PEGGY_STATUS } from './data';
 import { BrandMark } from './primitives';
 import { addChat } from './savedStore';
+import {
+  type PeggyConversationAccessResponse,
+} from '@shared/peggy-access';
+import { peggyFetchWithSingleRefresh } from '@/lib/peggy-access';
 
 const GREETING =
-  "I’m Peggy, Pegasus’s AI concierge. Tell me what you’re bringing, a property, a deal, a project, or a plan, in your own words. I’ll help organize it and route it to the appropriate Pegasus review path.";
+  "I’m Peggy, Pegasus’s AI intake assistant. Describe the property, deal, project, or plan in your own words. I can explain relevant public paths and help create an intake record, but I cannot promise human review, routing, advice, or a response.";
 
 const FALLBACK =
-  "I can’t reach my brain at the moment. You can still get a fast read from a person: start a Review and someone writes back within 48 hours, or open the Strategy Lab to model the numbers yourself.";
+  "I can’t reach the chat service right now. You can still share the context for possible consideration or open Strategy Lab to model your own assumptions. Human review, follow-up, and response timing are not promised.";
 
 type ChatMessage = { role: 'user' | 'assistant'; content: string };
 
@@ -20,23 +24,25 @@ type HandoffAction =
 const HANDOFF_RE = /\[\[HANDOFF\]\]([\s\S]*?)\[\[\/HANDOFF\]\]/;
 
 function SaveChatButton({ turns }: { turns: ChatTurn[] }) {
-  const [saved, setSaved] = useState(false);
+  const [saveState, setSaveState] = useState<'idle' | 'saved' | 'error'>('idle');
 
   const firstUser = turns.find((t) => t.role === 'user')?.content ?? '';
   const title = firstUser ? firstUser.slice(0, 80) : 'Peggy conversation';
 
   const onClick = () => {
-    if (saved) return;
-    addChat(title, turns);
-    setSaved(true);
+    if (saveState === 'saved') return;
+    const result = addChat(title, turns);
+    setSaveState(result.ok ? 'saved' : 'error');
   };
 
   return (
-    <button type="button" onClick={onClick} disabled={saved}
-      aria-label="Save this conversation"
-      className="ml-auto inline-flex items-center gap-1.5 pg-label !text-[8px] !tracking-[0.16em] text-[var(--cream)]/70 hover:text-[var(--cream)] transition-colors disabled:opacity-70">
-      {saved ? (
+    <button type="button" onClick={onClick} disabled={saveState === 'saved'}
+      aria-label={saveState === 'error' ? 'Retry saving this conversation' : 'Save this conversation'}
+      className="ml-auto inline-flex items-center gap-1.5 pg-label !text-[13px] !tracking-normal text-[var(--cream)]/70 hover:text-[var(--cream)] transition-colors disabled:opacity-70">
+      {saveState === 'saved' ? (
         <><BookmarkCheck className="w-3.5 h-3.5" strokeWidth={1.8} /> Saved</>
+      ) : saveState === 'error' ? (
+        <><Bookmark className="w-3.5 h-3.5" strokeWidth={1.8} /> <span role="status">Save failed. Retry</span></>
       ) : (
         <><Bookmark className="w-3.5 h-3.5" strokeWidth={1.8} /> Save chat</>
       )}
@@ -71,6 +77,7 @@ export function Peggy({
   go,
   toSubmit,
   initialRole = null,
+  initialPrompt = null,
 }: {
   open: boolean;
   setOpen: (v: boolean) => void;
@@ -79,16 +86,20 @@ export function Peggy({
   go: Nav;
   toSubmit: (intent?: string) => void;
   initialRole?: string | null;
+  initialPrompt?: string | null;
 }) {
   const panelId = useId();
   const fabRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
-  const convIdRef = useRef<number | null>(null);
+  const conversationAccessRef =
+    useRef<PeggyConversationAccessResponse | null>(null);
 
   const [messages, setMessages] = useState<ChatMessage[]>([{ role: 'assistant', content: GREETING }]);
   const [draft, setDraft] = useState('');
+  const suppliedPromptRef = useRef<string | null>(null);
   const [streaming, setStreaming] = useState(false);
   const [errored, setErrored] = useState(false);
   const [pickedRole, setPickedRole] = useState<string | null>(null);
@@ -99,7 +110,15 @@ export function Peggy({
     if (open && !messages.some((message) => message.role === 'user')) {
       setPickedRole(typeof initialRole === 'string' && initialRole ? initialRole : null);
     }
-  }, [open, initialRole, messages]);
+  }, [open, initialPrompt, initialRole, messages]);
+
+  useEffect(() => {
+    if (!open) { suppliedPromptRef.current = null; return; }
+    if (initialPrompt?.trim() && initialPrompt !== suppliedPromptRef.current) {
+      suppliedPromptRef.current = initialPrompt;
+      setDraft(initialPrompt.trim());
+    }
+  }, [open, initialPrompt]);
 
   useEffect(() => {
     if (!open) return;
@@ -110,6 +129,20 @@ export function Peggy({
     const id = requestAnimationFrame(() => inputRef.current?.focus());
     return () => { document.removeEventListener('keydown', onKey); cancelAnimationFrame(id); };
   }, [open, setOpen]);
+
+  // Match the visible viewport when a mobile soft keyboard reduces usable space.
+  useEffect(() => {
+    if (!open || !window.visualViewport) return;
+    const viewport = window.visualViewport;
+    const update = () => {
+      panelRef.current?.style.setProperty('--peggy-viewport-height', `${viewport.height}px`);
+      panelRef.current?.style.setProperty('--peggy-keyboard-offset', `${Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop)}px`);
+    };
+    update();
+    viewport.addEventListener('resize', update);
+    viewport.addEventListener('scroll', update);
+    return () => { viewport.removeEventListener('resize', update); viewport.removeEventListener('scroll', update); };
+  }, [open]);
 
   // Keep the transcript scrolled to the latest turn.
   useEffect(() => {
@@ -160,7 +193,7 @@ export function Peggy({
 
       try {
         // Ensure a conversation exists for this session before chatting.
-        if (convIdRef.current == null) {
+        if (conversationAccessRef.current == null) {
           const convRes = await fetch('/api/peggy/conversations', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -168,20 +201,41 @@ export function Peggy({
             signal: controller.signal,
           });
           if (!convRes.ok) throw new Error(`Conversation failed: ${convRes.status}`);
-          const conv = await convRes.json();
-          convIdRef.current = conv?.id ?? conv?.conversation?.id ?? null;
-          if (convIdRef.current == null) throw new Error('No conversation id');
+          const conv = (await convRes.json()) as
+            Partial<PeggyConversationAccessResponse> & {
+              conversation?: Partial<PeggyConversationAccessResponse>;
+            };
+          const id = conv?.id ?? conv?.conversation?.id;
+          const rawAccessToken =
+            conv?.accessToken ?? conv?.conversation?.accessToken;
+          const accessToken =
+            typeof rawAccessToken === 'string' ? rawAccessToken.trim() : '';
+          if (!Number.isSafeInteger(id) || (id as number) <= 0 || !accessToken) {
+            throw new Error('No conversation access');
+          }
+          conversationAccessRef.current = {
+            id: id as number,
+            accessToken,
+          };
         }
 
-        const res = await fetch('/api/peggy/chat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            conversationId: convIdRef.current,
-            message: content,
-            context: { surface: 'public-peggy' },
-          }),
-          signal: controller.signal,
+        const credential = conversationAccessRef.current;
+        if (!credential) throw new Error('No conversation access');
+
+        const res = await peggyFetchWithSingleRefresh({
+          fetcher: fetch,
+          credentialRef: conversationAccessRef,
+          input: '/api/peggy/chat',
+          init: {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              conversationId: credential.id,
+              message: content,
+              context: { surface: 'public-peggy' },
+            }),
+            signal: controller.signal,
+          },
         });
 
         if (!res.ok) throw new Error(`Peggy request failed: ${res.status}`);
@@ -224,16 +278,16 @@ export function Peggy({
         {!open && <span className="peggy-fab-label">Talk to Peggy</span>}
       </button>
 
-      <div id={panelId} className={`peggy-panel ${open ? 'is-open' : ''}`} role="dialog" aria-modal="false"
+      <div ref={panelRef} id={panelId} className={`peggy-panel ${open ? 'is-open' : ''}`} role="dialog" aria-modal="false"
         aria-label="Peggy, the Pegasus intake concierge" aria-hidden={!open} {...(!open ? { inert: '' } : {})}>
         <div className="peggy-head">
           <div className="peggy-avatar"><BrandMark boxClassName="w-full h-full" onDark /></div>
           <div className="leading-none">
             <div className="font-serif-display text-2xl text-[var(--cream)]">Peggy</div>
-            <div className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--accent-bright)] mt-1.5">Guided Intake Concierge</div>
+            <div className="pg-label !text-[13px] !tracking-normal text-[var(--accent-bright)] mt-1.5">AI intake assistant</div>
             <div className="flex items-center gap-1.5 mt-1.5" data-testid="peggy-status">
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-bright)]" aria-hidden="true" />
-              <span className="pg-label !text-[8px] !tracking-[0.18em] normal-case text-[var(--cream)]/55">{PEGGY_STATUS}</span>
+              <span className="pg-label !text-[13px] !tracking-normal normal-case text-[var(--cream)]/55">{PEGGY_STATUS}</span>
             </div>
           </div>
           {conversationStarted && <SaveChatButton turns={transcriptTurns(messages)} />}
@@ -266,13 +320,13 @@ export function Peggy({
           )}
           {lastAction?.action === 'review' && !streaming && (
             <button type="button" className="peggy-action" onClick={() => goReview(lastAction, messages)}>
-              Start my Review <ArrowRight className="w-3.5 h-3.5" strokeWidth={1.8} />
+              Share for Consideration <ArrowRight className="w-3.5 h-3.5" strokeWidth={1.8} />
             </button>
           )}
 
           {!conversationStarted && !pickedRole && (
             <>
-              <div className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--cream)]/45 mt-1 mb-2.5">First, who am I helping?</div>
+              <div className="pg-label !text-[13px] !tracking-normal text-[var(--cream)]/45 mt-1 mb-2.5">First, who am I helping?</div>
               <div className="flex flex-col gap-2">
                 {PEGGY_ROLES.map((r) => (
                   <button key={r.role} type="button" onClick={() => setPickedRole(r.role)} className="peggy-chip text-left">{r.label}</button>
@@ -283,7 +337,7 @@ export function Peggy({
 
           {!conversationStarted && pickedRole && (
             <>
-              <div className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--cream)]/45 mt-1 mb-2.5">Try one of these, or just type</div>
+              <div className="pg-label !text-[13px] !tracking-normal text-[var(--cream)]/45 mt-1 mb-2.5">Try one of these, or just type</div>
               <div className="flex flex-col gap-2">
                 {(PEGGY_ROLES.find((r) => r.role === pickedRole)?.chips ?? []).map((c) => (
                   <button key={c} type="button" onClick={() => send(c)} className="peggy-chip text-left">{c}</button>
@@ -303,13 +357,32 @@ export function Peggy({
           {errored && (
             <div className="flex flex-wrap gap-2 mt-1">
               <button type="button" className="peggy-action" onClick={() => goReview(null, messages)}>
-                Start a Review <ArrowRight className="w-3.5 h-3.5" strokeWidth={1.8} />
+                Share for Consideration <ArrowRight className="w-3.5 h-3.5" strokeWidth={1.8} />
               </button>
               <button type="button" className="peggy-action is-ghost" onClick={() => { toStrategyLab(); setOpen(false); }}>
                 Open Strategy Lab
               </button>
             </div>
           )}
+        <div className="px-5 pt-1 pb-2">
+          <div className="pg-label !text-[13px] !tracking-normal text-[var(--cream)]/40 mb-2">Or go straight to</div>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" data-testid="peggy-route-strategylab" className="peggy-chip !py-1.5 !px-3"
+              onClick={() => { toStrategyLab(); setOpen(false); }}>Strategy Lab</button>
+            <button type="button" data-testid="peggy-route-submit" className="peggy-chip !py-1.5 !px-3"
+              onClick={() => { toSubmit(); setOpen(false); }}>Submit a Property</button>
+            <button type="button" data-testid="peggy-route-apollo" className="peggy-chip !py-1.5 !px-3"
+              onClick={() => { go('apollo'); setOpen(false); }}>Ask About Representation</button>
+            <button type="button" data-testid="peggy-route-marketflow" className="peggy-chip !py-1.5 !px-3"
+              onClick={() => { go('marketflow'); setOpen(false); }}>MarketFlow</button>
+          </div>
+        </div>
+        <div className="pg-label !text-[13px] !tracking-normal normal-case text-[var(--cream)]/45 px-5 pt-1 text-center" data-testid="peggy-compliance">
+          {PEGGY_COMPLIANCE}
+        </div>
+        <div className="pg-label !text-[13px] !tracking-normal normal-case text-[var(--cream)]/35 px-5 pb-4 pt-2 text-center">
+          {PEGGY_SLA}
+        </div>
         </div>
 
         <form className="peggy-input" onSubmit={(e) => { e.preventDefault(); send(draft); }}>
@@ -319,25 +392,14 @@ export function Peggy({
             {streaming ? <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2} /> : <Send className="w-4 h-4" strokeWidth={1.7} />}
           </button>
         </form>
-        <div className="px-5 pt-1 pb-2">
-          <div className="pg-label !text-[8px] !tracking-[0.22em] text-[var(--cream)]/40 mb-2">Or go straight to</div>
-          <div className="flex flex-wrap gap-2">
-            <button type="button" data-testid="peggy-route-strategylab" className="peggy-chip !py-1.5 !px-3"
-              onClick={() => { toStrategyLab(); setOpen(false); }}>Strategy Lab</button>
-            <button type="button" data-testid="peggy-route-submit" className="peggy-chip !py-1.5 !px-3"
-              onClick={() => { toSubmit(); setOpen(false); }}>Submit a Property</button>
-            <button type="button" data-testid="peggy-route-apollo" className="peggy-chip !py-1.5 !px-3"
-              onClick={() => { go('apollo'); setOpen(false); }}>Represent With Apollo</button>
-            <button type="button" data-testid="peggy-route-marketflow" className="peggy-chip !py-1.5 !px-3"
-              onClick={() => { go('marketflow'); setOpen(false); }}>MarketFlow</button>
-          </div>
-        </div>
-        <div className="pg-label !text-[8px] !tracking-[0.14em] normal-case text-[var(--cream)]/45 px-5 pt-1 text-center" data-testid="peggy-compliance">
-          {PEGGY_COMPLIANCE}
-        </div>
-        <div className="pg-label !text-[8px] !tracking-[0.14em] normal-case text-[var(--cream)]/35 px-5 pb-4 pt-2 text-center">
-          {PEGGY_SLA}
-        </div>
+        <p
+          className="text-[13px] leading-relaxed normal-case text-[var(--cream)]/80 px-5 pt-2 text-center"
+          data-testid="peggy-send-disclosure"
+        >
+          By sending, your message is stored and processed by an AI service to generate Peggy&apos;s response. See{" "}
+          <a className="underline underline-offset-2 hover:text-[var(--cream)]" href="/privacy">Privacy Policy</a>.
+        </p>
+
       </div>
     </>
   );

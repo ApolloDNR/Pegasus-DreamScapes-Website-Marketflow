@@ -1,0 +1,72 @@
+/* Approved continuation: the light theme begins on paper, not a navy plate.
+   Scope these rules to the public root so private tools and dark mode retain
+   their existing palettes, even after supporting-page styles load lazily. */
+.pg-root:not([data-theme='dark']) :is(.site-nav, .site-mobile-menu, .site-estate-panel) {
+  color: #0b1d29;
+  background: #f5efe4;
+  border-color: #c9bba8;
+}
+.pg-root:not([data-theme='dark']) .site-estate-panel { border-top-color: #8e5030; }
+.pg-root:not([data-theme='dark']) :is(.site-brand, .site-nav-link, .site-estate-links a, .site-search-results a, .site-mobile-link, .site-mobile-estate a, .site-search input) { color: #0b1d29; }
+.pg-root:not([data-theme='dark']) :is(.site-brand-caption, .site-theme > span:last-child, .site-mobile-contact > *, .site-search-results button) { color: #8e5030; }
+.pg-root:not([data-theme='dark']) :is(.site-directory summary, .site-search, .site-search-results p) { color: #5c6265; }
+.pg-root:not([data-theme='dark']) .site-search input::placeholder { color: #5c6265; }
+.pg-root:not([data-theme='dark']) :is(.site-directory, .site-theme, .site-mobile-top, .site-mobile-link, .site-mobile-estate summary) { border-color: #c9bba8; }
+.pg-root:not([data-theme='dark']) .site-search { border-color: #8b8175; }
+.pg-root:not([data-theme='dark']) :is(.site-nav-link:hover, .site-nav-link[aria-current='page'], .site-nav-link[data-active], .site-estate-links a:hover, .site-estate-links a[aria-current='page'], .site-search-results a:hover, .site-search-results a[aria-current='page'], .site-mobile-menu [aria-current='page']) { color: #8e5030; border-bottom-color: #8e5030; }
+.pg-root:not([data-theme='dark']) :is(.site-nav, .site-mobile-menu) :is(a, button, input, summary):focus-visible { outline-color: #8e5030; }
+.pg-root:not([data-theme='dark']) :is(.site-nav, .site-mobile-menu, .experience-arrival) .experience-button {
+  color: #fcfaf6;
+  background: #8e5030;
+  border-color: #8e5030;
+}
+.pg-root:not([data-theme='dark']) :is(.site-nav, .site-mobile-menu, .experience-arrival) .experience-button:hover {
+  color: #fcfaf6;
+  background: #713e25;
+  border-color: #713e25;
+}
+.pg-root:not([data-theme='dark']) .experience-arrival { background: #f5efe4; color: #0b1d29; }
+.pg-root:not([data-theme='dark']) .experience-arrival::before {
+  background: linear-gradient(90deg, #f5efe4 0%, #f5efe4 32%, rgba(245,239,228,.97) 49%, rgba(245,239,228,.87) 61%, rgba(245,239,228,.12) 82%, transparent 100%);
+}
+/* Keep type and geometry shared: changing appearance must not move the page. */
+.pg-root .experience-arrival h1 { font-size: clamp(48px, 4.6vw, 68px); max-width: 760px; }
+.pg-root:not([data-theme='dark']) .experience-arrival h1 em { color: #8e5030; }
+.pg-root:not([data-theme='dark']) .experience-arrival :is(.experience-intro, .experience-geography, .experience-image-notice) { color: #3c454a; }
+.pg-root:not([data-theme='dark']) .experience-arrival .experience-link { color: #8e5030; }
+
+/* Questions lead; the stable specialist label remains available underneath.
+   Preserve the eight existing controls, live result and relationship diagram. */
+.pg-root .op-plan .op-choices button { min-height: 98px; }
+.pg-root .op-plan .op-choices button small { margin: 0; font-size: 15px; font-weight: 500; line-height: 1.45; color: inherit; }
+.pg-root .op-plan .op-choices button strong { margin-top: 8px; font-size: 13px; font-weight: 400; color: #c0c8ca; }
+.pg-root .op-plan .op-choices button[aria-pressed='true'] strong { color: #24343d; }
+.pg-root:not([data-theme='dark']) .op-plan { background: #f5efe4; color: #0b1d29; border-color: #c9bba8; border-top: 2px solid #8e5030; }
+.pg-root:not([data-theme='dark']) .op-plan :is(.op-plan-bar, .op-read, .op-plan-note) { border-color: #c9bba8; }
+.pg-root:not([data-theme='dark']) .op-plan :is(.op-plan-bar h3, .op-map-node strong, .op-read h4) { color: #0b1d29; }
+.pg-root:not([data-theme='dark']) .op-plan :is(.op-plan-bar > span, .op-read-label, .op-next, .op-map-junction, .op-map-origin svg) { color: #8e5030; }
+.pg-root:not([data-theme='dark']) .op-plan :is(.op-plan-intro, .op-plan-note, .op-read p, .op-map-node > span, .op-choices button strong) { color: #5c6265; }
+.pg-root:not([data-theme='dark']) .op-plan .op-choices button { color: #0b1d29; background: transparent; border-color: #a49989; }
+.pg-root:not([data-theme='dark']) .op-plan .op-choices button:hover { background: #eee5d6; border-color: #8e5030; }
+.pg-root:not([data-theme='dark']) .op-plan .op-choices button[aria-pressed='true'] { color: #0b1d29; background: #eee5d6; border-color: #8e5030; box-shadow: inset 2px 0 #8e5030; }
+.pg-root:not([data-theme='dark']) .op-plan .op-choice-mark { border-color: #8b8175; }
+.pg-root:not([data-theme='dark']) .op-plan .op-map-node,
+.pg-root:not([data-theme='dark']) .op-plan .op-map-branches::before { border-color: #a49989; }
+.pg-root:not([data-theme='dark']) .op-plan .op-map-focus[data-selected='true'] { border-color: #8e5030; }
+.pg-root:not([data-theme='dark']) .op-plan .op-mobile-connection { color: #8e5030 !important; }
+.pg-root:not([data-theme='dark']) .op-plan :is(a, button):focus-visible { outline-color: #8e5030; }
+
+@media (min-width: 1440px) {
+  .pg-root .po .ep-opening-with-image .ep-opening-grid { grid-template-columns: minmax(0, 640px) minmax(0, 1fr); }
+}
+@media (max-width: 700px) {
+  /* Give the original photograph its own readable band below the mobile copy.
+     Image bytes, crop and layout stay identical between appearances. */
+  .pg-root .experience-arrival h1 { font-size: clamp(34px, 8.6vw, 54px); line-height: 1.16; margin-block:20px 24px; text-wrap:initial; }
+  .pg-root .experience-arrival h1 > :is(span,em) { display:block; text-wrap:balance; }
+  .pg-root .experience-arrival { padding:116px 0 0; min-height:0; }
+  .pg-root .experience-arrival::before { display:none; }
+  .pg-root .experience-arrival-copy { order:1; }
+  .pg-root .experience-hero-image { position:relative; inset:auto; order:2; z-index:0; flex:none; height:clamp(168px,52vw,240px); margin-top:28px; object-position:74% 54%; }
+  .pg-root .experience-arrival .experience-image-notice { order:3; width:100%; max-width:none; margin:0; padding:14px 24px 22px; font-size:12px; }
+}

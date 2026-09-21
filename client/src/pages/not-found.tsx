@@ -7,6 +7,8 @@ export default function NotFound() {
   useSEO({
     title: "Page Not Found",
     description: "The path you're looking for doesn't exist on the Pegasus DreamScapes site. Return to the homepage or start a Strategy Review.",
+    noIndex: true,
+    noCanonical: true,
   });
 
   return (
@@ -56,7 +58,7 @@ export default function NotFound() {
         </h1>
 
         <p className="text-base sm:text-lg text-cream/75 leading-relaxed max-w-xl mx-auto mb-10">
-          The page you were looking for doesn't exist or has been moved. Every property gets a path. Every visitor does too.
+          The page you were looking for doesn't exist or has been moved. Use one of the verified destinations below to continue.
         </p>
 
         {/* CTAs */}
@@ -64,7 +66,7 @@ export default function NotFound() {
           <Link href="/">
             <Button
               size="lg"
-              className="min-h-[48px] px-8 bg-primary hover:bg-primary/90 text-primary-foreground text-sm uppercase tracking-[0.15em] font-semibold shadow-md shadow-black/30 transition-all duration-300 hover:-translate-y-0.5"
+              className="min-h-[48px] bg-[#9c5a24] px-8 text-sm font-semibold uppercase tracking-[0.15em] text-white shadow-md shadow-black/30 transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#8b4d1d]"
               data-testid="button-404-home"
             >
               <Compass className="mr-2 w-4 h-4" />
@@ -92,7 +94,7 @@ export default function NotFound() {
           <div className="flex flex-wrap justify-center gap-3">
             {[
               { href: "/strategy-lab", label: "Strategy Lab" },
-              { href: "/submit", label: "Submit a Property" },
+              { href: "/bring-an-opportunity", label: "Bring an Opportunity" },
               { href: "/about", label: "About" },
             ].map((link) => (
               <Link

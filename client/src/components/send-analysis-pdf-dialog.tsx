@@ -21,7 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { queryClient } from "@/lib/queryClient";
+import { authenticatedRequest, queryClient } from "@/lib/queryClient";
 import { Loader2, Send } from "lucide-react";
 
 interface Props {
@@ -66,9 +66,8 @@ export function SendAnalysisPdfDialog({
       if (analysisId !== undefined) body.id = analysisId;
       else if (shareToken) body.shareToken = shareToken;
 
-      const res = await fetch("/api/pdf/calculator/email", {
+      const res = await authenticatedRequest("/api/pdf/calculator/email", {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
       });

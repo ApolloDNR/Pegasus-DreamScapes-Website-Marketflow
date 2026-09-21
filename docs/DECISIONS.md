@@ -4,6 +4,16 @@ This file is the standard Codex decision entrypoint for the website repo. Keep d
 
 ## Current Controlling Decisions
 
+- September 21 design refinish: keep each mobile arrival headline clause together, show complete path/fit/result rows on phones, use the public cream/navy surfaces in intake and consent, place the partner primary action before the secondary proposal action, and retain native owner/partner selectors with shared control styling. Consent preferences use 44px actions and return keyboard focus without changing the visitor's choice. No route, asset, business claim, model calculation or submission contract changes.
+
+- September 20, six-refinement completion: scenario comparison keeps Base beside one selected alternative and labels the scenario used by the brief separately. Presets remain explicit and reversible. The decision brief leads with the finding, key numbers, critical unknowns and next check; all nine paths and full evidence details remain in an appendix included in Copy and PDF. The empty Lab puts Start a property before workspace tools. Mobile arrival gives the original photograph a visible band below the copy, with identical image geometry in both themes. The primary handoff reads Continue with this property and explains review and consent. These six presentation changes preserve the model, source assets, existing intake adapter and six homepage sections.
+
+- September 20 clarity upgrade: explain the current lane’s primary metric and a scoring factor beside the result. Derive a specific next evidence/input check from the active model; keep that same leading-path guidance in Memo, Peggy and intake. Compare scenario results against Base using unrounded values and explicit units. Preserve the six-section homepage and use only the documented Nelson photographs and existing founder-role facts for richer copy.
+
+- September 20 premium refinement: the Intelligence Desk leads with the actual path read and next diligence step; supporting evidence and funding diagrams are deliberate disclosures. Phone editing brings live feedback after essential inputs. Scenarios explicitly distinguish identical Base inputs from actual numeric overrides; presets remain opt-in. Preserve the established site identity, canonical model, privacy and handoff contracts.
+
+- On 2026-09-15 Apollo requested parchment/cream light mode as the initial appearance. New visitors start in light mode regardless of the OS; a saved explicit light, dark, or system preference is retained. Theme switching stays in the existing menu. This supersedes system-first initialization, not the approved navy hero, footer, imagery, or page structure.
+- The recovered owner direction and continuation scope are consolidated in `docs/WEBSITE_EXECUTION_BRIEF.md` (2026-09-11). Pegasus remains a real estate operating company. The locked homepage identity and “made executable” headline take precedence over the later “strategy company” / “structured clearly” copy drift.
 - Public brand casing is `Pegasus Dreamscapes`.
 - Current positioning is `Pegasus Dreamscapes - Deal Strategy & Real Estate Execution`.
 - Avoid public-facing `Deal Architect` / `architecture` language unless counsel clears the metaphor.

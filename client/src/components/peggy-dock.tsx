@@ -2,7 +2,8 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
-import { apiRequest } from "@/lib/queryClient";
+import { apiRequest, authenticatedRequest } from "@/lib/queryClient";
+import { peggyFetchWithSingleRefresh } from "@/lib/peggy-access";
 import { usePeggyContext, type PeggyContextData } from "@/contexts/peggy-context";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -11,6 +12,10 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import {
+  PEGGY_CONVERSATION_ACCESS_HEADER,
+  type PeggyConversationAccessResponse,
+} from "@shared/peggy-access";
 import { motion, AnimatePresence, useDragControls, PanInfo } from "framer-motion";
 import { 
   MessageCircle, 
@@ -40,6 +45,7 @@ import {
   GitBranch
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 
 const DOCK_STORAGE_KEY = 'peggy_dock_position';
 const DEFAULT_POSITION = { x: 0, y: 0 };
@@ -69,7 +75,7 @@ function saveDockPosition(position: DockPosition) {
   }
 }
 
-function TypingIndicator() {
+function TypingIndicator({ reduceMotion }: { reduceMotion: boolean }) {
   return (
     <div className="flex gap-3 mb-4">
       <Avatar className="h-9 w-9 flex-shrink-0 ring-1 ring-primary/25 ring-offset-2 ring-offset-background shadow-sm">
@@ -82,11 +88,11 @@ function TypingIndicator() {
           <motion.div
             key={i}
             className="w-1.5 h-1.5 bg-primary/70 rounded-full"
-            animate={{
+            animate={reduceMotion ? { y: 0, opacity: 0.7 } : {
               y: [0, -5, 0],
               opacity: [0.4, 1, 0.4]
             }}
-            transition={{
+            transition={reduceMotion ? { duration: 0 } : {
               duration: 0.7,
               repeat: Infinity,
               delay: i * 0.15,
@@ -109,10 +115,12 @@ interface Message {
 
 function PeggyMessage({ 
   message, 
-  onFeedback 
+  onFeedback,
+  reduceMotion,
 }: { 
   message: Message; 
   onFeedback?: (feedback: 'helpful' | 'not_helpful') => void;
+  reduceMotion: boolean;
 }) {
   const isUser = message.role === 'user';
   
@@ -122,9 +130,9 @@ function PeggyMessage({
         "flex gap-3 mb-4",
         isUser ? "flex-row-reverse" : "flex-row"
       )}
-      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+      initial={reduceMotion ? false : { opacity: 0, y: 10, scale: 0.95 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ duration: 0.3, ease: "easeOut" }}
+      transition={reduceMotion ? { duration: 0 } : { duration: 0.3, ease: "easeOut" }}
     >
       <Avatar className={cn(
         "h-9 w-9 flex-shrink-0 ring-1 ring-offset-2 ring-offset-background shadow-sm",
@@ -204,7 +212,7 @@ export function getQuickPrompts(page?: string, labAnalysis?: PeggyContextData['l
     { icon: GitBranch, label: "I have a deal or JV idea", prompt: "I have a deal or JV idea to route.", context: "router", href: "/sell" },
     { icon: DollarSign, label: "I want to discuss capital", prompt: "I want to discuss a private capital or partnership conversation.", context: "router", href: "/invest" },
     { icon: Hammer, label: "ADU / development", prompt: "I want to explore ADU or development potential.", context: "router", href: "/sell" },
-    { icon: BookOpen, label: "Learn strategies", prompt: "I want to learn the strategies. Point me to the Strategy Library.", context: "router", href: "/resources" },
+    { icon: BookOpen, label: "Learn strategies", prompt: "I want to learn the strategies. Open the Strategy Lab.", context: "router", href: "/strategy-lab" },
     { icon: Network, label: "Vendor or operator", prompt: "I'm a vendor or operator interested in the Pegasus network. What's the right way in?", context: "router", href: "/vendor-network" },
   ];
 
@@ -306,18 +314,32 @@ export function PeggyDock() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [inputValue, setInputValue] = useState("");
   const [conversationId, setConversationId] = useState<number | null>(null);
+  const [conversationAccessToken, setConversationAccessToken] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [showQuickPrompts, setShowQuickPrompts] = useState(true);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const dragControls = useDragControls();
+  const reduceMotion = usePrefersReducedMotion();
   const constraintsRef = useRef<HTMLDivElement>(null);
+  const createConversationInFlightRef = useRef(false);
+  const conversationAccessRef =
+    useRef<PeggyConversationAccessResponse | null>(null);
   
-  const { context, sessionId, isOpen, openChat, closeChat, toggleChat, consumePendingPrompt, pendingPrompt, updateContext } = usePeggyContext();
+  const { context, isOpen, openChat, closeChat, toggleChat, consumePendingPrompt, pendingPrompt, updateContext } = usePeggyContext();
   const [, setLocation] = useLocation();
   
   const quickPrompts = getQuickPrompts(context.page, context.labAnalysis);
+
+  const replaceConversationAccess = useCallback(
+    (credential: PeggyConversationAccessResponse) => {
+      conversationAccessRef.current = credential;
+      setConversationId(credential.id);
+      setConversationAccessToken(credential.accessToken);
+    },
+    [],
+  );
 
   const handleNavigate = useCallback((href: string) => {
     setLocation(href);
@@ -328,24 +350,35 @@ export function PeggyDock() {
   
   const createConversationMutation = useMutation({
     mutationFn: async (newContext: PeggyContextData) => {
-      const response = await apiRequest('POST', '/api/peggy/conversations', { sessionId, context: newContext });
-      return response.json();
+      const response = await apiRequest(
+        'POST',
+        '/api/peggy/conversations',
+        { context: newContext },
+      );
+      return response.json() as Promise<PeggyConversationAccessResponse>;
     },
-    onSuccess: (data: any) => {
-      setConversationId(data.id);
+    onSuccess: (data) => { replaceConversationAccess(data); },
+    onSettled: () => {
+      createConversationInFlightRef.current = false;
     }
   });
   
   const chatMutation = useMutation({
     mutationFn: async (message: string) => {
-      if (!conversationId) {
-        throw new Error('No conversation');
-      }
-      const response = await apiRequest('POST', '/api/peggy/chat', { 
-        conversationId, 
-        message, 
-        context 
+      const credential = conversationAccessRef.current;
+      if (!credential) throw new Error('No conversation');
+      const response = await peggyFetchWithSingleRefresh({
+        fetcher: authenticatedRequest,
+        credentialRef: conversationAccessRef,
+        input: '/api/peggy/chat',
+        init: {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', [PEGGY_CONVERSATION_ACCESS_HEADER]: credential.accessToken },
+          body: JSON.stringify({ conversationId: credential.id, message, context }),
+        },
+        onCredentialChange: replaceConversationAccess,
       });
+      if (!response.ok) throw new Error(`Peggy request failed: ${response.status}`);
       return response.json();
     },
     onSuccess: (data: any) => {
@@ -356,10 +389,35 @@ export function PeggyDock() {
       }]);
     }
   });
+
+  const startFreshConversation = useCallback(
+    (newContext: PeggyContextData) => {
+      if (createConversationInFlightRef.current) return;
+      createConversationInFlightRef.current = true;
+      conversationAccessRef.current = null;
+      setConversationId(null);
+      setConversationAccessToken(null);
+      createConversationMutation.mutate(newContext);
+    },
+    [createConversationMutation.mutate],
+  );
   
   const feedbackMutation = useMutation({
     mutationFn: async ({ messageId, feedback }: { messageId: number; feedback: string }) => {
-      const response = await apiRequest('POST', `/api/peggy/messages/${messageId}/feedback`, { feedback });
+      const credential = conversationAccessRef.current;
+      if (!credential) throw new Error('No conversation');
+      const response = await peggyFetchWithSingleRefresh({
+        fetcher: authenticatedRequest,
+        credentialRef: conversationAccessRef,
+        input: `/api/peggy/messages/${messageId}/feedback`,
+        init: {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', [PEGGY_CONVERSATION_ACCESS_HEADER]: credential.accessToken },
+          body: JSON.stringify({ conversationId: credential.id, feedback }),
+        },
+        onCredentialChange: replaceConversationAccess,
+      });
+      if (!response.ok) throw new Error(`Peggy feedback failed: ${response.status}`);
       return response.json();
     },
     onSuccess: (_, variables) => {
@@ -373,18 +431,32 @@ export function PeggyDock() {
   
   useEffect(() => {
     if (isOpen && !conversationId) {
-      createConversationMutation.mutate(context);
+      startFreshConversation(context);
     }
     if (isOpen && pendingPrompt && !isExpanded) {
       setIsExpanded(true);
     }
-  }, [isOpen, pendingPrompt]);
+  }, [
+    isOpen,
+    pendingPrompt,
+    conversationId,
+    context,
+    isExpanded,
+    startFreshConversation,
+  ]);
   
   // When a pending prompt is staged (from "Ask Peggy" on a calculator or
   // saved analysis) and the conversation is ready, auto-send it so Peggy
   // immediately produces a structural read without the user retyping.
   useEffect(() => {
-    if (!conversationId || !pendingPrompt || chatMutation.isPending) return;
+    if (
+      !conversationId ||
+      !conversationAccessToken ||
+      !pendingPrompt ||
+      createConversationInFlightRef.current ||
+      createConversationMutation.isPending ||
+      chatMutation.isPending
+    ) return;
     const prompt = consumePendingPrompt();
     if (!prompt) return;
     setShowQuickPrompts(false);
@@ -394,12 +466,19 @@ export function PeggyDock() {
       content: prompt,
     }]);
     chatMutation.mutate(prompt);
-  }, [conversationId, pendingPrompt, chatMutation.isPending]);
+  }, [
+    conversationId,
+    conversationAccessToken,
+    pendingPrompt,
+    createConversationMutation.isPending,
+    chatMutation.isPending,
+    consumePendingPrompt,
+  ]);
   
   useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-  
+    messagesEndRef.current?.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth' });
+  }, [messages, reduceMotion]);
+
   useEffect(() => {
     if (isExpanded && inputRef.current) {
       setTimeout(() => inputRef.current?.focus(), 100);
@@ -417,7 +496,14 @@ export function PeggyDock() {
   }, [position]);
   
   const handleSend = async () => {
-    if (!inputValue.trim() || chatMutation.isPending) return;
+    if (
+      !inputValue.trim() ||
+      !conversationId ||
+      !conversationAccessToken ||
+      createConversationInFlightRef.current ||
+      createConversationMutation.isPending ||
+      chatMutation.isPending
+    ) return;
     
     const userMessage = inputValue.trim();
     setInputValue("");
@@ -446,10 +532,14 @@ export function PeggyDock() {
   };
   
   const handleNewConversation = () => {
-    setConversationId(null);
+    if (
+      createConversationInFlightRef.current ||
+      createConversationMutation.isPending ||
+      chatMutation.isPending
+    ) return;
     setMessages([]);
     setShowQuickPrompts(true);
-    createConversationMutation.mutate(context);
+    startFreshConversation(context);
   };
   
   const handleFeedback = (messageId: number, feedback: 'helpful' | 'not_helpful') => {
@@ -484,17 +574,21 @@ export function PeggyDock() {
         drag
         dragControls={dragControls}
         dragMomentum={false}
-        dragElastic={0.1}
+        dragElastic={reduceMotion ? 0 : 0.1}
         dragConstraints={constraintsRef}
         onDragStart={() => setIsDragging(true)}
         onDragEnd={handleDragEnd}
         initial={false}
-        animate={{
+        animate={reduceMotion ? {
+          x: position.x,
+          y: position.y,
+          scale: 1,
+        } : {
           x: position.x,
           y: position.y,
           scale: isDragging ? 1.05 : 1,
         }}
-        transition={{
+        transition={reduceMotion ? { duration: 0 } : {
           type: "spring",
           stiffness: 500,
           damping: 30,
@@ -512,10 +606,10 @@ export function PeggyDock() {
           {!isExpanded ? (
             <motion.div
               key="collapsed"
-              initial={{ scale: 0.8, opacity: 0 }}
+              initial={reduceMotion ? false : { scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              transition={{ duration: 0.2 }}
+              exit={reduceMotion ? { scale: 1, opacity: 1 } : { scale: 0.8, opacity: 0 }}
+              transition={reduceMotion ? { duration: 0 } : { duration: 0.2 }}
               className="pointer-events-auto"
             >
               <div className="relative">
@@ -523,8 +617,8 @@ export function PeggyDock() {
                 <motion.div
                   aria-hidden="true"
                   className="absolute inset-0 rounded-full bg-primary/30 blur-2xl"
-                  animate={{ scale: [1, 1.18, 1], opacity: [0.4, 0.6, 0.4] }}
-                  transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+                  animate={reduceMotion ? { scale: 1, opacity: 0.4 } : { scale: [1, 1.18, 1], opacity: [0.4, 0.6, 0.4] }}
+                  transition={reduceMotion ? { duration: 0 } : { duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
                 />
                 {/* Slow rotating brass ring */}
                 <motion.div
@@ -534,8 +628,8 @@ export function PeggyDock() {
                     background:
                       "conic-gradient(from 0deg, hsl(var(--copper) / 0.55), hsl(var(--copper) / 0) 35%, hsl(var(--copper) / 0) 70%, hsl(var(--copper) / 0.55))",
                   }}
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 14, repeat: Infinity, ease: "linear" }}
+                  animate={reduceMotion ? { rotate: 0 } : { rotate: 360 }}
+                  transition={reduceMotion ? { duration: 0 } : { duration: 14, repeat: Infinity, ease: "linear" }}
                 />
                 <Button
                   onClick={handleToggleExpand}
@@ -562,8 +656,8 @@ export function PeggyDock() {
                   />
                   <motion.span
                     className="relative font-display text-[22px] leading-none tracking-[0.04em] text-cream"
-                    animate={{ y: [0, -1, 0] }}
-                    transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                    animate={reduceMotion ? { y: 0 } : { y: [0, -1, 0] }}
+                    transition={reduceMotion ? { duration: 0 } : { duration: 4, repeat: Infinity, ease: "easeInOut" }}
                   >
                     P
                   </motion.span>
@@ -573,11 +667,11 @@ export function PeggyDock() {
                 <motion.div
                   className="absolute top-0.5 right-0.5 h-3 w-3 rounded-full border-2 border-background"
                   style={{ backgroundColor: "hsl(var(--copper))" }}
-                  animate={{
+                  animate={reduceMotion ? { scale: 1, opacity: 0.75 } : {
                     scale: [1, 1.3, 1],
                     opacity: [0.75, 1, 0.75],
                   }}
-                  transition={{
+                  transition={reduceMotion ? { duration: 0 } : {
                     duration: 2.4,
                     repeat: Infinity,
                     ease: "easeInOut",
@@ -593,10 +687,10 @@ export function PeggyDock() {
         {isExpanded && (
           <motion.div
             key="expanded"
-            initial={{ opacity: 0, scale: 0.95, y: 20 }}
+            initial={reduceMotion ? false : { opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
+            exit={reduceMotion ? { opacity: 1, scale: 1, y: 0 } : { opacity: 0, scale: 0.95, y: 20 }}
+            transition={reduceMotion ? { duration: 0 } : { duration: 0.3, ease: "easeOut" }}
             className={cn(
               "fixed z-50 shadow-md",
               isFullscreen 
@@ -623,8 +717,8 @@ export function PeggyDock() {
                     <motion.div
                       className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-background"
                       style={{ backgroundColor: "hsl(var(--copper))" }}
-                      animate={{ opacity: [0.7, 1, 0.7], scale: [1, 1.2, 1] }}
-                      transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
+                      animate={reduceMotion ? { opacity: 0.7, scale: 1 } : { opacity: [0.7, 1, 0.7], scale: [1, 1.2, 1] }}
+                      transition={reduceMotion ? { duration: 0 } : { duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
                     />
                   </div>
                   <div>
@@ -645,6 +739,11 @@ export function PeggyDock() {
                     onClick={handleNewConversation}
                     title="New conversation"
                     data-testid="button-peggy-new"
+                    disabled={
+                      createConversationInFlightRef.current ||
+                      createConversationMutation.isPending ||
+                      chatMutation.isPending
+                    }
                   >
                     <RotateCcw className="h-4 w-4" />
                   </Button>
@@ -677,8 +776,8 @@ export function PeggyDock() {
                       <motion.span
                         aria-hidden="true"
                         className="absolute inset-0 -m-3 rounded-full bg-primary/15 blur-xl"
-                        animate={{ scale: [1, 1.15, 1], opacity: [0.5, 0.8, 0.5] }}
-                        transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+                        animate={reduceMotion ? { scale: 1, opacity: 0.5 } : { scale: [1, 1.15, 1], opacity: [0.5, 0.8, 0.5] }}
+                        transition={reduceMotion ? { duration: 0 } : { duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
                       />
                       {/* Slow rotating brass ring */}
                       <motion.span
@@ -688,8 +787,8 @@ export function PeggyDock() {
                           background:
                             "conic-gradient(from 0deg, hsl(var(--copper) / 0.5), hsl(var(--copper) / 0) 30%, hsl(var(--copper) / 0) 70%, hsl(var(--copper) / 0.5))",
                         }}
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+                        animate={reduceMotion ? { rotate: 0 } : { rotate: 360 }}
+                        transition={reduceMotion ? { duration: 0 } : { duration: 18, repeat: Infinity, ease: "linear" }}
                       />
                       <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-[#D88E4E] via-primary to-[#8E4F22] ring-1 ring-cream/40 shadow-[0_18px_40px_-10px_rgba(13,27,45,0.45)] flex items-center justify-center overflow-hidden">
                         <span aria-hidden="true" className="absolute inset-0 rounded-full bg-[radial-gradient(ellipse_at_30%_25%,rgba(255,255,255,0.45)_0%,rgba(255,255,255,0)_55%)]" />
@@ -731,18 +830,19 @@ export function PeggyDock() {
                     key={`${message.id}-${index}`}
                     message={message}
                     onFeedback={message.role === 'assistant' ? (fb) => handleFeedback(message.id, fb) : undefined}
+                    reduceMotion={reduceMotion}
                   />
                 ))}
                 
                 <AnimatePresence>
                   {chatMutation.isPending && (
                     <motion.div
-                      initial={{ opacity: 0, y: 10 }}
+                      initial={reduceMotion ? false : { opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      transition={{ duration: 0.2 }}
+                      exit={reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: -10 }}
+                      transition={reduceMotion ? { duration: 0 } : { duration: 0.2 }}
                     >
-                      <TypingIndicator />
+                      <TypingIndicator reduceMotion={reduceMotion} />
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -784,14 +884,27 @@ export function PeggyDock() {
                     value={inputValue}
                     onChange={(e) => setInputValue(e.target.value)}
                     placeholder="Ask Peggy anything…"
-                    disabled={chatMutation.isPending || !conversationId}
+                    disabled={
+                      createConversationInFlightRef.current ||
+                      createConversationMutation.isPending ||
+                      chatMutation.isPending ||
+                      !conversationId ||
+                      !conversationAccessToken
+                    }
                     className="flex-1 border-0 bg-transparent px-0 h-9 text-sm shadow-none focus-visible:ring-0 placeholder:text-muted-foreground/70"
                     data-testid="input-peggy-message"
                   />
                   <Button 
                     type="submit" 
                     size="icon"
-                    disabled={!inputValue.trim() || chatMutation.isPending || !conversationId}
+                    disabled={
+                      !inputValue.trim() ||
+                      createConversationInFlightRef.current ||
+                      createConversationMutation.isPending ||
+                      chatMutation.isPending ||
+                      !conversationId ||
+                      !conversationAccessToken
+                    }
                     className={cn(
                       "relative h-9 w-9 rounded-full p-0 overflow-hidden flex-shrink-0",
                       "bg-gradient-to-br from-[#D88E4E] via-primary to-[#8E4F22] text-cream",
@@ -806,8 +919,15 @@ export function PeggyDock() {
                   </Button>
                 </form>
                 
-                <p className="text-[10px] text-muted-foreground/80 text-center mt-3 font-supporting tracking-wide">
-                  Peggy uses AI for intake. Strategy reads, not legal or financial advice.
+                <p
+                  className="text-[11px] leading-relaxed text-foreground/80 text-center mt-3 font-supporting"
+                  data-testid="peggy-dock-send-disclosure"
+                >
+                  By sending, your message is stored and processed by an AI service to generate Peggy&apos;s response. See{" "}
+                  <a className="underline underline-offset-2 hover:text-foreground" href="/privacy">Privacy Policy</a>.
+                </p>
+                <p className="text-[10px] text-muted-foreground/80 text-center mt-1 font-supporting tracking-wide">
+                  Peggy provides intake support, not legal or financial advice.
                 </p>
               </div>
             </Card>

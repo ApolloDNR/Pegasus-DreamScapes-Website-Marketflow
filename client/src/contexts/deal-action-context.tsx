@@ -1,13 +1,19 @@
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react";
+import { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useLocation, Link } from "wouter";
+import { useLocation } from "wouter";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Loader2, Sparkles, ExternalLink } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { DealType, DealAction } from "@shared/schema";
+import type { ListingInquiryRequest } from "@shared/listing-inquiry-contract";
+import {
+  buildListingInfoRequest,
+  buildListingTourRequest,
+  listingInquiryValidationMessage,
+} from "@/lib/listing-inquiry";
 
 // Canonical action types per the 3-lane blueprint
 export type DealActionType = 
@@ -15,15 +21,15 @@ export type DealActionType =
   | "wholesale_accept"      // Accept terms as-is (fast path)
   | "wholesale_counter"     // Counter offer (full form)
   | "wholesale_jv"          // JV partnership request
-  // CAPITAL LANE - advanced negotiation  
-  | "capital_accept"        // Accept terms (fast path - investment amount + acknowledgements)
-  | "capital_counter"       // Counter offer (redirects to Offer Studio)
+  // Retired capital action keys remain recognized so old links fail closed.
+  | "capital_accept"
+  | "capital_counter"
   // LISTINGS LANE - inquiry-focused, not negotiation-heavy
   | "listing_request_info"  // Request more information
   | "listing_schedule_tour" // Schedule a showing
   // Legacy types (kept for backward compatibility)
   | "assignment_offer"      // Legacy: maps to wholesale_accept or wholesale_counter based on mode
-  | "capital_invest"        // Legacy: maps to capital_accept
+  | "capital_invest"        // Legacy: maps to the relationship-only notice
   | "listing_inquiry";      // Legacy: maps to listing_request_info
 
 export type DealCategory = "wholesale" | "capital" | "listing";
@@ -115,7 +121,7 @@ export function DealActionProvider({ children }: DealActionProviderProps) {
     if (dealType === "WHOLESALE_ASSIGNMENT") {
       actionType = action === "JV" ? "wholesale_jv" : "wholesale_accept";
     } else if (dealType === "CAPITAL_RAISE") {
-      // All capital actions route to capital_accept (counter goes to Offer Studio)
+      // All legacy capital actions route to the relationship-only notice.
       actionType = "capital_accept";
     } else if (dealType === "LISTING") {
       actionType = "listing_request_info";
@@ -132,7 +138,7 @@ export function DealActionProvider({ children }: DealActionProviderProps) {
     });
   }, []);
 
-  // Studio is CAPITAL_RAISE only - no wholesale deals in studio
+  // The legacy capital studio route now renders a relationship-only notice.
   const openInStudio = useCallback((dealId: string | number, projectType: "capital") => {
     setLocation(`/offer-studio/${projectType}/${dealId}`);
   }, [setLocation]);
@@ -161,7 +167,7 @@ export function DealActionProvider({ children }: DealActionProviderProps) {
 }
 
 function DealActionModal() {
-  const { state, closeDealAction, openInStudio } = useDealAction();
+  const { state, closeDealAction } = useDealAction();
   const { isOpen, dealId, dealType, actionType, mode, existingOfferId } = state;
 
   if (!isOpen || !dealId || !actionType) return null;
@@ -203,22 +209,12 @@ function DealActionModal() {
     }
     
     // ========== CAPITAL LANE FORMS ==========
-    // Capital Accept Terms (fast path - investment amount + acknowledgements)
     if (actionType === "capital_accept") {
-      return (
-        <CapitalAcceptTermsModal
-          projectId={Number(dealId)}
-          onClose={closeDealAction}
-        />
-      );
+      return <CapitalRelationshipHoldModal onClose={closeDealAction} />;
     }
     
-    // Capital Counter - redirects to Offer Studio (should not render modal)
     if (actionType === "capital_counter") {
-      // Counter offers go to Offer Studio - close modal and redirect
-      closeDealAction();
-      openInStudio(dealId, "capital");
-      return null;
+      return <CapitalRelationshipHoldModal onClose={closeDealAction} />;
     }
     
     // ========== LISTINGS LANE FORMS ==========
@@ -262,14 +258,8 @@ function DealActionModal() {
       );
     }
     
-    // Legacy capital_invest - route to accept
     if (actionType === "capital_invest") {
-      return (
-        <CapitalAcceptTermsModal
-          projectId={Number(dealId)}
-          onClose={closeDealAction}
-        />
-      );
+      return <CapitalRelationshipHoldModal onClose={closeDealAction} />;
     }
     
     // Legacy listing_inquiry - route to request info
@@ -294,6 +284,35 @@ function DealActionModal() {
   );
 }
 
+function CapitalRelationshipHoldModal({ onClose }: { onClose: () => void }) {
+  return (
+    <>
+      <DialogHeader>
+        <DialogTitle>Capital relationships begin privately</DialogTitle>
+        <DialogDescription>
+          MarketFlow does not accept, counter, or commit to project terms through this record.
+        </DialogDescription>
+      </DialogHeader>
+      <div className="space-y-4 pt-2">
+        <p className="text-sm leading-relaxed text-muted-foreground">
+          A project status or submitted term is context only. Any later discussion requires a
+          separate relationship, diligence, eligibility, and written documentation.
+        </p>
+        <div className="flex flex-col gap-3 sm:flex-row">
+          <a href="/capital#capital-introduction" className="flex-1">
+            <Button variant="outline" className="w-full">
+              Relationship information
+            </Button>
+          </a>
+          <Button type="button" variant="ghost" onClick={onClose} className="flex-1">
+            Close
+          </Button>
+        </div>
+      </div>
+    </>
+  );
+}
+
 interface WholesaleDeal {
   id: string;
   propertyAddress?: string;
@@ -312,34 +331,70 @@ interface WholesaleDeal {
   wholesalerId?: string;
 }
 
-interface CapitalProject {
-  id: number;
-  title?: string;
-  address?: string;
-  city?: string;
-  state?: string;
-  fundingGoal?: number;
-  minInvestment?: number;
-  amountRaised?: number;
-  structure?: string;
-  askingInterestRate?: string;
-  askingProfitSplit?: string;
-  askingLoanDuration?: string;
-  askingPreferredReturn?: string;
-  holdPeriod?: string;
-  operatorId?: string;
-  askingEquityPercent?: number;
-  askingDebtPortion?: number;
-  askingEquityPortion?: number;
-  paymentSchedule?: string;
+const MIN_WHOLESALE_OFFER_AMOUNT = 1_000;
+const MAX_WHOLESALE_OFFER_AMOUNT = 10_000_000_000;
+const MAX_WHOLESALE_INSPECTION_DAYS = 365;
+
+interface WholesaleOfferTerms {
+  offerPrice: number;
+  earnestMoney: number;
+  closeDate: string;
+  inspectionPeriod: number;
+  fundingType: "cash";
+  notes: string;
 }
 
-interface FormProps {
-  dealId?: string;
-  projectId?: number;
-  mode: "new" | "counter";
-  existingOfferId?: string;
-  onClose: () => void;
+function toDateInputValue(value: unknown): string {
+  if (typeof value !== "string") return "";
+  const match = value
+    .trim()
+    .match(
+      /^(\d{4}-\d{2}-\d{2})(?:T(?:[01]\d|2[0-3]):[0-5]\d:[0-5]\d(?:\.\d+)?(?:Z|[+-](?:(?:0\d|1[0-3]):[0-5]\d|14:00)))?$/,
+    );
+  return match?.[1] ?? "";
+}
+
+function readNonNegativeComponent(value: unknown): number | null {
+  if (typeof value !== "number" && typeof value !== "string") return null;
+  if (typeof value === "string" && !value.trim()) return null;
+  const parsed = Number(value);
+  return (
+    Number.isSafeInteger(parsed) &&
+    parsed >= 0 &&
+    parsed <= MAX_WHOLESALE_OFFER_AMOUNT
+  )
+    ? parsed
+    : null;
+}
+
+function calculateTotalAssignmentPrice(
+  contractPriceValue: unknown,
+  assignmentFeeValue: unknown,
+): number | null {
+  const contractPrice = readNonNegativeComponent(contractPriceValue);
+  const assignmentFee = readNonNegativeComponent(assignmentFeeValue);
+  if (contractPrice === null || assignmentFee === null) return null;
+
+  const total = contractPrice + assignmentFee;
+  return (
+    Number.isSafeInteger(total) &&
+    total >= MIN_WHOLESALE_OFFER_AMOUNT &&
+    total <= MAX_WHOLESALE_OFFER_AMOUNT
+  )
+    ? total
+    : null;
+}
+
+function parseBoundedWholeNumber(
+  value: string,
+  minimum: number,
+  maximum: number,
+): number | null {
+  if (!value.trim()) return null;
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) && parsed >= minimum && parsed <= maximum
+    ? parsed
+    : null;
 }
 
 // ========== CANONICAL WHOLESALE FORMS ==========
@@ -354,26 +409,52 @@ function WholesaleAcceptTermsModal({ dealId, onClose }: WholesaleAcceptFormProps
   const { toast } = useToast();
   const { isAuthenticated } = useSupabaseAuth();
   const [earnestMoney, setEarnestMoney] = useState("1000");
-  const [acknowledged, setAcknowledged] = useState(false);
+  const [acknowledgedTotal, setAcknowledgedTotal] = useState<number | null>(
+    null,
+  );
   const [message, setMessage] = useState("");
+  const [closingDate, setClosingDate] = useState("");
+  const [closingDateInitialized, setClosingDateInitialized] = useState(false);
+  const [closingDateError, setClosingDateError] = useState(false);
+  const closingDateInputRef = useRef<HTMLInputElement>(null);
 
   const { data: deal, isLoading: dealLoading } = useQuery<WholesaleDeal>({
     queryKey: ["/api/wholesale-deals", dealId],
     enabled: !!dealId,
   });
 
+  useEffect(() => {
+    if (deal && !closingDateInitialized) {
+      setClosingDate(toDateInputValue(deal.closingDate));
+      setClosingDateInitialized(true);
+    }
+  }, [deal, closingDateInitialized]);
+
+  const totalAssignmentPrice = calculateTotalAssignmentPrice(
+    deal?.contractPrice,
+    deal?.assignmentFee,
+  );
+  const hasAcknowledgedCurrentTotal =
+    totalAssignmentPrice !== null &&
+    acknowledgedTotal === totalAssignmentPrice;
+
   const submitMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/supabase/wholesale-offers", data);
+    mutationFn: async (payload: WholesaleOfferTerms) => {
+      const res = await apiRequest("POST", "/api/marketflow/offers", {
+        lane: "WHOLESALE",
+        dealId: Number(dealId),
+        offerKind: "WHOLESALE_ASSIGNMENT",
+        payload,
+      });
       return res.json();
     },
     onSuccess: () => {
       toast({
-        title: "Offer Accepted",
-        description: "You've accepted the wholesaler's terms. They will be notified.",
+        title: "Offer sent",
+        description: "Your offer is now awaiting the wholesaler's response.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/wholesale-deals"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/supabase/wholesale-offers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/marketflow/negotiations"] });
       onClose();
     },
     onError: (error: any) => {
@@ -387,23 +468,63 @@ function WholesaleAcceptTermsModal({ dealId, onClose }: WholesaleAcceptFormProps
 
   const handleSubmit = () => {
     if (!isAuthenticated) {
-      toast({ title: "Sign in required", description: "Please sign in to accept this deal." });
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to accept this deal.",
+      });
       return;
     }
-    if (!acknowledged) {
-      toast({ title: "Acknowledgement required", description: "Please acknowledge the terms.", variant: "destructive" });
+    if (totalAssignmentPrice === null) {
+      toast({ title: "Valid total assignment price required", variant: "destructive" });
+      return;
+    }
+    if (!hasAcknowledgedCurrentTotal) {
+      toast({
+        title: "Acknowledgement required",
+        description: "Please acknowledge the terms.",
+        variant: "destructive",
+      });
       return;
     }
 
-    submitMutation.mutate({
-      dealId,
-      type: "wholesale_accept",
-      isCounter: false,
-      assignmentFee: deal?.assignmentFee,
-      earnestMoney: parseFloat(earnestMoney) || 1000,
-      closingDate: deal?.closingDate,
-      message,
-    });
+    const closingDateInput = closingDateInputRef.current;
+    if (
+      !closingDate ||
+      !closingDateInput?.value ||
+      !closingDateInput.validity.valid
+    ) {
+      setClosingDateError(true);
+      closingDateInput?.focus();
+      return;
+    }
+    setClosingDateError(false);
+
+    const parsedEarnestMoney = parseBoundedWholeNumber(
+      earnestMoney,
+      0,
+      MAX_WHOLESALE_OFFER_AMOUNT,
+    );
+    if (
+      parsedEarnestMoney === null ||
+      parsedEarnestMoney > totalAssignmentPrice
+    ) {
+      toast({
+        title: "Valid earnest money required",
+        description: "Enter a whole-dollar amount from $0 through the total.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const payload = {
+      offerPrice: totalAssignmentPrice,
+      earnestMoney: parsedEarnestMoney,
+      closeDate: closingDate,
+      inspectionPeriod: 0,
+      fundingType: "cash",
+      notes: message,
+    } satisfies WholesaleOfferTerms;
+    submitMutation.mutate(payload);
   };
 
   if (dealLoading) {
@@ -414,9 +535,15 @@ function WholesaleAcceptTermsModal({ dealId, onClose }: WholesaleAcceptFormProps
     );
   }
 
-  const formatCurrency = (amount: number | undefined) => {
-    if (!amount) return "—";
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(amount);
+  const formatCurrency = (amount: number | null | undefined) => {
+    if (amount === null || amount === undefined || !Number.isFinite(amount)) {
+      return "—";
+    }
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(amount);
   };
 
   return (
@@ -449,22 +576,77 @@ function WholesaleAcceptTermsModal({ dealId, onClose }: WholesaleAcceptFormProps
               <span className="text-muted-foreground">ARV:</span>
               <span className="ml-2 font-medium">{formatCurrency(deal?.arv)}</span>
             </div>
-            <div>
-              <span className="text-muted-foreground">Closing:</span>
-              <span className="ml-2 font-medium">{deal?.closingDate || "TBD"}</span>
+            <div
+              className="col-span-2"
+              data-testid="text-accept-total-assignment-price"
+            >
+              <span className="text-muted-foreground">
+                Total assignment price:
+              </span>
+              <span className="ml-2 font-semibold text-primary">
+                {formatCurrency(totalAssignmentPrice)}
+              </span>
             </div>
           </div>
+          {totalAssignmentPrice === null && (
+            <p
+              id="accept-total-assignment-price-error"
+              role="alert"
+              className="text-sm text-destructive"
+              data-testid="error-accept-total-assignment-price"
+            >
+              Total assignment price is invalid.
+            </p>
+          )}
         </div>
 
         <div className="space-y-3">
+          <div>
+            <label
+              htmlFor="accept-closing-date"
+              className="text-sm font-medium"
+            >
+              Closing Date *
+            </label>
+            <input
+              ref={closingDateInputRef}
+              id="accept-closing-date"
+              type="date"
+              required
+              value={closingDate}
+              onChange={(event) => {
+                const value = event.target.value;
+                setClosingDate(value);
+                if (value) setClosingDateError(false);
+              }}
+              aria-invalid={closingDateError ? "true" : undefined}
+              aria-describedby={
+                closingDateError ? "accept-closing-date-error" : undefined
+              }
+              className="w-full px-3 py-2 border rounded-md mt-1"
+              data-testid="input-accept-closing-date"
+            />
+            {closingDateError && (
+              <p
+                id="accept-closing-date-error"
+                role="alert"
+                className="text-sm text-destructive mt-1"
+                data-testid="error-accept-closing-date"
+              >
+                Closing date is required.
+              </p>
+            )}
+          </div>
+
           <div>
             <label className="text-sm font-medium">Earnest Money Deposit</label>
             <div className="relative mt-1">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
               <input
                 type="number"
+                step="1"
                 value={earnestMoney}
-                onChange={(e) => setEarnestMoney(e.target.value)}
+                onChange={(event) => setEarnestMoney(event.target.value)}
                 placeholder="1000"
                 className="w-full pl-7 pr-3 py-2 border rounded-md"
                 data-testid="input-accept-earnest-money"
@@ -486,13 +668,20 @@ function WholesaleAcceptTermsModal({ dealId, onClose }: WholesaleAcceptFormProps
           <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
             <input
               type="checkbox"
-              checked={acknowledged}
-              onChange={(e) => setAcknowledged(e.target.checked)}
+              checked={hasAcknowledgedCurrentTotal}
+              onChange={(event) =>
+                setAcknowledgedTotal(
+                  event.target.checked ? totalAssignmentPrice : null,
+                )
+              }
+              disabled={totalAssignmentPrice === null}
               className="mt-0.5 rounded"
               data-testid="checkbox-acknowledge-terms"
             />
             <span className="text-sm">
-              I acknowledge and accept the assignment terms as posted. I understand I am agreeing to pay the listed assignment fee of {formatCurrency(deal?.assignmentFee)}.
+              I acknowledge and accept the assignment terms as posted. I
+              understand I am agreeing to pay the total assignment price of{" "}
+              {formatCurrency(totalAssignmentPrice)}.
             </span>
           </label>
         </div>
@@ -503,7 +692,11 @@ function WholesaleAcceptTermsModal({ dealId, onClose }: WholesaleAcceptFormProps
           </Button>
           <Button 
             onClick={handleSubmit} 
-            disabled={submitMutation.isPending || !acknowledged}
+            disabled={
+              submitMutation.isPending ||
+              !hasAcknowledgedCurrentTotal ||
+              totalAssignmentPrice === null
+            }
             className="flex-1"
             data-testid="button-submit-wholesale-accept"
           >
@@ -523,15 +716,20 @@ interface WholesaleCounterFormProps {
 }
 
 // WHOLESALE COUNTER OFFER - Full form with all negotiable fields
-function WholesaleCounterOfferModal({ dealId, existingOfferId, onClose }: WholesaleCounterFormProps) {
+function WholesaleCounterOfferModal({
+  dealId,
+  onClose,
+}: WholesaleCounterFormProps) {
   const { toast } = useToast();
   const { isAuthenticated } = useSupabaseAuth();
-  const [assignmentFee, setAssignmentFee] = useState("");
+  const [counterAssignmentFee, setCounterAssignmentFee] = useState("");
   const [earnestMoney, setEarnestMoney] = useState("1000");
   const [closingDate, setClosingDate] = useState("");
   const [inspectionPeriod, setInspectionPeriod] = useState("10");
   const [message, setMessage] = useState("");
   const [initialized, setInitialized] = useState(false);
+  const [closingDateError, setClosingDateError] = useState(false);
+  const closingDateInputRef = useRef<HTMLInputElement>(null);
 
   const { data: deal, isLoading: dealLoading } = useQuery<WholesaleDeal>({
     queryKey: ["/api/wholesale-deals", dealId],
@@ -540,19 +738,33 @@ function WholesaleCounterOfferModal({ dealId, existingOfferId, onClose }: Wholes
 
   useEffect(() => {
     if (deal && !initialized) {
-      if (deal.assignmentFee) {
-        setAssignmentFee(String(deal.assignmentFee));
-      }
-      if (deal.closingDate) {
-        setClosingDate(deal.closingDate);
-      }
+      setCounterAssignmentFee(
+        deal.assignmentFee === undefined || deal.assignmentFee === null
+          ? ""
+          : String(deal.assignmentFee),
+      );
+      setClosingDate(toDateInputValue(deal.closingDate));
       setInitialized(true);
     }
   }, [deal, initialized]);
 
+  const totalAssignmentPrice = initialized
+    ? calculateTotalAssignmentPrice(
+        deal?.contractPrice,
+        counterAssignmentFee,
+      )
+    : null;
+  const hasInvalidTotalAssignmentPrice =
+    initialized && totalAssignmentPrice === null;
+
   const submitMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/supabase/wholesale-offers", data);
+    mutationFn: async (payload: WholesaleOfferTerms) => {
+      const res = await apiRequest("POST", "/api/marketflow/offers", {
+        lane: "WHOLESALE",
+        dealId: Number(dealId),
+        offerKind: "WHOLESALE_ASSIGNMENT",
+        payload,
+      });
       return res.json();
     },
     onSuccess: () => {
@@ -561,7 +773,7 @@ function WholesaleCounterOfferModal({ dealId, existingOfferId, onClose }: Wholes
         description: "Your counter-offer has been sent for review.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/wholesale-deals"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/supabase/wholesale-offers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/marketflow/negotiations"] });
       onClose();
     },
     onError: (error: any) => {
@@ -575,25 +787,68 @@ function WholesaleCounterOfferModal({ dealId, existingOfferId, onClose }: Wholes
 
   const handleSubmit = () => {
     if (!isAuthenticated) {
-      toast({ title: "Sign in required", description: "Please sign in to make a counter-offer." });
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to make a counter-offer.",
+      });
       return;
     }
-    if (!assignmentFee) {
-      toast({ title: "Assignment fee required", variant: "destructive" });
+    if (!initialized || totalAssignmentPrice === null) {
+      toast({ title: "Valid total assignment price required", variant: "destructive" });
       return;
     }
 
-    submitMutation.mutate({
-      dealId,
-      type: "wholesale_counter",
-      isCounter: true,
-      parentOfferId: existingOfferId,
-      assignmentFee: parseFloat(assignmentFee),
-      earnestMoney: parseFloat(earnestMoney) || 1000,
-      closingDate: closingDate || undefined,
-      inspectionPeriod: parseInt(inspectionPeriod) || 10,
-      message,
-    });
+    const closingDateInput = closingDateInputRef.current;
+    if (
+      !closingDate ||
+      !closingDateInput?.value ||
+      !closingDateInput.validity.valid
+    ) {
+      setClosingDateError(true);
+      closingDateInput?.focus();
+      return;
+    }
+    setClosingDateError(false);
+
+    const parsedEarnestMoney = parseBoundedWholeNumber(
+      earnestMoney,
+      0,
+      MAX_WHOLESALE_OFFER_AMOUNT,
+    );
+    const parsedInspectionPeriod = parseBoundedWholeNumber(
+      inspectionPeriod,
+      0,
+      MAX_WHOLESALE_INSPECTION_DAYS,
+    );
+    if (
+      parsedEarnestMoney === null ||
+      parsedEarnestMoney > totalAssignmentPrice
+    ) {
+      toast({
+        title: "Valid earnest money required",
+        description: "Enter a whole-dollar amount from $0 through the total.",
+        variant: "destructive",
+      });
+      return;
+    }
+    if (parsedInspectionPeriod === null) {
+      toast({
+        title: "Valid inspection period required",
+        description: "Enter a whole number from 0 through 365 days.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const payload = {
+      offerPrice: totalAssignmentPrice,
+      earnestMoney: parsedEarnestMoney,
+      closeDate: closingDate,
+      inspectionPeriod: parsedInspectionPeriod,
+      fundingType: "cash",
+      notes: message,
+    } satisfies WholesaleOfferTerms;
+    submitMutation.mutate(payload);
   };
 
   if (dealLoading) {
@@ -604,9 +859,15 @@ function WholesaleCounterOfferModal({ dealId, existingOfferId, onClose }: Wholes
     );
   }
 
-  const formatCurrency = (amount: number | undefined) => {
-    if (!amount) return "—";
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(amount);
+  const formatCurrency = (amount: number | null | undefined) => {
+    if (amount === null || amount === undefined || !Number.isFinite(amount)) {
+      return "—";
+    }
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
+      maximumFractionDigits: 0,
+    }).format(amount);
   };
 
   return (
@@ -639,18 +900,48 @@ function WholesaleCounterOfferModal({ dealId, existingOfferId, onClose }: Wholes
             <span className="text-muted-foreground">Repairs:</span>
             <span className="ml-2 font-medium">{formatCurrency(deal?.repairEstimate || deal?.estimatedRepairs)}</span>
           </div>
+          <div
+            className="col-span-2"
+            data-testid="text-counter-total-assignment-price"
+          >
+            <span className="text-muted-foreground">
+              Total assignment price:
+            </span>
+            <span className="ml-2 font-semibold text-primary">
+              {formatCurrency(totalAssignmentPrice)}
+            </span>
+          </div>
         </div>
+        {hasInvalidTotalAssignmentPrice && (
+          <p
+            id="counter-total-assignment-price-error"
+            role="alert"
+            className="text-sm text-destructive"
+            data-testid="error-counter-total-assignment-price"
+          >
+            Total assignment price is invalid.
+          </p>
+        )}
 
         <div className="space-y-3">
           <div>
-            <label className="text-sm font-medium">Your Assignment Fee Offer *</label>
+            <label
+              htmlFor="counter-assignment-fee"
+              className="text-sm font-medium"
+            >
+              Your Assignment Fee Offer *
+            </label>
             <div className="relative mt-1">
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
               <input
+                id="counter-assignment-fee"
                 type="number"
-                value={assignmentFee}
-                onChange={(e) => setAssignmentFee(e.target.value)}
-                placeholder={String(deal?.assignmentFee || 5000)}
+                step="1"
+                value={counterAssignmentFee}
+                onChange={(event) =>
+                  setCounterAssignmentFee(event.target.value)
+                }
+                placeholder={String(deal?.assignmentFee ?? 5000)}
                 className="w-full pl-7 pr-3 py-2 border rounded-md"
                 data-testid="input-counter-assignment-fee"
               />
@@ -663,8 +954,9 @@ function WholesaleCounterOfferModal({ dealId, existingOfferId, onClose }: Wholes
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
               <input
                 type="number"
+                step="1"
                 value={earnestMoney}
-                onChange={(e) => setEarnestMoney(e.target.value)}
+                onChange={(event) => setEarnestMoney(event.target.value)}
                 placeholder="1000"
                 className="w-full pl-7 pr-3 py-2 border rounded-md"
                 data-testid="input-counter-earnest-money"
@@ -674,21 +966,48 @@ function WholesaleCounterOfferModal({ dealId, existingOfferId, onClose }: Wholes
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-medium">Closing Date</label>
+              <label
+                htmlFor="counter-closing-date"
+                className="text-sm font-medium"
+              >
+                Closing Date *
+              </label>
               <input
+                ref={closingDateInputRef}
+                id="counter-closing-date"
                 type="date"
+                required
                 value={closingDate}
-                onChange={(e) => setClosingDate(e.target.value)}
+                onChange={(event) => {
+                  const value = event.target.value;
+                  setClosingDate(value);
+                  if (value) setClosingDateError(false);
+                }}
+                aria-invalid={closingDateError ? "true" : undefined}
+                aria-describedby={
+                  closingDateError ? "counter-closing-date-error" : undefined
+                }
                 className="w-full px-3 py-2 border rounded-md mt-1"
                 data-testid="input-counter-closing-date"
               />
+              {closingDateError && (
+                <p
+                  id="counter-closing-date-error"
+                  role="alert"
+                  className="text-sm text-destructive mt-1"
+                  data-testid="error-counter-closing-date"
+                >
+                  Closing date is required.
+                </p>
+              )}
             </div>
             <div>
               <label className="text-sm font-medium">Inspection Period (days)</label>
               <input
                 type="number"
+                step="1"
                 value={inspectionPeriod}
-                onChange={(e) => setInspectionPeriod(e.target.value)}
+                onChange={(event) => setInspectionPeriod(event.target.value)}
                 placeholder="10"
                 className="w-full px-3 py-2 border rounded-md mt-1"
                 data-testid="input-counter-inspection-period"
@@ -714,7 +1033,11 @@ function WholesaleCounterOfferModal({ dealId, existingOfferId, onClose }: Wholes
           </Button>
           <Button 
             onClick={handleSubmit} 
-            disabled={submitMutation.isPending}
+            disabled={
+              submitMutation.isPending ||
+              !initialized ||
+              totalAssignmentPrice === null
+            }
             className="flex-1"
             data-testid="button-submit-wholesale-counter"
           >
@@ -750,7 +1073,7 @@ function WholesaleJVRequestModal({ dealId, existingOfferId, onClose }: Wholesale
 
   const submitMutation = useMutation({
     mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/supabase/jv-requests", data);
+      const res = await apiRequest("POST", "/api/marketplace/jv-requests", data);
       return res.json();
     },
     onSuccess: () => {
@@ -759,7 +1082,7 @@ function WholesaleJVRequestModal({ dealId, existingOfferId, onClose }: Wholesale
         description: "Your partnership request has been sent to the wholesaler.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/wholesale-deals"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/supabase/jv-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/marketplace/wholesaler/jv-requests"] });
       onClose();
     },
     onError: (error: any) => {
@@ -966,801 +1289,6 @@ function WholesaleJVRequestModal({ dealId, existingOfferId, onClose }: Wholesale
   );
 }
 
-function CapitalRaiseTermsForm({ projectId, mode, existingOfferId, onClose }: FormProps) {
-  const { toast } = useToast();
-  const { isAuthenticated } = useSupabaseAuth();
-  const [capitalTarget, setCapitalTarget] = useState("");
-  const [minInvestment, setMinInvestment] = useState("25000");
-  const [structure, setStructure] = useState<"DEBT" | "EQUITY" | "HYBRID">("EQUITY");
-  const [proposedReturn, setProposedReturn] = useState("15");
-  const [profitSplit, setProfitSplit] = useState("70");
-  const [timeline, setTimeline] = useState("24");
-  const [message, setMessage] = useState("");
-
-  const { data: project, isLoading: projectLoading } = useQuery<CapitalProject>({
-    queryKey: ["/api/capital-projects", projectId],
-    enabled: !!projectId,
-  });
-
-  const submitMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/supabase/capital-raises", data);
-      return res.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: mode === "counter" ? "Updated Terms Submitted" : "Capital Raise Posted",
-        description: "Your capital raise terms have been published.",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/capital-projects"] });
-      onClose();
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to submit capital raise",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleSubmit = () => {
-    if (!isAuthenticated) {
-      toast({ title: "Sign in required", description: "Please sign in to post a capital raise." });
-      return;
-    }
-    if (!capitalTarget) {
-      toast({ title: "Capital target required", variant: "destructive" });
-      return;
-    }
-
-    submitMutation.mutate({
-      projectId,
-      type: "capital_raise",
-      isCounter: mode === "counter",
-      parentOfferId: existingOfferId,
-      capitalTarget: parseFloat(capitalTarget),
-      minInvestment: parseFloat(minInvestment) || 25000,
-      structure,
-      proposedReturn: parseFloat(proposedReturn),
-      profitSplit: parseInt(profitSplit),
-      timelineMonths: parseInt(timeline),
-      message,
-    });
-  };
-
-  if (projectLoading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="w-6 h-6 animate-spin" />
-      </div>
-    );
-  }
-
-  const formatCurrency = (amount: number | undefined) => {
-    if (!amount) return "—";
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(amount);
-  };
-
-  const fundingProgress = project?.fundingGoal 
-    ? ((project.amountRaised || 0) / project.fundingGoal) * 100 
-    : 0;
-
-  return (
-    <>
-      <DialogHeader>
-        <DialogTitle data-testid="dialog-title-capital-raise">
-          {mode === "counter" ? "Update Raise Terms" : "Post Capital Raise"}
-        </DialogTitle>
-        <DialogDescription>
-          {project?.title || "Capital Project"}
-        </DialogDescription>
-      </DialogHeader>
-
-      <div className="space-y-4 mt-4">
-        {project && (
-          <div className="p-3 bg-muted rounded-lg">
-            <div className="flex justify-between text-sm mb-2">
-              <span>Funding Progress</span>
-              <span className="font-medium">{formatCurrency(project.amountRaised)} / {formatCurrency(project.fundingGoal)}</span>
-            </div>
-            <div className="w-full bg-background rounded-full h-2">
-              <div 
-                className="bg-primary h-2 rounded-full transition-all" 
-                style={{ width: `${Math.min(fundingProgress, 100)}%` }}
-              />
-            </div>
-          </div>
-        )}
-
-        <div className="space-y-3">
-          <div>
-            <label className="text-sm font-medium">Capital Target *</label>
-            <div className="relative mt-1">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-              <input
-                type="number"
-                value={capitalTarget}
-                onChange={(e) => setCapitalTarget(e.target.value)}
-                placeholder={String(project?.fundingGoal || 500000)}
-                className="w-full pl-7 pr-3 py-2 border rounded-md"
-                data-testid="input-capital-target"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium">Minimum Investment</label>
-            <div className="relative mt-1">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-              <input
-                type="number"
-                value={minInvestment}
-                onChange={(e) => setMinInvestment(e.target.value)}
-                placeholder="25000"
-                className="w-full pl-7 pr-3 py-2 border rounded-md"
-                data-testid="input-min-investment"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium">Investment Structure</label>
-            <div className="grid grid-cols-3 gap-2 mt-2">
-              {(["DEBT", "EQUITY", "HYBRID"] as const).map((s) => (
-                <button
-                  key={s}
-                  type="button"
-                  onClick={() => setStructure(s)}
-                  className={`p-2 border rounded-lg text-sm transition-colors ${
-                    structure === s 
-                      ? "border-primary bg-primary/5" 
-                      : "border-border hover:border-primary/50"
-                  }`}
-                  data-testid={`button-structure-${s.toLowerCase()}`}
-                >
-                  {s}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-sm font-medium">Proposed Return (%)</label>
-              <input
-                type="number"
-                value={proposedReturn}
-                onChange={(e) => setProposedReturn(e.target.value)}
-                placeholder="15"
-                className="w-full px-3 py-2 border rounded-md mt-1"
-                data-testid="input-proposed-return"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Profit Split (Investor %)</label>
-              <input
-                type="number"
-                value={profitSplit}
-                onChange={(e) => setProfitSplit(e.target.value)}
-                placeholder="70"
-                className="w-full px-3 py-2 border rounded-md mt-1"
-                data-testid="input-profit-split"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium">Timeline (months)</label>
-            <input
-              type="number"
-              value={timeline}
-              onChange={(e) => setTimeline(e.target.value)}
-              placeholder="24"
-              className="w-full px-3 py-2 border rounded-md mt-1"
-              data-testid="input-timeline-months"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium">Project Description</label>
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Describe the capital participation request..."
-              className="w-full px-3 py-2 border rounded-md mt-1 min-h-[80px]"
-              data-testid="input-project-description"
-            />
-          </div>
-        </div>
-
-        <div className="flex gap-3 pt-4">
-          <Button variant="outline" onClick={onClose} className="flex-1" data-testid="button-cancel-raise">
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleSubmit} 
-            disabled={submitMutation.isPending}
-            className="flex-1"
-            data-testid="button-submit-capital-raise"
-          >
-            {submitMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            {mode === "counter" ? "Update Terms" : "Post Raise"}
-          </Button>
-        </div>
-      </div>
-    </>
-  );
-}
-
-function CapitalInvestmentForm({ projectId, mode, existingOfferId, onClose }: FormProps) {
-  const { toast } = useToast();
-  const { isAuthenticated } = useSupabaseAuth();
-  const [investmentAmount, setInvestmentAmount] = useState("");
-  const [expectedReturn, setExpectedReturn] = useState("15");
-  const [profitSplit, setProfitSplit] = useState("70");
-  const [termMonths, setTermMonths] = useState("24");
-  const [message, setMessage] = useState("");
-  const [initialized, setInitialized] = useState(false);
-
-  const { data: project, isLoading: projectLoading } = useQuery<CapitalProject>({
-    queryKey: ["/api/capital-projects", projectId],
-    enabled: !!projectId,
-  });
-
-  // Pre-populate form with project data when loaded
-  useEffect(() => {
-    if (project && !initialized) {
-      if (project.minInvestment) {
-        setInvestmentAmount(String(project.minInvestment));
-      }
-      if (project.askingInterestRate) {
-        const rate = parseFloat(project.askingInterestRate.replace('%', ''));
-        if (!isNaN(rate)) setExpectedReturn(String(rate));
-      }
-      if (project.askingProfitSplit) {
-        const split = parseFloat(project.askingProfitSplit.replace(/[^0-9]/g, ''));
-        if (!isNaN(split)) setProfitSplit(String(split));
-      }
-      if (project.askingLoanDuration) {
-        const months = parseInt(project.askingLoanDuration.replace(/[^0-9]/g, ''));
-        if (!isNaN(months)) setTermMonths(String(months));
-      }
-      setInitialized(true);
-    }
-  }, [project, initialized]);
-
-  const submitMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/supabase/capital-investments", data);
-      return res.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: mode === "counter" ? "Counter-Offer Sent" : "Investment Submitted",
-        description: mode === "counter"
-          ? "Your counter-offer has been sent to the operator."
-          : "Your investment offer has been submitted.",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/capital-projects"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/supabase/capital-investments"] });
-      onClose();
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to submit investment",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleSubmit = () => {
-    if (!isAuthenticated) {
-      toast({ title: "Sign in required", description: "Please sign in to invest." });
-      return;
-    }
-    if (!investmentAmount) {
-      toast({ title: "Investment amount required", variant: "destructive" });
-      return;
-    }
-
-    const amount = parseFloat(investmentAmount);
-    if (project?.minInvestment && amount < project.minInvestment) {
-      toast({ 
-        title: "Below minimum investment", 
-        description: `Minimum investment is ${formatCurrency(project.minInvestment)}`,
-        variant: "destructive" 
-      });
-      return;
-    }
-
-    submitMutation.mutate({
-      projectId,
-      type: "capital_invest",
-      isCounter: mode === "counter",
-      parentOfferId: existingOfferId,
-      investmentAmount: amount,
-      expectedReturn: parseFloat(expectedReturn),
-      profitSplit: parseInt(profitSplit),
-      termMonths: parseInt(termMonths),
-      message,
-    });
-  };
-
-  const formatCurrency = (amount: number | undefined) => {
-    if (!amount) return "—";
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(amount);
-  };
-
-  if (projectLoading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="w-6 h-6 animate-spin" />
-      </div>
-    );
-  }
-
-  const fundingProgress = project?.fundingGoal 
-    ? ((project.amountRaised || 0) / project.fundingGoal) * 100 
-    : 0;
-  const remaining = (project?.fundingGoal || 0) - (project?.amountRaised || 0);
-
-  return (
-    <>
-      <DialogHeader>
-        <DialogTitle data-testid="dialog-title-capital-investment">
-          {mode === "counter" ? "Counter Investment Terms" : "Make Investment"}
-        </DialogTitle>
-        <DialogDescription>
-          {project?.title || "Capital Project"}
-        </DialogDescription>
-      </DialogHeader>
-
-      <div className="space-y-4 mt-4">
-        <div className="p-3 bg-muted rounded-lg">
-          <div className="grid grid-cols-2 gap-4 text-sm">
-            <div>
-              <span className="text-muted-foreground">Funding Goal:</span>
-              <span className="ml-2 font-medium">{formatCurrency(project?.fundingGoal)}</span>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Remaining:</span>
-              <span className="ml-2 font-medium">{formatCurrency(remaining)}</span>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Minimum Capital:</span>
-              <span className="ml-2 font-medium">{formatCurrency(project?.minInvestment)}</span>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Structure:</span>
-              <span className="ml-2 font-medium">{project?.structure || "Equity"}</span>
-            </div>
-          </div>
-          <div className="mt-3">
-            <div className="flex justify-between text-xs text-muted-foreground mb-1">
-              <span>Progress</span>
-              <span>{fundingProgress.toFixed(0)}%</span>
-            </div>
-            <div className="w-full bg-background rounded-full h-2">
-              <div 
-                className="bg-primary h-2 rounded-full transition-all" 
-                style={{ width: `${Math.min(fundingProgress, 100)}%` }}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <div>
-            <label className="text-sm font-medium">Investment Amount *</label>
-            <div className="relative mt-1">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-              <input
-                type="number"
-                value={investmentAmount}
-                onChange={(e) => setInvestmentAmount(e.target.value)}
-                placeholder={String(project?.minInvestment || 25000)}
-                className="w-full pl-7 pr-3 py-2 border rounded-md"
-                data-testid="input-investment-amount"
-              />
-            </div>
-            {project?.minInvestment && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Minimum: {formatCurrency(project.minInvestment)}
-              </p>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="text-sm font-medium">Expected Return (%)</label>
-              <input
-                type="number"
-                value={expectedReturn}
-                onChange={(e) => setExpectedReturn(e.target.value)}
-                placeholder="15"
-                className="w-full px-3 py-2 border rounded-md mt-1"
-                data-testid="input-expected-return"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium">Profit Split (Your %)</label>
-              <input
-                type="number"
-                value={profitSplit}
-                onChange={(e) => setProfitSplit(e.target.value)}
-                placeholder="70"
-                className="w-full px-3 py-2 border rounded-md mt-1"
-                data-testid="input-investor-profit-split"
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className="text-sm font-medium">Term Length (months)</label>
-            <input
-              type="number"
-              value={termMonths}
-              onChange={(e) => setTermMonths(e.target.value)}
-              placeholder="24"
-              className="w-full px-3 py-2 border rounded-md mt-1"
-              data-testid="input-term-months"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium">Message to Operator</label>
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Add any terms or conditions..."
-              className="w-full px-3 py-2 border rounded-md mt-1 min-h-[80px]"
-              data-testid="input-investment-message"
-            />
-          </div>
-        </div>
-
-        <div className="flex gap-3 pt-4">
-          <Button variant="outline" onClick={onClose} className="flex-1" data-testid="button-cancel-investment">
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleSubmit} 
-            disabled={submitMutation.isPending}
-            className="flex-1"
-            data-testid="button-submit-capital-investment"
-          >
-            {submitMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            {mode === "counter" ? "Send Counter-Offer" : "Submit Investment"}
-          </Button>
-        </div>
-      </div>
-    </>
-  );
-}
-
-// ========== CANONICAL CAPITAL FORMS ==========
-
-interface CapitalAcceptFormProps {
-  projectId: number;
-  onClose: () => void;
-}
-
-// CAPITAL ACCEPT TERMS - Fast path with minimal fields (investment amount + acknowledgements)
-function CapitalAcceptTermsModal({ projectId, onClose }: CapitalAcceptFormProps) {
-  const { toast } = useToast();
-  const { isAuthenticated } = useSupabaseAuth();
-  const [investmentAmount, setInvestmentAmount] = useState("");
-  const [acknowledged, setAcknowledged] = useState(false);
-  const [acknowledgedRisk, setAcknowledgedRisk] = useState(false);
-  const [message, setMessage] = useState("");
-  const [initialized, setInitialized] = useState(false);
-
-  const { data: project, isLoading: projectLoading } = useQuery<CapitalProject>({
-    queryKey: ["/api/capital-projects", projectId],
-    enabled: !!projectId,
-  });
-
-  useEffect(() => {
-    if (project && !initialized) {
-      if (project.minInvestment) {
-        setInvestmentAmount(String(project.minInvestment));
-      }
-      setInitialized(true);
-    }
-  }, [project, initialized]);
-
-  const submitMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/supabase/capital-investments", data);
-      return res.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Investment Accepted",
-        description: "You've accepted the operator's terms. They will be notified.",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/capital-projects"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/supabase/capital-investments"] });
-      onClose();
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to submit investment",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleSubmit = () => {
-    if (!isAuthenticated) {
-      toast({ title: "Sign in required", description: "Please sign in to invest." });
-      return;
-    }
-    if (!investmentAmount) {
-      toast({ title: "Investment amount required", variant: "destructive" });
-      return;
-    }
-    if (!acknowledged || !acknowledgedRisk) {
-      toast({ title: "Acknowledgements required", description: "Please acknowledge all terms.", variant: "destructive" });
-      return;
-    }
-
-    const amount = parseFloat(investmentAmount);
-    if (project?.minInvestment && amount < project.minInvestment) {
-      toast({ 
-        title: "Below minimum investment", 
-        description: `Minimum investment is ${formatCurrency(project.minInvestment)}`,
-        variant: "destructive" 
-      });
-      return;
-    }
-
-    submitMutation.mutate({
-      projectId,
-      type: "capital_accept",
-      isCounter: false,
-      investmentAmount: amount,
-      message,
-    });
-  };
-
-  const formatCurrency = (amount: number | undefined) => {
-    if (!amount) return "—";
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(amount);
-  };
-
-  if (projectLoading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="w-6 h-6 animate-spin" />
-      </div>
-    );
-  }
-
-  const fundingProgress = project?.fundingGoal 
-    ? ((project.amountRaised || 0) / project.fundingGoal) * 100 
-    : 0;
-  const remaining = (project?.fundingGoal || 0) - (project?.amountRaised || 0);
-
-  return (
-    <>
-      <DialogHeader>
-        <DialogTitle data-testid="dialog-title-capital-accept">
-          Capital Accept Terms
-        </DialogTitle>
-        <DialogDescription>
-          Accept the capital participation request as posted
-        </DialogDescription>
-      </DialogHeader>
-
-      <div className="space-y-4 mt-4">
-        <div className="p-4 bg-muted rounded-lg space-y-3">
-          <div className="flex items-start justify-between gap-2">
-            <div>
-              <div className="text-lg font-semibold">{project?.title}</div>
-              {project?.address && (
-                <div className="text-sm text-muted-foreground">{project.address}, {project.city}, {project.state}</div>
-              )}
-            </div>
-            <span className={`px-2 py-1 text-xs font-semibold rounded-full shrink-0 ${
-              project?.structure === "DEBT" 
-                ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
-                : project?.structure === "HYBRID"
-                  ? "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary"
-                  : "bg-green-100 text-green-700 dark:bg-green-950 dark:text-green-300"
-            }`} data-testid="badge-structure-type">
-              {project?.structure || "EQUITY"}
-            </span>
-          </div>
-          
-          {/* Structure-specific terms display */}
-          {project?.structure === "DEBT" && (
-            <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800 space-y-2">
-              <div className="text-xs font-medium text-blue-700 dark:text-blue-300 uppercase tracking-wide">Debt Investment Terms</div>
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <span className="text-muted-foreground">Interest Rate:</span>
-                  <span className="ml-2 font-semibold text-blue-600 dark:text-blue-400">{project.askingInterestRate || "—"}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Loan Duration:</span>
-                  <span className="ml-2 font-medium">{project.askingLoanDuration || "—"}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Payment Schedule:</span>
-                  <span className="ml-2 font-medium">{project.paymentSchedule || "Monthly"}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Security:</span>
-                  <span className="ml-2 font-medium">First Lien Position</span>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {project?.structure === "EQUITY" && (
-            <div className="p-3 bg-green-50 dark:bg-green-950/30 rounded-lg border border-green-200 dark:border-green-800 space-y-2">
-              <div className="text-xs font-medium text-green-700 dark:text-green-300 uppercase tracking-wide">Equity Investment Terms</div>
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <span className="text-muted-foreground">Equity Share:</span>
-                  <span className="ml-2 font-semibold text-green-600 dark:text-green-400">{project.askingEquityPercent ? `${project.askingEquityPercent}%` : "—"}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Preferred Return:</span>
-                  <span className="ml-2 font-medium">{project.askingPreferredReturn || "—"}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Profit Split:</span>
-                  <span className="ml-2 font-medium">{project.askingProfitSplit || "—"}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Hold Period:</span>
-                  <span className="ml-2 font-medium">{project.holdPeriod || "—"}</span>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {project?.structure === "HYBRID" && (
-            <div className="p-3 bg-primary/10 dark:bg-primary/20 rounded-lg border border-primary/25 dark:border-primary/30 space-y-2">
-              <div className="text-xs font-medium text-primary uppercase tracking-wide">Hybrid Investment Terms</div>
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <span className="text-muted-foreground">Debt Portion:</span>
-                  <span className="ml-2 font-semibold">{project.askingDebtPortion ? `${project.askingDebtPortion}%` : "—"}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Equity Portion:</span>
-                  <span className="ml-2 font-semibold">{project.askingEquityPortion ? `${project.askingEquityPortion}%` : "—"}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Base Interest:</span>
-                  <span className="ml-2 font-medium text-blue-600 dark:text-blue-400">{project.askingInterestRate || "—"}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Equity Upside:</span>
-                  <span className="ml-2 font-medium text-green-600 dark:text-green-400">{project.askingEquityPercent ? `${project.askingEquityPercent}%` : "—"}</span>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {/* Fallback for unspecified structure */}
-          {!project?.structure && (
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              <div>
-                <span className="text-muted-foreground">Target Return:</span>
-                <span className="ml-2 font-medium text-primary">{project?.askingInterestRate || project?.askingPreferredReturn || "—"}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Profit Split:</span>
-                <span className="ml-2 font-medium">{project?.askingProfitSplit || "—"}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Hold Period:</span>
-                <span className="ml-2 font-medium">{project?.holdPeriod || project?.askingLoanDuration || "—"}</span>
-              </div>
-            </div>
-          )}
-          
-          <div className="pt-2 border-t border-border/50">
-            <div className="flex justify-between text-xs text-muted-foreground mb-1">
-              <span>Funding Progress</span>
-              <span>{formatCurrency(project?.amountRaised)} / {formatCurrency(project?.fundingGoal)}</span>
-            </div>
-            <div className="w-full bg-background rounded-full h-2">
-              <div 
-                className="bg-primary h-2 rounded-full transition-all" 
-                style={{ width: `${Math.min(fundingProgress, 100)}%` }}
-              />
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-3">
-          <div>
-            <label className="text-sm font-medium">Investment Amount *</label>
-            <div className="relative mt-1">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
-              <input
-                type="number"
-                value={investmentAmount}
-                onChange={(e) => setInvestmentAmount(e.target.value)}
-                placeholder={String(project?.minInvestment || 25000)}
-                className="w-full pl-7 pr-3 py-2 border rounded-md"
-                data-testid="input-capital-accept-amount"
-              />
-            </div>
-            {project?.minInvestment && (
-              <p className="text-xs text-muted-foreground mt-1">
-                Minimum: {formatCurrency(project.minInvestment)} | Remaining: {formatCurrency(remaining)}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="text-sm font-medium">Message (optional)</label>
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder="Any notes for the operator..."
-              className="w-full px-3 py-2 border rounded-md mt-1 min-h-[60px]"
-              data-testid="input-capital-accept-message"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
-              <input
-                type="checkbox"
-                checked={acknowledged}
-                onChange={(e) => setAcknowledged(e.target.checked)}
-                className="mt-0.5 rounded"
-                data-testid="checkbox-capital-acknowledge-terms"
-              />
-              <span className="text-sm">
-                I acknowledge and accept the investment terms as posted, including the {project?.structure || "equity"} structure with {project?.askingInterestRate || project?.askingPreferredReturn || "stated"} target return.
-              </span>
-            </label>
-            
-            <label className="flex items-start gap-3 p-3 border rounded-lg cursor-pointer hover:bg-muted/50">
-              <input
-                type="checkbox"
-                checked={acknowledgedRisk}
-                onChange={(e) => setAcknowledgedRisk(e.target.checked)}
-                className="mt-0.5 rounded"
-                data-testid="checkbox-capital-acknowledge-risk"
-              />
-              <span className="text-sm">
-                I understand that real estate investments carry risk and returns are not guaranteed. I have reviewed the project details and am making an informed investment decision.
-              </span>
-            </label>
-          </div>
-        </div>
-
-        <div className="flex gap-3 pt-4">
-          <Button variant="outline" onClick={onClose} className="flex-1" data-testid="button-cancel-capital-accept">
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleSubmit} 
-            disabled={submitMutation.isPending || !acknowledged || !acknowledgedRisk}
-            className="flex-1"
-            data-testid="button-submit-capital-accept"
-          >
-            {submitMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            Accept Terms
-          </Button>
-        </div>
-      </div>
-    </>
-  );
-}
-
 // ========== CANONICAL LISTING FORMS ==========
 
 interface ListingFormProps {
@@ -1818,7 +1346,7 @@ function ListingRequestInfoModal({ listingId, onClose }: ListingFormProps) {
   });
 
   const submitMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: ListingInquiryRequest) => {
       const res = await apiRequest("POST", "/api/listing-inquiries", data);
       return res.json();
     },
@@ -1842,33 +1370,37 @@ function ListingRequestInfoModal({ listingId, onClose }: ListingFormProps) {
 
   const handleSubmit = () => {
     if (!isAuthenticated) {
-      toast({ title: "Sign in required", description: "Please sign in to submit an inquiry." });
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to submit an inquiry.",
+      });
       return;
     }
-    if (!name) {
-      toast({ title: "Name required", variant: "destructive" });
-      return;
-    }
-    if (preferredContact === "email" && !email) {
-      toast({ title: "Email required", variant: "destructive" });
-      return;
-    }
-    if (preferredContact === "phone" && !phone) {
+    if (preferredContact === "phone" && !phone.trim()) {
       toast({ title: "Phone required", variant: "destructive" });
       return;
     }
 
-    submitMutation.mutate({
-      listingId,
-      inquiryType: "info",
-      name,
-      email: email || undefined,
-      phone: phone || undefined,
-      preferredContact,
-      questions: [...questions, customQuestion].filter(Boolean),
-      timeframe,
-      message: customQuestion || questions.join(", "),
-    });
+    try {
+      submitMutation.mutate(buildListingInfoRequest({
+        listingId,
+        name,
+        email,
+        phone,
+        preferredContact,
+        questions: questionOptions.filter((option) =>
+          questions.includes(option),
+        ),
+        customQuestion,
+        timeframe,
+      }));
+    } catch (error) {
+      toast({
+        title: "Check your inquiry",
+        description: listingInquiryValidationMessage(error),
+        variant: "destructive",
+      });
+    }
   };
 
   if (contextLoading) {
@@ -1948,7 +1480,7 @@ function ListingRequestInfoModal({ listingId, onClose }: ListingFormProps) {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-medium">Email</label>
+              <label className="text-sm font-medium">Email *</label>
               <input
                 type="email"
                 value={email}
@@ -2080,7 +1612,7 @@ function ListingScheduleShowingModal({ listingId, onClose }: ListingFormProps) {
   });
 
   const submitMutation = useMutation({
-    mutationFn: async (data: any) => {
+    mutationFn: async (data: ListingInquiryRequest) => {
       const res = await apiRequest("POST", "/api/listing-inquiries", data);
       return res.json();
     },
@@ -2104,33 +1636,35 @@ function ListingScheduleShowingModal({ listingId, onClose }: ListingFormProps) {
 
   const handleSubmit = () => {
     if (!isAuthenticated) {
-      toast({ title: "Sign in required", description: "Please sign in to schedule a tour." });
+      toast({
+        title: "Sign in required",
+        description: "Please sign in to schedule a tour.",
+      });
       return;
     }
-    if (!name) {
-      toast({ title: "Name required", variant: "destructive" });
-      return;
-    }
-    if (!email && !phone) {
-      toast({ title: "Contact info required", description: "Please provide email or phone.", variant: "destructive" });
-      return;
-    }
-    if (!preferredDates[0]) {
+    if (!preferredDates[0]?.trim()) {
       toast({ title: "Preferred date required", variant: "destructive" });
       return;
     }
 
-    submitMutation.mutate({
-      listingId,
-      inquiryType: "tour",
-      name,
-      email: email || undefined,
-      phone: phone || undefined,
-      preferredDates: preferredDates.filter(Boolean),
-      preferredTimes: preferredTimes.filter(Boolean),
-      isPreApproved,
-      message: notes || "Interested in scheduling a tour",
-    });
+    try {
+      submitMutation.mutate(buildListingTourRequest({
+        listingId,
+        name,
+        email,
+        phone,
+        preferredDates,
+        preferredTimes,
+        preApproved: isPreApproved,
+        message: notes,
+      }));
+    } catch (error) {
+      toast({
+        title: "Check your tour request",
+        description: listingInquiryValidationMessage(error),
+        variant: "destructive",
+      });
+    }
   };
 
   if (contextLoading) {
@@ -2200,7 +1734,7 @@ function ListingScheduleShowingModal({ listingId, onClose }: ListingFormProps) {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-sm font-medium">Email</label>
+              <label className="text-sm font-medium">Email *</label>
               <input
                 type="email"
                 value={email}
@@ -2237,17 +1771,14 @@ function ListingScheduleShowingModal({ listingId, onClose }: ListingFormProps) {
                     placeholder={index === 0 ? "Date (required)" : "Date (optional)"}
                     data-testid={`input-tour-date-${index}`}
                   />
-                  <select
+                  <input
+                    type="time"
                     value={preferredTimes[index]}
-                    onChange={(e) => updatePreferredTime(index, e.target.value)}
+                    onChange={(event) => updatePreferredTime(index, event.target.value)}
                     className="px-3 py-2 border rounded-md"
-                    data-testid={`select-tour-time-${index}`}
-                  >
-                    <option value="">Select time</option>
-                    <option value="morning">Morning (9am-12pm)</option>
-                    <option value="afternoon">Afternoon (12pm-5pm)</option>
-                    <option value="evening">Evening (5pm-8pm)</option>
-                  </select>
+                    aria-label={`Preferred time ${index + 1}`}
+                    data-testid={`input-tour-time-${index}`}
+                  />
                 </div>
               ))}
             </div>
@@ -2307,231 +1838,6 @@ function ListingScheduleShowingModal({ listingId, onClose }: ListingFormProps) {
           >
             {submitMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
             Schedule Showing
-          </Button>
-        </div>
-      </div>
-    </>
-  );
-}
-
-// Legacy LISTING form - kept for backward compatibility
-interface ListingInquiryFormProps {
-  listingId: number;
-  onClose: () => void;
-}
-
-function ListingInquiryForm({ listingId, onClose }: ListingInquiryFormProps) {
-  const { toast } = useToast();
-  const { isAuthenticated, profile } = useSupabaseAuth();
-  const [inquiryType, setInquiryType] = useState<"info" | "tour" | "offer">("info");
-  const [message, setMessage] = useState("");
-  const [preferredDate, setPreferredDate] = useState("");
-  const [preferredTime, setPreferredTime] = useState("");
-  const [phone, setPhone] = useState("");
-
-  // Use unified context endpoint for consistency with other deal types
-  const { data: context, isLoading: contextLoading } = useQuery<ListingContext>({
-    queryKey: [`/api/deals/LISTING/${listingId}/context`],
-    enabled: !!listingId,
-  });
-
-  const submitMutation = useMutation({
-    mutationFn: async (data: any) => {
-      const res = await apiRequest("POST", "/api/listing-inquiries", data);
-      return res.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Inquiry Submitted",
-        description: inquiryType === "tour" 
-          ? "Your tour request has been sent to the listing agent."
-          : "Your inquiry has been submitted.",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/listings"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/listing-inquiries"] });
-      onClose();
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to submit inquiry",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleSubmit = () => {
-    if (!isAuthenticated) {
-      toast({ title: "Sign in required", description: "Please sign in to submit an inquiry." });
-      return;
-    }
-    if (!message && inquiryType !== "tour") {
-      toast({ title: "Message required", variant: "destructive" });
-      return;
-    }
-
-    submitMutation.mutate({
-      listingId,
-      inquiryType,
-      message: message || `Interested in scheduling a tour`,
-      preferredDate: preferredDate || undefined,
-      preferredTime: preferredTime || undefined,
-      phone: phone || undefined,
-    });
-  };
-
-  if (contextLoading) {
-    return (
-      <div className="flex items-center justify-center p-8">
-        <Loader2 className="w-6 h-6 animate-spin" />
-      </div>
-    );
-  }
-
-  const formatCurrency = (amount: number | undefined) => {
-    if (!amount) return "—";
-    return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(amount);
-  };
-
-  const deal = context?.deal;
-  const terms = context?.listingTerms;
-
-  return (
-    <>
-      <DialogHeader>
-        <DialogTitle data-testid="dialog-title-listing-inquiry">
-          {inquiryType === "tour" ? "Schedule a Tour" : "Property Inquiry"}
-        </DialogTitle>
-        <DialogDescription>
-          {deal?.propertyAddress || "Property"}
-          {deal?.city && deal?.state && ` - ${deal.city}, ${deal.state}`}
-        </DialogDescription>
-      </DialogHeader>
-
-      <div className="space-y-4 mt-4">
-        <div className="grid grid-cols-2 gap-4 p-3 bg-muted rounded-lg text-sm">
-          <div>
-            <span className="text-muted-foreground">List Price:</span>
-            <span className="ml-2 font-medium">{formatCurrency(terms?.listPrice)}</span>
-          </div>
-          <div>
-            <span className="text-muted-foreground">Type:</span>
-            <span className="ml-2 font-medium">{deal?.propertyType || "—"}</span>
-          </div>
-          {(deal?.bedrooms || deal?.bathrooms) && (
-            <>
-              <div>
-                <span className="text-muted-foreground">Beds:</span>
-                <span className="ml-2 font-medium">{deal?.bedrooms || "—"}</span>
-              </div>
-              <div>
-                <span className="text-muted-foreground">Baths:</span>
-                <span className="ml-2 font-medium">{deal?.bathrooms || "—"}</span>
-              </div>
-            </>
-          )}
-        </div>
-
-        <div className="space-y-3">
-          <div>
-            <label className="text-sm font-medium">Inquiry Type</label>
-            <div className="grid grid-cols-3 gap-2 mt-2">
-              {[
-                { value: "info", label: "More Info" },
-                { value: "tour", label: "Schedule Tour" },
-                { value: "offer", label: "Make Offer" },
-              ].map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => setInquiryType(option.value as "info" | "tour" | "offer")}
-                  className={`p-2 border rounded-lg text-center text-sm transition-colors ${
-                    inquiryType === option.value
-                      ? "border-primary bg-primary/5"
-                      : "border-border hover:border-primary/50"
-                  }`}
-                  data-testid={`button-inquiry-type-${option.value}`}
-                >
-                  {option.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {inquiryType === "tour" && (
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-sm font-medium">Preferred Date</label>
-                <input
-                  type="date"
-                  value={preferredDate}
-                  onChange={(e) => setPreferredDate(e.target.value)}
-                  min={new Date().toISOString().split('T')[0]}
-                  className="w-full px-3 py-2 border rounded-md mt-1"
-                  data-testid="input-tour-date"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Preferred Time</label>
-                <select
-                  value={preferredTime}
-                  onChange={(e) => setPreferredTime(e.target.value)}
-                  className="w-full px-3 py-2 border rounded-md mt-1"
-                  data-testid="select-tour-time"
-                >
-                  <option value="">Select time</option>
-                  <option value="morning">Morning (9am-12pm)</option>
-                  <option value="afternoon">Afternoon (12pm-5pm)</option>
-                  <option value="evening">Evening (5pm-8pm)</option>
-                </select>
-              </div>
-            </div>
-          )}
-
-          <div>
-            <label className="text-sm font-medium">Phone Number (optional)</label>
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="(555) 123-4567"
-              className="w-full px-3 py-2 border rounded-md mt-1"
-              data-testid="input-inquiry-phone"
-            />
-          </div>
-
-          <div>
-            <label className="text-sm font-medium">
-              Message {inquiryType === "tour" ? "(optional)" : "*"}
-            </label>
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder={
-                inquiryType === "tour"
-                  ? "Any special requests or questions..."
-                  : inquiryType === "offer"
-                    ? "Describe your offer terms..."
-                    : "What would you like to know about this property?"
-              }
-              className="w-full px-3 py-2 border rounded-md mt-1 min-h-[80px]"
-              data-testid="input-inquiry-message"
-            />
-          </div>
-        </div>
-
-        <div className="flex gap-3 pt-4">
-          <Button variant="outline" onClick={onClose} className="flex-1" data-testid="button-cancel-inquiry">
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleSubmit} 
-            disabled={submitMutation.isPending}
-            className="flex-1"
-            data-testid="button-submit-listing-inquiry"
-          >
-            {submitMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            {inquiryType === "tour" ? "Request Tour" : "Submit Inquiry"}
           </Button>
         </div>
       </div>

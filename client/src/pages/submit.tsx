@@ -653,8 +653,9 @@ export default function SubmitPage() {
                       <FormLabel>
                         I agree Pegasus Dreamscapes may contact me by email or phone call about the
                         property. Pegasus uses the information to evaluate and route the request
-                        and may share it with service providers or qualified professionals involved
-                        in that review. The <a href="/privacy">Privacy Policy</a> explains retention,
+                        and may share it with service providers that operate the site. Pegasus will
+                        provide separate notice and ask permission before sharing it with an
+                        independent professional unless disclosure is legally required. The <a href="/privacy">Privacy Policy</a> explains retention,
                         rights, and deletion requests. This intake is not an offer, valuation,
                         appraisal, CMA, or commitment to transact.
                       </FormLabel>

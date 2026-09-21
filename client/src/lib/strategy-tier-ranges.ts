@@ -67,7 +67,7 @@ const TABLE: { match: RegExp; value: TierRange }[] = [
   },
   {
     match: /marketflow|disposition/i,
-    value: { strategy: "MarketFlow Disposition", range: "network-dependent", basis: "placed to a vetted buyer through the network" },
+    value: { strategy: "MarketFlow Disposition", range: "network-dependent", basis: "routing depends on authorization, fit, and real participant availability" },
   },
   {
     match: /retail|listing|referral/i,
@@ -82,7 +82,7 @@ const TABLE: { match: RegExp; value: TierRange }[] = [
 const FALLBACK: TierRange = {
   strategy: "Strategy review",
   range: "varies by submarket tier",
-  basis: "depends on basis, scope, and exit — confirmed in a written Property Read",
+  basis: "depends on basis, scope, and exit; any later Property Read is conditional on fit and capacity",
 };
 
 /** Resolve an illustrative tier range from a lane key or strategy label. */

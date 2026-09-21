@@ -40,6 +40,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { WholesaleDeal, CapitalProject, Listing } from "@shared/schema";
+import { PrivateDataError } from "@/components/private-data-state";
 
 export default function MyDealsPage() {
   useSEO({
@@ -82,22 +83,47 @@ function MyDealsContent() {
   const [activeTab, setActiveTab] = useState("wholesale");
   const { toast } = useToast();
 
-  const { data: wholesaleDeals, isLoading: wholesaleLoading } = useQuery<WholesaleDeal[]>({
+  const {
+    data: wholesaleDeals,
+    isLoading: wholesaleLoading,
+    isError: wholesaleError,
+    isFetching: wholesaleFetching,
+    refetch: refetchWholesale,
+  } = useQuery<WholesaleDeal[]>({
     queryKey: ["/api/portal/wholesaler/my-deals"],
   });
 
-  const { data: capitalProjects, isLoading: capitalLoading } = useQuery<CapitalProject[]>({
+  const {
+    data: capitalProjects,
+    isLoading: capitalLoading,
+    isError: capitalError,
+    isFetching: capitalFetching,
+    refetch: refetchCapital,
+  } = useQuery<CapitalProject[]>({
     queryKey: ["/api/portal/my-capital-projects"],
   });
 
-  const { data: listings, isLoading: listingsLoading } = useQuery<Listing[]>({
+  const {
+    data: listings,
+    isLoading: listingsLoading,
+    isError: listingsError,
+    isFetching: listingsFetching,
+    refetch: refetchListings,
+  } = useQuery<Listing[]>({
     queryKey: ["/api/portal/my-listings"],
   });
 
-  const wholesaleCount = wholesaleDeals?.length || 0;
-  const capitalCount = capitalProjects?.length || 0;
-  const listingsCount = listings?.length || 0;
-  const totalDeals = wholesaleCount + capitalCount + listingsCount;
+  const wholesaleUnavailable = wholesaleError || (!wholesaleLoading && !Array.isArray(wholesaleDeals));
+  const capitalUnavailable = capitalError || (!capitalLoading && !Array.isArray(capitalProjects));
+  const listingsUnavailable = listingsError || (!listingsLoading && !Array.isArray(listings));
+  const wholesaleCount = wholesaleLoading || wholesaleUnavailable || !wholesaleDeals ? null : wholesaleDeals.length;
+  const capitalCount = capitalLoading || capitalUnavailable || !capitalProjects ? null : capitalProjects.length;
+  const listingsCount = listingsLoading || listingsUnavailable || !listings ? null : listings.length;
+  const totalDeals =
+    wholesaleCount === null || capitalCount === null || listingsCount === null
+      ? null
+      : wholesaleCount + capitalCount + listingsCount;
+  const countLabel = (count: number | null) => count === null ? "—" : count;
 
   return (
     <div className="container py-8">
@@ -125,7 +151,7 @@ function MyDealsContent() {
                   <FileText className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-2xl font-semibold">{totalDeals}</p>
+                  <p className="text-2xl font-semibold" data-testid="stat-total-deals">{countLabel(totalDeals)}</p>
                   <p className="text-xs text-muted-foreground">Total Deals</p>
                 </div>
               </div>
@@ -138,7 +164,7 @@ function MyDealsContent() {
                   <Building2 className="w-5 h-5 text-blue-500" />
                 </div>
                 <div>
-                  <p className="text-2xl font-semibold">{wholesaleCount}</p>
+                  <p className="text-2xl font-semibold">{countLabel(wholesaleCount)}</p>
                   <p className="text-xs text-muted-foreground">Wholesale</p>
                 </div>
               </div>
@@ -151,8 +177,8 @@ function MyDealsContent() {
                   <DollarSign className="w-5 h-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-2xl font-semibold">{capitalCount}</p>
-                  <p className="text-xs text-muted-foreground">Capital Raises</p>
+                  <p className="text-2xl font-semibold">{countLabel(capitalCount)}</p>
+                  <p className="text-xs text-muted-foreground">Capital Requests</p>
                 </div>
               </div>
             </CardContent>
@@ -164,7 +190,7 @@ function MyDealsContent() {
                   <Home className="w-5 h-5 text-green-500" />
                 </div>
                 <div>
-                  <p className="text-2xl font-semibold">{listingsCount}</p>
+                  <p className="text-2xl font-semibold">{countLabel(listingsCount)}</p>
                   <p className="text-xs text-muted-foreground">Listings</p>
                 </div>
               </div>
@@ -176,19 +202,27 @@ function MyDealsContent() {
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="mb-6">
           <TabsTrigger value="wholesale" data-testid="tab-wholesale">
-            Wholesale ({wholesaleCount})
+            Wholesale ({countLabel(wholesaleCount)})
           </TabsTrigger>
           <TabsTrigger value="capital" data-testid="tab-capital">
-            Capital Raises ({capitalCount})
+            Capital Requests ({countLabel(capitalCount)})
           </TabsTrigger>
           <TabsTrigger value="listings" data-testid="tab-listings">
-            Listings ({listingsCount})
+            Listings ({countLabel(listingsCount)})
           </TabsTrigger>
         </TabsList>
 
         <TabsContent value="wholesale">
           {wholesaleLoading ? (
             <DealsLoadingSkeleton />
+          ) : wholesaleUnavailable ? (
+            <PrivateDataError
+              title="Wholesale submissions unavailable"
+              description="Pegasus could not verify your wholesale submission history. This is not an empty-list result."
+              onRetry={() => void refetchWholesale()}
+              isRetrying={wholesaleFetching}
+              testId="state-wholesale-deals-error"
+            />
           ) : wholesaleDeals && wholesaleDeals.length > 0 ? (
             <div className="grid gap-4">
               {wholesaleDeals.map((deal) => (
@@ -199,8 +233,8 @@ function MyDealsContent() {
             <EmptyState
               icon={Building2}
               title="No wholesale deals yet"
-              description="Submit your first wholesale deal to start matching with investors"
-              actionLabel="Submit Wholesale Deal"
+              description="Submit wholesale opportunity information for Pegasus to review. Submission does not promise approval, matching, or a response."
+              actionLabel="Submit Opportunity"
               actionHref="/marketflow/submit"
             />
           )}
@@ -209,6 +243,14 @@ function MyDealsContent() {
         <TabsContent value="capital">
           {capitalLoading ? (
             <DealsLoadingSkeleton />
+          ) : capitalUnavailable ? (
+            <PrivateDataError
+              title="Capital relationship requests unavailable"
+              description="Pegasus could not verify your capital-introduction request history. This is not an empty-list result."
+              onRetry={() => void refetchCapital()}
+              isRetrying={capitalFetching}
+              testId="state-capital-deals-error"
+            />
           ) : capitalProjects && capitalProjects.length > 0 ? (
             <div className="grid gap-4">
               {capitalProjects.map((project) => (
@@ -218,9 +260,9 @@ function MyDealsContent() {
           ) : (
             <EmptyState
               icon={DollarSign}
-              title="No capital raises yet"
-              description="Create your first capital raise to connect with investors"
-              actionLabel="Start Capital Raise"
+              title="No capital relationship requests yet"
+              description="Share project context to request a possible relationship introduction. Pegasus does not offer, arrange, or commit capital here."
+              actionLabel="Request an Introduction"
               actionHref="/marketflow/submit"
             />
           )}
@@ -229,6 +271,14 @@ function MyDealsContent() {
         <TabsContent value="listings">
           {listingsLoading ? (
             <DealsLoadingSkeleton />
+          ) : listingsUnavailable ? (
+            <PrivateDataError
+              title="Listing submissions unavailable"
+              description="Pegasus could not verify your listing submission history. This is not an empty-list result."
+              onRetry={() => void refetchListings()}
+              isRetrying={listingsFetching}
+              testId="state-listing-deals-error"
+            />
           ) : listings && listings.length > 0 ? (
             <div className="grid gap-4">
               {listings.map((listing) => (
@@ -239,8 +289,8 @@ function MyDealsContent() {
             <EmptyState
               icon={Home}
               title="No listings yet"
-              description="List your first property to start receiving inquiries"
-              actionLabel="Create Listing"
+              description="Submit property information for review. Publication and inquiries are not guaranteed."
+              actionLabel="Submit Property"
               actionHref="/marketflow/submit"
             />
           )}
@@ -357,84 +407,47 @@ function WholesaleDealCard({ deal }: { deal: WholesaleDeal }) {
 }
 
 function CapitalProjectCard({ project }: { project: CapitalProject }) {
-  const [isEditing, setIsEditing] = useState(false);
-  const { toast } = useToast();
-  const progress = project.fundingGoal ? ((project.amountRaised || 0) / project.fundingGoal) * 100 : 0;
-
-  const updateMutation = useMutation({
-    mutationFn: async (data: Partial<CapitalProject>) => {
-      const response = await apiRequest("PATCH", `/api/capital-projects/${project.id}`, data);
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/portal/my-capital-projects"] });
-      setIsEditing(false);
-      toast({ title: "Project updated successfully" });
-    },
-    onError: () => {
-      toast({ title: "Failed to update project", variant: "destructive" });
-    },
-  });
-
   return (
-    <>
-      <Card className="hover-elevate" data-testid={`card-capital-project-${project.id}`}>
-        <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-lg bg-primary/10 flex-shrink-0">
-                  <DollarSign className="w-5 h-5 text-primary" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h3 className="font-medium truncate">{project.title}</h3>
-                  <p className="text-sm text-muted-foreground flex items-center gap-1">
-                    <MapPin className="w-3 h-3" />
-                    {project.location || "Location not specified"}
-                  </p>
-                  <div className="flex flex-wrap items-center gap-3 mt-2">
-                    <StatusBadge status={project.status} />
+    <Card className="hover-elevate" data-testid={`card-capital-project-${project.id}`}>
+      <CardContent className="pt-6">
+        <div className="flex flex-col md:flex-row md:items-center gap-4 justify-between">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start gap-3">
+              <div className="p-2 rounded-lg bg-primary/10 flex-shrink-0">
+                <DollarSign className="w-5 h-5 text-primary" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h3 className="font-medium truncate">{project.title}</h3>
+                <p className="text-sm text-muted-foreground flex items-center gap-1">
+                  <MapPin className="w-3 h-3" />
+                  {project.location || "Location not specified"}
+                </p>
+                <div className="flex flex-wrap items-center gap-3 mt-2">
+                  <Badge variant="outline">Relationship record</Badge>
+                  {project.fundingGoal > 0 && (
                     <span className="text-sm">
-                      <span className="text-muted-foreground">Target:</span>{" "}
+                      <span className="text-muted-foreground">Submitted capital need:</span>{" "}
                       <span className="font-medium">{formatCurrency(project.fundingGoal)}</span>
                     </span>
-                    <span className="text-sm">
-                      <span className="text-muted-foreground">Progress:</span>{" "}
-                      <span className="font-medium">{progress.toFixed(0)}%</span>
-                    </span>
-                  </div>
+                  )}
                 </div>
+                <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+                  Stored project context only. It is not an investment offering, capital commitment, approval, or funding-progress report.
+                </p>
               </div>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <Button variant="outline" size="sm" asChild>
-                <Link href={`/marketflow/capital/${project.id}`}>
-                  <Eye className="w-4 h-4 mr-1" />
-                  View
-                </Link>
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsEditing(true)}
-                data-testid={`button-edit-capital-${project.id}`}
-              >
-                <Edit className="w-4 h-4 mr-1" />
-                Edit
-              </Button>
-            </div>
           </div>
-        </CardContent>
-      </Card>
-
-      <EditCapitalDialog
-        project={project}
-        open={isEditing}
-        onOpenChange={setIsEditing}
-        onSave={(data) => updateMutation.mutate(data)}
-        isPending={updateMutation.isPending}
-      />
-    </>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Button variant="outline" size="sm" asChild>
+              <Link href={`/marketflow/capital/${project.id}`}>
+                <Eye className="w-4 h-4 mr-1" />
+                View record
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -593,102 +606,6 @@ function EditWholesaleDialog({
                 data-testid="input-assignment-fee"
               />
             </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              rows={4}
-              data-testid="input-description"
-            />
-          </div>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={() => onSave(formData)} disabled={isPending} data-testid="button-save-changes">
-            {isPending ? "Saving..." : "Save Changes"}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function EditCapitalDialog({
-  project,
-  open,
-  onOpenChange,
-  onSave,
-  isPending,
-}: {
-  project: CapitalProject;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSave: (data: Partial<CapitalProject>) => void;
-  isPending: boolean;
-}) {
-  const [formData, setFormData] = useState({
-    title: project.title,
-    fundingGoal: project.fundingGoal,
-    minInvestment: project.minInvestment || 0,
-    projectedReturn: project.projectedReturn || "",
-    description: project.description || "",
-  });
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Edit Capital Raise</DialogTitle>
-          <DialogDescription>
-            Update the details for {project.title}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="title">Project Title</Label>
-            <Input
-              id="title"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              data-testid="input-title"
-            />
-          </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="fundingGoal">Funding Goal</Label>
-              <Input
-                id="fundingGoal"
-                type="number"
-                value={formData.fundingGoal}
-                onChange={(e) => setFormData({ ...formData, fundingGoal: Number(e.target.value) })}
-                data-testid="input-target-amount"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="minInvestment">Minimum Investment</Label>
-              <Input
-                id="minInvestment"
-                type="number"
-                value={formData.minInvestment}
-                onChange={(e) => setFormData({ ...formData, minInvestment: Number(e.target.value) })}
-                data-testid="input-min-investment"
-              />
-            </div>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="projectedReturn">Projected Return</Label>
-            <Input
-              id="projectedReturn"
-              value={formData.projectedReturn}
-              onChange={(e) => setFormData({ ...formData, projectedReturn: e.target.value })}
-              placeholder="e.g., 15-20%"
-              data-testid="input-projected-roi"
-            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="description">Description</Label>

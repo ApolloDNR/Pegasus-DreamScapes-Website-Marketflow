@@ -1,6 +1,10 @@
 -- Public Website v1 (issue #22) — deal-routing opportunity records.
--- Mirrors shared/schema.ts `opportunities`. Apply via drizzle-kit push
--- or run directly against Supabase/Postgres.
+-- Mirrors shared/schema.ts `opportunities`. This legacy artifact targets the
+-- website Postgres database referenced by DATABASE_URL. Prefer the reviewed,
+-- tracked migrations/0005_public_opportunities.sql file for staging and
+-- production. Do not run this against the Supabase Auth/Data API project
+-- unless that project is intentionally the website's DATABASE_URL database
+-- and its exposure, grants, and RLS have been reviewed first.
 CREATE TABLE IF NOT EXISTS opportunities (
   id varchar PRIMARY KEY DEFAULT gen_random_uuid(),
   created_at timestamp DEFAULT now() NOT NULL,

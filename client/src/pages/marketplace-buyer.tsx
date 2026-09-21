@@ -74,24 +74,17 @@ function BuyerDashboard() {
   const { userRole } = useSupabaseAuth();
   const isInvestmentBuyer = userRole === "buyer_investment";
 
-  const { data: stats, isLoading: statsLoading } =
+  const { data: stats, isLoading: statsLoading, isError: statsError } =
     useAuthenticatedQuery<BuyerStats>(QUERY_KEYS.userStats("buyer"));
 
-  const { data: savedProperties, isLoading: savedLoading } =
+  const { data: savedProperties, isLoading: savedLoading, isError: savedError } =
     useAuthenticatedQuery<EnrichedSavedProperty[]>(["/api/supabase/saved-items"]);
 
-  const { data: offers, isLoading: offersLoading } =
+  const { data: offers, isLoading: offersLoading, isError: offersError } =
     useAuthenticatedQuery<EnrichedOffer[]>(["/api/supabase/buyer-offers"]);
 
-  const displayStats: BuyerStats = stats ?? {
-    savedProperties: 0,
-    pendingOffers: 0,
-    acceptedOffers: 0,
-    totalPurchases: 0,
-  };
-
-  const recentSaved = savedProperties?.slice(0, 3) || [];
-  const recentOffers = offers?.slice(0, 3) || [];
+  const recentSaved = savedProperties?.slice(0, 3) ?? [];
+  const recentOffers = offers?.slice(0, 3) ?? [];
 
   const formatCurrency = (amount: number | null | undefined) => {
     if (!amount) return "N/A";
@@ -129,18 +122,18 @@ function BuyerDashboard() {
           </h1>
           <p className="text-muted-foreground">
             {isInvestmentBuyer
-              ? "Find investment properties for your portfolio"
-              : "Find your perfect home with Pegasus DreamScapes"}
+              ? "Review approved property records and your account activity."
+              : "Review approved home records and your saved account activity."}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="secondary">
-            {isInvestmentBuyer ? "Investment Buyer" : "Retail Buyer"}
+            {isInvestmentBuyer ? "Investment interest" : "Homebuying interest"}
           </Badge>
           <Link href="/marketflow/properties">
             <Button data-testid="button-search-properties">
               <Search className="h-4 w-4 mr-2" />
-              Browse Properties
+              Review property records
             </Button>
           </Link>
         </div>
@@ -155,9 +148,11 @@ function BuyerDashboard() {
           <CardContent>
             {statsLoading ? (
               <Skeleton className="h-8 w-16" />
+            ) : statsError || !stats ? (
+              <p className="text-sm text-muted-foreground">Unavailable</p>
             ) : (
               <div className="text-2xl font-bold" data-testid="stat-saved-properties">
-                {displayStats.savedProperties}
+                {stats.savedProperties}
               </div>
             )}
             <p className="text-xs text-muted-foreground">In your favorites</p>
@@ -172,9 +167,11 @@ function BuyerDashboard() {
           <CardContent>
             {statsLoading ? (
               <Skeleton className="h-8 w-16" />
+            ) : statsError || !stats ? (
+              <p className="text-sm text-muted-foreground">Unavailable</p>
             ) : (
               <div className="text-2xl font-bold" data-testid="stat-pending-offers">
-                {displayStats.pendingOffers}
+                {stats.pendingOffers}
               </div>
             )}
             <p className="text-xs text-muted-foreground">Pending response</p>
@@ -183,35 +180,39 @@ function BuyerDashboard() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Accepted Offers</CardTitle>
+            <CardTitle className="text-sm font-medium">Accepted offer records</CardTitle>
             <Home className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             {statsLoading ? (
               <Skeleton className="h-8 w-16" />
+            ) : statsError || !stats ? (
+              <p className="text-sm text-muted-foreground">Unavailable</p>
             ) : (
               <div className="text-2xl font-bold" data-testid="stat-accepted-offers">
-                {displayStats.acceptedOffers}
+                {stats.acceptedOffers}
               </div>
             )}
-            <p className="text-xs text-muted-foreground">In process</p>
+            <p className="text-xs text-muted-foreground">Recorded status; not proof of contract</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Purchases</CardTitle>
+            <CardTitle className="text-sm font-medium">Closed offer records</CardTitle>
             <Building2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             {statsLoading ? (
               <Skeleton className="h-8 w-16" />
+            ) : statsError || !stats ? (
+              <p className="text-sm text-muted-foreground">Unavailable</p>
             ) : (
               <div className="text-2xl font-bold" data-testid="stat-total-purchases">
-                {displayStats.totalPurchases}
+                {stats.totalPurchases}
               </div>
             )}
-            <p className="text-xs text-muted-foreground">Lifetime</p>
+            <p className="text-xs text-muted-foreground">Account status; not closing verification</p>
           </CardContent>
         </Card>
       </div>
@@ -229,12 +230,18 @@ function BuyerDashboard() {
                   <Skeleton key={i} className="h-16 w-full" />
                 ))}
               </div>
+            ) : savedError || !savedProperties ? (
+              <AccountDataUnavailable
+                testId="state-buyer-saved-unavailable"
+                title="Saved records unavailable"
+                detail="No empty saved list is being inferred. Try again after the account connection is restored."
+              />
             ) : recentSaved.length === 0 ? (
               <div className="text-center py-8">
                 <Heart className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground">No saved properties yet</p>
+                <p className="text-muted-foreground">No recorded saved properties</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Browse properties and save your favorites
+                  Review available records and save the ones you want to revisit.
                 </p>
                 <Link href="/marketflow/properties">
                   <Button variant="outline" size="sm" className="mt-4" data-testid="button-browse-empty">
@@ -302,8 +309,8 @@ function BuyerDashboard() {
 
         <Card>
           <CardHeader>
-            <CardTitle>My Offers</CardTitle>
-            <CardDescription>Track your submitted offers</CardDescription>
+            <CardTitle>Offer records</CardTitle>
+            <CardDescription>Review offer entries associated with this account</CardDescription>
           </CardHeader>
           <CardContent>
             {offersLoading ? (
@@ -312,12 +319,18 @@ function BuyerDashboard() {
                   <Skeleton key={i} className="h-16 w-full" />
                 ))}
               </div>
+            ) : offersError || !offers ? (
+              <AccountDataUnavailable
+                testId="state-buyer-offers-unavailable"
+                title="Offer records unavailable"
+                detail="No empty offer history is being inferred. Try again after the account connection is restored."
+              />
             ) : recentOffers.length === 0 ? (
               <div className="text-center py-8">
                 <FileText className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground">No offers submitted yet</p>
+                <p className="text-muted-foreground">No recorded offers</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Find a property and make an offer
+                  Review property records and contact Pegasus about an appropriate next step.
                 </p>
                 <Link href="/marketflow/properties">
                   <Button variant="outline" size="sm" className="mt-4" data-testid="button-find-property">
@@ -373,13 +386,13 @@ function BuyerDashboard() {
           <CardContent>
             <p className="text-sm text-muted-foreground mb-4">
               {isInvestmentBuyer 
-                ? "Find investment opportunities and wholesale deals"
-                : "Explore our collection of renovated homes"}
+                ? "Review controlled-pilot property records available to this account"
+                : "Review controlled-pilot home records available to this account"}
             </p>
             <Link href="/marketflow/properties">
               <Button className="w-full" data-testid="action-browse">
                 <Search className="h-4 w-4 mr-2" />
-                Browse Now
+                Review records
               </Button>
             </Link>
           </CardContent>
@@ -409,7 +422,7 @@ function BuyerDashboard() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">
-                Analyze deals with our investment calculators
+                Run self-directed scenarios. Calculator output is an estimate, not underwriting.
               </p>
               <Link href="/marketflow/calculators">
                 <Button variant="outline" className="w-full" data-testid="action-calculators">
@@ -444,7 +457,7 @@ function BuyerDashboard() {
 }
 
 function SavedPropertiesView() {
-  const { data: savedProperties, isLoading } =
+  const { data: savedProperties, isLoading, isError } =
     useAuthenticatedQuery<EnrichedSavedProperty[]>(["/api/supabase/saved-items"]);
 
   const formatCurrency = (amount: number | null | undefined) => {
@@ -481,13 +494,19 @@ function SavedPropertiesView() {
             <Skeleton key={i} className="h-40 w-full" />
           ))}
         </div>
-      ) : !savedProperties || savedProperties.length === 0 ? (
+      ) : isError || !savedProperties ? (
+        <AccountDataUnavailable
+          testId="state-buyer-saved-unavailable"
+          title="Saved records unavailable"
+          detail="No empty saved list is being inferred. Try again after the account connection is restored."
+        />
+      ) : savedProperties.length === 0 ? (
         <Card>
           <CardContent className="py-16 text-center">
             <Heart className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Saved Properties</h3>
+            <h3 className="text-lg font-semibold mb-2">No recorded saved properties</h3>
             <p className="text-muted-foreground mb-4">
-              You haven't saved any properties yet. Browse our listings and save your favorites.
+              Review available property records and save the ones you want to revisit.
             </p>
             <Link href="/marketflow/properties">
               <Button data-testid="button-browse">
@@ -551,7 +570,7 @@ function SavedPropertiesView() {
 }
 
 function OffersView() {
-  const { data: offers, isLoading } =
+  const { data: offers, isLoading, isError } =
     useAuthenticatedQuery<EnrichedOffer[]>(["/api/supabase/buyer-offers"]);
 
   const formatCurrency = (amount: number | null | undefined) => {
@@ -605,13 +624,19 @@ function OffersView() {
             <Skeleton key={i} className="h-24 w-full" />
           ))}
         </div>
-      ) : !offers || offers.length === 0 ? (
+      ) : isError || !offers ? (
+        <AccountDataUnavailable
+          testId="state-buyer-offers-unavailable"
+          title="Offer records unavailable"
+          detail="No empty offer history is being inferred. Try again after the account connection is restored."
+        />
+      ) : offers.length === 0 ? (
         <Card>
           <CardContent className="py-16 text-center">
             <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-lg font-semibold mb-2">No Offers Yet</h3>
+            <h3 className="text-lg font-semibold mb-2">No recorded offers</h3>
             <p className="text-muted-foreground mb-4">
-              You haven't submitted any offers. Find a property and make an offer to get started.
+              Review property records and contact Pegasus about an appropriate next step.
             </p>
             <Link href="/marketflow/properties">
               <Button data-testid="button-browse">
@@ -685,5 +710,24 @@ function OffersView() {
         </div>
       )}
     </div>
+  );
+}
+
+function AccountDataUnavailable({
+  testId,
+  title,
+  detail,
+}: {
+  testId: string;
+  title: string;
+  detail: string;
+}) {
+  return (
+    <Card className="border-dashed" role="status" data-testid={testId}>
+      <CardContent className="py-8 text-center">
+        <p className="font-medium">{title}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{detail}</p>
+      </CardContent>
+    </Card>
   );
 }

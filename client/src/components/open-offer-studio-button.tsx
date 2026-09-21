@@ -37,19 +37,24 @@ export function OpenOfferStudioButton({
 
   const href = `/marketflow/offer-studio/${dealId}?lane=${lane}`;
   const testId = `button-open-offer-studio-${lane.toLowerCase()}-${dealId}`;
+  const button = (
+    <Button
+      variant={variant}
+      size={size}
+      className={className}
+      data-testid={testId}
+      {...buttonProps}
+    >
+      {showIcon && <Sparkles className="w-4 h-4 mr-2" />}
+      {label}
+    </Button>
+  );
+
+  if (buttonProps.disabled) return button;
 
   return (
     <Link href={href} onClick={stopPropagation ? (e) => e.stopPropagation() : undefined}>
-      <Button
-        variant={variant}
-        size={size}
-        className={className}
-        data-testid={testId}
-        {...buttonProps}
-      >
-        {showIcon && <Sparkles className="w-4 h-4 mr-2" />}
-        {label}
-      </Button>
+      {button}
     </Link>
   );
 }

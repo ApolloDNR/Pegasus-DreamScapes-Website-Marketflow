@@ -7,8 +7,8 @@ import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useDemoMode } from "@/contexts/demo-mode-context";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { useSEO } from "@/hooks/use-seo";
+import { hasGovernedMarketflowAccess } from "@/lib/marketflow-access";
 import { WholesaleDealForm } from "@/components/wholesale-deal-form";
-import { CapitalRaiseForm } from "@/components/capital-raise-form";
 import { ListingForm } from "@/components/listing-form";
 import { Link } from "wouter";
 import {
@@ -16,16 +16,12 @@ import {
   FileText,
   DollarSign,
   CheckCircle,
-  Users,
   Shield,
-  TrendingUp,
   Loader2,
-  Sparkles,
   Crown,
   Target,
   Building2,
   Clock,
-  Award,
   Lock,
   AlertCircle,
   Wrench,
@@ -40,7 +36,17 @@ export default function MarketflowSubmit() {
     description: "Private MarketFlow submission surface.",
     noIndex: true,
   });
-  const { user, isLoading, isWholesaler, isDreamscaper, userRole, isGuestMode } = useSupabaseAuth();
+  const {
+    user,
+    profile,
+    isLoading,
+    isAuthenticated,
+    isAdmin,
+    isWholesaler,
+    isDreamscaper,
+    userRole,
+    isGuestMode,
+  } = useSupabaseAuth();
   const { isDemoMode } = useDemoMode();
 
   if (isLoading) {
@@ -52,36 +58,54 @@ export default function MarketflowSubmit() {
   }
 
   const isPegasus = userRole?.startsWith("pegasus_") || false;
-  const canSubmit = isWholesaler || isDreamscaper;
-  const isPreviewMode = isDemoMode || isGuestMode;
+  const hasGovernedAccess = hasGovernedMarketflowAccess({
+    isAuthenticated,
+    isGuestMode,
+    isAdmin,
+    profile,
+    userRole,
+  });
+  const hasSubmissionRole = isWholesaler || isDreamscaper;
+  const holdReason = isDemoMode || isGuestMode
+    ? "preview"
+    : !user
+      ? "login"
+      : !hasGovernedAccess
+        ? "approval"
+        : !hasSubmissionRole
+          ? "role"
+          : null;
 
-  // Anonymous and out-of-role users get the marketing-style gate
-  // WITHOUT the authenticated MarketplaceLayout sidebar. Auditor flagged
-  // the sidebar leaking to public visitors as the biggest visual whiplash.
-  if (!user && !isPreviewMode) {
+  if (holdReason) {
     return (
       <div className="min-h-screen bg-background pt-24 pb-24">
-        <LockedScreen reason="login" />
-      </div>
-    );
-  }
-
-  if (user && !canSubmit && !isPreviewMode) {
-    return (
-      <div className="min-h-screen bg-background pt-24 pb-24">
-        <LockedScreen reason="role" currentRole={userRole} />
+        <LockedScreen reason={holdReason} currentRole={userRole} />
       </div>
     );
   }
 
   return (
     <MarketplaceLayout>
-      <AuthenticatedSubmitPage isPegasus={isPegasus} isPreviewMode={isPreviewMode} />
+      <AuthenticatedSubmitPage isPegasus={isPegasus} />
     </MarketplaceLayout>
   );
 }
 
-function LockedScreen({ reason, currentRole }: { reason: "login" | "role"; currentRole?: string | null }) {
+function LockedScreen({
+  reason,
+  currentRole,
+}: {
+  reason: "login" | "preview" | "approval" | "role";
+  currentRole?: string | null;
+}) {
+  const explanation = reason === "login"
+    ? "Signing in or creating a preview account does not unlock submissions. If you already have separately approved MarketFlow access, sign in to that account."
+    : reason === "preview"
+      ? "A preview role does not create private access. It is a walkthrough lens only and cannot view inventory or submit a record."
+      : reason === "approval"
+        ? "Your self-selected account role is declared interest only. It does not verify or approve you, and it does not grant MarketFlow inventory access or submission privileges."
+        : "This governed account does not currently have a submission-capable operator role. Role and submission privileges are assigned separately.";
+
   return (
     <div className="min-h-[70vh] flex items-center justify-center">
       <div className="max-w-lg w-full">
@@ -90,7 +114,7 @@ function LockedScreen({ reason, currentRole }: { reason: "login" | "role"; curre
             <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
               <Lock className="w-8 h-8 text-primary" />
             </div>
-            <CardTitle className="text-2xl font-serif">Verification Required</CardTitle>
+            <CardTitle className="text-2xl font-serif">Invitation and role approval required</CardTitle>
             <div className="flex items-center justify-center gap-2 mt-2">
               <Badge variant="outline" className="gap-1">
                 <Wrench className="w-3 h-3" />
@@ -99,81 +123,48 @@ function LockedScreen({ reason, currentRole }: { reason: "login" | "role"; curre
             </div>
           </CardHeader>
           <CardContent className="text-center space-y-6">
-            {reason === "login" ? (
-              <>
-                <p className="text-muted-foreground">
-                  Sign in to your account to submit deals to the MarketFlow platform.
-                </p>
-                <div className="space-y-3">
-                  <a href="/api/login">
-                    <Button className="w-full gap-2" data-testid="button-login-submit">
-                      <ArrowRight className="w-4 h-4" />
-                      Sign In to Continue
-                    </Button>
-                  </a>
-                  <p className="text-sm text-muted-foreground">
-                    Don't have an account?{" "}
-                    <Link href="/signup" className="text-primary hover:underline">
-                      Apply to become a Wholesaler
-                    </Link>
-                  </p>
+            <div className="space-y-4">
+              <div className="flex items-center justify-center gap-2">
+                <AlertCircle className="w-5 h-5 text-amber-500" />
+                <span className="font-medium">Private workspace unavailable</span>
+              </div>
+              <p className="text-muted-foreground">{explanation}</p>
+              {currentRole ? (
+                <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                  <span>Declared or assigned role:</span>
+                  <Badge variant="secondary">{currentRole.replace(/_/g, " ")}</Badge>
                 </div>
-              </>
-            ) : (
-              <>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-center gap-2">
-                    <AlertCircle className="w-5 h-5 text-amber-500" />
-                    <span className="font-medium">Access Restricted</span>
-                  </div>
-                  <p className="text-muted-foreground">
-                    Only verified <span className="font-semibold text-foreground">Dreamscapers</span> and{" "}
-                    <span className="font-semibold text-foreground">Wholesalers</span> can submit deals to the MarketFlow platform.
-                  </p>
-                  {currentRole && (
-                    <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                      <span>Your current role:</span>
-                      <Badge variant="secondary">{currentRole.replace(/_/g, " ")}</Badge>
-                    </div>
-                  )}
-                </div>
-                
-                <div className="bg-muted/50 rounded-lg p-4 text-left space-y-3">
-                  <h4 className="font-semibold flex items-center gap-2">
-                    <Shield className="w-4 h-4 text-primary" />
-                    How to Get Verified
-                  </h4>
-                  <ul className="text-sm text-muted-foreground space-y-2">
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span>Complete your profile with business information</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span>Submit verification documents</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 flex-shrink-0" />
-                      <span>Pass our quick screening process</span>
-                    </li>
-                  </ul>
-                </div>
-                
-                <div className="flex flex-col gap-3">
-                  <Link href="/partner">
-                    <Button className="w-full gap-2" data-testid="button-apply-wholesaler">
-                      <Sparkles className="w-4 h-4" />
-                      Apply to Become a Wholesaler
-                    </Button>
-                  </Link>
-                  <Link href="/marketflow/discover">
-                    <Button variant="outline" className="w-full gap-2" data-testid="button-browse-deals">
-                      Browse Available Deals
-                    </Button>
-                  </Link>
-                </div>
-              </>
-            )}
+              ) : null}
+            </div>
+
+            <div className="bg-muted/50 rounded-lg p-4 text-left space-y-3">
+              <h4 className="font-semibold flex items-center gap-2">
+                <Shield className="w-4 h-4 text-primary" />
+                Controlled-pilot boundary
+              </h4>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                An access request records context for possible consideration only. It does
+                not promise review, response, verification, approval, an invitation,
+                inventory, or submission rights.
+              </p>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              {reason === "login" ? (
+                <a href="/login">
+                  <Button variant="outline" className="w-full gap-2" data-testid="button-login-submit">
+                    Sign in to an approved account
+                    <ArrowRight className="w-4 h-4" />
+                  </Button>
+                </a>
+              ) : null}
+              <Link href="/marketflow/access">
+                <Button className="w-full gap-2" data-testid="button-request-marketflow-access">
+                  Record MarketFlow interest
+                  <ArrowRight className="w-4 h-4" />
+                </Button>
+              </Link>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -181,37 +172,11 @@ function LockedScreen({ reason, currentRole }: { reason: "login" | "role"; curre
   );
 }
 
-function AuthenticatedSubmitPage({ isPegasus, isPreviewMode = false }: { isPegasus: boolean; isPreviewMode?: boolean }) {
+function AuthenticatedSubmitPage({ isPegasus }: { isPegasus: boolean }) {
   const [submitType, setSubmitType] = useState<"wholesale" | "capital" | "listing">("wholesale");
   
   return (
     <div className="space-y-6">
-      {isPreviewMode && (
-        <Card className="border-amber-500/30 bg-amber-500/10">
-          <CardContent className="p-4">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <Lock className="w-5 h-5 text-amber-600" />
-                <div>
-                  <h3 className="font-medium">Preview Mode</h3>
-                  <p className="text-sm text-muted-foreground">
-                    You're viewing the submission forms in preview mode. Sign up as a Wholesaler to submit deals.
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <Link href="/signup">
-                  <Button size="sm" data-testid="button-signup-preview">
-                    <Sparkles className="w-4 h-4 mr-2" />
-                    Sign Up to Submit
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       <div>
         <div className="flex items-center gap-3 mb-2">
           <h1 className="text-2xl sm:text-3xl font-bold" data-testid="text-submit-deal-title">
@@ -223,17 +188,10 @@ function AuthenticatedSubmitPage({ isPegasus, isPreviewMode = false }: { isPegas
               Pegasus
             </Badge>
           )}
-          {isPreviewMode && (
-            <Badge variant="outline" className="gap-1 text-amber-600 border-amber-500/50">
-              <Lock className="w-3 h-3" />
-              Preview
-            </Badge>
-          )}
         </div>
         <p className="text-muted-foreground">
-          {isPreviewMode 
-            ? "Explore our deal submission process. Sign up to submit your own deals."
-            : "Submit your deal for review. Approved deals will be listed in MarketFlow for investors to discover."}
+          Submit a private record for possible consideration. Only a separately
+          approved opportunity may later be made available to eligible MarketFlow participants.
         </p>
       </div>
 
@@ -245,7 +203,7 @@ function AuthenticatedSubmitPage({ isPegasus, isPreviewMode = false }: { isPegas
           </TabsTrigger>
           <TabsTrigger value="capital" className="gap-2" data-testid="tab-submit-capital">
             <PiggyBank className="w-4 h-4" />
-            <span className="hidden sm:inline">Capital Raise</span>
+            <span className="hidden sm:inline">Capital Info</span>
           </TabsTrigger>
           <TabsTrigger value="listing" className="gap-2" data-testid="tab-submit-listing">
             <Home className="w-4 h-4" />
@@ -260,19 +218,35 @@ function AuthenticatedSubmitPage({ isPegasus, isPreviewMode = false }: { isPegas
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }} />
             </div>
-            <WholesaleSidebar isPegasus={isPegasus} />
+            <WholesaleSidebar />
           </div>
         </TabsContent>
 
         <TabsContent value="capital">
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            <div className="xl:col-span-2">
-              <CapitalRaiseForm onSuccess={() => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }} />
-            </div>
-            <CapitalRaiseSidebar isPegasus={isPegasus} />
-          </div>
+          <Card data-testid="capital-relationship-hold">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <PiggyBank className="w-5 h-5 text-primary" />
+                Capital relationships begin privately
+              </CardTitle>
+              <CardDescription>
+                MarketFlow is not accepting capital raise submissions through this form.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-5">
+              <p className="text-sm text-muted-foreground leading-relaxed max-w-2xl">
+                Pegasus does not publish user-created investment offerings or fundraising
+                terms here. A capital conversation can begin only as a relationship inquiry;
+                any project, diligence, eligibility, and written terms are handled separately.
+              </p>
+              <Link href="/capital#capital-introduction">
+                <Button variant="outline" data-testid="button-capital-relationship-info">
+                  Review the capital relationship process
+                  <ArrowRight className="ml-2 w-4 h-4" />
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="listing">
@@ -282,7 +256,7 @@ function AuthenticatedSubmitPage({ isPegasus, isPreviewMode = false }: { isPegas
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }} />
             </div>
-            <ListingSidebar isPegasus={isPegasus} />
+            <ListingSidebar />
           </div>
         </TabsContent>
       </Tabs>
@@ -290,7 +264,7 @@ function AuthenticatedSubmitPage({ isPegasus, isPreviewMode = false }: { isPegas
   );
 }
 
-function WholesaleSidebar({ isPegasus }: { isPegasus: boolean }) {
+function WholesaleSidebar() {
   return (
     <div className="space-y-6">
       <Card>
@@ -325,147 +299,40 @@ function WholesaleSidebar({ isPegasus }: { isPegasus: boolean }) {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-primary" />
-            Review Timeline
+            <FileText className="w-5 h-5 text-primary" />
+            Review sequence
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4 text-sm">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">1</div>
             <div>
-              <p className="font-medium">Initial Review</p>
-              <p className="text-muted-foreground text-xs">Within 24 hours</p>
+              <p className="font-medium">Record check</p>
+              <p className="text-muted-foreground text-xs">Required fields and ownership context are checked</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">2</div>
             <div>
-              <p className="font-medium">Deep Analysis</p>
-              <p className="text-muted-foreground text-xs">1-2 business days</p>
+              <p className="font-medium">Fit assessment</p>
+              <p className="text-muted-foreground text-xs">Numbers, title, access, and authorization may be verified</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">3</div>
             <div>
-              <p className="font-medium">Approval Decision</p>
-              <p className="text-muted-foreground text-xs">You'll be notified</p>
+              <p className="font-medium">Outcome</p>
+              <p className="text-muted-foreground text-xs">A status or next step is recorded when appropriate</p>
             </div>
           </div>
         </CardContent>
       </Card>
       
-      {isPegasus && (
-        <Card className="border-primary/30 bg-primary/5">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Crown className="w-5 h-5 text-primary" />
-              Pegasus Privileges
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm space-y-2">
-            <p className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-primary" />
-              Priority listing placement
-            </p>
-            <p className="flex items-center gap-2">
-              <Award className="w-4 h-4 text-primary" />
-              Verified Pegasus badge on deals
-            </p>
-            <p className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-primary" />
-              Expedited review process
-            </p>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }
 
-function CapitalRaiseSidebar({ isPegasus }: { isPegasus: boolean }) {
-  return (
-    <div className="space-y-6">
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <PiggyBank className="w-5 h-5 text-green-600" />
-            Capital Raise Requirements
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ul className="space-y-3 text-sm">
-            <li className="flex items-start gap-3">
-              <FileText className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-              <span>Clear investment thesis and exit strategy</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <DollarSign className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-              <span>Realistic projected returns with supporting data</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <Users className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-              <span>Operator track record and experience</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <Shield className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-              <span>Proper deal structure and legal documentation</span>
-            </li>
-          </ul>
-        </CardContent>
-      </Card>
-      
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-primary" />
-            Investment Structures
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-3 text-sm">
-          <div className="p-3 rounded-lg bg-muted/50">
-            <p className="font-medium">Equity</p>
-            <p className="text-muted-foreground text-xs">Ownership stake with profit sharing</p>
-          </div>
-          <div className="p-3 rounded-lg bg-muted/50">
-            <p className="font-medium">Debt</p>
-            <p className="text-muted-foreground text-xs">Fixed interest loans with set terms</p>
-          </div>
-          <div className="p-3 rounded-lg bg-muted/50">
-            <p className="font-medium">Hybrid</p>
-            <p className="text-muted-foreground text-xs">Combination of debt and equity</p>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {isPegasus && (
-        <Card className="border-primary/30 bg-primary/5">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Crown className="w-5 h-5 text-primary" />
-              Pegasus Privileges
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm space-y-2">
-            <p className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-primary" />
-              Featured placement to investors
-            </p>
-            <p className="flex items-center gap-2">
-              <Award className="w-4 h-4 text-primary" />
-              Verified operator badge
-            </p>
-            <p className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-primary" />
-              Priority capital matching
-            </p>
-          </CardContent>
-        </Card>
-      )}
-    </div>
-  );
-}
-
-function ListingSidebar({ isPegasus }: { isPegasus: boolean }) {
+function ListingSidebar() {
   return (
     <div className="space-y-6">
       <Card>
@@ -506,40 +373,16 @@ function ListingSidebar({ isPegasus }: { isPegasus: boolean }) {
         </CardHeader>
         <CardContent className="space-y-3 text-sm">
           <div className="p-3 rounded-lg bg-muted/50">
-            <p className="font-medium">On Market</p>
-            <p className="text-muted-foreground text-xs">Active MLS listings open to all buyers</p>
+            <p className="font-medium">Public listing</p>
+            <p className="text-muted-foreground text-xs">Active listing distributed through its authorized listing channel</p>
           </div>
           <div className="p-3 rounded-lg bg-muted/50">
-            <p className="font-medium">Off Market</p>
-            <p className="text-muted-foreground text-xs">Exclusive listings for platform members</p>
+            <p className="font-medium">Direct submission</p>
+            <p className="text-muted-foreground text-xs">Private record shared only after review and authorization</p>
           </div>
         </CardContent>
       </Card>
       
-      {isPegasus && (
-        <Card className="border-primary/30 bg-primary/5">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-base flex items-center gap-2">
-              <Crown className="w-5 h-5 text-primary" />
-              Pegasus Privileges
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="text-sm space-y-2">
-            <p className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-primary" />
-              Featured listing placement
-            </p>
-            <p className="flex items-center gap-2">
-              <Award className="w-4 h-4 text-primary" />
-              Verified agent badge
-            </p>
-            <p className="flex items-center gap-2">
-              <TrendingUp className="w-4 h-4 text-primary" />
-              Priority buyer matching
-            </p>
-          </CardContent>
-        </Card>
-      )}
     </div>
   );
 }

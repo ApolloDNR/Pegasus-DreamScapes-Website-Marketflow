@@ -19,11 +19,14 @@ describe("public Deal Blueprint launch contract", () => {
     expect(source).not.toContain("custom invoice");
   });
 
-  it("keeps the old Blueprint confirmation page in request-review language", () => {
+  it("retires the old Blueprint confirmation page without fabricating a receipt", () => {
     const source = readSource("client/src/pages/strategy-lab-blueprint-confirmed.tsx");
 
-    expect(source).toContain("Blueprint request received");
-    expect(source).toContain("This is not an order confirmation");
+    expect(source).toContain("Blueprint confirmation is not available at this link");
+    expect(source).toContain("cannot verify that Pegasus received a request");
+    expect(source).toContain("not an order confirmation");
+    expect(source).not.toContain("Blueprint request received");
+    expect(source).not.toContain("Keep the reference above as proof of receipt");
     expect(source).not.toContain("Order confirmed. Work begins.");
     expect(source).not.toContain("Your Blueprint order is in our queue");
   });

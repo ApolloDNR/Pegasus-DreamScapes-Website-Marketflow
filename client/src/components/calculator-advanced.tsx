@@ -25,6 +25,7 @@ import {
   monthlyPayment,
 } from "@shared/lib/calculator-math";
 import { ScenarioBarChart, formatUSD } from "@/components/calculator-charts";
+import { useCalculatorRuntime } from "@/components/calculator-shared";
 import { Activity, TrendingUp, Target, BarChart3, Save, Loader2 } from "lucide-react";
 
 const KICKER = "text-[10px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold";
@@ -331,7 +332,90 @@ const SCENARIO_DEFAULTS: Record<"Base" | "Stressed" | "Worst", (b: ScenarioInput
   Worst: (b) => ({ rent: b.rent * 0.9, opex: b.opex * 1.2, rate: b.rate + 2.0 }),
 };
 
+type ScenarioLabel = keyof typeof SCENARIO_DEFAULTS;
+type ScenarioSet = Record<ScenarioLabel, ScenarioInputs>;
+
+function ScenarioSaveButton({
+  saveContext,
+  scenarios,
+  loanAmount,
+  termYears,
+}: {
+  saveContext: NonNullable<ScenarioCompareCardProps["saveContext"]>;
+  scenarios: ScenarioSet;
+  loanAmount: number;
+  termYears: number;
+}) {
+  const { toast } = useToast();
+  const { isAuthenticated } = useSupabaseAuth();
+  const saveScenariosMutation = useMutation({
+    mutationFn: async () => {
+      const groupId = Math.floor(Math.random() * 2_000_000_000);
+      const namePrefix = saveContext.namePrefix ?? "Scenario set";
+      const labels: ScenarioLabel[] = ["Base", "Stressed", "Worst"];
+      const results = await Promise.all(
+        labels.map(async (label) => {
+          const scenario = scenarios[label];
+          const payment = monthlyPayment(loanAmount, scenario.rate, termYears);
+          const monthlyCashFlow = scenario.rent - scenario.opex - payment;
+          const response = await apiRequest("POST", "/api/saved-analyses", {
+            name: `${namePrefix}: ${label}`,
+            calculatorType: saveContext.calculatorType,
+            inputs: {
+              ...saveContext.inputs,
+              scenarioRent: scenario.rent,
+              scenarioOpex: scenario.opex,
+              scenarioRate: scenario.rate,
+            },
+            results: {
+              monthlyCashFlow,
+              rent: scenario.rent,
+              opex: scenario.opex,
+              rate: scenario.rate,
+            },
+            primaryMetric: "Monthly cash flow",
+            primaryValue: formatUSD(monthlyCashFlow),
+            scenarioGroupId: groupId,
+            scenarioLabel: label,
+          });
+          return response.json();
+        }),
+      );
+      return results;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/saved-analyses"] });
+      toast({
+        title: "Scenarios saved",
+        description: "Base, Stressed, and Worst stored as a linked set.",
+      });
+    },
+    onError: () =>
+      toast({ title: "Could not save scenarios", variant: "destructive" }),
+  });
+
+  return (
+    <Button
+      variant="outline"
+      size="sm"
+      className="shrink-0"
+      disabled={!isAuthenticated || saveScenariosMutation.isPending}
+      onClick={() => saveScenariosMutation.mutate()}
+      data-testid="button-save-scenarios"
+      title={isAuthenticated ? "Save Base/Stressed/Worst as a linked set" : "Sign in to save scenarios"}
+    >
+      {saveScenariosMutation.isPending ? (
+        <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+      ) : (
+        <Save className="w-3.5 h-3.5 mr-1.5" />
+      )}
+      Save scenarios
+    </Button>
+  );
+}
+
 export function ScenarioCompareCard(props: ScenarioCompareCardProps) {
+  const { publicMode } = useCalculatorRuntime();
   const baseDefaults: ScenarioInputs = {
     rent: props.baseRent,
     opex: props.baseOpex,
@@ -364,50 +448,6 @@ export function ScenarioCompareCard(props: ScenarioCompareCardProps) {
     setScenarios((prev) => ({ ...prev, [label]: SCENARIO_DEFAULTS[label](baseDefaults) }));
   }
 
-  const { toast } = useToast();
-  const { isAuthenticated } = useSupabaseAuth();
-  const saveScenariosMutation = useMutation({
-    mutationFn: async () => {
-      if (!props.saveContext) throw new Error("No save context");
-      const groupId = Math.floor(Math.random() * 2_000_000_000);
-      const namePrefix = props.saveContext.namePrefix ?? "Scenario set";
-      const labels: Array<keyof typeof scenarios> = ["Base", "Stressed", "Worst"];
-      const results = await Promise.all(
-        labels.map(async (label) => {
-          const s = scenarios[label];
-          const pmt = monthlyPayment(props.loanAmount, s.rate, props.termYears);
-          const monthlyCashFlow = s.rent - s.opex - pmt;
-          const res = await apiRequest("POST", "/api/saved-analyses", {
-            name: `${namePrefix}: ${label}`,
-            calculatorType: props.saveContext!.calculatorType,
-            inputs: {
-              ...props.saveContext!.inputs,
-              scenarioRent: s.rent,
-              scenarioOpex: s.opex,
-              scenarioRate: s.rate,
-            },
-            results: { monthlyCashFlow, rent: s.rent, opex: s.opex, rate: s.rate },
-            primaryMetric: "Monthly cash flow",
-            primaryValue: formatUSD(monthlyCashFlow),
-            scenarioGroupId: groupId,
-            scenarioLabel: label,
-          });
-          return res.json();
-        }),
-      );
-      return results;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/saved-analyses"] });
-      toast({
-        title: "Scenarios saved",
-        description: "Base, Stressed, and Worst stored as a linked set.",
-      });
-    },
-    onError: () =>
-      toast({ title: "Could not save scenarios", variant: "destructive" }),
-  });
-
   return (
     <Card className="border-primary/15" data-testid="card-scenario-compare">
       <CardHeader className="pb-3">
@@ -421,24 +461,14 @@ export function ScenarioCompareCard(props: ScenarioCompareCardProps) {
             Each column is independently editable. Defaults: stressed = rent −5%, opex +10%, rate +1.0%.
             Worst = rent −10%, opex +20%, rate +2.0%.
           </p>
-          {props.saveContext && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="shrink-0"
-              disabled={!isAuthenticated || saveScenariosMutation.isPending}
-              onClick={() => saveScenariosMutation.mutate()}
-              data-testid="button-save-scenarios"
-              title={isAuthenticated ? "Save Base/Stressed/Worst as a linked set" : "Sign in to save scenarios"}
-            >
-              {saveScenariosMutation.isPending ? (
-                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-              ) : (
-                <Save className="w-3.5 h-3.5 mr-1.5" />
-              )}
-              Save scenarios
-            </Button>
-          )}
+          {props.saveContext && !publicMode ? (
+            <ScenarioSaveButton
+              saveContext={props.saveContext}
+              scenarios={scenarios}
+              loanAmount={props.loanAmount}
+              termYears={props.termYears}
+            />
+          ) : null}
         </div>
       </CardHeader>
       <CardContent className="space-y-4">

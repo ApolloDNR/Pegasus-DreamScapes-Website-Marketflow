@@ -1,0 +1,85 @@
+import React from "react";
+import { cleanup, fireEvent, render, screen, within } from "@testing-library/react";
+import { afterEach, describe, expect, it } from "vitest";
+import { Router } from "wouter";
+import { memoryLocation } from "wouter/memory-location";
+
+import { PREMIUM_NAVIGATION } from "@/pegasus/data";
+import { NavBar } from "@/pegasus/nav";
+import { urlFor } from "@/pegasus/routes";
+
+afterEach(cleanup);
+
+function renderNav() {
+  const memory = memoryLocation({ path: "/" });
+  render(
+    <Router hook={memory.hook}>
+      <NavBar
+        go={() => undefined}
+        route="home"
+        theme="dark"
+        toggleTheme={() => undefined}
+        scrolled
+        openPeggy={() => undefined}
+      />
+    </Router>,
+  );
+}
+
+describe("Pegasus desktop navigation directory", () => {
+  it("exposes every non-primary public destination through one accessible More disclosure", () => {
+    renderNav();
+
+    const trigger = screen.getByRole("button", { name: "Real Estate" });
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+    fireEvent.click(trigger);
+    expect(trigger).toHaveAttribute("aria-expanded", "true");
+
+    const directory = document.getElementById("desktop-real-estate");
+    expect(directory).not.toBeNull();
+    expect(within(directory!).getAllByRole('link').map(link=>link.getAttribute('href'))).toEqual([
+      '/property-owners','/work-with-apollo','/deal-partners','/development','/how-we-operate',
+    ]);
+  });
+
+  it("does not present duplicate destinations or the retired Investments label", () => {
+    const items = PREMIUM_NAVIGATION.more.flatMap((group) => group.items);
+    const hrefs = items.map((item) => item.url ?? (item.route ? urlFor(item.route) : ""));
+
+    expect(new Set(hrefs).size).toBe(hrefs.length);
+    expect(items.map((item) => item.label)).not.toContain("Investments");
+    expect(hrefs).not.toContain("/investments");
+  });
+
+  it("finds tools by name and description and recovers from an empty search", () => {
+    renderNav();
+    fireEvent.click(screen.getByRole("button", { name: "Real Estate" }));
+    const directory = within(document.getElementById("desktop-real-estate")!);
+    fireEvent.click(directory.getByText('Search the site'));
+    const search = directory.getByRole("searchbox", { name: "Search navigation" });
+
+    fireEvent.change(search, { target: { value: "strategy lab" } });
+    expect(directory.getByRole("link", { name: /^Strategy Lab/ })).toHaveAttribute("href", "/strategy-lab");
+    expect(directory.queryByRole("link", { name: /^FAQ/ })).not.toBeInTheDocument();
+    fireEvent.change(search, { target: { value: "service area" } });
+    expect(directory.getByRole("link", { name: /^Vendor application/ })).toHaveAttribute("href", "/vendor-network");
+    fireEvent.change(search, { target: { value: "no-such-page" } });
+    expect(directory.getByRole("status")).toHaveTextContent("0 pages found");
+    fireEvent.click(directory.getByRole("button", { name: /Show all pages/ }));
+    expect(search).toHaveValue("");
+    expect(search).toHaveFocus();
+    expect(directory.getByRole("link", { name: "Property owners" })).toBeInTheDocument();
+  });
+
+  it("dismisses search with Escape and returns focus to the More control", () => {
+    renderNav();
+    const trigger = screen.getByRole("button", { name: "Real Estate" });
+    fireEvent.click(trigger);
+    fireEvent.click(screen.getByText("Search the site"));
+    const search = within(document.getElementById("desktop-real-estate")!).getByRole("searchbox");
+    search.focus();
+    fireEvent.keyDown(search, { key: "Escape" });
+    expect(trigger).toHaveAttribute("aria-expanded", "false");
+    expect(trigger).toHaveFocus();
+  });
+});

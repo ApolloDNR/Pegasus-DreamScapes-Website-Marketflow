@@ -1,5 +1,6 @@
 import type { Express, Response, NextFunction, RequestHandler } from "express";
 import { storage } from "./storage";
+import { projectPublicSavedAnalysis } from "./publicAnalysis";
 
 export interface ShareRoutesDeps {
   isAuthenticated: RequestHandler;
@@ -16,7 +17,13 @@ export function registerSavedAnalysesShareRoutes(
       if (!analysis) {
         return res.status(404).json({ message: "Shared analysis not found" });
       }
-      res.json(analysis);
+      const visible = projectPublicSavedAnalysis(analysis);
+      if (!visible) {
+        return res.status(404).json({ message: "Shared analysis not found" });
+      }
+      res.setHeader("X-Robots-Tag", "noindex, nofollow, noarchive");
+      res.setHeader("Cache-Control", "private, no-store, max-age=0");
+      res.json(visible);
     } catch (error) {
       console.error("Error fetching shared analysis:", error);
       res.status(500).json({ message: "Failed to fetch shared analysis" });

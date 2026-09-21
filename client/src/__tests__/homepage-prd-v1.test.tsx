@@ -1,26 +1,20 @@
 import React from "react";
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { render, cleanup, fireEvent } from "@testing-library/react";
+import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { render, cleanup, fireEvent, within } from "@testing-library/react";
 import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Landing } from "@/pegasus/Landing";
 
-// Homepage contract — Master Blueprint v5.1 (§7, §31, §32.1, §32.2).
-//
-// v5.1 locks the homepage to seven narrative movements in a fixed order:
-//   1. Arrival  2. Visitor Router  3. Proof (Nelson Drive)  4. Pegasus Method
-//   5. Opportunity Plan (signature)  6. Partner Proposition
-//   7. Founder Trust + Final Invitation
-// It also locks the public promise ("Complex real estate, made executable."),
-// the primary CTA ("Bring an Opportunity" → /bring-an-opportunity), and the
-// §11-safe framing of the Nelson numbers (transparent stack; the in-house
-// edge as the featured stat; never "profit").
-//
-// This suite renders the real prototype shell at "/" and pins the locked
-// copy and the movement order so a refactor cannot silently drift the
-// homepage away from the blueprint. Supersedes the issue-#22 contract.
+// Homepage contract: experience blueprint v1.1 and its approved parchment refinement.
+// Six sections: arrival, visitor paths, Nelson evidence, founder, optional plan,
+// and invitation. The owner-approved clearer headline supersedes the older
+// "made executable" wording; the original image hash, action destinations,
+// evidence boundaries and representation disclosures remain locked.
 
 vi.mock("@/lib/analytics", () => ({
   initAnalytics: () => () => {},
@@ -79,114 +73,80 @@ function renderHome() {
 afterEach(() => cleanup());
 
 describe("Homepage premium editorial contract", () => {
-  it("locks the Arrival promise and focused hero actions", () => {
-    const { container } = renderHome();
-    const text = container.querySelector("main")!.textContent!;
-    expect(text).toContain("Complex real estate, made executable.");
-    expect(text).toContain(
-      "reads the property, the people, and the economics",
+  it("locks the approved Bay-colonnade plate instead of silently replacing its architecture", () => {
+    const asset = readFileSync(
+      resolve(process.cwd(), "client/public/images/hero/pegasus-v6-arrival.webp"),
     );
-    expect(text).toContain("Bring an Opportunity");
-    expect(text).toContain("See How Pegasus Operates");
-    // §31: the primary CTA is a real link to the canonical intake URL.
-    const primary = Array.from(container.querySelectorAll("a")).find((a) =>
-      a.textContent?.includes("Bring an Opportunity"),
+    expect(createHash("sha256").update(asset).digest("hex")).toBe(
+      "a1de24393eda3bf7ca0ece805a96b71554b7006aee0fcede5d7c41554d8409a3",
     );
-    expect(primary?.getAttribute("href")).toBe("/bring-an-opportunity");
-  });
 
-  it("locks the Visitor Router question and its four routes (§7.2)", () => {
     const { container } = renderHome();
-    const text = container.querySelector("main")!.textContent!;
-    expect(text).toContain("What are you bringing to Pegasus?");
-    for (const route of [
-      "A property I own",
-      "A deal I found",
-      "A project I run",
-      "A relationship or specialty",
-    ]) {
-      expect(text).toContain(route);
-    }
-  });
-
-  it("locks the Nelson proof with the §11-safe number framing", () => {
-    const { container } = renderHome();
-    const text = container.querySelector("main")!.textContent!;
-    expect(text).toContain("One house, taken down to the studs.");
-    expect(text).toContain("Nelson Drive");
-    expect(text).toContain("El Sobrante");
-    // Transparent stack — acquired / built in-house / sold.
-    expect(text).toContain("$600,000");
-    expect(text).toContain("$105,000");
-    expect(text).toContain("$840,000");
-    // Featured stat: the in-house operating edge, not a gross-lift headline.
-    expect(text).toContain("~$95K");
-    // §11 discipline: gross value creation is never presented as profit.
-    expect(text).toContain("not net profit");
-    expect(text).not.toContain("$240K value created");
-  });
-
-  it("locks the five-step Pegasus Method (§7.4)", () => {
-    const { container } = renderHome();
-    const text = container.querySelector("main")!.textContent!;
-    for (const step of ["Originate", "Structure", "Operate", "Realize", "Learn"]) {
-      expect(text).toContain(step);
-    }
-  });
-
-  it("locks the Opportunity Plan signature with its eight needs (§32.2)", () => {
-    const { container } = renderHome();
-    const text = container.querySelector("main")!.textContent!;
-    expect(text).toContain("Every deal is missing something.");
-    for (const need of [
-      "Control",
-      "Underwriting",
-      "Buyer",
-      "Capital",
-      "Development",
-      "Local execution",
-      "Disposition",
-      "Asset operations",
-    ]) {
-      expect(text).toContain(need);
-    }
-    // The signature must never read as a commitment (§15/§21 discipline).
-    expect(text).toContain("Illustrative");
-  });
-
-  it("locks the Partner Proposition and Founder Trust movements (§7.7–§7.8)", () => {
-    const { container } = renderHome();
-    const text = container.querySelector("main")!.textContent!;
-    expect(text).toContain("Bring what you do well.");
-    expect(text).toContain("Paolo");
-    expect(text).toContain("Keller Williams East Bay");
-    expect(text).toContain("CA DRE #02333658");
-  });
-
-  it("keeps the seven movements in the locked narrative order (§32.1)", () => {
-    const { container } = renderHome();
-    const order = Array.from(
-      container.querySelectorAll<HTMLElement>("[data-hv]"),
-    ).map((el) => el.dataset.hv);
-    expect(order).toEqual([
-      "arrival",
-      "router",
-      "proof",
-      "method",
-      "plan",
-      "partner",
-      "founder",
-      "final",
-    ]);
-  });
-
-  it("selecting an Opportunity Plan need reveals what Pegasus brings", () => {
-    const { container } = renderHome();
-    const chip = Array.from(container.querySelectorAll<HTMLButtonElement>("button")).find(
-      (b) => b.textContent?.trim() === "Underwriting" && b.className.includes("hv-chip"),
+    const hero = container.querySelector<HTMLImageElement>(
+      '[data-testid="approved-home-hero-image"]',
     );
-    expect(chip, "Opportunity Plan chip row must render").toBeTruthy();
-    fireEvent.click(chip!);
-    expect(chip!.getAttribute("aria-pressed")).toBe("true");
+    expect(hero).toBeTruthy();
+    expect(hero).toHaveAttribute("src", "/images/hero/pegasus-v6-arrival.webp");
+    expect(hero).toHaveAttribute("width", "1672");
+    expect(hero).toHaveAttribute("height", "941");
+    expect(hero).toHaveAttribute("fetchpriority", "high");
+  });
+
+  it("uses the specified arrival copy and two real links", () => {
+    const { container } = renderHome();
+    const arrival = within(container.querySelector<HTMLElement>('[data-hv="arrival"]')!);
+    expect(arrival.getByRole('heading', { level:1 })).toHaveTextContent('Complex real estate, a clear way forward.');
+    expect(arrival.getAllByRole('link').map(link => link.getAttribute('href'))).toEqual(['/bring-an-opportunity','/our-work']);
+    expect(arrival.getByText(/Property strategy, renovation insight/)).toBeInTheDocument();
+  });
+  it("does not repeat the old proof rail", () => {
+    const { container } = renderHome();
+    expect(container.querySelector('.hv-hero-statbar')).toBeNull();
+    expect(container.querySelector('[data-hv="proof"] img')).toBeInTheDocument();
+  });
+  it("gives owners, representation clients, and deal partners a direct path", () => {
+    const { container } = renderHome();
+    const links = within(container.querySelector<HTMLElement>('[data-hv="router"]')!).getAllByRole('link');
+    expect(links.map(link => link.getAttribute('href'))).toEqual(['/property-owners','/work-with-apollo','/deal-partners']);
+  });
+  it("keeps accounting and role attribution out of the homepage evidence summary", () => {
+    const { container } = renderHome();
+    const proof = container.querySelector<HTMLElement>('[data-hv="proof"]')!;
+    expect(proof).toHaveTextContent('The renovation moved the cooktop to a waterfall island with seating.');
+    expect(proof).not.toHaveTextContent(/\$|ROI|profit|sourced the deal/);
+    expect(within(proof).getByRole('link')).toHaveAttribute('href','/projects/nelson-dr');
+  });
+  it("removes the duplicated method pitch from Home", () => {
+    const { container } = renderHome();
+    expect(container.querySelector('[data-hv="method"]')).toBeNull();
+    expect(within(container.querySelector('nav')!).getByRole('button', {name:'Real Estate'})).toBeInTheDocument();
+  });
+  it("keeps the optional tool behind an on-demand load and direct Strategy Lab access", () => {
+    const { container } = renderHome();
+    const plan = within(container.querySelector<HTMLElement>('[data-hv="plan"]')!);
+    expect(plan.getByRole('button', {name:'Open the planning guide'})).toBeInTheDocument();
+    expect(plan.getByRole('link', {name:'Open Strategy Lab'})).toHaveAttribute('href','/strategy-lab');
+  });
+  it("pairs the founder portrait and biography with the required representation boundary", () => {
+    const { container } = renderHome();
+    const founder = container.querySelector<HTMLElement>('[data-hv="founder"]')!;
+    expect(founder).toHaveTextContent('Apollo Duran');
+    expect(founder).toHaveTextContent('Duran Ramirez, Paolo Ariel');
+    expect(founder).toHaveTextContent('BMP Realty Inc DBA Keller Williams Realty-East Bay');
+    expect(founder).toHaveTextContent('CA DRE #02333658');
+  });
+  it("keeps exactly six sections in the blueprint order", () => {
+    const { container } = renderHome();
+    expect(Array.from(container.querySelectorAll<HTMLElement>('[data-hv]')).map(el=>el.dataset.hv)).toEqual(['arrival','router','proof','founder','plan','final']);
+  });
+  it("selects the real connected question after loading the guide", async () => {
+    const { container } = renderHome();
+    fireEvent.click(within(container).getByRole('button', {name:'Open the planning guide'}));
+    const plan = await within(container).findByTestId('opportunity-plan');
+    const choice = within(plan).getByRole('button', {name:'Underwriting'});
+    fireEvent.click(choice);
+    expect(choice).toHaveAttribute('aria-pressed','true');
+    expect(within(plan).getByRole('link', {name:'Work through the numbers'})).toHaveAttribute('href','/strategy-lab');
+    expect(plan.querySelector('.op-map-node:not(.op-map-focus)')).toHaveTextContent('Capital');
   });
 });

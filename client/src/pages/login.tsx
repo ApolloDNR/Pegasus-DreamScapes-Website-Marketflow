@@ -1,10 +1,11 @@
 import { useState } from "react";
-import { useLocation, Link } from "wouter";
+import { useLocation, useSearch, Link } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useSupabaseAuth, getRoleDashboardPath } from "@/contexts/supabase-auth-context";
 import type { UserRole } from "@/lib/supabase";
+import { getReturnToFromSearch, withReturnTo } from "@/lib/auth-return";
 import {
   Form,
   FormControl,
@@ -15,7 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Mail, Lock, ArrowRight, Eye } from "lucide-react";
 
@@ -28,7 +29,9 @@ type LoginFormData = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const [, setLocation] = useLocation();
-  const { signIn, isLoading, profile, enterGuestMode } = useSupabaseAuth();
+  const search = useSearch();
+  const returnTo = getReturnToFromSearch(search);
+  const { signIn, isLoading, enterGuestMode } = useSupabaseAuth();
 
   const handleGuestExplore = (role: UserRole) => {
     enterGuestMode(role);
@@ -59,10 +62,9 @@ export default function LoginPage() {
       } else {
         toast({
           title: "Welcome Back",
-          description: "You've been signed in successfully.",
+          description: "You've been signed in to your Pegasus account.",
         });
-        const dashboardPath = getRoleDashboardPath(profile?.primary_role ?? null);
-        setLocation(dashboardPath);
+        setLocation(returnTo ?? "/marketflow");
       }
     } catch (err) {
       toast({
@@ -87,12 +89,19 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 px-4 pt-24 pb-12">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-2 text-center">
-          <CardTitle className="text-3xl font-serif" data-testid="text-login-title">
+          <h1
+            className="text-3xl font-serif font-semibold tracking-tight"
+            data-testid="text-login-title"
+          >
             Welcome Back
-          </CardTitle>
+          </h1>
           <CardDescription>
-            Sign in to access your Pegasus Dreamscapes account
+            Sign in to your general Pegasus preview account.
           </CardDescription>
+          <p className="text-sm text-muted-foreground leading-relaxed pt-2">
+            MarketFlow is invitation-led and requires separate approval. Signing in or
+            creating an account does not grant private inventory or submission access.
+          </p>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -125,7 +134,16 @@ export default function LoginPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Password</FormLabel>
+                    <div className="flex items-center justify-between gap-4">
+                      <FormLabel>Password</FormLabel>
+                      <Link
+                        href={withReturnTo("/forgot-password", returnTo)}
+                        className="text-xs text-primary hover:underline font-medium"
+                        data-testid="link-forgot-password"
+                      >
+                        Forgot password?
+                      </Link>
+                    </div>
                     <FormControl>
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -162,11 +180,11 @@ export default function LoginPage() {
           <div className="mt-6 text-center text-sm text-muted-foreground">
             Don't have an account?{" "}
             <Link
-              href="/signup"
+              href={withReturnTo("/signup", returnTo)}
               className="text-primary hover:underline font-medium"
               data-testid="link-signup"
             >
-              Create one
+              Create a preview account
             </Link>
           </div>
 
@@ -209,7 +227,8 @@ export default function LoginPage() {
               </Button>
             </div>
             <p className="text-[11px] text-muted-foreground/80 text-center mt-3">
-              Preview only. Private-beta walkthrough. No real actions.
+              Preview roles are walkthrough lenses only. They do not create approval,
+              private access, or submission privileges.
             </p>
           </div>
 

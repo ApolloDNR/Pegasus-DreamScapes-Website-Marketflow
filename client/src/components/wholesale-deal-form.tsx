@@ -31,6 +31,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { AddressAutocomplete, parseAddressComponents } from "@/components/address-autocomplete";
+import { buildMarketflowWholesaleSubmissionPayload } from "@shared/marketflow-wholesale-submission";
 
 const optionalNumber = z.preprocess(
   (val) => (val === "" || val === undefined || val === null ? undefined : Number(val)),
@@ -103,6 +104,9 @@ const wholesaleDealFormSchema = z.object({
   dispositionPath: z.string().optional(),
   negotiationAllowed: z.boolean().optional().default(true),
   jvAllowed: z.boolean().optional().default(true),
+  consentAcknowledged: z.boolean().refine((accepted) => accepted, {
+    message: "Required to submit private deal information",
+  }),
 });
 
 type WholesaleDealFormData = z.infer<typeof wholesaleDealFormSchema>;
@@ -235,6 +239,7 @@ export function WholesaleDealForm({ onSuccess }: WholesaleDealFormProps) {
       dispositionPath: "assignment",
       negotiationAllowed: true,
       jvAllowed: true,
+      consentAcknowledged: false,
     },
   });
 
@@ -262,16 +267,16 @@ export function WholesaleDealForm({ onSuccess }: WholesaleDealFormProps) {
 
   const submitMutation = useMutation({
     mutationFn: async (data: WholesaleDealFormData) => {
-      return apiRequest("POST", "/api/supabase/wholesale-deals", {
-        ...data,
-        highlights,
-        images: imageUrls,
-      });
+      return apiRequest(
+        "POST",
+        "/api/supabase/wholesale-deals",
+        buildMarketflowWholesaleSubmissionPayload(data, highlights, imageUrls),
+      );
     },
     onSuccess: () => {
       toast({
         title: "Deal Submitted Successfully",
-        description: "Your wholesale deal has been submitted for review. We'll get back to you within 24-48 hours.",
+        description: "Your private record is under review. Submission does not publish, approve, or distribute the deal.",
       });
       form.reset();
       setHighlights([]);
@@ -312,6 +317,19 @@ export function WholesaleDealForm({ onSuccess }: WholesaleDealFormProps) {
     }
   };
 
+  const fieldsForStep: Record<number, (keyof WholesaleDealFormData)[]> = {
+    1: ["propertyAddress", "city", "state", "zipCode", "propertyType", "strategy"],
+    2: [],
+    3: [],
+    4: ["contractPrice", "assignmentFee"],
+    5: ["consentAcknowledged"],
+  };
+
+  const advanceTo = async (nextStep: number) => {
+    const valid = await form.trigger(fieldsForStep[step]);
+    if (valid) setStep(nextStep);
+  };
+
   const stepLabels = [
     { num: 1, label: "Property", icon: Home },
     { num: 2, label: "Seller", icon: User },
@@ -337,7 +355,8 @@ export function WholesaleDealForm({ onSuccess }: WholesaleDealFormProps) {
               <div key={s.num} className="flex items-center">
                 <button
                   type="button"
-                  onClick={() => setStep(s.num)}
+                  onClick={() => s.num <= step && setStep(s.num)}
+                  disabled={s.num > step}
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all whitespace-nowrap ${
                     step === s.num 
                       ? "bg-primary text-white" 
@@ -613,7 +632,7 @@ export function WholesaleDealForm({ onSuccess }: WholesaleDealFormProps) {
                   </div>
 
                   <div className="flex justify-end pt-4">
-                    <Button type="button" onClick={() => setStep(2)} data-testid="button-next-step-1">
+                    <Button type="button" onClick={() => void advanceTo(2)} data-testid="button-next-step-1">
                       Next: Seller Info
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
@@ -755,7 +774,7 @@ export function WholesaleDealForm({ onSuccess }: WholesaleDealFormProps) {
                       <ArrowLeft className="w-4 h-4 mr-2" />
                       Back
                     </Button>
-                    <Button type="button" onClick={() => setStep(3)} data-testid="button-next-step-2">
+                    <Button type="button" onClick={() => void advanceTo(3)} data-testid="button-next-step-2">
                       Next: Contract Details
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
@@ -995,7 +1014,7 @@ export function WholesaleDealForm({ onSuccess }: WholesaleDealFormProps) {
                       <ArrowLeft className="w-4 h-4 mr-2" />
                       Back
                     </Button>
-                    <Button type="button" onClick={() => setStep(4)}>
+                    <Button type="button" onClick={() => void advanceTo(4)}>
                       Next: Financials
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
@@ -1241,7 +1260,7 @@ export function WholesaleDealForm({ onSuccess }: WholesaleDealFormProps) {
                       <ArrowLeft className="w-4 h-4 mr-2" />
                       Back
                     </Button>
-                    <Button type="button" onClick={() => setStep(5)}>
+                    <Button type="button" onClick={() => void advanceTo(5)}>
                       Next: Marketing
                       <ArrowRight className="w-4 h-4 ml-2" />
                     </Button>
@@ -1461,6 +1480,36 @@ export function WholesaleDealForm({ onSuccess }: WholesaleDealFormProps) {
                             {...field}
                           />
                         </FormControl>
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="consentAcknowledged"
+                    render={({ field }) => (
+                      <FormItem className="rounded-lg border border-border p-4">
+                        <div className="flex items-start gap-3">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={(checked) => field.onChange(checked === true)}
+                              data-testid="checkbox-wholesale-private-consent"
+                            />
+                          </FormControl>
+                          <div className="space-y-1">
+                            <FormLabel className="leading-relaxed">
+                              I am authorized to share these property, seller, contract, title,
+                              access, and contact details with Pegasus for private review.
+                            </FormLabel>
+                            <FormDescription>
+                              The record starts private and under review. Submission does not
+                              approve or publish the deal; any later sharing requires a separate
+                              review decision. Do not submit information you are not authorized to share.
+                            </FormDescription>
+                            <FormMessage />
+                          </div>
+                        </div>
                       </FormItem>
                     )}
                   />
