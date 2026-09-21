@@ -34,7 +34,7 @@ export function HomePageV51(_props: { go: Nav; openPeggy: () => void }) {
         width={1672} height={941} alt="" loading="eager" decoding="async" {...{ fetchpriority: 'high' }} />
       <div className="experience-wrap experience-arrival-copy">
         <p className="experience-geography">Contra Costa &amp; Alameda</p>
-        <h1>Complex real estate,<br /> <em>a clear way forward.</em></h1>
+        <h1><span>Complex real estate,</span><br /> <em>a clear way forward.</em></h1>
         <p className="experience-intro">Property strategy, renovation insight, and execution for East Bay owners and partners. Led by Apollo Duran.</p>
         <div className="experience-actions">
           <Link href={PUBLIC_ACTIONS.opportunity.href} className="experience-button">{PUBLIC_ACTIONS.opportunity.label}<ArrowRight aria-hidden="true" size={18} /></Link>

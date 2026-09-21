@@ -213,7 +213,7 @@ const choiceLabel = (c: Choice) => (typeof c === "string" ? c : c.label);
 function ChoiceGrid({ options, value, onPick, cols = 2 }:
   { options: readonly Choice[]; value: string; onPick: (v: string) => void; cols?: number }) {
   return (
-    <div className={`grid gap-x-6 gap-y-0 ${cols === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
+    <div className={`intake-choices grid gap-x-6 gap-y-0 ${cols === 3 ? "sm:grid-cols-3" : "sm:grid-cols-2"}`}>
       {options.map((c) => {
         const label = choiceLabel(c);
         const desc = typeof c === "string" ? undefined : c.desc;
@@ -500,7 +500,7 @@ export default function SubmitPropertyPage() {
         {announcement}
       </p>
       {result ? (
-      <div className="min-h-screen bg-[#fcfaf6] dark:bg-[#0b1d29] pt-32 pb-24 px-6">
+      <div className="intake-page intake-received min-h-screen pt-32 pb-24 px-6">
         <div className="mx-auto max-w-2xl text-center">
           <div className="mx-auto mb-8 flex h-16 w-16 items-center justify-center rounded-full border-2 border-[#b47645]">
             <Check className="h-7 w-7 text-[#975735] dark:text-[#c88a5d]" strokeWidth={2.4} />
@@ -520,10 +520,10 @@ export default function SubmitPropertyPage() {
         </div>
       </div>
       ) : (
-    <div className="intake-page min-h-screen bg-[#fcfaf6] dark:bg-[#0b1d29] pt-28 pb-24 px-6">
+    <div className="intake-page min-h-screen pt-28 pb-24 px-6">
       <div className="mx-auto max-w-5xl">
-        <div className="mb-10 max-w-3xl">
-          <p className="mb-3 text-[13px] font-semibold uppercase tracking-[0.22em] text-[#975735] dark:text-[#c88a5d]">
+        <div className="intake-opening max-w-3xl">
+          <p className="intake-label">
             Bring an Opportunity
           </p>
           <h1 className="font-serif text-4xl sm:text-5xl leading-tight text-[#0b1d29] dark:text-[#fcfaf6]">

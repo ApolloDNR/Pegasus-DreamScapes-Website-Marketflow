@@ -124,6 +124,7 @@
 .id-paths tr[data-selected='true'] th { box-shadow:inset 2px 0 var(--id-accent); padding-left:12px; }
 .id-paths td strong { display:block; font-size:16px; font-weight:600; }
 .id-paths td span { display:block; font-size:13px; color:var(--id-muted); }
+.id-paths td .id-path-fit-label { display:none; }
 .id-paths > button { margin-top:12px; }
 .id-risk-summary { display:flex; justify-content:space-between; align-items:center; gap:24px; padding:20px 0 0; border-top:1px solid var(--id-rule); margin-top:20px; }
 .id-risk-summary p { display:flex; align-items:center; gap:10px; font-size:13px; }
@@ -340,8 +341,19 @@
   .id-capital header { flex-wrap:wrap; }
   .id-paths header { display:block; }
   .id-paths header > span { display:block; margin-top:8px; }
-  .id-paths table { min-width:490px; }
-  .id-paths tbody button { padding-right:0; }
+  /* Keep every path, fit and result visible together on a phone. Explicit
+     table roles retain the same relationships when cells reflow in Safari. */
+  .id-paths table,.id-paths tbody { display:block; width:100%; min-width:0; }
+  .id-paths thead { position:absolute; width:1px; height:1px; padding:0; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+  .id-paths tbody tr { display:grid; grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr); gap:0 20px; border-bottom:1px solid var(--id-rule); padding:12px 14px 20px; }
+  .id-paths tbody tr:first-child { border-top:1px solid var(--id-rule); }
+  .id-paths tbody :is(th,td) { display:block; width:auto; padding:0; border:0; min-width:0; overflow-wrap:anywhere; }
+  .id-paths tbody th { grid-column:1/-1; }
+  .id-paths tbody button { padding:0 0 8px; min-height:48px; font-size:16px; }
+  .id-paths tbody tr[data-selected='true'] { box-shadow:inset 2px 0 var(--id-accent); }
+  .id-paths tbody tr[data-selected='true'] th { padding-left:0; box-shadow:none; }
+  .id-paths td .id-path-fit-label { display:block; margin-bottom:4px; }
+  .id-paths td strong { font-size:19px; margin-bottom:4px; }
   .id-risk-summary > div { flex-wrap:wrap; gap:8px 24px; }
   .id-empty { display:block; padding-top:12px; }
   .id-empty h2 { font-size:32px; }

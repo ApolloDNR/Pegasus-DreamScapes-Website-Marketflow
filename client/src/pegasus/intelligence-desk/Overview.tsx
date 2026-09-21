@@ -76,7 +76,18 @@ export function Overview({ draft, analysis, selectedLane, onLane, onView, onExam
       </aside>
     </div>
     <KeyEconomics analysis={analysis} />
-    <section className="id-paths"><header><h2>Modeled strategy paths</h2><span>Select a path to bring its read into view.</span></header><div className="id-table-scroll" tabIndex={0} role="region" aria-label="Ranked paths, scroll horizontally on small screens"><table aria-label="Ranked strategy paths"><thead><tr><th scope="col">Path</th><th scope="col">Modeled fit</th><th scope="col">Model result</th></tr></thead><tbody>{(allPaths ? snapshot.lanes : snapshot.lanes.slice(0, 3)).map(item => <tr key={item.lane} data-selected={item.lane === lane.lane}><th scope="row"><button type="button" aria-label={`Inspect ${laneName(item)}`} aria-pressed={item.lane === lane.lane} onClick={() => inspect(item.lane)}>{laneName(item)}<ArrowRight aria-hidden="true" /></button></th><td>{item.verdictLabel}</td><td><strong>{safeMetric(item.economics.primaryValue)}</strong><span>{item.economics.primaryMetric}</span></td></tr>)}</tbody></table></div><button type="button" className="id-text-button" onClick={() => setAllPaths(!allPaths)} aria-expanded={allPaths}>{allPaths ? 'Show the first three paths' : 'View all nine paths'} <ArrowRight aria-hidden="true" /></button></section>
+    <section className="id-paths">
+      <header><h2>Modeled strategy paths</h2><span>Select a path to bring its read into view.</span></header>
+      <table aria-label="Ranked strategy paths" role="table">
+        <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Path</th><th scope="col" role="columnheader">Modeled fit</th><th scope="col" role="columnheader">Model result</th></tr></thead>
+        <tbody role="rowgroup">{(allPaths ? snapshot.lanes : snapshot.lanes.slice(0, 3)).map(item => <tr key={item.lane} role="row" data-selected={item.lane === lane.lane}>
+          <th scope="row" role="rowheader"><button type="button" aria-label={`Inspect ${laneName(item)}`} aria-pressed={item.lane === lane.lane} onClick={() => inspect(item.lane)}>{laneName(item)}<ArrowRight aria-hidden="true" /></button></th>
+          <td role="cell"><span className="id-path-fit-label" aria-hidden="true">Fit</span>{item.verdictLabel}</td>
+          <td role="cell"><strong>{safeMetric(item.economics.primaryValue)}</strong><span>{item.lane === 'listing_referral' ? 'Exit value above investor allowance' : item.economics.primaryMetric}</span></td>
+        </tr>)}</tbody>
+      </table>
+      <button type="button" className="id-text-button" onClick={() => setAllPaths(!allPaths)} aria-expanded={allPaths}>{allPaths ? 'Show the first three paths' : 'View all nine paths'} <ArrowRight aria-hidden="true" /></button>
+    </section>
     <div className="id-risk-summary"><p><CircleAlert aria-hidden="true" />{snapshot.risks.length} triggered flags. Evidence remains unverified.</p><div><button type="button" className="id-text-button" onClick={() => onView('scenarios')}>Compare scenarios</button><button type="button" className="id-text-button" onClick={() => onView('risk')}>Inspect risk <ArrowRight aria-hidden="true" /></button></div></div>
     <details className="id-details id-model-detail"><summary>Explore the funding and model relationships</summary><div className="id-model-grid"><div><DecisionCanvas analysis={analysis} selected={stage} onSelect={setStage} />{detail && <section className="id-stage-detail" aria-live="polite" aria-label="Stage assumptions"><h3>{detail.title}</h3><strong>{detail.value}</strong><p>{detail.explanation}</p></section>}</div><CapitalBreakdown snapshot={snapshot} unknownScope={analysis.missing.includes('scope')} /></div></details>
   </>;

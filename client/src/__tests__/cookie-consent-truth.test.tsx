@@ -36,4 +36,15 @@ describe("cookie consent storage disclosures", () => {
     );
     expect(screen.getByRole("switch", { name: "Essential preference" })).toBeDisabled();
   });
+
+  it("keeps keyboard focus through preferences without interrupting the initial visit", () => {
+    render(<CookieConsent />);
+    act(() => vi.advanceTimersByTime(350));
+    expect(screen.getByTestId("button-cookie-customize")).not.toHaveFocus();
+    fireEvent.click(screen.getByTestId("button-cookie-customize"));
+    expect(screen.getByRole("button", { name: "Close privacy preferences" })).toHaveFocus();
+    fireEvent.keyDown(screen.getByTestId("cookie-consent-banner"), { key: "Escape" });
+    expect(screen.getByTestId("button-cookie-customize")).toHaveFocus();
+    expect(window.localStorage.getItem(CONSENT_STORAGE_KEY)).toBeNull();
+  });
 });

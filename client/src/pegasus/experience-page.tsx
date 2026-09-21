@@ -14,14 +14,15 @@ export function PageAction({ href, children, secondary = false }: { href: string
   return <Link href={href} className={className}>{content}</Link>;
 }
 
-export function PageOpening({ title, children, action, image }: {
+export function PageOpening({ title, children, action, secondaryAction, image }: {
   title: string; children: ReactNode; action?: { label: string; href: string };
+  secondaryAction?: { label: string; href: string };
   image?: { src: string; alt: string; width: number; height: number; caption?: string; portrait?: boolean };
 }) {
   return <header className={`ep-opening${image ? ' ep-opening-with-image' : ''}`}>
     <div className="experience-wrap ep-opening-grid">
       <div className="ep-opening-copy"><h1>{title}</h1><div className="ep-intro">{children}</div>
-        {action && <div className="experience-actions"><PageAction href={action.href}>{action.label}</PageAction></div>}
+        {action && <div className="experience-actions"><PageAction href={action.href}>{action.label}</PageAction>{secondaryAction && <PageAction href={secondaryAction.href} secondary>{secondaryAction.label}</PageAction>}</div>}
       </div>
       {image && <figure className={image.portrait ? 'ep-opening-image ep-portrait' : 'ep-opening-image'}>
         <img src={image.src} alt={image.alt} width={image.width} height={image.height} loading="eager" decoding="async" />

@@ -2315,6 +2315,22 @@ try {
     await page.getByLabel('Projected exit value').fill('840000');
     await page.getByRole('button', { name: 'Overview', exact: true }).click();
     await page.getByRole('heading', { name: 'Modeled strategy paths', exact: true }).waitFor({ state: 'visible' });
+    const originalViewport = page.viewportSize();
+    await page.getByRole('button', { name: 'View all nine paths', exact: true }).click();
+    for (const width of [320, 390]) {
+      await page.setViewportSize({ width, height: 844 });
+      const pathTable = page.getByRole('table', { name: 'Ranked strategy paths' });
+      assert(await pathTable.getByRole('rowheader').count() === 9, 'Phone layout lost a strategy path');
+      const clippedCells = await pathTable.locator('tbody th, tbody td').evaluateAll(cells => cells.filter(cell => {
+        const rect = cell.getBoundingClientRect();
+        return rect.left < 0 || rect.right > innerWidth + 1 || cell.scrollWidth > cell.clientWidth + 1;
+      }).map(cell => cell.textContent));
+      assert(clippedCells.length === 0, `Phone path results are clipped at ${width}px: ${JSON.stringify(clippedCells)}`);
+      await pathTable.getByRole('button', { name: 'Inspect Rental Hold', exact: true }).click();
+      const result = page.getByRole('heading', { name: 'Rental Hold', exact: true });
+      assert(await result.evaluate(node => node === document.activeElement), 'Phone path selection did not focus its result');
+    }
+    await page.setViewportSize(originalViewport);
     await page.getByRole('button', { name: 'Memo', exact: true }).click();
     await page.emulateMedia({ media: 'print' });
     assert(await page.locator('.id-memo header').isVisible(), 'Printed brief lost its property and scenario header');

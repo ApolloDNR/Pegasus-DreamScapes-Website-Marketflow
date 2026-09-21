@@ -1,5 +1,20 @@
 # Pegasus website continuation status
 
+## September 21: design refinish
+
+Apollo requested another serious design refinement. Fresh captures of `c25bbc0208a2a1a4dfe0507ad467fe5f15f258ae` covered Home, Property Owners, Deal Partners, Our Work, About, intake, Lab and Tools at 390, 768 and 1440px. This pass stays on the same branch and PR #26.
+
+- [x] Mobile arrival gives each headline clause its own line. At 390px it changes from three mixed lines to two deliberate lines; the original photo starts 61px earlier. Both themes retain matching geometry, the original asset and all six homepage sections.
+- [x] Lab paths reflow into paired fit/result rows on phones. All nine paths, negative results, unavailable results, metric labels and explicit inspection remain available without horizontal scrolling at 320px. Semantic table roles and focus on the selected result are retained. The listing gap uses the same plain-language label as its inspector.
+- [x] Intake uses the exact cream/navy public surfaces, a quieter page label, a consistent heading scale, 44px progress targets, and a visible selected-choice background and copper rule. Receipt, submission, consent, enum and handoff contracts are unchanged.
+- [x] Deal Partners presents Bring a deal before its secondary proposal action in one action group.
+- [x] Owner and partner selectors keep native select behavior, with the same padding and Lucide chevron. Selection still updates the adjacent answer and intake context.
+- [x] Consent now matches the selected appearance. Actions are 44px; switch tracks and labels remain legible. Opening preferences focuses its close control; Escape restores Manage without saving consent. Initial appearance does not steal focus. The final screenshot review also removed the remaining small uppercase title and strengthened the switch tracks.
+
+Local checks pass: TypeScript; all 221 test files / 2,534 tests; 16 focused desk/consent tests; production build; client bundle budgets; all four deployment-entry runtime cases. Initial JavaScript is 398,765 bytes raw / 119,523 bytes gzip. The rendered review passes 56 layout/accessibility states at 320, 390, 768 and 1440px in both themes, followed by eight consent-state checks after the final typography/switch correction. All nine path cells fit; selection focuses its actual result; owner context, intake selection, and consent rejection remain correct. Exact-source hosted CI evidence is recorded on PR #26 after publication.
+
+The managed browser returned `net::ERR_CONNECTION_REFUSED` for the local preview. The repository's existing Chromium workflow supplied browser evidence from the local production build with explicit unavailable-backend fixtures. These checks do not establish hosted, physical-device, real-delivery or production readiness. The previously verified Vercel deployment-action blocker remains; no production, merge, DNS change or external message is part of this design pass.
+
 ## September 20: six design refinements completed
 
 Apollo authorized the six follow-up refinements identified in the review of `a61c63eb99f979d31005c30e37ebeefe73add7cf`. This continuation uses the same recovery branch and draft PR #26.

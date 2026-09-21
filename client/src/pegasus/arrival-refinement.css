@@ -62,8 +62,9 @@
 @media (max-width: 700px) {
   /* Give the original photograph its own readable band below the mobile copy.
      Image bytes, crop and layout stay identical between appearances. */
-  .pg-root .experience-arrival h1 { font-size: clamp(38px, 8vw, 54px); line-height: 1.12; }
-  .pg-root .experience-arrival { padding:124px 0 0; min-height:0; }
+  .pg-root .experience-arrival h1 { font-size: clamp(34px, 8.6vw, 54px); line-height: 1.16; margin-block:20px 24px; text-wrap:initial; }
+  .pg-root .experience-arrival h1 > :is(span,em) { display:block; text-wrap:balance; }
+  .pg-root .experience-arrival { padding:116px 0 0; min-height:0; }
   .pg-root .experience-arrival::before { display:none; }
   .pg-root .experience-arrival-copy { order:1; }
   .pg-root .experience-hero-image { position:relative; inset:auto; order:2; z-index:0; flex:none; height:clamp(168px,52vw,240px); margin-top:28px; object-position:74% 54%; }
