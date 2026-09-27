@@ -1,5 +1,20 @@
 # Pegasus website continuation status
 
+## September 27: final composition and planning clarity
+
+This continuation starts from `227a2261d82f74bf50320d30f8c21410cd8b7e11` on the same recovery branch and draft PR #26. Apollo requested completion of the remaining premium design review. Fresh production-build screenshots cover the complete Home composition, Tools, empty Lab, intake, Property Owners and representation at 390, 768 and 1440px. The approved six-section story, cream/navy/copper palette, Playfair/Inter typography and original photographs remain.
+
+- [x] Opportunity Plan now leads with the actual answer and next action. The desktop diagram follows as supporting context. Repeated visible labels are removed while the mobile chooser retains its accessible name.
+- [x] All eight answers use clearer wording and retain their destinations, companions and explicit boundaries. No funding availability, buyer, service or result is promised.
+- [x] The empty Lab explains purchase costs, cash needs and possible sale/rental outcomes. Its nine paths, eight calculators, formulas, saved work and handoff contracts are unchanged.
+- [x] Home and representation browser titles now match the approved public wording.
+- [x] All 17 rendered journeys and all 46 light-mobile public route checks pass on this build. The final planning review additionally checks all eight choices and clearing in eight width/theme states (320, 390, 768 and 1440px, both appearances). Mobile next actions remain visible at 320/390 × 667px, and Escape restores the chooser's focus.
+- [x] Eighteen route/viewport composition checks report no horizontal overflow or JavaScript page errors. The final production build, TypeScript, bundle budgets and four deployment-entry runtime cases pass. Initial JavaScript is 398,896 bytes raw / 119,471 bytes gzip.
+
+Exact-source CI, the final commit and the protected-preview delivery result are recorded on PR #26 and the owner checklist after source publication. Earlier run 420 is evidence for the parent, not this revision. The cloud browser blocks the local preview address; fresh rendered evidence uses the repository's Chromium workflow against the production build. Controlled API fixtures do not send live submissions. Component screenshots position the component below the fixed navigation; the smaller viewport interaction assertions are recorded separately.
+
+The existing preview project was readable at the start of this continuation but still served an older deployment. The approved delivery attempt targets that same protected preview after CI passes. The actual website backend, live intake/HQ/email receipts, configured Peggy/authentication, physical-device review and owner visual acceptance remain separate release requirements. No production, merge or DNS change is part of this pass.
+
 ## September 27: close the accepted design audit
 
 Apollo requested a complete refinement against the existing owner blueprint and September 22 audit. This continuation starts from `49bfbad9539dd25348d8a47a97d92f521527d1ec`, on the same recovery branch and draft PR #26.

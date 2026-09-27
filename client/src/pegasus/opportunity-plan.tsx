@@ -4,14 +4,14 @@ import { ArrowDown, ArrowRight, Check, ChevronDown, MapPin } from 'lucide-react'
 import './opportunity-plan.css';
 
 const NEEDS = [
-  { key: 'control', question: 'Can the property move forward?', label: 'Control', companion: 'Underwriting', title: 'Establish the right to move forward.', caption: 'Test whether contract terms, access, and decision rights support further diligence.', href: '/deal-partners', action: 'Explore the partner path' },
-  { key: 'underwriting', question: 'Do the numbers make sense?', label: 'Underwriting', companion: 'Capital', title: 'Make the assumptions visible.', caption: 'Organize supplied assumptions around price, scope, carry, exit, and unresolved evidence.', href: '/strategy-lab', action: 'Work through the numbers' },
-  { key: 'buyer', question: 'Who is the potential buyer?', label: 'Buyer', companion: 'Disposition', title: 'Define the possible buyer path.', caption: 'Identify what a potential buyer path would require; no buyer, introduction, or closing is promised.', href: '/deal-partners', action: 'Explore the partner path' },
-  { key: 'capital', question: 'What would funding require?', label: 'Capital', companion: 'Underwriting', title: 'Understand the capital question.', caption: 'Map the capital question without implying funding, solicitation, matching, or availability.', href: '/strategy-lab', action: 'Model the assumptions' },
-  { key: 'development', question: 'What work needs to happen?', label: 'Development', companion: 'Local context', title: 'Connect the scope to the property.', caption: 'Frame scope, budget, permits, and specialist roles that would need project-specific verification.', href: '/development', action: 'Explore project planning' },
-  { key: 'local', question: 'What does the location change?', label: 'Local context', companion: 'Development', title: 'Bring the location into the plan.', caption: 'Surface location-specific constraints without promising field work or project management.', href: '/property-owners', action: 'Explore the property path' },
-  { key: 'disposition', question: 'Sell, refinance, or keep it?', label: 'Disposition', companion: 'Buyer', title: 'Compare the possible exits.', caption: 'Compare possible sale, listing, refinance, or hold scenarios without recommending an outcome.', href: '/strategy-lab', action: 'Compare the modeled paths' },
-  { key: 'assetops', question: 'What would ownership involve?', label: 'Asset operations', companion: 'Underwriting', title: 'Read beyond the acquisition.', caption: 'List the operating questions a hold scenario would need to answer.', href: '/strategy-lab', action: 'Explore a hold scenario' },
+  { key: 'control', question: 'Can the property move forward?', label: 'Control', companion: 'Underwriting', title: 'Start with ownership and access.', caption: 'Check who can approve a sale or project, the current contract terms, and access to inspect the property.', href: '/deal-partners', action: 'Explore the partner path' },
+  { key: 'underwriting', question: 'Do the numbers make sense?', label: 'Underwriting', companion: 'Capital', title: 'See the full cost.', caption: 'Compare price, renovation costs, holding costs, and a possible sale price. Keep unverified numbers marked as assumptions.', href: '/strategy-lab', action: 'Work through the numbers' },
+  { key: 'buyer', question: 'Who is the potential buyer?', label: 'Buyer', companion: 'Disposition', title: 'Clarify who the property could suit.', caption: 'Consider its condition, possible use, and what a buyer would need to assess. No buyer, introduction, or closing is promised.', href: '/deal-partners', action: 'Explore the partner path' },
+  { key: 'capital', question: 'What would funding require?', label: 'Capital', companion: 'Underwriting', title: 'Estimate the cash needed.', caption: 'Model the cash needed to buy, improve, and hold the property. This does not arrange funding or imply that capital is available.', href: '/strategy-lab', action: 'Model the assumptions' },
+  { key: 'development', question: 'What work needs to happen?', label: 'Development', companion: 'Local context', title: 'Define the work ahead.', caption: 'Outline the repairs or improvements, budget, permits, and specialists to confirm before moving forward.', href: '/development', action: 'Explore project planning' },
+  { key: 'local', question: 'What does the location change?', label: 'Local context', companion: 'Development', title: 'Check what the location changes.', caption: 'Identify zoning, access, and site questions to verify locally. This guide does not include site visits or project management.', href: '/property-owners', action: 'Explore the property path' },
+  { key: 'disposition', question: 'Sell, refinance, or keep it?', label: 'Disposition', companion: 'Buyer', title: 'Compare selling with keeping it.', caption: 'Use your own numbers to explore a sale, listing, refinance, or hold. The model compares assumptions; it does not recommend an outcome.', href: '/strategy-lab', action: 'Compare the modeled paths' },
+  { key: 'assetops', question: 'What would ownership involve?', label: 'Asset operations', companion: 'Underwriting', title: 'Look beyond the purchase.', caption: 'Consider rent, maintenance, reserves, and the work of managing the property. Start with what you know and leave unknown costs open.', href: '/strategy-lab', action: 'Explore a hold scenario' },
 ] as const;
 
 export function OpportunityPlan() {
@@ -32,14 +32,13 @@ export function OpportunityPlan() {
 
   return (
     <div className="op-plan" data-testid="opportunity-plan">
-      <div className="op-plan-bar"><h3>Opportunity Plan</h3><span>Planning guide</span></div>
+      <div className="op-plan-bar"><h3>Opportunity Plan</h3><p>Choose a question to find a useful next step.</p></div>
       <div className="op-plan-body">
         <div className="op-choice-column">
-          <p className="op-plan-intro">Pick a question to explore. No finished plan needed.</p>
           <div className="op-mobile-choice" onKeyDown={event => {
             if (event.key === 'Escape' && chooserOpen) { event.preventDefault(); closeChooser(); }
           }}>
-            <p className="op-choice-label" id={`${resultId}-label`}>Choose a planning question</p>
+            <p className="sr-only" id={`${resultId}-label`}>Choose a planning question</p>
             <div className="op-select-wrap">
               <button ref={chooserRef} type="button" className="op-select-trigger" aria-expanded={chooserOpen}
                 aria-controls={`${resultId}-questions`} aria-labelledby={`${resultId}-label ${resultId}-selection`} onClick={() => setChooserOpen(open => !open)}>
@@ -61,20 +60,19 @@ export function OpportunityPlan() {
           </div>
         </div>
         <div className="op-result" id={resultId} aria-live="polite" aria-atomic="true">
+          <div className="op-read">
+            <h4>{selected?.title ?? 'What needs a closer look?'}</h4>
+            <p>{selected?.caption ?? 'Choose the question closest to your situation. You can change it at any time.'}</p>
+            {selected && <p className="op-mobile-connection">{selected.label} <ArrowRight aria-hidden="true" size={14} /> {selected.companion}</p>}
+            {selected && <Link href={selected.href} className="op-next">{selected.action}<ArrowRight aria-hidden="true" /></Link>}
+          </div>
           <div className="op-map" role="group" aria-label="Property and connected planning questions">
-            <div className="op-map-origin"><MapPin aria-hidden="true" /><span>Property + known constraints</span></div>
+            <div className="op-map-origin"><MapPin aria-hidden="true" /><span>Your property and situation</span></div>
             <div className="op-map-junction" aria-hidden="true"><ArrowDown /></div>
             <div className="op-map-branches">
               <div className="op-map-node op-map-focus" data-selected={Boolean(selected)}><span>Selected need</span><strong>{selected?.label ?? 'Your missing piece'}</strong></div>
               <div className="op-map-node"><span>Consider alongside</span><strong>{selected?.companion ?? 'Connected questions'}</strong></div>
             </div>
-          </div>
-          <div className="op-read">
-            {selected && <p className="op-mobile-connection">{selected.label} <ArrowRight aria-hidden="true" size={14} /> {selected.companion}</p>}
-            <span className="op-read-label">Planning prompt</span>
-            <h4>{selected?.title ?? 'What needs a closer look?'}</h4>
-            <p>{selected?.caption ?? 'Select a need to see a planning prompt and a relevant next step.'}</p>
-            {selected && <Link href={selected.href} className="op-next">{selected.action}<ArrowRight aria-hidden="true" /></Link>}
           </div>
         </div>
       </div>

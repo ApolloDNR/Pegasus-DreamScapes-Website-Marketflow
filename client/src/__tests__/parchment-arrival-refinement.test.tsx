@@ -53,7 +53,7 @@ describe('Approved parchment arrival refinement', () => {
       expect(selector).toHaveTextContent('Choose a question');
     }
     fireEvent.click(plan.getByRole('button', { name: 'What would funding require?' }));
-    expect(plan.getByText(/without implying funding/)).toBeInTheDocument();
+    expect(plan.getByText(/does not arrange funding or imply that capital is available/)).toBeInTheDocument();
   }, 5_000);
 
   it('balances the owner opening with real project evidence while preserving the property intake', () => {

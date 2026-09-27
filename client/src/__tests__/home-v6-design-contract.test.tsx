@@ -68,7 +68,7 @@ describe('Blueprint v1.1 mounted homepage', () => {
     fireEvent.click(capital);
     expect(capital).toHaveAttribute('aria-pressed', 'true');
     expect(plan.getByRole('link', { name: 'Model the assumptions' })).toHaveAttribute('href', '/strategy-lab');
-    expect(plan.getByText(/without implying funding/)).toBeInTheDocument();
+    expect(plan.getByText(/does not arrange funding or imply that capital is available/)).toBeInTheDocument();
     fireEvent.click(capital);
     expect(capital).toHaveAttribute('aria-pressed', 'false');
     expect(plan.queryByRole('link')).not.toBeInTheDocument();

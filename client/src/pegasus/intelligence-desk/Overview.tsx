@@ -32,13 +32,13 @@ export function Overview({ draft, analysis, selectedLane, onLane, onView, onExam
       <div className="id-empty-intro">
         <p className="id-eyebrow">A clearer property decision</p>
         <h2>Start with the property.</h2>
-        <p>Bring the numbers you know. See how the basis, capital and possible exits fit together, then decide what to investigate next.</p>
+        <p>Start with the numbers you know. Compare purchase costs, cash needs, and possible sale or rental outcomes, then see what needs checking.</p>
         <div className="id-actions"><button type="button" className="id-button is-primary" onClick={() => onView('assumptions')}>Start a property <ArrowRight aria-hidden="true" /></button><button type="button" className="id-text-button" onClick={onExample}>Load illustrative example <ArrowRight aria-hidden="true" /></button></div>
         <p className="id-caption">The example is synthetic. Your working draft stays in this browser until you choose to carry it forward.</p>
       </div>
       <div className="id-start-guide" aria-label="What you need to begin">
         <h3>A useful first read starts here.</h3>
-        <ol><li><span>01</span><div><h4>Purchase basis</h4><p>The price or current basis you want to model.</p></div></li><li><span>02</span><div><h4>An exit value or monthly rent</h4><p>Your assumption, ready to test and refine.</p></div></li><li><span>03</span><div><h4>Scope, when you know it</h4><p>Leave unknown costs blank. Add detail as you go.</p></div></li></ol>
+        <ol><li><span>01</span><div><h4>Purchase price or current basis</h4><p>The starting cost you want to model.</p></div></li><li><span>02</span><div><h4>Expected sale price or monthly rent</h4><p>Your assumption, ready to test and refine.</p></div></li><li><span>03</span><div><h4>Repairs and improvements</h4><p>Leave unknown costs blank. Add detail as you go.</p></div></li></ol>
       </div>
     </div>
     {analysis.status === 'invalid' && <Unavailable analysis={analysis} onEdit={() => onView('assumptions')} />}

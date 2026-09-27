@@ -1572,14 +1572,14 @@ async function exercisePublicDesign(page, route, viewport, health) {
     const plan = page.getByTestId('opportunity-plan');
     await plan.waitFor({ state: 'visible' });
     const planningNeeds = [
-      ['control', 'Can the property move forward?', 'Underwriting', 'Establish the right to move forward.', '/deal-partners'],
-      ['underwriting', 'Do the numbers make sense?', 'Capital', 'Make the assumptions visible.', '/strategy-lab'],
-      ['buyer', 'Who is the potential buyer?', 'Disposition', 'Define the possible buyer path.', '/deal-partners'],
-      ['capital', 'What would funding require?', 'Underwriting', 'Understand the capital question.', '/strategy-lab'],
-      ['development', 'What work needs to happen?', 'Local context', 'Connect the scope to the property.', '/development'],
-      ['local', 'What does the location change?', 'Development', 'Bring the location into the plan.', '/property-owners'],
-      ['disposition', 'Sell, refinance, or keep it?', 'Buyer', 'Compare the possible exits.', '/strategy-lab'],
-      ['assetops', 'What would ownership involve?', 'Underwriting', 'Read beyond the acquisition.', '/strategy-lab'],
+      ['control', 'Can the property move forward?', 'Underwriting', 'Start with ownership and access.', '/deal-partners'],
+      ['underwriting', 'Do the numbers make sense?', 'Capital', 'See the full cost.', '/strategy-lab'],
+      ['buyer', 'Who is the potential buyer?', 'Disposition', 'Clarify who the property could suit.', '/deal-partners'],
+      ['capital', 'What would funding require?', 'Underwriting', 'Estimate the cash needed.', '/strategy-lab'],
+      ['development', 'What work needs to happen?', 'Local context', 'Define the work ahead.', '/development'],
+      ['local', 'What does the location change?', 'Development', 'Check what the location changes.', '/property-owners'],
+      ['disposition', 'Sell, refinance, or keep it?', 'Buyer', 'Compare selling with keeping it.', '/strategy-lab'],
+      ['assetops', 'What would ownership involve?', 'Underwriting', 'Look beyond the purchase.', '/strategy-lab'],
     ];
     const compactPlan = viewport.width <= 900;
     const selector = plan.getByRole('button', { name: /^Choose a planning question/ });

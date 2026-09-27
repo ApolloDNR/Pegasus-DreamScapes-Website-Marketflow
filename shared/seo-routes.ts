@@ -68,7 +68,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   // Master Blueprint v5.1 — homepage promise + copy-deck meta (supersedes
   // issue #22 §12).
   "/": {
-    title: "Pegasus Dreamscapes — Complex Real Estate, Made Executable",
+    title: "Pegasus Dreamscapes · A Clear Way Forward",
     description:
       "A founder-led East Bay real estate operating company connecting property strategy and execution. Share a property, deal, or project for possible review.",
     image: `${SITE_URL}/og/home.png`,
@@ -179,7 +179,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
 
   // ---- Company / proof / contact ----
   "/work-with-apollo": {
-    title: tag("Represent With Apollo"),
+    title: tag("Buy or Sell With Apollo"),
     description:
       "Ask about possible representation with Apollo Duran. Verify the site-listed Keller Williams East Bay affiliation and DRE #02333658 before engagement.",
     image: `${SITE_URL}/og/work-with-apollo.png`,
