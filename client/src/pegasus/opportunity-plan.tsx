@@ -1,6 +1,6 @@
-import React, { useId, useState } from 'react';
+import React, { useId, useRef, useState } from 'react';
 import { Link } from 'wouter';
-import { ArrowDown, ArrowRight, Check, MapPin } from 'lucide-react';
+import { ArrowDown, ArrowRight, Check, ChevronDown, MapPin } from 'lucide-react';
 import './opportunity-plan.css';
 
 const NEEDS = [
@@ -16,8 +16,19 @@ const NEEDS = [
 
 export function OpportunityPlan() {
   const resultId = useId();
+  const chooserRef = useRef<HTMLButtonElement>(null);
+  const [chooserOpen, setChooserOpen] = useState(false);
   const [active, setActive] = useState<string | null>(null);
   const selected = NEEDS.find((need) => need.key === active);
+  const closeChooser = () => {
+    setChooserOpen(false);
+    chooserRef.current?.focus({ preventScroll: true });
+    requestAnimationFrame(() => chooserRef.current?.scrollIntoView?.({ block: 'start', behavior: 'auto' }));
+  };
+  const chooseOnMobile = (next: string | null) => {
+    setActive(next);
+    closeChooser();
+  };
 
   return (
     <div className="op-plan" data-testid="opportunity-plan">
@@ -25,10 +36,26 @@ export function OpportunityPlan() {
       <div className="op-plan-body">
         <div className="op-choice-column">
           <p className="op-plan-intro">Pick a question to explore. No finished plan needed.</p>
+          <div className="op-mobile-choice" onKeyDown={event => {
+            if (event.key === 'Escape' && chooserOpen) { event.preventDefault(); closeChooser(); }
+          }}>
+            <p className="op-choice-label" id={`${resultId}-label`}>Choose a planning question</p>
+            <div className="op-select-wrap">
+              <button ref={chooserRef} type="button" className="op-select-trigger" aria-expanded={chooserOpen}
+                aria-controls={`${resultId}-questions`} aria-labelledby={`${resultId}-label ${resultId}-selection`} onClick={() => setChooserOpen(open => !open)}>
+                <span id={`${resultId}-selection`}>{selected?.question ?? 'Choose a question'}</span><ChevronDown aria-hidden="true" />
+              </button>
+              <div id={`${resultId}-questions`} className="op-mobile-options" role="group" aria-label="Planning questions" hidden={!chooserOpen}>
+                {NEEDS.map(need => <button key={need.key} type="button" aria-pressed={active === need.key} aria-controls={resultId}
+                  onClick={() => chooseOnMobile(need.key)}><span>{need.question}</span>{active === need.key && <Check aria-hidden="true" />}</button>)}
+                <button type="button" className="op-clear" onClick={() => chooseOnMobile(null)}>Clear question</button>
+              </div>
+            </div>
+          </div>
           <div className="op-choices" role="group" aria-label="What is your deal missing?">
-            {NEEDS.map(need => <button key={need.key} type="button" aria-label={need.label} aria-pressed={active === need.key}
-              aria-controls={resultId} aria-describedby={`${resultId}-${need.key}-question`} onClick={() => setActive(active === need.key ? null : need.key)}>
-              <span><small id={`${resultId}-${need.key}-question`}>{need.question}</small><strong>{need.label}</strong></span>
+            {NEEDS.map(need => <button key={need.key} type="button" aria-label={need.question} aria-pressed={active === need.key}
+              aria-controls={resultId} aria-describedby={`${resultId}-${need.key}-label`} onClick={() => setActive(active === need.key ? null : need.key)}>
+              <span><small>{need.question}</small><strong id={`${resultId}-${need.key}-label`}>{need.label}</strong></span>
               {active === need.key ? <Check aria-hidden="true" /> : <span className="op-choice-mark" aria-hidden="true" />}
             </button>)}
           </div>

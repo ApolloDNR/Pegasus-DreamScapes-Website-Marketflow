@@ -18,7 +18,6 @@ export function CookieConsent() {
   const [visible, setVisible] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [analytics, setAnalytics] = useState(false);
-  const [marketing, setMarketing] = useState(false);
   const manageRef = useRef<HTMLButtonElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const detailsWereOpen = useRef(false);
@@ -34,7 +33,6 @@ export function CookieConsent() {
       if (!hasDecided()) {
         const current = readConsent();
         setAnalytics(current.analytics);
-        setMarketing(current.marketing);
         setVisible(true);
       }
     }, 350);
@@ -74,7 +72,7 @@ export function CookieConsent() {
                   Privacy preferences
                 </p>
                 <p className="pg-cookie-copy text-sm text-muted-foreground leading-relaxed">
-                  Analytics and marketing technologies are off until you opt in.
+                  Optional analytics stay off until you opt in.
                 </p>
               </div>
               <button
@@ -104,13 +102,7 @@ export function CookieConsent() {
                 onChange={setAnalytics}
                 testId="toggle-cookie-analytics"
               />
-              <ToggleRow
-                label="Marketing"
-                description="Reserved for future first-party campaign attribution. We do not currently run third-party retargeting."
-                checked={marketing}
-                onChange={setMarketing}
-                testId="toggle-cookie-marketing"
-              />
+              <p className="pg-cookie-copy text-sm text-muted-foreground leading-relaxed">Marketing tracking is not used.</p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:justify-end pt-2">
@@ -125,7 +117,7 @@ export function CookieConsent() {
               <Button
                 size="sm"
                 className="pg-cookie-btn-solid bg-primary hover:bg-primary/90 text-primary-foreground"
-                onClick={() => persist({ analytics, marketing })}
+                onClick={() => persist({ analytics, marketing: false })}
                 data-testid="button-cookie-save"
               >
                 Save preferences
@@ -152,7 +144,7 @@ export function CookieConsent() {
             className="pg-cookie-copy text-xs sm:text-sm text-foreground leading-snug flex-1"
           >
             <span className="hidden sm:inline">Local browser storage remembers your theme and consent choices. </span>
-            Analytics and marketing are off until you opt in.{" "}
+            Optional analytics stay off until you opt in.{" "}
             <a
               href="/privacy"
               className="pg-cookie-link underline hover:text-primary transition-colors"
@@ -185,7 +177,7 @@ export function CookieConsent() {
             <Button
               size="sm"
               className="pg-cookie-btn-solid h-8 px-4 text-xs bg-primary hover:bg-primary/90 text-primary-foreground"
-              onClick={() => persist({ analytics: true, marketing: true })}
+              onClick={() => persist({ analytics: true, marketing: false })}
               data-testid="button-cookie-accept-all"
             >
               Accept

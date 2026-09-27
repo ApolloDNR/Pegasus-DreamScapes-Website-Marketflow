@@ -143,7 +143,7 @@ describe("Homepage premium editorial contract", () => {
     const { container } = renderHome();
     fireEvent.click(within(container).getByRole('button', {name:'Open the planning guide'}));
     const plan = await within(container).findByTestId('opportunity-plan');
-    const choice = within(plan).getByRole('button', {name:'Underwriting'});
+    const choice = within(plan).getByRole('button', {name:'Do the numbers make sense?'});
     fireEvent.click(choice);
     expect(choice).toHaveAttribute('aria-pressed','true');
     expect(within(plan).getByRole('link', {name:'Work through the numbers'})).toHaveAttribute('href','/strategy-lab');

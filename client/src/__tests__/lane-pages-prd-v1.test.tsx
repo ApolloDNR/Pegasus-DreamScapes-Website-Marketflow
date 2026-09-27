@@ -85,7 +85,7 @@ const LANES: [string, string[], string, string | null][] = [
   [
     "/deal-partners",
     ["Bring the deal. Define the role."],
-    "Share the property or project, what you bring, and what is missing.",
+    "Share the property or project, your role, and the help you are looking for.",
     "Any joint venture, assignment, referral, distribution, representation, or compensation arrangement would require a separate written agreement before anyone relies on it.",
   ],
   [

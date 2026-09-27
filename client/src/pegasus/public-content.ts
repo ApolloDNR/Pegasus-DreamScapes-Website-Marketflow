@@ -19,8 +19,8 @@ export const PRIMARY_LINKS = [
   { label: 'About', href: '/about' },
 ] as const;
 export const HOME_PATHS = [
-  { label: 'I own a property', note: 'Explore the next step for a property you own.', href: '/property-owners' },
-  { label: 'I’m buying or selling', note: 'Work with Apollo on representation.', href: '/work-with-apollo' },
+  { label: 'I own a property', note: 'Work through repairs, timing, or the options for your property.', href: '/property-owners' },
+  { label: 'I’m buying or selling', note: 'Ask Apollo about licensed buyer or seller representation.', href: '/work-with-apollo' },
   { label: 'I have a deal or partnership', note: 'Bring an opportunity, project, or specialty.', href: '/deal-partners' },
 ] as const;
 export const PUBLIC_CONTACT = {

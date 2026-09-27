@@ -1572,27 +1572,46 @@ async function exercisePublicDesign(page, route, viewport, health) {
     const plan = page.getByTestId('opportunity-plan');
     await plan.waitFor({ state: 'visible' });
     const planningNeeds = [
-      ['Control', 'Underwriting', 'Establish the right to move forward.', '/deal-partners'],
-      ['Underwriting', 'Capital', 'Make the assumptions visible.', '/strategy-lab'],
-      ['Buyer', 'Disposition', 'Define the possible buyer path.', '/deal-partners'],
-      ['Capital', 'Underwriting', 'Understand the capital question.', '/strategy-lab'],
-      ['Development', 'Local context', 'Connect the scope to the property.', '/development'],
-      ['Local context', 'Development', 'Bring the location into the plan.', '/property-owners'],
-      ['Disposition', 'Buyer', 'Compare the possible exits.', '/strategy-lab'],
-      ['Asset operations', 'Underwriting', 'Read beyond the acquisition.', '/strategy-lab'],
+      ['control', 'Can the property move forward?', 'Underwriting', 'Establish the right to move forward.', '/deal-partners'],
+      ['underwriting', 'Do the numbers make sense?', 'Capital', 'Make the assumptions visible.', '/strategy-lab'],
+      ['buyer', 'Who is the potential buyer?', 'Disposition', 'Define the possible buyer path.', '/deal-partners'],
+      ['capital', 'What would funding require?', 'Underwriting', 'Understand the capital question.', '/strategy-lab'],
+      ['development', 'What work needs to happen?', 'Local context', 'Connect the scope to the property.', '/development'],
+      ['local', 'What does the location change?', 'Development', 'Bring the location into the plan.', '/property-owners'],
+      ['disposition', 'Sell, refinance, or keep it?', 'Buyer', 'Compare the possible exits.', '/strategy-lab'],
+      ['assetops', 'What would ownership involve?', 'Underwriting', 'Read beyond the acquisition.', '/strategy-lab'],
     ];
-    for (const [label, companion, title, href] of planningNeeds) {
-      const choice = plan.getByRole('button', { name: label, exact: true });
-      await choice.click();
+    const compactPlan = viewport.width <= 900;
+    const selector = plan.getByRole('button', { name: /^Choose a planning question/ });
+    for (const [, question, companion, title, href] of planningNeeds) {
+      const choice = plan.locator('.op-choices').getByRole('button', { name: question, exact: true, includeHidden: true });
+      if (compactPlan) {
+        await selector.scrollIntoViewIfNeeded();
+        await selector.click();
+        await plan.getByRole('group', { name: 'Planning questions', exact: true }).getByRole('button', { name: question, exact: true }).click();
+      } else await choice.click();
       await plan.getByRole('heading', { name: title, exact: true }).waitFor({ state: 'visible' });
-      assert(await choice.getAttribute('aria-pressed') === 'true', `${label} selection is not announced`);
-      assert(await plan.locator('.op-next').getAttribute('href') === href, `${label} has an incorrect next step`);
-      assert((await plan.locator('.op-map-node').last().textContent()).includes(companion), `${label} lost its companion question`);
-      await choice.click();
+      assert(await choice.getAttribute('aria-pressed') === 'true', `${question} selection is not announced`);
+      assert(await plan.locator('.op-next').getAttribute('href') === href, `${question} has an incorrect next step`);
+      assert((await plan.locator('.op-map-node').last().textContent()).includes(companion), `${question} lost its companion question`);
+      if (compactPlan) {
+        const answer = await plan.locator('.op-next').boundingBox();
+        assert(answer && answer.y >= 76 && answer.y + answer.height <= viewport.height, `${question} answer is below the viewport`);
+        await selector.click();
+        await plan.getByRole('button', { name: 'Clear question', exact: true }).click();
+        await page.evaluate(() => new Promise(requestAnimationFrame));
+        const clearedChooser = await selector.boundingBox();
+        assert(await selector.evaluate(element => document.activeElement === element), 'Clearing a planning question lost keyboard focus');
+        assert(clearedChooser && clearedChooser.y >= 76 && clearedChooser.y + clearedChooser.height <= viewport.height, 'Clearing a planning question left its control outside the viewport');
+      } else await choice.click();
       await plan.getByRole('heading', { name: 'What needs a closer look?', exact: true }).waitFor({ state: 'visible' });
       assert(await plan.locator('.op-next').count() === 0, 'Deselecting a need retained a stale action');
     }
-    await plan.getByRole('button', { name: 'Development', exact: true }).click();
+    if (compactPlan) {
+      await selector.click();
+      await plan.getByRole('group', { name: 'Planning questions', exact: true }).getByRole('button', { name: 'What work needs to happen?', exact: true }).click();
+    }
+    else await plan.getByRole('button', { name: 'What work needs to happen?', exact: true }).click();
     assert(await plan.getByRole('link', { name: 'Explore project planning' }).getAttribute('href') === '/development', 'Development map lost its next step');
     const controls = await plan.locator('.op-choices button, .op-map-node strong').evaluateAll((elements) => elements.map((element) => ({
       visible: element.getBoundingClientRect().width > 0,
@@ -1604,6 +1623,15 @@ async function exercisePublicDesign(page, route, viewport, health) {
     })));
     assert(controls.filter((control) => control.button).length === 8, 'Opportunity Plan lost a planning need');
     assert(controls.filter(control => control.visible).every((control) => control.width > 0 && !control.overflow && (!control.button || control.height >= 44)), `Diagram labels or touch targets failed: ${JSON.stringify(controls)}`);
+    if (viewport.width < 768) {
+      for (const group of await page.locator('.site-footer-group').all()) {
+        const summary = group.locator('summary');
+        await summary.press('Enter');
+        assert(await group.locator('a').first().isVisible(), 'Footer group did not reveal its destinations');
+        await summary.press('Enter');
+        assert(!await group.locator('a').first().isVisible(), 'Footer group did not close by keyboard');
+      }
+    }
   }
   if (route === '/property-owners') {
     assert(await page.getByRole('group', { name: 'Common owner situations', includeHidden: true }).isVisible() === (viewport.width > 900), 'Owner situations show both mobile and desktop controls');
@@ -2089,7 +2117,7 @@ try {
     await homepagePrimaryCta.click();
     await page.waitForURL(/\/bring-an-opportunity$/);
     const destinationHeading = page.getByRole('heading', {
-      name: 'Start with what you have.',
+      name: 'Bring an Opportunity',
       level: 1,
       exact: true,
     });
@@ -2204,7 +2232,8 @@ try {
         await page.getByLabel('Anything urgent?').fill('No immediate deadline');
         await page.getByRole('button', { name: 'Continue', exact: true }).click();
 
-        assert(await page.getByRole('button', { name: 'Inherited / probate', exact: true }).getAttribute('aria-pressed') === 'true', 'Owner situation was lost on intake');
+        if (intakeViewport.width <= 600) assert(await page.getByLabel('Choose the closest match').inputValue() === 'Inherited / probate', 'Owner situation was lost on mobile intake');
+        else assert(await page.getByRole('button', { name: 'Inherited / probate', exact: true }).getAttribute('aria-pressed') === 'true', 'Owner situation was lost on intake');
         await page.getByRole('button', { name: 'Continue', exact: true }).click();
         await page.getByRole('button', { name: 'Not sure', exact: true }).click();
         await page.getByRole('button', { name: 'Continue', exact: true }).click();

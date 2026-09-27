@@ -54,7 +54,13 @@
 .pg-root:not([data-theme='dark']) .op-plan .op-map-branches::before { border-color: #a49989; }
 .pg-root:not([data-theme='dark']) .op-plan .op-map-focus[data-selected='true'] { border-color: #8e5030; }
 .pg-root:not([data-theme='dark']) .op-plan .op-mobile-connection { color: #8e5030 !important; }
-.pg-root:not([data-theme='dark']) .op-plan :is(a, button):focus-visible { outline-color: #8e5030; }
+.pg-root:not([data-theme='dark']) .op-plan .op-select-trigger { background:#fcfaf6; color:#0b1d29; border-color:#a49989; }
+.pg-root:not([data-theme='dark']) .op-plan .op-mobile-options { border-color:#a49989; }
+.pg-root:not([data-theme='dark']) .op-plan .op-mobile-options button { color:#0b1d29; border-color:#c9bba8; }
+.pg-root:not([data-theme='dark']) .op-plan .op-mobile-options button:hover,
+.pg-root:not([data-theme='dark']) .op-plan .op-mobile-options button[aria-pressed='true'] { background:#eee5d6; }
+.pg-root:not([data-theme='dark']) .op-plan .op-mobile-options :is(.op-clear,svg) { color:#8e5030; }
+.pg-root:not([data-theme='dark']) .op-plan :is(a, button, select):focus-visible { outline-color: #8e5030; }
 
 @media (min-width: 1440px) {
   .pg-root .po .ep-opening-with-image .ep-opening-grid { grid-template-columns: minmax(0, 640px) minmax(0, 1fr); }

@@ -31,25 +31,28 @@ describe('Approved parchment arrival refinement', () => {
   it('describes each stable planner control with its visible everyday question', () => {
     const { container } = mount(<OpportunityPlan />);
     const plan = within(container);
-    expect(plan.getAllByRole('button')).toHaveLength(8);
-    expect(plan.getByRole('button', { name: 'Control' })).toHaveAccessibleDescription('Can the property move forward?');
-    expect(plan.getByRole('button', { name: 'Underwriting' })).toHaveAccessibleDescription('Do the numbers make sense?');
-    expect(plan.getByRole('button', { name: 'Disposition' })).toHaveAccessibleDescription('Sell, refinance, or keep it?');
-    for (const [name, href] of [
-      ['Control', '/deal-partners'], ['Underwriting', '/strategy-lab'],
-      ['Buyer', '/deal-partners'], ['Capital', '/strategy-lab'],
-      ['Development', '/development'], ['Local context', '/property-owners'],
-      ['Disposition', '/strategy-lab'], ['Asset operations', '/strategy-lab'],
+    expect(within(container.querySelector<HTMLElement>('.op-choices')!).getAllByRole('button')).toHaveLength(8);
+    expect(plan.getByRole('button', { name: 'Can the property move forward?' })).toHaveAccessibleDescription('Control');
+    expect(plan.getByRole('button', { name: 'Do the numbers make sense?' })).toHaveAccessibleDescription('Underwriting');
+    expect(plan.getByRole('button', { name: 'Sell, refinance, or keep it?' })).toHaveAccessibleDescription('Disposition');
+    const selector = plan.getByRole('button', { name: /^Choose a planning question/ });
+    for (const [, name, href] of [
+      ['control', 'Can the property move forward?', '/deal-partners'], ['underwriting', 'Do the numbers make sense?', '/strategy-lab'],
+      ['buyer', 'Who is the potential buyer?', '/deal-partners'], ['capital', 'What would funding require?', '/strategy-lab'],
+      ['development', 'What work needs to happen?', '/development'], ['local', 'What does the location change?', '/property-owners'],
+      ['disposition', 'Sell, refinance, or keep it?', '/strategy-lab'], ['assetops', 'What would ownership involve?', '/strategy-lab'],
     ]) {
       const button = plan.getByRole('button', { name });
       fireEvent.click(button);
       expect(button).toHaveAttribute('aria-pressed', 'true');
+      expect(selector).toHaveTextContent(name);
       expect(plan.getByRole('link')).toHaveAttribute('href', href);
       fireEvent.click(button);
       expect(button).toHaveAttribute('aria-pressed', 'false');
       expect(plan.queryByRole('link')).not.toBeInTheDocument();
+      expect(selector).toHaveTextContent('Choose a question');
     }
-    fireEvent.click(plan.getByRole('button', { name: 'Capital' }));
+    fireEvent.click(plan.getByRole('button', { name: 'What would funding require?' }));
     expect(plan.getByText(/without implying funding/)).toBeInTheDocument();
   }, 5_000);
 

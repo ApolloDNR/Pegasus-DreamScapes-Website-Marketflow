@@ -1,5 +1,22 @@
 # Pegasus website continuation status
 
+## September 27: close the accepted design audit
+
+Apollo requested a complete refinement against the existing owner blueprint and September 22 audit. This continuation starts from `49bfbad9539dd25348d8a47a97d92f521527d1ec`, on the same recovery branch and draft PR #26.
+
+- [x] F1/F3: All eight planning questions use their visible question as the accessible name. The phone disclosure wraps long labels and closes with visible focus on the chooser; the selected answer and its real next action follow immediately. Desktop retains the eight-question diagram. Neutral state removes the previous action.
+- [x] F2: The intake opening is a compact working header. At 390px, the first property-address input begins at 397px instead of 674px. The situation step uses the same 16 options in a native mobile selector. Owner context, Back/Continue edits, review, consent, failure/retry and actual receipt contracts remain.
+- [x] F4: Owner and representation routing, the founder introduction, the Nelson case-study invitation and partner opening use direct, supported language.
+- [x] F5: Privacy preferences state that marketing tracking is not used. New Accept/Save choices grant only the current analytics choice; stored consent schema and existing records remain compatible.
+- [x] F6: The original dark-mode emblem sits on a small paper ground. Mobile footer navigation uses three keyboard-operable disclosures; contact, policies and all identity text stay visible. At 390px the closed footer is 1,020px instead of 1,436px.
+- [x] Additional review: the 320px header now fits its wordmark and Menu action without squeezing or horizontal overflow.
+
+Local evidence covers 56 responsive/layout/accessibility states at 320, 390, 768 and 1440px in both themes, plus 1920/2560px owner views. All 17 rendered launch journeys and 46 light-mobile public route checks passed before the final focus-return refinement; the affected planning checks are repeated on the final build and required across the hosted release matrix. All 221 test files / 2,536 tests pass. TypeScript, production build, bundle budgets and all four deployment-entry runtime cases pass. After the final focus correction, all eight choices and Clear also pass at 390 × 667px; Clear returns to y=104px below the fixed header. Exact-source hosted CI is recorded on PR #26 after publication.
+
+The conservative lightest footer background under its navy overlay gives at least 4.94:1 for copper navigation text, 6.39:1 for muted text and 8.65:1 for contact links. Automated scans report no violations in the checked states; gradient-related incomplete checks are not a full accessibility certification. Reference comparisons retain the approved hero geometry, six-section hierarchy, Playfair/Inter typography, palette and original photographs.
+
+The cloud browser's local address resolved to an unrelated application, so that tab was closed. Rendered evidence uses the repository's Chromium workflow against this local production build, with explicit unavailable-backend and controlled receipt fixtures. These fixtures do not send live submissions. The existing protected-preview deployment path is checked after source publication; its result is recorded on PR #26 and the owner checklist. The separate website backend, actual intake/HQ/email receipts, configured Peggy/authentication and physical-device acceptance remain launch dependencies. No production or DNS changes are included.
+
 ## September 21: design refinish
 
 Apollo requested another serious design refinement. Fresh captures of `c25bbc0208a2a1a4dfe0507ad467fe5f15f258ae` covered Home, Property Owners, Deal Partners, Our Work, About, intake, Lab and Tools at 390, 768 and 1440px. This pass stays on the same branch and PR #26.

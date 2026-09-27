@@ -37,7 +37,7 @@ export function DealPartnersPage({ go: _go }: { go: Nav }) {
   const selectedNeedHref = `/bring-an-opportunity?intent=deal-jv&ref=deal-partners&partner_need=${encodeURIComponent(pick.label)}`;
   return <article className="experience-page dp">
     <PageOpening title="Bring the deal. Define the role." action={{ label: 'Bring a deal', href: '/bring-an-opportunity?intent=deal-jv' }} secondaryAction={{ label:'Share a partnership proposal', href:'/bring-an-opportunity?ref=deal-partners' }}>
-      <p>Share the property or project, what you bring, and what is missing. Pegasus considers participation case by case, subject to diligence, capacity, and written terms.</p>
+      <p>Share the property or project, your role, and the help you are looking for. Pegasus considers each proposal individually; participation requires separate written terms.</p>
     </PageOpening>
     <section className="ep-section" data-testid="missing-composer"><div className="experience-wrap">
       <h2>What does the deal need next?</h2>

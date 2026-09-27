@@ -14,7 +14,7 @@ afterEach(() => cleanup());
 describe('public design interactions', () => {
   it('connects a development selection to context and a real next step, and lets the visitor clear it', () => {
     render(<OpportunityPlan />);
-    const choice = screen.getByRole('button', { name: 'Development' });
+    const choice = screen.getByRole('button', { name: 'What work needs to happen?' });
     fireEvent.click(choice);
     expect(choice).toHaveAttribute('aria-pressed', 'true');
     expect(document.querySelector('.op-map-focus')).toHaveTextContent('Development');

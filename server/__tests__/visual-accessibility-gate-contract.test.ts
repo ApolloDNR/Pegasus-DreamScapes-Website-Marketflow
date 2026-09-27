@@ -875,7 +875,7 @@ describe("rendered visual-accessibility gate contract", () => {
     expect(interaction).toContain("/bring-an-opportunity");
     expect(interaction).toContain("await homepagePrimaryCta.click()");
     expect(interaction).toContain("await page.waitForURL(/\\/bring-an-opportunity$/)");
-    expect(interaction).toContain("name: 'Start with what you have.'");
+    expect(interaction).toContain("name: 'Bring an Opportunity'");
     expect(interaction).toContain("destinationHeading.waitFor({ state: 'visible' })");
     expect(interaction).not.toContain("nav a[");
   });

@@ -47,4 +47,24 @@ describe("cookie consent storage disclosures", () => {
     expect(screen.getByTestId("button-cookie-customize")).toHaveFocus();
     expect(window.localStorage.getItem(CONSENT_STORAGE_KEY)).toBeNull();
   });
+
+  it("offers only the active analytics purpose and never grants future marketing consent", () => {
+    render(<CookieConsent />);
+    act(() => vi.advanceTimersByTime(350));
+    fireEvent.click(screen.getByTestId("button-cookie-customize"));
+    expect(screen.queryByRole("switch", { name: "Marketing preference" })).not.toBeInTheDocument();
+    expect(screen.getByText("Marketing tracking is not used.")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("switch", { name: "Analytics preference" }));
+    fireEvent.click(screen.getByTestId("button-cookie-save"));
+    expect(JSON.parse(window.localStorage.getItem(CONSENT_STORAGE_KEY)!)).toMatchObject({ analytics: true, marketing: false });
+  });
+
+  it("leaves existing consent records unchanged until a visitor makes a new choice", () => {
+    const existing = JSON.stringify({ essential: true, analytics: false, marketing: true, decidedAt: '2026-09-01T00:00:00Z' });
+    window.localStorage.setItem(CONSENT_STORAGE_KEY, existing);
+    render(<CookieConsent />);
+    act(() => vi.advanceTimersByTime(350));
+    expect(screen.queryByTestId("cookie-consent-banner")).not.toBeInTheDocument();
+    expect(window.localStorage.getItem(CONSENT_STORAGE_KEY)).toBe(existing);
+  });
 });

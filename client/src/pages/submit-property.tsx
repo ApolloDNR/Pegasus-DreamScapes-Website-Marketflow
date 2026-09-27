@@ -11,7 +11,7 @@ import {
   readStrategyLabHandoff,
   type StrategyLabHandoffBrief,
 } from "@/pegasus/strategy-lab-handoff";
-import { ArrowLeft, ArrowRight, Check, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check, ChevronDown, Loader2 } from "lucide-react";
 
 /**
  * Bring an Opportunity — Master Blueprint v5.1 (§14, §31).
@@ -422,7 +422,10 @@ export default function SubmitPropertyPage() {
 
   useEffect(() => {
     if (result) return;
-    stepPromptRef.current?.focus();
+    // Keep the page identity, progress and current question clear of the fixed
+    // header. Native focus scrolling previously clipped the page title.
+    window.scrollTo({ top: 0, behavior: "auto" });
+    stepPromptRef.current?.focus({ preventScroll: true });
   }, [result, step]);
 
   useEffect(() => {
@@ -523,15 +526,9 @@ export default function SubmitPropertyPage() {
     <div className="intake-page min-h-screen pt-28 pb-24 px-6">
       <div className="mx-auto max-w-5xl">
         <div className="intake-opening max-w-3xl">
-          <p className="intake-label">
-            Bring an Opportunity
-          </p>
           <h1 className="font-serif text-4xl sm:text-5xl leading-tight text-[#0b1d29] dark:text-[#fcfaf6]">
-            Start with what you have.
+            Bring an Opportunity
           </h1>
-          <p className="mt-4 max-w-2xl text-[16px] leading-relaxed text-[#454b55] dark:text-[#cfc5b4]">
-            Share a property, contract, project, or plan. Partial information is fine; review and response are not promised.
-          </p>
           {utm.partnerNeed && (
             <p className="mt-3 text-sm leading-relaxed text-[#6b5f4d] dark:text-[#b9a888]">
               From Deal Partners: {utm.partnerNeed}
@@ -539,7 +536,6 @@ export default function SubmitPropertyPage() {
           )}
         </div>
 
-        <p className="intake-draft-note">Your entries stay on this page as you move between steps. Refreshing or leaving clears this form.</p>
         <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_290px] lg:items-start lg:gap-12">
         <div className="min-w-0">
         {/* progress */}
@@ -559,12 +555,13 @@ export default function SubmitPropertyPage() {
             </li>
           ))}
         </ol>
+        <p className="intake-draft-note">Entries stay here between steps. Leaving or refreshing clears this form.</p>
 
         <form
           noValidate
           data-testid="opportunity-intake-form"
           aria-busy={submit.isPending}
-          className="border-y border-[#c9bead] bg-transparent py-8 dark:border-[#35455a] sm:py-10"
+          className="intake-working-form border-y border-[#c9bead] bg-transparent dark:border-[#35455a]"
           onSubmit={(e) => {
             e.preventDefault();
             if (submit.isPending) return;
@@ -595,7 +592,7 @@ export default function SubmitPropertyPage() {
           )}
 
           {step === 1 && (
-            <fieldset className="space-y-6">
+            <fieldset className="space-y-5">
               <legend
                 ref={stepPromptRef}
                 tabIndex={-1}
@@ -604,11 +601,11 @@ export default function SubmitPropertyPage() {
               >
                 The property.
               </legend>
-              <p className="text-sm text-[#6b5f4d] dark:text-[#b9a888]">Share what you know. Partial information is fine.</p>
               <div>
                 <Label htmlFor="sp-address">Property address</Label>
                 <input id="sp-address" className={field} value={form.propertyAddress}
                   onChange={(e) => set({ propertyAddress: e.target.value })} placeholder="Street address" autoComplete="street-address" />
+                <p className="mt-3 text-sm text-[#6b5f4d] dark:text-[#b9a888]">Share what you know. Partial information is fine.</p>
               </div>
               <div className="grid gap-4 sm:grid-cols-3">
                 <div><Label htmlFor="sp-city">City</Label>
@@ -656,7 +653,17 @@ export default function SubmitPropertyPage() {
               >
                 The situation.
               </legend>
-              <ChoiceGrid options={SITUATIONS} value={form.situation} onPick={(v) => set({ situation: v })} cols={3} />
+              <div className="intake-situation-mobile">
+                <Label htmlFor="sp-situation">Choose the closest match</Label>
+                <div className="intake-select-wrap">
+                  <select id="sp-situation" className={field} value={form.situation} onChange={event => set({ situation: event.target.value })}>
+                    <option value="">Select a situation</option>
+                    {SITUATIONS.map(situation => <option key={situation}>{situation}</option>)}
+                  </select>
+                  <ChevronDown aria-hidden="true" size={18} />
+                </div>
+              </div>
+              <div className="intake-situation-desktop"><ChoiceGrid options={SITUATIONS} value={form.situation} onPick={(v) => set({ situation: v })} cols={3} /></div>
             </fieldset>
           )}
 

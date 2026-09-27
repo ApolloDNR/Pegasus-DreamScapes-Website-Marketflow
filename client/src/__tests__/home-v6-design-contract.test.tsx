@@ -62,8 +62,9 @@ describe('Blueprint v1.1 mounted homepage', () => {
     expect(section.queryByTestId('opportunity-plan')).not.toBeInTheDocument();
     fireEvent.click(section.getByRole('button', { name: 'Open the planning guide' }));
     const plan = within(await section.findByTestId('opportunity-plan'));
-    expect(plan.getAllByRole('button')).toHaveLength(8);
-    const capital = plan.getByRole('button', { name: 'Capital' });
+    const desktopChoices = within(plan.getByRole('group', { name: 'What is your deal missing?' }));
+    expect(desktopChoices.getAllByRole('button')).toHaveLength(8);
+    const capital = desktopChoices.getByRole('button', { name: 'What would funding require?' });
     fireEvent.click(capital);
     expect(capital).toHaveAttribute('aria-pressed', 'true');
     expect(plan.getByRole('link', { name: 'Model the assumptions' })).toHaveAttribute('href', '/strategy-lab');
