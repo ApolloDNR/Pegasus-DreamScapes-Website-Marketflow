@@ -6,6 +6,7 @@ import { scenarioDraft, resultDifference } from './scenario-model';
 import { SCENARIOS, SCENARIO_NAMES, DEFAULTS, NUMERIC_FIELDS, type Draft, type NumericField, type Workspace, type ScenarioId, type ScenarioPatch } from './state';
 import { Unavailable } from './Overview';
 import { FIELD_LABELS, FIELD_UNITS } from './Fields';
+import { WhatIf } from './WhatIf';
 
 const GRID_LANES: StrategyLane[] = ['flip', 'wholetail', 'brrrr', 'rental_hold', 'ground_up', 'wholesale'];
 function cellPatch(grid: SensitivityGrid, x: number, y: number): ScenarioPatch | null {
@@ -33,7 +34,7 @@ function shownInput(draft: Draft, key: NumericField): string {
   return ['acquisition', 'scope', 'arv', 'marketRent', 'insurance', 'hoa'].includes(key) ? money(parsed.value) : `${parsed.value}${FIELD_UNITS[key] ? ` ${FIELD_UNITS[key]}` : ''}`;
 }
 
-export function Scenarios({ workspace, analysis, selectedLane, onLane, onUse, onPreset, onReset, onApply, onEdit }: { workspace: Workspace; analysis: Analysis; selectedLane: StrategyLane | null; onLane: (lane: StrategyLane) => void; onUse: (id: ScenarioId) => void; onPreset: (id: 'conservative' | 'upside') => void; onReset: (id: 'conservative' | 'upside') => void; onApply: (patch: ScenarioPatch) => void; onEdit: () => void }) {
+export function Scenarios({ workspace, analysis, selectedLane, onLane, onUse, onPreset, onReset, onApply, onPreviewApply, onEdit }: { workspace: Workspace; analysis: Analysis; selectedLane: StrategyLane | null; onLane: (lane: StrategyLane) => void; onUse: (id: ScenarioId) => void; onPreset: (id: 'conservative' | 'upside') => void; onReset: (id: 'conservative' | 'upside') => void; onApply: (patch: ScenarioPatch) => void; onPreviewApply: (patch: ScenarioPatch, target: 'conservative' | 'upside') => void; onEdit: () => void }) {
   const runs = React.useMemo(() => SCENARIOS.map(id => ({ id, draft: scenarioDraft(workspace, id), analysis: analyzeDraft(scenarioDraft(workspace, id), new Date(0)) })), [workspace]);
   const [comparison, setComparison] = React.useState<'conservative' | 'upside'>(workspace.activeScenario === 'upside' ? 'upside' : 'conservative');
   const [cell, setCell] = React.useState<{ x: number; y: number; value: number } | null>(null);
@@ -51,6 +52,7 @@ export function Scenarios({ workspace, analysis, selectedLane, onLane, onUse, on
   return <>
     <p className="id-view-intro">Keep Base in view while testing one alternative. Presets are illustrative assumptions, never forecasts.</p>
     {analysis.status !== 'ready' && <Unavailable analysis={analysis} onEdit={onEdit} />}
+    <WhatIf base={workspace.base} onApply={(patch, target) => { onPreviewApply(patch, target); setComparison(target); }} />
     <section className="id-comparison" aria-label="Scenario comparison">
       <div className="id-comparison-header"><div><h3>Base compared with</h3><div className="id-comparison-picker" role="group" aria-label="Scenario to compare">{(['conservative', 'upside'] as const).map(id => <button type="button" key={id} aria-pressed={comparison === id} onClick={() => setComparison(id)}>{SCENARIO_NAMES[id]}</button>)}</div></div><p className="id-brief-scenario" role="status">Brief uses <strong>{SCENARIO_NAMES[active]}</strong></p></div>
       <p className="id-scenario-state">{SCENARIO_NAMES[comparison]}: {differences.length ? `${differences.length} assumption${differences.length === 1 ? '' : 's'} changed` : 'Same inputs as Base'}. Selecting a comparison does not change your brief.</p>

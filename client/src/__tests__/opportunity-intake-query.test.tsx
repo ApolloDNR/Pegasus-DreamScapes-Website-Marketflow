@@ -142,6 +142,7 @@ describe("Bring an Opportunity query contract", () => {
     fireEvent.click(screen.getByRole("button", { name: "Record Opportunity" }));
 
     await waitFor(() => expect(apiRequestMock).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(window.sessionStorage.getItem(STRATEGY_LAB_HANDOFF_SESSION_KEY)).toBeNull());
     const payload = apiRequestMock.mock.calls[0][2] as Record<string, unknown>;
     expect(payload.situation).toBe("Inherited / probate");
     expect(payload.notes).toContain("Owner situation: Inherited property");
@@ -182,7 +183,7 @@ describe("Bring an Opportunity query contract", () => {
     await waitFor(() => {
       expect(
         window.sessionStorage.getItem(STRATEGY_LAB_HANDOFF_SESSION_KEY),
-      ).toBeNull();
+      ).not.toBeNull();
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));

@@ -90,13 +90,14 @@ export function Peggy({
 }) {
   const panelId = useId();
   const fabRef = useRef<HTMLButtonElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
   const conversationAccessRef =
     useRef<PeggyConversationAccessResponse | null>(null);
 
+  const requestGeneration = useRef(0);
   const [messages, setMessages] = useState<ChatMessage[]>([{ role: 'assistant', content: GREETING }]);
   const [draft, setDraft] = useState('');
   const suppliedPromptRef = useRef<string | null>(null);
@@ -116,6 +117,13 @@ export function Peggy({
     if (!open) { suppliedPromptRef.current = null; return; }
     if (initialPrompt?.trim() && initialPrompt !== suppliedPromptRef.current) {
       suppliedPromptRef.current = initialPrompt;
+      requestGeneration.current += 1;
+      abortRef.current?.abort();
+      abortRef.current = null;
+      conversationAccessRef.current = null;
+      setMessages([{ role: 'assistant', content: GREETING }]);
+      setStreaming(false);
+      setErrored(false);
       setDraft(initialPrompt.trim());
     }
   }, [open, initialPrompt]);
@@ -178,7 +186,9 @@ export function Peggy({
   const send = useCallback(
     async (text: string) => {
       const content = text.trim();
-      if (!content || streaming) return;
+      if (!content || streaming || abortRef.current) return;
+      const generation = requestGeneration.current;
+      const currentRequest = () => requestGeneration.current === generation;
 
       setErrored(false);
       setDraft('');
@@ -205,6 +215,7 @@ export function Peggy({
             Partial<PeggyConversationAccessResponse> & {
               conversation?: Partial<PeggyConversationAccessResponse>;
             };
+          if (!currentRequest() || controller.signal.aborted) return;
           const id = conv?.id ?? conv?.conversation?.id;
           const rawAccessToken =
             conv?.accessToken ?? conv?.conversation?.accessToken;
@@ -222,9 +233,10 @@ export function Peggy({
         const credential = conversationAccessRef.current;
         if (!credential) throw new Error('No conversation access');
 
+        const requestCredential = { current: credential };
         const res = await peggyFetchWithSingleRefresh({
           fetcher: fetch,
-          credentialRef: conversationAccessRef,
+          credentialRef: requestCredential,
           input: '/api/peggy/chat',
           init: {
             method: 'POST',
@@ -238,9 +250,12 @@ export function Peggy({
           },
         });
 
+        if (!currentRequest() || controller.signal.aborted) return;
+        conversationAccessRef.current = requestCredential.current;
         if (!res.ok) throw new Error(`Peggy request failed: ${res.status}`);
 
         const data = (await res.json()) as { response?: string };
+        if (!currentRequest() || controller.signal.aborted) return;
         const reply = (data.response ?? '').trim() || FALLBACK;
         setMessages((prev) => {
           const copy = prev.slice();
@@ -248,7 +263,8 @@ export function Peggy({
           return copy;
         });
       } catch (err) {
-        if ((err as Error).name === 'AbortError') return;
+        if (!currentRequest() || controller.signal.aborted || (err as Error).name === 'AbortError') return;
+        setDraft(content);
         setErrored(true);
         setMessages((prev) => {
           const copy = prev.slice();
@@ -256,9 +272,11 @@ export function Peggy({
           return copy;
         });
       } finally {
-        setStreaming(false);
-        abortRef.current = null;
-        requestAnimationFrame(() => inputRef.current?.focus());
+        if (currentRequest()) {
+          setStreaming(false);
+          abortRef.current = null;
+          requestAnimationFrame(() => inputRef.current?.focus());
+        }
       }
     },
     [messages, streaming],
@@ -287,7 +305,7 @@ export function Peggy({
             <div className="pg-label !text-[13px] !tracking-normal text-[var(--accent-bright)] mt-1.5">AI intake assistant</div>
             <div className="flex items-center gap-1.5 mt-1.5" data-testid="peggy-status">
               <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent-bright)]" aria-hidden="true" />
-              <span className="pg-label !text-[13px] !tracking-normal normal-case text-[var(--cream)]/55">{PEGGY_STATUS}</span>
+              <span className="pg-label !text-[13px] !tracking-normal normal-case text-[var(--cream)]/75">{PEGGY_STATUS}</span>
             </div>
           </div>
           {conversationStarted && <SaveChatButton turns={transcriptTurns(messages)} />}
@@ -306,7 +324,7 @@ export function Peggy({
               <div key={i} className={`peggy-bubble ${isAssistant ? 'is-peggy' : 'is-user'}`}>
                 {text}
                 {isStreamingThis && !text && (
-                  <Loader2 className="w-4 h-4 animate-spin text-[var(--cream)]/55" strokeWidth={2} />
+                  <Loader2 className="w-4 h-4 animate-spin text-[var(--cream)]/75" strokeWidth={2} />
                 )}
                 {isStreamingThis && text && <span className="peggy-caret" aria-hidden="true" />}
               </div>
@@ -324,9 +342,9 @@ export function Peggy({
             </button>
           )}
 
-          {!conversationStarted && !pickedRole && (
+          {!conversationStarted && !initialPrompt && !pickedRole && (
             <>
-              <div className="pg-label !text-[13px] !tracking-normal text-[var(--cream)]/45 mt-1 mb-2.5">First, who am I helping?</div>
+              <div className="pg-label !text-[13px] !tracking-normal text-[var(--cream)]/75 mt-1 mb-2.5">First, who am I helping?</div>
               <div className="flex flex-col gap-2">
                 {PEGGY_ROLES.map((r) => (
                   <button key={r.role} type="button" onClick={() => setPickedRole(r.role)} className="peggy-chip text-left">{r.label}</button>
@@ -335,9 +353,9 @@ export function Peggy({
             </>
           )}
 
-          {!conversationStarted && pickedRole && (
+          {!conversationStarted && !initialPrompt && pickedRole && (
             <>
-              <div className="pg-label !text-[13px] !tracking-normal text-[var(--cream)]/45 mt-1 mb-2.5">Try one of these, or just type</div>
+              <div className="pg-label !text-[13px] !tracking-normal text-[var(--cream)]/75 mt-1 mb-2.5">Try one of these, or just type</div>
               <div className="flex flex-col gap-2">
                 {(PEGGY_ROLES.find((r) => r.role === pickedRole)?.chips ?? []).map((c) => (
                   <button key={c} type="button" onClick={() => send(c)} className="peggy-chip text-left">{c}</button>
@@ -364,8 +382,8 @@ export function Peggy({
               </button>
             </div>
           )}
-        <div className="px-5 pt-1 pb-2">
-          <div className="pg-label !text-[13px] !tracking-normal text-[var(--cream)]/40 mb-2">Or go straight to</div>
+        {(!initialPrompt || conversationStarted) && <><div className="px-5 pt-1 pb-2">
+          <div className="pg-label !text-[13px] !tracking-normal text-[var(--cream)]/75 mb-2">Or go straight to</div>
           <div className="flex flex-wrap gap-2">
             <button type="button" data-testid="peggy-route-strategylab" className="peggy-chip !py-1.5 !px-3"
               onClick={() => { toStrategyLab(); setOpen(false); }}>Strategy Lab</button>
@@ -377,16 +395,17 @@ export function Peggy({
               onClick={() => { go('marketflow'); setOpen(false); }}>MarketFlow</button>
           </div>
         </div>
-        <div className="pg-label !text-[13px] !tracking-normal normal-case text-[var(--cream)]/45 px-5 pt-1 text-center" data-testid="peggy-compliance">
+        <div className="pg-label !text-[13px] !tracking-normal normal-case text-[var(--cream)]/75 px-5 pt-1 text-center" data-testid="peggy-compliance">
           {PEGGY_COMPLIANCE}
         </div>
-        <div className="pg-label !text-[13px] !tracking-normal normal-case text-[var(--cream)]/35 px-5 pb-4 pt-2 text-center">
+        <div className="pg-label !text-[13px] !tracking-normal normal-case text-[var(--cream)]/75 px-5 pb-4 pt-2 text-center">
           {PEGGY_SLA}
-        </div>
+        </div></>}
         </div>
 
+        {initialPrompt && !conversationStarted && <p className="peggy-context-note">Review your prepared message. This starts a fresh conversation; nothing is sent until you choose Send.</p>}
         <form className="peggy-input" onSubmit={(e) => { e.preventDefault(); send(draft); }}>
-          <input ref={inputRef} type="text" aria-label="Talk to Peggy" placeholder="Describe your deal..."
+          <textarea ref={inputRef} aria-label="Talk to Peggy" placeholder="Describe your deal..." rows={initialPrompt ? 4 : 2} maxLength={4000}
             value={draft} onChange={(e) => setDraft(e.target.value)} disabled={streaming} />
           <button type="submit" aria-label="Send" disabled={streaming || !draft.trim()}>
             {streaming ? <Loader2 className="w-4 h-4 animate-spin" strokeWidth={2} /> : <Send className="w-4 h-4" strokeWidth={1.7} />}

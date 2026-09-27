@@ -345,6 +345,7 @@ describe("Peggy — handoff action buttons", () => {
     expect(fetchMock.mock.calls.filter(([input]) =>
       String(input).endsWith("/access/refresh"),
     )).toHaveLength(1);
-    expect(screen.getAllByText("fail closed once")).toHaveLength(1);
+    expect(screen.getAllByText("fail closed once", { selector: ".peggy-bubble.is-user" })).toHaveLength(1);
+    expect(screen.getByRole("textbox", { name: "Talk to Peggy" })).toHaveValue("fail closed once");
   });
 });

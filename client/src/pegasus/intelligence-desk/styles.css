@@ -413,3 +413,65 @@
   .id-memo-provenance { color:#333; }
   .id-memo li { break-inside:avoid; }
 }
+
+/* Experience elevation: one reversible preview, using the established desk tokens. */
+.id-property-actions { display:flex; gap:20px; }
+.id-property-actions .id-text-button { font-size:13px; min-height:36px; }
+.id-desk .id-property-context { font-size:13px; padding:14px 0 0; }
+.id-context-review { border-block:1px solid var(--id-rule); padding:24px 0; margin-bottom:24px; }
+.id-context-review h2 { margin-bottom:12px; }
+.id-context-review p { margin-bottom:12px; max-width:78ch; }
+.id-whatif { border-block:1px solid var(--id-rule); margin-bottom:40px; padding:28px 0; }
+.id-whatif > header { margin-bottom:24px; }
+.id-whatif > header p { max-width:68ch; margin-top:8px; }
+.id-whatif-layout { display:grid; grid-template-columns:minmax(220px,.8fr) minmax(0,1.4fr); gap:40px; }
+.id-whatif-controls { display:flex; flex-direction:column; gap:8px; }
+.id-whatif-controls label,.id-whatif-apply label { font-size:14px; font-weight:500; }
+.id-whatif-controls label:not(:first-child) { margin-top:12px; }
+.id-desk .id-whatif-controls input[type='range'] { appearance:auto; padding:0; border:0; background:transparent; accent-color:var(--id-accent); min-height:44px; cursor:pointer; }
+.id-whatif-controls .id-text-button { align-self:flex-start; }
+.id-whatif-results { border-left:1px solid var(--id-rule); padding-left:32px; }
+.id-whatif-metric { margin-bottom:24px; }
+.id-whatif-metric h4 { margin-bottom:10px; }
+.id-whatif-metric dl > div { display:grid; grid-template-columns:70px minmax(0,1fr) auto; align-items:center; gap:14px; margin:10px 0; }
+.id-whatif-metric dt { font-size:13px; color:var(--id-muted); }
+.id-whatif-metric dd { grid-column:3; font-size:20px; font-weight:500; }
+.id-whatif-track { grid-row:1; grid-column:2; position:relative; height:16px; background:var(--experience-limestone); }
+.id-whatif-track span { position:absolute; height:100%; background:var(--id-muted); }
+.id-whatif-track span[data-preview='true'] { background:var(--id-accent); }
+.id-whatif-track i { position:absolute; height:24px; top:-4px; width:1px; background:var(--id-ink); z-index:1; }
+.id-whatif-path { border-top:1px solid var(--id-rule); padding-top:18px; margin-bottom:18px; }
+.id-whatif-path > p:first-of-type { display:flex; align-items:center; flex-wrap:wrap; gap:8px 12px; margin-top:10px; }
+.id-whatif-path svg { width:16px; height:16px; }
+.id-whatif-why { margin-top:24px; border-top:1px solid var(--id-rule); padding-top:12px; }
+.id-whatif-why summary { min-height:44px; padding:10px 0; font-size:14px; cursor:pointer; color:var(--id-accent); }
+.id-whatif-why p { margin:10px 0; max-width:85ch; font-size:14px; }
+.id-whatif-apply { display:flex; flex-wrap:wrap; align-items:flex-end; gap:16px; margin-top:16px; }
+.id-whatif-apply label { display:grid; gap:8px; min-width:190px; }
+.id-whatif-apply p { flex-basis:100%; }
+.id-desk button:disabled { opacity:.55; cursor:not-allowed; }
+.id-peggy-help { max-width:960px; margin:28px auto 0; padding:24px 0; border-block:1px solid var(--id-rule); }
+.id-peggy-help p { margin:10px 0; }
+.id-memo-context { padding-top:20px; }
+@media(max-width:767px) {
+  .id-whatif-layout { grid-template-columns:1fr; gap:24px; }
+  .id-whatif-results { border-left:0; border-top:1px solid var(--id-rule); padding:24px 0 0; }
+  .id-whatif-metric dl > div { grid-template-columns:56px minmax(0,1fr) auto; gap:10px; }
+  .id-whatif-metric dd { font-size:19px; }
+  .id-whatif-apply > :is(label,button) { width:100%; }
+}
+@media print {
+  .id-property-context,.id-context-review,.id-peggy-help { display:none !important; }
+  .id-memo .id-memo-context { padding-top:8px; }
+  .id-memo-summary h3 { margin-top:12px; margin-bottom:6px; }
+  .id-memo-summary li { margin-bottom:7px; }
+  .id-memo-summary .id-memo-next { margin:12px 0; }
+  .id-memo-summary .id-rule { font-size:9pt; line-height:1.35; }
+}
+.id-funding-bar span[data-muted='true'] { opacity:.3; }
+.id-funding-bar span[data-selected='true'] { outline:2px solid var(--id-ink); outline-offset:3px; }
+.id-funding-legend button[aria-pressed='true'] { text-decoration:underline; text-underline-offset:4px; }
+.id-assumption-next { border-top:1px solid var(--id-rule); padding-top:16px; }
+.id-assumption-next h4 { margin-bottom:8px; }
+.id-whatif-track i small { position:absolute; top:-14px; left:0; transform:translateX(-50%); font:400 11px/1 var(--pg-font-ui); color:var(--id-muted); }
+.id-whatif-metric dl > div { margin:20px 0 12px; }

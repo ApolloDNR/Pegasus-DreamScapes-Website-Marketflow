@@ -4,6 +4,8 @@ import { apiRequest } from "@/lib/queryClient";
 import { readOpportunityReceipt } from "@/lib/lead-receipt";
 import { trackEvent } from "@/lib/analytics";
 import { useSEO } from "@/hooks/use-seo";
+import { normalizeOwnerSituation } from "@/pegasus/owner-context";
+export { normalizeOwnerSituation } from "@/pegasus/owner-context";
 import { normalizePartnerNeed } from "@/pegasus/partner-intake-context";
 import {
   clearStrategyLabHandoff,
@@ -63,18 +65,6 @@ const INTENT_TO_VISITOR: Record<string, string> = {
   buyer: "buyer",
 };
 
-const OWNER_SITUATION_TO_INTAKE: Record<string, string> = {
-  "Significant repairs": "Major repairs",
-  "Vacant property": "Vacant",
-  "Inherited property": "Inherited / probate",
-  "Unfinished construction": "Unfinished project",
-  "Tenant or occupancy issues": "Tenant issue",
-  "Code or permit concerns": "Other",
-  "Time-sensitive sale": "Other",
-  "ADU or development potential": "Other",
-  "A listing that is not working": "Other",
-};
-
 const STRATEGY_LAB_PROPERTY_TYPE_TO_INTAKE: Record<string, string> = {
   "Single-family residence": "Single-family",
   "single_family": "Single-family",
@@ -116,6 +106,7 @@ function strategyLabPrefill(
   if (!brief) return {};
   return {
     propertyAddress: brief.address ?? "",
+    city: brief.city ?? "",
     propertyType: knownIntakeChoice(
       brief.propertyType,
       PROPERTY_TYPES,
@@ -131,25 +122,13 @@ function strategyLabPrefill(
       CONDITIONS,
       STRATEGY_LAB_CONDITION_TO_INTAKE,
     ),
-    situation: knownIntakeChoice(
+    situation: normalizeOwnerSituation(brief.ownerSituation ?? null).situation || knownIntakeChoice(
       brief.situation,
       SITUATIONS,
       STRATEGY_LAB_SITUATION_TO_INTAKE,
     ),
     estimatedValue:
       brief.arvEstimate !== undefined ? String(brief.arvEstimate) : "",
-  };
-}
-
-export function normalizeOwnerSituation(rawValue: string | null): {
-  situation: string;
-  sourceLabel: string;
-} {
-  const bounded = (rawValue ?? "").slice(0, 160);
-  const situation = OWNER_SITUATION_TO_INTAKE[bounded] ?? "";
-  return {
-    situation,
-    sourceLabel: situation ? bounded : "",
   };
 }
 
@@ -269,7 +248,7 @@ export default function SubmitPropertyPage() {
         : "",
     };
   }, []);
-  const [strategyLabBrief] = useState<StrategyLabHandoffBrief | null>(() =>
+  const [strategyLabBrief, setStrategyLabBrief] = useState<StrategyLabHandoffBrief | null>(() =>
     utm.referralReference === "strategy-lab"
       ? readStrategyLabHandoff()
       : null,
@@ -278,10 +257,6 @@ export default function SubmitPropertyPage() {
     () => strategyLabPrefill(strategyLabBrief),
     [strategyLabBrief],
   );
-
-  useEffect(() => {
-    if (strategyLabBrief) clearStrategyLabHandoff();
-  }, [strategyLabBrief]);
 
   // A lane CTA that already answered the §14 question lands mid-flow.
   const [step, setStep] = useState(utm.preVisitor ? 1 : 0);
@@ -331,38 +306,42 @@ export default function SubmitPropertyPage() {
     setContactValidationMessage("");
   };
 
+  const intakeArv = form.estimatedValue
+    ? Number(form.estimatedValue.replace(/[^0-9.]/g, ""))
+    : undefined;
+  const labFactsChanged = Boolean(strategyLabBrief) && (
+    form.propertyAddress !== (labPrefill.propertyAddress || "") ||
+    form.city !== (labPrefill.city || "") ||
+    form.propertyType !== (labPrefill.propertyType || "") ||
+    form.occupancyStatus !== (labPrefill.occupancyStatus || "") ||
+    form.condition !== (labPrefill.condition || "") ||
+    form.situation !== (labPrefill.situation || "") ||
+    intakeArv !== strategyLabBrief?.arvEstimate
+  );
+  const strategyLabSummary = strategyLabBrief
+    ? formatStrategyLabHandoffSummary({
+        ...strategyLabBrief,
+        address: form.propertyAddress || undefined,
+        city: form.city || undefined,
+        ownerSituation: form.situation === labPrefill.situation ? strategyLabBrief.ownerSituation : undefined,
+        propertyType: form.propertyType || undefined,
+        occupancy: form.occupancyStatus || undefined,
+        condition: form.condition || undefined,
+        situation: form.situation || undefined,
+        arvEstimate: intakeArv,
+        topLaneLabel: labFactsChanged ? undefined : strategyLabBrief.topLaneLabel,
+        topLaneVerdict: labFactsChanged ? undefined : strategyLabBrief.topLaneVerdict,
+        primaryMetric: labFactsChanged ? undefined : strategyLabBrief.primaryMetric,
+        memoNextStep: labFactsChanged
+          ? "Intake facts changed after the Strategy Lab read; rerun the automated path comparison with the updated inputs before relying on it."
+          : strategyLabBrief.memoNextStep,
+      })
+    : undefined;
+
   const submitInFlight = useRef(false);
   const submit = useMutation({
     mutationFn: async () => {
       const mapped = VISITOR_VALUE_MAP[form.visitorType];
-      const intakeArv = form.estimatedValue
-        ? Number(form.estimatedValue.replace(/[^0-9.]/g, ""))
-        : undefined;
-      const labFactsChanged = Boolean(strategyLabBrief) && (
-        form.propertyAddress !== (labPrefill.propertyAddress || "") ||
-        form.propertyType !== (labPrefill.propertyType || "") ||
-        form.occupancyStatus !== (labPrefill.occupancyStatus || "") ||
-        form.condition !== (labPrefill.condition || "") ||
-        form.situation !== (labPrefill.situation || "") ||
-        intakeArv !== strategyLabBrief?.arvEstimate
-      );
-      const strategyLabSummary = strategyLabBrief
-        ? formatStrategyLabHandoffSummary({
-            ...strategyLabBrief,
-            address: form.propertyAddress || undefined,
-            propertyType: form.propertyType || undefined,
-            occupancy: form.occupancyStatus || undefined,
-            condition: form.condition || undefined,
-            situation: form.situation || undefined,
-            arvEstimate: intakeArv,
-            topLaneLabel: labFactsChanged ? undefined : strategyLabBrief.topLaneLabel,
-            topLaneVerdict: labFactsChanged ? undefined : strategyLabBrief.topLaneVerdict,
-            primaryMetric: labFactsChanged ? undefined : strategyLabBrief.primaryMetric,
-            memoNextStep: labFactsChanged
-              ? "Intake facts changed after the Strategy Lab read; rerun the automated path comparison with the updated inputs before relying on it."
-              : strategyLabBrief.memoNextStep,
-          })
-        : undefined;
       const res = await apiRequest("POST", "/api/opportunities", {
         hp_company: hp,
         ts_elapsed_ms: Date.now() - startedAt.current,
@@ -409,6 +388,7 @@ export default function SubmitPropertyPage() {
       trackEvent("submit_property_completed", { visitor_type: form.visitorType });
       setRetrying(false);
       setAnnouncement(`Submission received. Reference ${data.id}.`);
+      clearStrategyLabHandoff();
       setResult(data);
       window.scrollTo({ top: 0, behavior: "auto" });
     },
@@ -529,6 +509,7 @@ export default function SubmitPropertyPage() {
           <h1 className="font-serif text-4xl sm:text-5xl leading-tight text-[#0b1d29] dark:text-[#fcfaf6]">
             Bring an Opportunity
           </h1>
+          {(utm.ownerSituationLabel || strategyLabBrief?.ownerSituation) && <p className="mt-3 text-sm leading-relaxed text-[#6b5f4d] dark:text-[#b9a888]">Starting with {utm.ownerSituationLabel || strategyLabBrief?.ownerSituation}. Add what you know; you can edit the situation before sending.</p>}
           {utm.partnerNeed && (
             <p className="mt-3 text-sm leading-relaxed text-[#6b5f4d] dark:text-[#b9a888]">
               From Deal Partners: {utm.partnerNeed}
@@ -698,7 +679,8 @@ export default function SubmitPropertyPage() {
                   ['Property or area', (form.propertyAddress || form.city || form.zipCode) ? [form.propertyAddress, form.city, form.state, form.zipCode].filter(Boolean).join(', ') : 'Not provided', 1],
                   ['Situation', form.situation || 'Not provided', 2],
                   ['Goal', form.goal || 'Not provided', 3],
-                ].map(([label,value,target]) => <div key={String(label)}><dt>{label}</dt><dd>{value}</dd><button type="button" onClick={() => moveToStep(Number(target))} aria-label={`Edit ${label}`}>Edit</button></div>)}</dl>
+                ].map(([label,value,target]) => <div key={String(label)}><dt>{label}</dt><dd><span>{value}</span><button type="button" onClick={() => moveToStep(Number(target))} aria-label={`Edit ${label}`}>Edit</button></dd></div>)}</dl>
+                {strategyLabBrief && <div className="intake-lab-review"><h3>Included Strategy Lab summary</h3><p>{strategyLabSummary}</p><p>Property facts edited here take precedence. The model is not rerun by this form.</p><button type="button" onClick={() => { clearStrategyLabHandoff(); setStrategyLabBrief(null); }}>Remove Lab summary</button><p>Removing the summary keeps the property fields you have already entered.</p></div>}
               </details>
               <p id="sp-contact-requirements" className="text-sm leading-relaxed text-[#6b5f4d] dark:text-[#b9a888]">
                 Full name, email, and contact consent are required. Phone and scheduling details are optional.

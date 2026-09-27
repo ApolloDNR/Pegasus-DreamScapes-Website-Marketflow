@@ -4,6 +4,7 @@ import type { Nav } from './theme';
 import { ResponsiveChoiceList } from './responsive-choice-list';
 import { PageAction, PageOpening, PageClosing, ProjectEvidence } from './experience-page';
 import { REPRESENTATION_NOTICE } from './public-content';
+import { PropertySketch } from './property-sketch';
 
 type Situation = { label: string; path: string; limit: string };
 
@@ -45,7 +46,9 @@ export function PropertyOwnersPage({ go: _go }: { go: Nav }) {
           <ResponsiveChoiceList id="owner-situation" label="Common owner situations" options={SITUATIONS} value={idx} onChange={selectSituation} controls="owner-path" className="ep-choices" itemClassName="ep-choice" />
           <div className="ep-choice-answer" id="owner-path" aria-live="polite" aria-atomic="true">
             <h3>{SITUATIONS[idx].label}</h3><p>{SITUATIONS[idx].path}</p>
-            <PageAction href={selectedSituationHref}>Start with this situation</PageAction>
+            <div className="ep-context-actions"><PageAction href={selectedSituationHref}>Start with this situation</PageAction>
+            <PageAction href={`/strategy-lab?owner_situation=${encodeURIComponent(SITUATIONS[idx].label)}`} secondary>Explore the numbers first</PageAction></div>
+            <div className="ep-property-context"><PropertySketch focus={[2, 4, 6, 8].includes(idx) ? 'access' : [5, 7].includes(idx) ? 'site' : 'scope'} /><p>{[2, 4, 6, 8].includes(idx) ? 'Ownership · Access · Timing' : [5, 7].includes(idx) ? 'Site · Permits · Intended use' : 'Condition · Scope · Current use'}<small>Questions to establish for your property.</small></p></div>
             <p className="ep-notice">{SITUATIONS[idx].limit}</p>
           </div>
         </div>

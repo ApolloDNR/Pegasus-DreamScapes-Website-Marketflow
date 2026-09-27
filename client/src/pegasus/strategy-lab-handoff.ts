@@ -10,6 +10,9 @@ const SUMMARY_LABEL =
 
 export type StrategyLabHandoffInput = {
   address?: string;
+  city?: string;
+  ownerSituation?: string;
+  planningObjective?: string;
   propertyType?: string;
   occupancy?: string;
   condition?: string;
@@ -37,6 +40,9 @@ export type StrategyLabHandoffBrief = StrategyLabHandoffInput & {
 
 const TEXT_LIMITS = {
   address: 500,
+  city: 180,
+  ownerSituation: 160,
+  planningObjective: 180,
   propertyType: 80,
   occupancy: 80,
   condition: 80,
@@ -221,6 +227,9 @@ export function formatStrategyLabHandoffSummary(
 ): string {
   const parts: string[] = [];
   if (brief.scenario) parts.push(`Scenario: ${brief.scenario.charAt(0).toUpperCase()}${brief.scenario.slice(1)}`);
+  if (brief.ownerSituation) parts.push(`Owner situation: ${brief.ownerSituation}`);
+  if (brief.planningObjective) parts.push(`Planning objective: ${brief.planningObjective}`);
+  if (brief.city) parts.push(`City: ${brief.city}`);
   if (brief.illustrative) parts.push('Synthetic example with editable assumptions');
   if (brief.modelAssumptions) parts.push(`Model assumptions: ${brief.modelAssumptions}`);
   if (brief.address) parts.push(`Address: ${brief.address}`);

@@ -4,6 +4,7 @@ import { cleanup, fireEvent, render, screen, within } from '@testing-library/rea
 import userEvent from '@testing-library/user-event';
 import { OpportunityPlan } from '@/pegasus/opportunity-plan';
 import { PropertyOwnersPage } from '@/pegasus/property-owners';
+import { NELSON_PAIRS } from '@/pegasus/nelson-gallery-data';
 import { ProjectGallery } from '@/pegasus/project-gallery';
 import FAQ from '@/pages/faq';
 import { FAQ_SECTIONS } from '@shared/faq-data';
@@ -12,6 +13,19 @@ vi.mock('@/hooks/use-seo', () => ({ useSEO: vi.fn() }));
 afterEach(() => cleanup());
 
 describe('public design interactions', () => {
+  it('ties the inspection controls to documented details on the original photograph', () => {
+    render(<ProjectGallery pairs={NELSON_PAIRS} finishes={[]} />);
+    const toggle = screen.getByRole('button', { name: 'See what changed in the kitchen' });
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    const choices = screen.getByRole('group', { name: 'The kitchen photo details' });
+    fireEvent.click(within(choices).getByRole('button', { name: '3 Statement hood' }));
+    expect(screen.getByText('The dark hood sits above the island cooktop in the finished kitchen.')).toBeVisible();
+    expect(document.querySelector('.ow-detail-marker[data-active="true"]')).toHaveTextContent('3');
+    fireEvent.click(screen.getByRole('button', { name: 'Hide details in the kitchen' }));
+    expect(screen.queryByRole('group', { name: 'The kitchen photo details' })).not.toBeInTheDocument();
+  });
+
   it('connects a development selection to context and a real next step, and lets the visitor clear it', () => {
     render(<OpportunityPlan />);
     const choice = screen.getByRole('button', { name: 'What work needs to happen?' });

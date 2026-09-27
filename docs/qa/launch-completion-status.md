@@ -1,5 +1,15 @@
 # Pegasus website continuation status
 
+## September 27: approved experience elevation
+
+Apollo approved the Pegasus Experience Elevation Plan and requested a persistent checklist and a completed/pending report whenever work stops. This pass starts from `fc37a613ee6439f4090149ccd407551a33c4e037` on the existing recovery branch and draft PR #26. The active ledger is [experience-elevation-checklist.md](experience-elevation-checklist.md).
+
+Completed locally: reviewable owner context and working-property continuity; canonical What-if preview with deliberate scenario Apply/Undo; native explanatory property diagrams; documented Nelson photo inspection; shared control/reduced-motion behavior; three contextual Peggy intents with editable drafts, no automatic send, stale-response isolation and failure recovery; visible inquiry context/removal with Back/Forward continuity; situation/scenario-consistent brief, Copy and print. The approved identity, six Home sections, original photographs, nine paths, eight calculators and consent/receipt/private-access contracts remain.
+
+Validation: TypeScript, 223 files / 2,548 tests, production build, bundle budgets and all four runtime cases pass. The new journey passes 48 width/theme/accessibility states; all 17 existing rendered journeys and 46 light-mobile route checks pass. Final-build extras verify actual three-page A4 output without backgrounds, copied amounts, a short Peggy viewport and 200% text reflow. Initial JavaScript is 399,615 bytes raw / 119,707 bytes gzip, only 236 gzip bytes above the parent. Detailed fixes, limits and source reproduction commands are in the ledger.
+
+Publication and exact-source hosted CI are recorded on PR #26 and the owner report after this commit is created. The existing protected preview must be verified against the new source before delivery is claimed. Its deployment action was previously unavailable; one authorized attempt follows CI. Configured Peggy, intake/HQ/email/authentication acceptance, physical-device review and consenting task observation remain open. No production, merge, DNS or indexability change is included.
+
 ## September 27: final composition and planning clarity
 
 This continuation starts from `227a2261d82f74bf50320d30f8c21410cd8b7e11` on the same recovery branch and draft PR #26. Apollo requested completion of the remaining premium design review. Fresh production-build screenshots cover the complete Home composition, Tools, empty Lab, intake, Property Owners and representation at 390, 768 and 1440px. The approved six-section story, cream/navy/copper palette, Playfair/Inter typography and original photographs remain.

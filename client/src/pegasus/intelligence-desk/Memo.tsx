@@ -8,6 +8,9 @@ import { nextReadText, metricExplanation } from './read-guidance';
 
 const RENTAL_FLAGS = new Set(['dscr-worst-fail', 'cash-flow-negative', 'dscr-base-thin', 'rent-yield-low', 'rental-income-unavailable']);
 const BOUNDARY = 'Preliminary automated model, not a valuation, appraisal, professional advice, lending offer or commitment. Intake does not guarantee review, response, routing, an offer or a timeline.';
+export type PeggyIntent = 'explain' | 'missing' | 'inquiry';
+const PEGGY_INTENTS: Record<PeggyIntent, string> = { explain: 'Explain this result and its sensitive assumptions.', missing: 'Help me identify the missing information and the next evidence to gather.', inquiry: 'Help me prepare a concise inquiry from these facts. Keep unknowns explicit and do not send an inquiry for me.' };
+
 function operatingBrief(analysis: ReadyAnalysis): string {
   return `Vacancy ${analysis.options.vacancyPctBase}%; management ${analysis.options.managementPct}%; property tax ${analysis.property.monthlyTaxAnnualPct ?? DEFAULTS.taxRate}% annually; insurance ${money(analysis.property.monthlyInsurance ?? Number(DEFAULTS.insurance))}/month; homeowners association fees ${money(analysis.property.monthlyHoa ?? Number(DEFAULTS.hoa))}/month. Base repairs 8% and capital expenditure 5% of collected rent.`;
 }
@@ -32,17 +35,27 @@ function financingBrief(analysis: ReadyAnalysis): string {
   return `Acquisition loan: ${analysis.options.loanLtvPct}% of purchase basis, ${analysis.options.loanRatePct}% annual interest, ${analysis.options.loanTermYears} years. Closing reserve: ${analysis.options.closingReservePct}% of basis.`;
 }
 
-export function peggyBrief(draft: Draft, analysis: ReadyAnalysis, scenario: ScenarioId): string {
+export function peggyModelContext(draft: Draft, analysis: ReadyAnalysis, scenario: ScenarioId) {
+  return { schemaVersion: 1 as const, scenario, engineVersion: analysis.presentation.engineVersion,
+    generatedAt: analysis.presentation.generatedAt, source: draft.illustrative ? 'synthetic' : 'visitor_entered_unverified',
+    situation: draft.ownerSituation || draft.situation, objective: draft.objective,
+    cashRequired: analysis.presentation.totalCashIn, monthlyCashFlow: analysis.rentalMetrics.monthlyCashFlow ?? null };
+}
+
+export function peggyBrief(draft: Draft, analysis: ReadyAnalysis, scenario: ScenarioId, intent: PeggyIntent = 'explain'): string {
+  const context = peggyModelContext(draft, analysis, scenario);
   return [
+    PEGGY_INTENTS[intent],
+    `Situation: ${context.situation}. Planning objective: ${context.objective}.`,
     `Help me understand this ${SCENARIO_NAMES[scenario]} Strategy Lab scenario. ${draft.illustrative ? 'Synthetic example, not a real submitted property.' : 'Visitor-entered inputs, unverified.'}`,
     `Property: ${JSON.stringify(draft.address || draft.city || 'Unnamed property')}. Basis ${money(analysis.property.purchasePrice)}; scope ${analysis.property.rehabBudget === undefined ? 'Unreported' : money(analysis.property.rehabBudget)}; exit value ${money(analysis.property.arvEstimate)}; rent ${money(analysis.property.marketRent)}/month.`,
     finding(analysis),
-    `Cash required ${money(analysis.presentation.totalCashIn)}${analysis.missing.includes('scope') ? ', excluding unreported scope' : ''}. ${financingBrief(analysis)}`,
+    `Cash required ${money(context.cashRequired)}${analysis.missing.includes('scope') ? ', excluding unreported scope' : ''}. ${financingBrief(analysis)}`,
     operatingBrief(analysis),
     ...criticalUnknowns(draft, analysis),
     `Next check: ${nextReadText(draft, analysis)} Engine ${analysis.presentation.engineVersion}, generated ${analysis.presentation.generatedAt}.`,
     'Explain sensitive assumptions and missing evidence. This automated preliminary model is not a valuation, professional advice, financing offer or commitment.',
-  ].join(' ').slice(0, 3900);
+  ].join('\n\n').slice(0, 3900);
 }
 
 export function memoText(draft: Draft, analysis: ReadyAnalysis, scenario: ScenarioId, diligence: string[]): string {
@@ -50,6 +63,7 @@ export function memoText(draft: Draft, analysis: ReadyAnalysis, scenario: Scenar
   return [
     'Pegasus Dreamscapes | Strategy Lab decision brief',
     `${draft.address || draft.city || 'Unnamed property'} | ${SCENARIO_NAMES[scenario]} scenario`,
+    `Situation: ${draft.ownerSituation || draft.situation}. Planning objective: ${draft.objective}.`,
     draft.illustrative ? 'Illustrative example with synthetic inputs.' : 'Visitor-entered assumptions, unverified.',
     `What the model shows: ${finding(analysis)}`,
     `Key numbers: acquisition basis ${money(analysis.property.purchasePrice)}; scope ${analysis.property.rehabBudget === undefined ? 'Unreported' : money(analysis.property.rehabBudget)}; entered exit value ${money(analysis.property.arvEstimate)}; monthly rent ${money(analysis.property.marketRent)}; modeled cash required ${money(snapshot.totalCashIn)}${analysis.missing.includes('scope') ? ' (excludes unknown scope)' : ''}.`,
@@ -67,7 +81,7 @@ export function memoText(draft: Draft, analysis: ReadyAnalysis, scenario: Scenar
   ].join('\n\n');
 }
 
-export function Memo({ draft, analysis, scenario, diligence, onCopy, onPrint, onIntake, onPeggy, onEdit }: { draft: Draft; analysis: Analysis; scenario: ScenarioId; diligence: string[]; onCopy: (text: string) => void; onPrint: () => void; onIntake: () => void; onPeggy: () => void; onEdit: () => void }) {
+export function Memo({ draft, analysis, scenario, diligence, onCopy, onPrint, onIntake, onPeggy, onEdit }: { draft: Draft; analysis: Analysis; scenario: ScenarioId; diligence: string[]; onCopy: (text: string) => void; onPrint: () => void; onIntake: () => void; onPeggy: (intent?: PeggyIntent) => void; onEdit: () => void }) {
   const appendix = React.useRef<HTMLDetailsElement>(null);
   const wasOpen = React.useRef(false);
   React.useEffect(() => {
@@ -83,6 +97,7 @@ export function Memo({ draft, analysis, scenario, diligence, onCopy, onPrint, on
     <section className="id-memo" aria-label="Decision brief">
       <header><p>Pegasus Dreamscapes / Strategy Lab</p><h2>{draft.address || draft.city || 'Property decision brief'}</h2><p>{SCENARIO_NAMES[scenario]} scenario · {draft.illustrative ? 'Synthetic example' : 'Visitor-entered assumptions'}</p></header>
       <div className="id-memo-summary">
+        <p className="id-memo-context"><strong>{draft.ownerSituation || draft.situation}</strong><br />{draft.objective}</p>
         <h3>What the model shows</h3><p className="id-memo-finding">{finding(analysis)}</p>
         <h3>Key numbers</h3><dl className="id-memo-numbers"><div><dt>Acquisition basis</dt><dd>{money(analysis.property.purchasePrice)}</dd></div><div><dt>Scope budget</dt><dd>{analysis.property.rehabBudget === undefined ? 'Unreported' : money(analysis.property.rehabBudget)}</dd></div><div><dt>Entered exit value</dt><dd>{money(analysis.property.arvEstimate)}</dd></div><div><dt>Entered monthly rent</dt><dd>{money(analysis.property.marketRent)}</dd></div><div><dt>Modeled cash required</dt><dd>{money(snapshot.totalCashIn)}{analysis.missing.includes('scope') && <small>Excludes unreported scope</small>}</dd></div></dl>
         <h3>Critical unknowns</h3><ul>{criticalUnknowns(draft, analysis).map(text => <li key={text}>{text}</li>)}</ul>
@@ -100,6 +115,7 @@ export function Memo({ draft, analysis, scenario, diligence, onCopy, onPrint, on
       </div></details>
       <p className="id-caption id-memo-provenance">Engine {snapshot.engineVersion} · Generated {new Date(snapshot.generatedAt).toLocaleString()}.</p>
     </section>
-    <div className="id-actions id-memo-actions"><button type="button" className="id-button" onClick={() => onCopy(memoText(draft, analysis, scenario, diligence))}><Copy aria-hidden="true" />Copy summary</button><button type="button" className="id-button" onClick={onPrint}><Printer aria-hidden="true" />Print / Save as PDF</button><button type="button" className="id-text-button" onClick={onPeggy}><MessageCircle aria-hidden="true" />Discuss with Peggy</button><p className="id-caption">Copy and PDF include the appendix.</p></div>
+    <section className="id-peggy-help" aria-label="Prepare context for Peggy"><h3>A question about this brief?</h3><p>Choose what you need help with. Review and edit the prepared message before sending it to Peggy.</p><div className="id-actions"><button type="button" className="id-text-button" onClick={() => onPeggy('missing')}>Identify missing information <ArrowRight aria-hidden="true" /></button><button type="button" className="id-text-button" onClick={() => onPeggy('inquiry')}>Prepare my inquiry <ArrowRight aria-hidden="true" /></button></div></section>
+    <div className="id-actions id-memo-actions"><button type="button" className="id-button" onClick={() => onCopy(memoText(draft, analysis, scenario, diligence))}><Copy aria-hidden="true" />Copy summary</button><button type="button" className="id-button" onClick={onPrint}><Printer aria-hidden="true" />Print / Save as PDF</button><button type="button" className="id-text-button" onClick={() => onPeggy('explain')}><MessageCircle aria-hidden="true" />Discuss with Peggy</button><p className="id-caption">Copy and PDF include the appendix.</p></div>
   </>;
 }

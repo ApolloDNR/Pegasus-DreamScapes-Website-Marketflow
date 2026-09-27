@@ -6,6 +6,7 @@ import { type Draft, type DeskView } from './state';
 import { CapitalBreakdown } from './CapitalBreakdown';
 import { DecisionCanvas, stageDetails, type Stage } from './DecisionCanvas';
 import { fitExplanation, metricExplanation, nextReadAction, type ReadAction } from './read-guidance';
+import { PropertySketch } from '../property-sketch';
 
 export function KeyEconomics({ analysis }: { analysis: ReadyAnalysis }) {
   const total = analysis.presentation.capitalStack.reduce((sum, row) => sum + row.amount, 0);
@@ -37,6 +38,7 @@ export function Overview({ draft, analysis, selectedLane, onLane, onView, onExam
         <p className="id-caption">The example is synthetic. Your working draft stays in this browser until you choose to carry it forward.</p>
       </div>
       <div className="id-start-guide" aria-label="What you need to begin">
+        <PropertySketch />
         <h3>A useful first read starts here.</h3>
         <ol><li><span>01</span><div><h4>Purchase price or current basis</h4><p>The starting cost you want to model.</p></div></li><li><span>02</span><div><h4>Expected sale price or monthly rent</h4><p>Your assumption, ready to test and refine.</p></div></li><li><span>03</span><div><h4>Repairs and improvements</h4><p>Leave unknown costs blank. Add detail as you go.</p></div></li></ol>
       </div>

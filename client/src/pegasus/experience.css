@@ -216,3 +216,35 @@
 @media(prefers-reduced-motion:reduce) { .experience-home *, .site-nav *, .site-mobile-menu * { transition:none !important; animation:none !important; } }
 
 .experience-home section[id] { scroll-margin-top:104px; }
+
+/* Shared response timing. Content and calculations never wait for motion. */
+.pg-root { --experience-motion-control:160ms; --experience-motion-panel:220ms; --experience-motion-ease:cubic-bezier(.2,.7,.2,1); }
+.pg-root :is(.ep-action,.ep-choice,.id-button,.id-text-button,.id-command nav button,.id-comparison-picker button,.peggy-chip,.peggy-input,.ow-viewer-controls button) { transition:color var(--experience-motion-control),background-color var(--experience-motion-control),border-color var(--experience-motion-control); }
+.pg-root :is(.ep-action,.id-button,.peggy-chip):active { filter:brightness(.96); }
+.pg-root :is(.id-button,.id-text-button,.ep-action) > svg { transition:transform var(--experience-motion-control) var(--experience-motion-ease); }
+.pg-root :is(.id-button,.id-text-button,.ep-action):hover > svg:last-child { transform:translateX(2px); }
+.peggy-input textarea { flex:1; min-width:0; max-height:160px; resize:vertical; border:0; background:transparent; color:var(--cream); font:400 16px/1.5 var(--pg-font-ui); padding:8px 0; }
+.peggy-input textarea:focus { outline:0; }
+.peggy-input textarea::placeholder { color:rgba(239,231,218,.6); }
+.peggy-context-note { margin:0 18px 12px; color:var(--cream); font:400 13px/1.5 var(--pg-font-ui); }
+.intake-lab-review { margin-top:20px; padding-top:18px; border-top:1px solid var(--experience-rule); }
+.intake-lab-review h3 { font-size:17px; }
+.intake-lab-review p { margin-top:10px; font-size:13px; line-height:1.7; overflow-wrap:anywhere; }
+.intake-lab-review button { margin-top:10px; min-height:44px; text-decoration:underline; text-underline-offset:4px; color:var(--experience-copper); font-size:14px; }
+@media(prefers-reduced-motion:reduce) { .pg-root *, .ow-gallery-viewer *, .ow-gallery-overlay { animation:none !important; transition:none !important; scroll-behavior:auto !important; } }
+.property-sketch { display:block; width:160px; height:auto; max-width:100%; color:var(--experience-muted); flex:none; }
+.property-sketch .is-emphasized { stroke:var(--experience-copper); stroke-width:2.2; }
+.property-sketch .property-sketch-ground { fill:var(--experience-limestone); }
+.property-sketch .property-sketch-marker { stroke:var(--experience-copper); fill:var(--experience-paper); stroke-width:2; }
+.ep-property-context { display:flex; align-items:center; gap:20px; margin-top:24px; }
+.ep-property-context .property-sketch { width:140px; }
+.ep-property-context p { font-size:14px; line-height:1.6; margin:0; }
+.ep-property-context small { display:block; font-size:13px; color:var(--experience-muted); margin-top:6px; }
+.id-start-guide > .property-sketch { width:180px; margin-bottom:18px; }
+@media(max-width:420px) { .ep-property-context { gap:12px; } .ep-property-context .property-sketch { width:100px; } }
+.ep-context-actions { display:flex; align-items:center; flex-wrap:wrap; gap:12px 24px; }
+/* Peggy remains a navy surface in both appearances; inherited page ink is unsuitable here. */
+.peggy-panel { color:#efe7da; }
+.peggy-panel .pg-label,.peggy-panel [data-testid='peggy-send-disclosure'] { color:#d5d1c9; font:400 13px/1.6 var(--pg-font-ui); letter-spacing:normal; text-transform:none; }
+.peggy-head > button { color:#efe7da; }
+.peggy-head > .leading-none { flex:1; min-width:0; }

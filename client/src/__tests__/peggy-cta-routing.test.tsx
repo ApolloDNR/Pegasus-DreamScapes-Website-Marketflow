@@ -217,8 +217,8 @@ describe("Peggy handoff action buttons navigate to real routes (Task #214)", () 
     panel: HTMLElement,
     actionLabel: string,
   ): Promise<HTMLButtonElement> {
-    const input = panel.querySelector<HTMLInputElement>(
-      'input[aria-label="Talk to Peggy"]',
+    const input = panel.querySelector<HTMLTextAreaElement>(
+      'textarea[aria-label="Talk to Peggy"]',
     );
     expect(input, "Peggy input not found").toBeTruthy();
     fireEvent.change(input!, { target: { value: "I have a property to weigh" } });
@@ -294,8 +294,8 @@ describe("Peggy handoff action buttons navigate to real routes (Task #214)", () 
     const { container, history } = renderLanding("/");
     const panel = openPeggy(container);
 
-    const input = panel.querySelector<HTMLInputElement>(
-      'input[aria-label="Talk to Peggy"]',
+    const input = panel.querySelector<HTMLTextAreaElement>(
+      'textarea[aria-label="Talk to Peggy"]',
     );
     fireEvent.change(input!, { target: { value: "help" } });
     fireEvent.click(panel.querySelector<HTMLButtonElement>('button[aria-label="Send"]')!);

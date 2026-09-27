@@ -1,11 +1,14 @@
-import { useRef, useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { ArrowLeft, ArrowRight, Expand, X } from 'lucide-react';
 import './project-gallery.css';
 
-type Pair = { title: string; before: string; after: string; beforeAlt: string; afterAlt: string; note: string; tag?: string };
+type Pair = { title: string; before: string; after: string; beforeAlt: string; afterAlt: string; note: string; tag?: string; details?: Array<{ label: string; note: string; x: number; y: number }> };
 
 export function ProjectGallery({ pairs, finishes }: { pairs: Pair[]; finishes: Array<[string, string]> }) {
+  const inspectionId = useId();
+  const [inspecting, setInspecting] = useState<number | null>(null);
+  const [detail, setDetail] = useState(0);
   const [active, setActive] = useState<number | null>(null);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const photos = [
@@ -25,7 +28,7 @@ export function ProjectGallery({ pairs, finishes }: { pairs: Pair[]; finishes: A
   return <Dialog.Root open={active !== null} onOpenChange={(isOpen) => { if (!isOpen) setActive(null); }}>
     <div className="project-gallery"><p className="ow-gallery-hint"><Expand aria-hidden="true" />Select a photograph to view it in full.</p>
     <div className="ow-pairs">
-      {pairs.map((pair, index) => <figure key={pair.title} className="ow-pair">
+      {pairs.map((pair, index) => <figure key={pair.title} className="ow-pair" data-inspecting={inspecting === index}>
         <div className="ow-pair-heading"><span>0{index + 1}</span><h3 className="font-serif-display">{pair.title}</h3></div>
         <div className="ow-pair-media">
           <button type="button" className="ow-shot" onClick={(event) => open(event, index * 2)} aria-label={`Enlarge ${pair.title.toLowerCase()}, before`}>
@@ -34,10 +37,14 @@ export function ProjectGallery({ pairs, finishes }: { pairs: Pair[]; finishes: A
           </button>
           <button type="button" className="ow-shot ow-shot-after" onClick={(event) => open(event, index * 2 + 1)} aria-label={`Enlarge ${pair.title.toLowerCase()}, after`}>
             <img src={pair.after} alt={pair.afterAlt} loading="lazy" />
+            {inspecting === index && pair.details?.map((item, point) => <span key={item.label} className="ow-detail-marker" data-active={detail === point} style={{ left: `${item.x}%`, top: `${item.y}%` }} aria-hidden="true">{point + 1}</span>)}
             <i>After</i><Expand className="ow-expand" aria-hidden="true" />
           </button>
         </div>
         <figcaption><span>{pair.note}</span></figcaption>
+        {pair.details && <div className="ow-photo-inspection"><button type="button" className="ow-inspection-toggle" aria-label={`${inspecting === index ? 'Hide details' : 'See what changed'} in ${pair.title.toLowerCase()}`} aria-expanded={inspecting === index} aria-controls={`${inspectionId}-${index}`} onClick={() => { setInspecting(inspecting === index ? null : index); setDetail(0); }}>{inspecting === index ? 'Hide details' : 'See what changed'}<span className="sr-only"> in {pair.title.toLowerCase()}</span><ArrowRight aria-hidden="true" /></button><div id={`${inspectionId}-${index}`} hidden={inspecting !== index}>
+          <p>Select a detail to locate it in the finished photograph. The earlier image shows a different viewpoint.</p><div className="ow-detail-choices" role="group" aria-label={`${pair.title} photo details`}>{pair.details.map((item, point) => <button key={item.label} type="button" aria-label={`${point + 1} ${item.label}`} aria-pressed={detail === point} onClick={() => setDetail(point)}><span>{point + 1}</span>{item.label}</button>)}</div><p className="ow-detail-note" aria-live="polite">{pair.details[detail]?.note}</p>
+        </div></div>}
       </figure>)}
     </div>
     <div className="ow-strip">

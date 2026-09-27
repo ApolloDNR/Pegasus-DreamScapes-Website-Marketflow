@@ -1,6 +1,7 @@
 import React, { useId, useRef, useState } from 'react';
 import { Link } from 'wouter';
-import { ArrowDown, ArrowRight, Check, ChevronDown, MapPin } from 'lucide-react';
+import { ArrowDown, ArrowRight, Check, ChevronDown } from 'lucide-react';
+import { PropertySketch } from './property-sketch';
 import './opportunity-plan.css';
 
 const NEEDS = [
@@ -67,7 +68,7 @@ export function OpportunityPlan() {
             {selected && <Link href={selected.href} className="op-next">{selected.action}<ArrowRight aria-hidden="true" /></Link>}
           </div>
           <div className="op-map" role="group" aria-label="Property and connected planning questions">
-            <div className="op-map-origin"><MapPin aria-hidden="true" /><span>Your property and situation</span></div>
+            <div className="op-map-origin"><PropertySketch focus={active === 'local' ? 'site' : ['control', 'buyer', 'disposition'].includes(active ?? '') ? 'access' : 'scope'} /><span>Your property and situation</span></div>
             <div className="op-map-junction" aria-hidden="true"><ArrowDown /></div>
             <div className="op-map-branches">
               <div className="op-map-node op-map-focus" data-selected={Boolean(selected)}><span>Selected need</span><strong>{selected?.label ?? 'Your missing piece'}</strong></div>

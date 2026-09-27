@@ -3,7 +3,8 @@ import { useLocation, useSearch } from 'wouter';
 import { Save, SlidersHorizontal, RotateCcw } from 'lucide-react';
 import { STRATEGY_LANES, type StrategyLane } from '@shared/strategy-lab';
 import type { CalcTabKey } from '@/components/strategy-lab/calculator-tools-panel';
-import { writeStrategyLabHandoff } from '../strategy-lab-handoff';
+import { normalizeOwnerSituation, ownerLabSituation } from '../owner-context';
+import { clearStrategyLabHandoff, writeStrategyLabHandoff } from '../strategy-lab-handoff';
 import { analyzeDraft, laneName, safeMetric } from './model';
 import { emptyWorkspace, illustrativeDraft, restoreDraft, serializeDraft, VIEWS, STORAGE_KEY, NUMERIC_FIELDS, SCENARIO_NAMES, type Workspace, type DeskView, type DraftField, type NumericField, type ScenarioPatch } from './state';
 import { applyPreset, scenarioDraft } from './scenario-model';
@@ -32,6 +33,7 @@ export function IntelligenceDesk({ openPeggy }: { openPeggy: (role?: string, pro
   const [, setLocation] = useLocation();
   const search = useSearch();
   const initial = queryState(search);
+  const [incomingOwner, setIncomingOwner] = React.useState(() => normalizeOwnerSituation(new URLSearchParams(search).get('owner_situation')).sourceLabel);
   const [workspace, setWorkspace] = React.useState<Workspace>(emptyWorkspace);
   const [view, setView] = React.useState<DeskView>(initial.view);
   const [selectedLane, setSelectedLane] = React.useState<StrategyLane | null>(initial.lane);
@@ -112,20 +114,23 @@ export function IntelligenceDesk({ openPeggy }: { openPeggy: (role?: string, pro
   const changed = JSON.stringify(workspace) !== savedState;
   const change = (key: DraftField, value: string) => {
     setConfirmation(null);
+    clearStrategyLabHandoff();
     setWorkspace(current => current.activeScenario !== 'base' && NUMERIC_FIELDS.includes(key as NumericField)
       ? { ...current, variants: { ...current.variants, [current.activeScenario]: { ...current.variants[current.activeScenario], [key]: value } } }
-      : { ...current, base: { ...current.base, [key]: value, entered: [...new Set([...current.base.entered, key])] } });
+      : { ...current, base: { ...current.base, [key]: value, ...(key === 'situation' ? { ownerSituation: '' } : {}), entered: [...new Set([...current.base.entered, key])] } });
   };
-  const replace = (next: Workspace, message: string) => { setUndo(workspace); setWorkspace(next); setNotice(message); setConfirmation(null); };
+  const replace = (next: Workspace, message: string) => { clearStrategyLabHandoff(); setUndo(workspace); setWorkspace(next); setNotice(message); setConfirmation(null); };
   const save = () => {
     try { window.localStorage.setItem(STORAGE_KEY, serializeDraft(workspace)); setSavedState(JSON.stringify(workspace)); setNotice('Decision brief saved in this browser.'); }
     catch { setNotice('This browser blocked local saving. Your current desk remains open.'); }
   };
   const example = () => {
     if (confirmation !== 'example' && (draft.address.trim() || draft.acquisition.trim() || draft.arv.trim() || draft.marketRent.trim())) { setConfirmation('example'); return; }
+    setIncomingOwner(''); setSelectedLane(null); updateQuery({ owner_situation: null, lane: null });
     replace({ ...emptyWorkspace(), base: illustrativeDraft() }, 'Synthetic example loaded. Your saved draft changes only when you save.');
   };
   const clear = () => {
+    setIncomingOwner(''); setSelectedLane(null); updateQuery({ owner_situation: null, lane: null });
     replace(emptyWorkspace(), 'Desk cleared. Undo restores the previous working state.');
     try { for (const key of [STORAGE_KEY, 'pegasus.strategy-lab.v3', 'pegasus.strategy-lab.v2']) window.localStorage.removeItem(key); setSavedState(JSON.stringify(emptyWorkspace())); }
     catch { setNotice('Working desk cleared, but this browser blocked removal of the saved draft.'); }
@@ -135,17 +140,25 @@ export function IntelligenceDesk({ openPeggy }: { openPeggy: (role?: string, pro
     const id = workspace.activeScenario;
     replace(id === 'base' ? { ...workspace, base: { ...workspace.base, ...patch, entered: [...new Set([...workspace.base.entered, ...Object.keys(patch)])] } } : { ...workspace, variants: { ...workspace.variants, [id]: { ...workspace.variants[id], ...patch } } }, `Selected sensitivity inputs applied to ${SCENARIO_NAMES[id]}. The full model has rerun.`);
   };
+  const applyOwner = () => {
+    const next = emptyWorkspace();
+    next.base = { ...next.base, ownerSituation: incomingOwner, situation: ownerLabSituation(incomingOwner), submitterRole: 'Property owner', entered: ['ownerSituation', 'situation', 'submitterRole'] };
+    replace(next, 'Your selected situation is ready. Add the property facts you know. Undo restores the previous workspace.');
+    setIncomingOwner(''); setSelectedLane(null);
+    updateQuery({ owner_situation: null, lane: null });
+    move('assumptions');
+  };
   const carry = () => {
     if (analysis.status !== 'ready') { move('assumptions'); return; }
     const { property, presentation: snapshot } = analysis;
     const top = snapshot.lanes[0];
-    const saved = writeStrategyLabHandoff({ address: property.address, propertyType: draft.propertyType, occupancy: draft.occupancy, condition: draft.condition, situation: draft.situation, askingPrice: property.purchasePrice, rehabBudget: property.rehabBudget, arvEstimate: property.arvEstimate, marketRent: property.marketRent, topLaneLabel: laneName(top), topLaneVerdict: top.verdictLabel, primaryMetric: `${top.economics.primaryMetric}: ${safeMetric(top.economics.primaryValue)}`, memoNextStep: `${SCENARIO_NAMES[workspace.activeScenario]} scenario. ${nextReadText(draft, analysis)}`, engineVersion: snapshot.engineVersion, generatedAt: snapshot.generatedAt, scenario: workspace.activeScenario, illustrative: draft.illustrative, scopeReported: property.rehabBudget !== undefined, modelAssumptions: `${analysis.options.loanLtvPct}% acquisition LTV; ${analysis.options.loanRatePct}% interest; ${analysis.options.loanTermYears} years; ${analysis.options.closingReservePct}% closing reserve` });
+    const saved = writeStrategyLabHandoff({ address: property.address, city: property.city, ownerSituation: draft.ownerSituation, planningObjective: draft.entered.includes('objective') ? draft.objective : undefined, propertyType: draft.propertyType, occupancy: draft.occupancy, condition: draft.condition, situation: draft.situation, askingPrice: property.purchasePrice, rehabBudget: property.rehabBudget, arvEstimate: property.arvEstimate, marketRent: property.marketRent, topLaneLabel: laneName(top), topLaneVerdict: top.verdictLabel, primaryMetric: `${top.economics.primaryMetric}: ${safeMetric(top.economics.primaryValue)}`, memoNextStep: `${SCENARIO_NAMES[workspace.activeScenario]} scenario. ${nextReadText(draft, analysis)}`, engineVersion: snapshot.engineVersion, generatedAt: snapshot.generatedAt, scenario: workspace.activeScenario, illustrative: draft.illustrative, scopeReported: property.rehabBudget !== undefined, modelAssumptions: `${analysis.options.loanLtvPct}% acquisition LTV; ${analysis.options.loanRatePct}% interest; ${analysis.options.loanTermYears} years; ${analysis.options.closingReservePct}% closing reserve` });
     if (!saved) { setNotice('This browser blocked the intake handoff. Copy the summary from Memo to keep it.'); return; }
     setLocation('/bring-an-opportunity?intent=property&ref=strategy-lab');
   };
-  const discuss = () => {
+  const discuss = (intent: 'explain' | 'missing' | 'inquiry' = 'explain') => {
     if (analysis.status !== 'ready') { move('assumptions'); return; }
-    openPeggy(undefined, peggyBrief(draft, analysis, workspace.activeScenario));
+    openPeggy(undefined, peggyBrief(draft, analysis, workspace.activeScenario, intent));
   };
   const copy = async (text: string) => {
     try { await navigator.clipboard.writeText(text); setNotice('The current scenario summary was copied.'); }
@@ -156,18 +169,20 @@ export function IntelligenceDesk({ openPeggy }: { openPeggy: (role?: string, pro
   const navigation = <nav aria-label="Analysis views">{VIEWS.map(item => <button type="button" key={item} aria-current={view === item ? 'page' : undefined} onClick={() => move(item)}>{VIEW_NAMES[item]}</button>)}</nav>;
   return <div className={`id-desk${isStarting ? ' is-starting' : ''}`}>
     <header className="id-opening"><div><h1>Strategy Lab.</h1><p>Pegasus Intelligence Desk</p></div>{!isStarting && workspaceActions}</header>
-    {!isStarting && <div className="id-command"><div className="id-property"><strong>{draft.address || draft.city || 'New property model'}</strong><span>{SCENARIO_NAMES[workspace.activeScenario]} scenario · {draft.illustrative ? 'Synthetic example' : 'Unverified inputs'}</span></div>{navigation}</div>}
+    {incomingOwner && hydrated && <section className="id-context-review" aria-label="Review owner context"><h2>Start with your situation</h2><p><strong>{incomingOwner}</strong> · Property owner</p><p>This starts a new property workspace with your selected situation. {changed || draft.address || draft.acquisition ? 'Your current workspace will be replaced. Save it locally first if you need to keep it; Undo restores it during this visit.' : 'You can add the address, goal and assumptions next.'}</p><div className="id-actions"><button type="button" className="id-button is-primary" onClick={applyOwner}>Use this situation</button><button type="button" className="id-text-button" onClick={() => { setIncomingOwner(''); updateQuery({ owner_situation: null }); }}>Keep current workspace</button></div></section>}
+    {!isStarting && <div className="id-command"><div className="id-property"><strong>{draft.address || draft.city || 'New property model'}</strong><span>{SCENARIO_NAMES[workspace.activeScenario]} scenario · {draft.illustrative ? 'Synthetic example' : 'Unverified inputs'}</span><div className="id-property-actions"><button type="button" className="id-text-button" onClick={() => move('assumptions')}>Edit property</button><button type="button" className="id-text-button" onClick={() => setConfirmation('clear')}>Clear property</button></div></div>{navigation}</div>}
+    {!isStarting && <p className="id-property-context"><strong>Your property</strong> · {draft.ownerSituation || draft.situation} · {draft.objective}</p>}
     {confirmation && <div className="id-confirm" role="alert"><p>{confirmation === 'clear' ? 'Clear the working desk and saved browser draft?' : 'Replace your working inputs with a synthetic example? Saved data changes only when you save.'}</p><button type="button" className="id-button" onClick={confirmation === 'clear' ? clear : example}>{confirmation === 'clear' ? 'Confirm clear' : 'Confirm load example'}</button><button type="button" className="id-text-button" onClick={() => setConfirmation(null)}>Cancel</button></div>}
     <section className="id-workspace" ref={workspaceElement} aria-labelledby="desk-view-heading" data-testid="strategy-lab-workspace"><h2 ref={heading} id="desk-view-heading" tabIndex={-1} className={view === 'overview' ? 'sr-only' : 'id-view-title'}>{VIEW_HEADINGS[view]}</h2>
       {view === 'overview' && <Overview draft={draft} analysis={analysis} selectedLane={selectedLane} onLane={inspect} onView={move} onExample={example} onAction={action => { focusTarget.current = action; move(action.evidence ? 'risk' : 'assumptions'); }} />}
       {view === 'assumptions' && <Assumptions draft={draft} analysis={analysis} scenario={workspace.activeScenario} onChange={change} onOverview={() => move('overview')} />}
-      {view === 'scenarios' && <Scenarios workspace={workspace} analysis={analysis} selectedLane={selectedLane} onLane={inspect} onUse={id => { setWorkspace(current => ({ ...current, activeScenario: id })); setNotice(`${SCENARIO_NAMES[id]} is now used by the brief and other analysis views.`); }} onPreset={id => replace(applyPreset(workspace, id), `${SCENARIO_NAMES[id]} preset applied. The brief still uses ${SCENARIO_NAMES[workspace.activeScenario]}.`)} onReset={id => replace({ ...workspace, variants: { ...workspace.variants, [id]: {} } }, `${SCENARIO_NAMES[id]} now matches Base.`)} onApply={apply} onEdit={() => move('assumptions')} />}
+      {view === 'scenarios' && <Scenarios workspace={workspace} analysis={analysis} selectedLane={selectedLane} onLane={inspect} onUse={id => { clearStrategyLabHandoff(); setWorkspace(current => ({ ...current, activeScenario: id })); setNotice(`${SCENARIO_NAMES[id]} is now used by the brief and other analysis views.`); }} onPreset={id => replace(applyPreset(workspace, id), `${SCENARIO_NAMES[id]} preset applied. The brief still uses ${SCENARIO_NAMES[workspace.activeScenario]}.`)} onReset={id => replace({ ...workspace, variants: { ...workspace.variants, [id]: {} } }, `${SCENARIO_NAMES[id]} now matches Base.`)} onApply={apply} onPreviewApply={(patch, target) => replace({ ...workspace, variants: { ...workspace.variants, [target]: patch } }, `Preview applied to ${SCENARIO_NAMES[target]}. Base is unchanged. The brief uses ${SCENARIO_NAMES[workspace.activeScenario]}.`)} onEdit={() => move('assumptions')} />}
       {view === 'risk' && <Risk draft={draft} analysis={analysis} diligence={workspace.diligence} phases={workspace.phases} onDiligence={id => setWorkspace(current => ({ ...current, diligence: current.diligence.includes(id) ? current.diligence.filter(item => item !== id) : [...current.diligence, id] }))} onPhase={(id, key, value) => setWorkspace(current => ({ ...current, phases: current.phases.map(phase => phase.id === id ? { ...phase, [key]: value } : phase) }))} onEdit={() => move('assumptions')} />}
       {view === 'memo' && <Memo draft={draft} analysis={analysis} scenario={workspace.activeScenario} diligence={workspace.diligence} onCopy={copy} onPrint={() => { setNotice('Use your browser print dialog to print or save a PDF.'); window.print(); }} onIntake={carry} onPeggy={discuss} onEdit={() => move('assumptions')} />}
     </section>
     {isStarting && <div className="id-start-tools"><p className="id-eyebrow">Workspace tools</p>{workspaceActions}<div className="id-command">{navigation}</div></div>}
     {analysis.status === 'ready' && view !== 'overview' && view !== 'memo' && <KeyEconomics analysis={analysis} />}
-    <footer className="id-workspace-footer"><div role="status" aria-label="Workspace status"><p>{notice}</p><span>{changed ? 'Unsaved changes' : 'No unsaved changes'}</span></div><div className="id-actions">{undo && <button type="button" className="id-text-button" onClick={() => { setWorkspace(undo); setUndo(null); setNotice('Previous working state restored. Save to update the browser draft.'); }}><RotateCcw aria-hidden="true" />Undo</button>}{analysis.status === 'ready' && <button type="button" className="id-text-button" onClick={example}>Load illustrative example</button>}<button type="button" className="id-text-button" onClick={() => setConfirmation('clear')}>Clear desk</button></div></footer>
+    <footer className="id-workspace-footer"><div role="status" aria-label="Workspace status"><p>{notice}</p><span>{changed ? 'Unsaved changes' : 'No unsaved changes'}</span></div><div className="id-actions">{undo && <button type="button" className="id-text-button" onClick={() => { clearStrategyLabHandoff(); setWorkspace(undo); setUndo(null); setNotice('Previous working state restored. Save to update the browser draft.'); }}><RotateCcw aria-hidden="true" />Undo</button>}{analysis.status === 'ready' && <button type="button" className="id-text-button" onClick={example}>Load illustrative example</button>}<button type="button" className="id-text-button" onClick={() => setConfirmation('clear')}>Clear desk</button></div></footer>
     {calculators && <section className="id-calculators" ref={calculatorPanel} tabIndex={-1} aria-label="Decision calculators"><header><div><p>Decision calculators</p><h2>Open the worksheet your decision requires.</h2></div><button type="button" className="id-button" onClick={() => { setCalculators(false); updateQuery({ tool: null, tab: null }); calculatorOpener.current?.focus(); }}>Close calculators</button></header><React.Suspense fallback={<p>Loading calculators…</p>}><CalculatorToolsPanel activeTab={instrument} setActiveTab={tab => { setInstrument(tab); updateQuery({ tool: 'calculators', tab: tab === 'arv' ? null : tab }); }} publicMode /></React.Suspense></section>}
   </div>;
 }

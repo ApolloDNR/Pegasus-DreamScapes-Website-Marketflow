@@ -1,3 +1,5 @@
+import { OWNER_SITUATIONS } from '../owner-context';
+
 export const VIEWS = ['overview', 'assumptions', 'scenarios', 'risk', 'memo'] as const;
 export type DeskView = typeof VIEWS[number];
 export const SCENARIOS = ['base', 'conservative', 'upside'] as const;
@@ -6,6 +8,7 @@ export const SCENARIO_NAMES: Record<ScenarioId, string> = { base: 'Base', conser
 export const STORAGE_KEY = 'pegasus.strategy-lab.v4';
 
 export const OPTIONS = {
+  ownerSituation: ['', ...OWNER_SITUATIONS],
   propertyType: ['Single-family residence', 'Condo or townhome', '2–4 units', 'Small multifamily', 'Land or development site', 'Commercial or mixed-use'],
   situation: ['Value-add opportunity', 'Owner needs options', 'Inherited or estate property', 'Distressed or time-sensitive', 'Contract or sourced opportunity', 'Development or ADU potential'],
   occupancy: ['Unknown or needs review', 'Vacant', 'Owner occupied', 'Tenant occupied'],
@@ -23,6 +26,7 @@ export const DEFAULTS = {
   taxRate: '1.1', insurance: '150', hoa: '0',
 } as const;
 export const INITIAL_DRAFT = {
+  ownerSituation: '',
   address: '', city: '', propertyType: OPTIONS.propertyType[0] as string, situation: OPTIONS.situation[0] as string,
   occupancy: OPTIONS.occupancy[0] as string, condition: OPTIONS.condition[0] as string, submitterRole: OPTIONS.submitterRole[0] as string,
   acquisition: '', scope: '', arv: '', marketRent: '', sqft: '', beds: '', baths: '',
