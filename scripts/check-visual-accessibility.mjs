@@ -2648,6 +2648,7 @@ try {
     await fab.click();
     assert(await fab.getAttribute('aria-expanded') === 'false', 'Peggy did not close');
     await fab.click();
+    await panel.getByText('Go straight to a tool or path', { exact: true }).click();
     await panel.getByTestId('peggy-route-submit').click();
     await page.waitForURL(/\/bring-an-opportunity$/);
   });
