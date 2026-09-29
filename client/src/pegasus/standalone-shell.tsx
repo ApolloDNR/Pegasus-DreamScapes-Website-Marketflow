@@ -86,7 +86,7 @@ export function PegasusStandaloneShell({
   const dataTheme = theme === 'dark' ? 'dark' : undefined;
 
   return (
-    <>
+    <div className="peggy-workspace">
       <div className="pg-root" data-theme={dataTheme}>
         <NavBar
           go={go}
@@ -114,7 +114,7 @@ export function PegasusStandaloneShell({
           pagePath={location}
         />
       </div>
-    </>
+    </div>
   );
 }
 

@@ -110,13 +110,16 @@ export function usePeggyPageGuide(pagePath: string, enabled: boolean) {
     update(true);
     const observer = new MutationObserver(rebuild);
     observer.observe(root, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['hidden', 'inert', 'aria-hidden', 'open'] });
+    // Opening the wide companion changes page width without a window resize.
+    const resizeObserver = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(rebuild);
+    resizeObserver?.observe(root);
     window.addEventListener('scroll', schedule, { passive: true });
     window.addEventListener('resize', rebuild);
     document.addEventListener('mouseup', onSelection);
     document.addEventListener('keyup', onSelection);
     document.addEventListener('selectionchange', onSelectionChange);
     return () => {
-      cancelAnimationFrame(frame); clearTimeout(timer); observer.disconnect();
+      cancelAnimationFrame(frame); clearTimeout(timer); observer.disconnect(); resizeObserver?.disconnect();
       window.removeEventListener('scroll', schedule); window.removeEventListener('resize', rebuild);
       document.removeEventListener('mouseup', onSelection); document.removeEventListener('keyup', onSelection);
       document.removeEventListener('selectionchange', onSelectionChange);

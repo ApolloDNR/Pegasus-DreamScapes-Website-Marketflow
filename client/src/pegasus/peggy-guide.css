@@ -123,15 +123,16 @@
 .pg-root .peggy-head .peggy-avatar { width:44px; height:44px; border:1px solid #d9a47c; border-radius:50%; padding:6px; flex:none; }
 .pg-root .peggy-head .peggy-avatar .peggy-mark { width:30px; height:30px; }
 .peggy-tour header .peggy-tour-seal { display:grid; place-items:center; width:40px; height:40px; border:1px solid #d9a47c; border-radius:50%; flex:none; }
+.peggy-tour-stop-label { display:none; }
 .peggy-tour-trail { position:relative; display:flex; overflow-x:auto; padding:4px 0 10px; margin:0 0 6px; overscroll-behavior-x:contain; scrollbar-width:thin; }
 .peggy-tour-trail button { position:relative; isolation:isolate; flex:1 0 44px; min-width:44px; min-height:44px; display:grid; place-items:center; color:var(--experience-muted); font:400 11px/1 var(--pg-font-ui); }
 .peggy-tour-trail button::before { content:''; position:absolute; z-index:-1; inset-inline:0; top:50%; height:1px; background:var(--experience-rule); }
 .peggy-tour-trail button:first-child::before { left:50%; }
 .peggy-tour-trail button:last-child::before { right:50%; }
-.peggy-tour-trail button > span { display:grid; place-items:center; width:24px; height:24px; border:1px solid var(--experience-rule); border-radius:50%; background:var(--experience-paper); }
-.peggy-tour-trail button[data-before='true'] > span { border-color:var(--experience-copper); color:var(--experience-copper); }
-.peggy-tour-trail button[aria-current='step'] > span { border-color:var(--experience-copper); background:var(--experience-copper); color:var(--experience-paper); box-shadow:none; }
-.peggy-tour-trail button:hover > span { border-color:var(--experience-copper); }
+.peggy-tour-trail button > span:first-child { display:grid; place-items:center; width:24px; height:24px; border:1px solid var(--experience-rule); border-radius:50%; background:var(--experience-paper); }
+.peggy-tour-trail button[data-before='true'] > span:first-child { border-color:var(--experience-copper); color:var(--experience-copper); }
+.peggy-tour-trail button[aria-current='step'] > span:first-child { border-color:var(--experience-copper); background:var(--experience-copper); color:var(--experience-paper); box-shadow:none; }
+.peggy-tour-trail button:hover > span:first-child { border-color:var(--experience-copper); }
 .peggy-tour-trail button:focus-visible { outline-offset:-2px; border-radius:3px; }
 @media(max-width:640px) {
   .pg-root .peggy-head .peggy-avatar { width:42px; height:42px; padding:6px; }
@@ -139,4 +140,52 @@
 }
 @media(max-height:600px) {
   .peggy-tour-trail { padding-bottom:2px; margin-bottom:0; }
+}
+
+/* The seal owns the identity; the surrounding paper keeps the reading calm. */
+.pg-root .peggy-head { background:var(--experience-paper); color:var(--experience-text); border-top:0; border-bottom:1px solid var(--experience-rule); }
+.pg-root .peggy-head .peggy-avatar { background:#132a38; }
+.pg-root .peggy-name span,.pg-root .peggy-ai-label { color:var(--experience-muted); }
+.pg-root .peggy-close { color:var(--experience-text); border-color:var(--experience-rule); }
+.pg-root .peggy-close:hover { background:var(--experience-limestone); }
+.pg-root .peggy-head button:focus-visible { outline-color:var(--experience-copper); }
+/* On wide displays the companion shares the workspace instead of covering it.
+   Keep navigation full width and reserve the same space during a page tour. */
+@media(min-width:1440px) {
+  .peggy-workspace:has(.peggy-panel.is-open,.peggy-tour) { padding-right:420px; }
+  .peggy-workspace .peggy-panel,.peggy-workspace .peggy-tour {
+    top:var(--journey-nav-height,88px); right:0; bottom:0; width:420px;
+    max-height:none; height:auto; border:0; border-left:1px solid var(--experience-rule);
+    border-radius:0; box-shadow:none;
+  }
+  .peggy-workspace .peggy-head { padding:24px; }
+  .peggy-workspace .peggy-head .peggy-avatar { width:52px; height:52px; padding:8px; }
+  .peggy-workspace .peggy-head .peggy-avatar .peggy-mark { width:34px; height:34px; }
+  .peggy-workspace .peggy-name { font-size:32px; }
+  .peggy-workspace .peggy-name span { font-size:11px; }
+  .peggy-workspace .peggy-welcome h2 { font-size:30px; }
+  .peggy-workspace .peggy-thread { padding-top:28px; }
+  .peggy-workspace .peggy-compose-area { padding-bottom:24px; }
+  .peggy-workspace .peggy-tour { display:flex; flex-direction:column; }
+  .peggy-workspace .peggy-tour header { padding:20px 18px 20px 24px; background:var(--experience-paper); color:var(--experience-text); border-bottom:1px solid var(--experience-rule); }
+  .peggy-workspace .peggy-tour header .peggy-tour-seal { background:#132a38; }
+  .peggy-workspace .peggy-tour header button:focus-visible { outline-color:var(--experience-copper); }
+  .peggy-workspace .peggy-tour-trail { flex:none; flex-direction:column; gap:0; max-height:min(320px,40dvh); overflow-y:auto; margin-bottom:24px; padding:0 0 20px; border-bottom:1px solid var(--experience-rule); }
+  .peggy-workspace .peggy-tour-trail button { flex:none; display:grid; grid-template-columns:24px minmax(0,1fr); column-gap:14px; justify-content:start; text-align:left; min-height:44px; }
+  .peggy-workspace .peggy-tour-trail button::before { left:12px; right:auto; top:0; bottom:0; width:1px; height:auto; }
+  .peggy-workspace .peggy-tour-trail button:first-child::before { top:50%; }
+  .peggy-workspace .peggy-tour-trail button:last-child::before { bottom:50%; }
+  .peggy-workspace .peggy-tour-stop-label { display:block; width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--experience-muted); font:400 13px/1.5 var(--pg-font-ui); }
+  .peggy-workspace .peggy-tour-trail button[aria-current='step'] .peggy-tour-stop-label { color:var(--experience-text); font-weight:500; }
+  .peggy-workspace .peggy-tour-body { display:flex; flex-direction:column; flex:1; padding:24px; }
+  .peggy-workspace .peggy-tour h2 { font-size:30px; margin-block:20px 16px; }
+  .peggy-workspace .peggy-tour-body > p { font-size:15px; line-height:1.75; }
+  .peggy-workspace .peggy-tour-controls { margin-top:auto; padding-top:28px; }
+  .peggy-workspace:has(.peggy-panel.is-open,.peggy-tour) .home-pathways { column-gap:40px; }
+  .peggy-workspace:has(.peggy-panel.is-open,.peggy-tour) .home-pathways h2 { font-size:48px; }
+  .peggy-workspace:has(.peggy-panel.is-open,.peggy-tour) .experience-path strong { font-size:26px; }
+  .peggy-workspace:has(.peggy-panel.is-open,.peggy-tour) .experience-path { column-gap:16px; }
+  .peggy-workspace:has(.peggy-panel.is-open,.peggy-tour) .experience-project-copy h2 { font-size:36px; }
+  .pg-cookie-visible .peggy-workspace .peggy-panel,.pg-cookie-visible .peggy-workspace .peggy-tour,
+  .pg-cookie-visible.peggy-workspace .peggy-panel,.pg-cookie-visible.peggy-workspace .peggy-tour { bottom:110px; max-height:none; }
 }

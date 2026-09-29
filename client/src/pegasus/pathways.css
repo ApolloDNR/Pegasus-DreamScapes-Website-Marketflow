@@ -1,57 +1,50 @@
-/* An editorial directory: one small allegory, three equally clear destinations. */
-.experience-orientation { background:var(--experience-paper); padding-block:80px 64px; }
-.home-pathways-intro { display:flex; justify-content:space-between; align-items:flex-start; gap:64px; margin-bottom:44px; }
-.home-pathways h2 { max-width:none; font-size:clamp(36px,3.2vw,48px); margin:20px 0 0; text-wrap:balance; }
-.threshold-atlas { width:320px; max-width:30%; flex:none; color:var(--experience-copper); }
+/* A visitor directory: the allegory introduces three direct, readable routes. */
+.experience-orientation { background:var(--experience-paper); padding-block:80px; }
+.home-pathways { display:grid; grid-template-columns:minmax(0,2fr) minmax(0,3fr); grid-template-areas:'intro paths' 'invite paths'; column-gap:64px; row-gap:28px; align-items:start; }
+.home-pathways-intro { grid-area:intro; display:flex; flex-direction:column; gap:36px; }
+.experience-home .home-pathways h2 { max-width:11ch; font-size:clamp(42px,4.2vw,64px); line-height:1.1; margin:0; text-wrap:initial; }
+.threshold-atlas { width:360px; max-width:100%; color:var(--experience-copper); }
 .threshold-atlas img { display:block; width:100%; height:auto; }
 .threshold-marks { display:grid; grid-template-columns:repeat(3,1fr); margin-top:10px; }
 .threshold-marks > span { width:18px; height:1px; justify-self:center; background:var(--experience-rule); transition:background-color 180ms,width 180ms; }
 .threshold-marks > span[data-active='true'] { width:32px; background:var(--experience-copper); }
-.home-pathways .experience-paths { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); padding-bottom:28px; }
-.home-pathways .experience-path { display:flex; flex-direction:column; align-items:flex-start; gap:18px; min-height:230px; padding:4px 40px 12px; border:0; border-left:1px solid var(--experience-rule); }
-.home-pathways .experience-path:first-child { padding-left:0; border-left:0; }
-.home-pathways .experience-path:last-child { padding-right:0; border-bottom:0; }
-.home-pathways .experience-path > .home-path-number { display:block; flex:none; color:var(--experience-copper); font:500 11px/1.5 var(--pg-font-ui); font-variant-numeric:tabular-nums; letter-spacing:.06em; }
-.home-pathways .experience-path > .home-path-copy { display:flex; flex-direction:column; align-items:flex-start; gap:14px; width:100%; flex:1; }
-.home-pathways .experience-path strong { font:400 clamp(24px,1.8vw,28px)/1.3 var(--pg-font-display); min-height:2.6em; }
-.home-pathways .experience-path .home-path-copy > span { max-width:38ch; font-size:14px; line-height:1.7; }
-.home-pathways .experience-path > svg { align-self:flex-end; width:21px; height:21px; margin-top:12px; }
+.home-pathways .experience-paths { grid-area:paths; display:block; padding:0; }
+.home-pathways .experience-path { display:grid; grid-template-columns:32px minmax(0,1fr) 24px; gap:24px; align-items:center; min-height:144px; padding:28px 0; border:0; border-top:1px solid var(--experience-rule); }
+.home-pathways .experience-path:first-child { border-top:0; padding-top:4px; min-height:120px; }
+.home-pathways .experience-path:last-child { border-bottom:0; padding-bottom:4px; min-height:120px; }
+.home-pathways .experience-path > .home-path-number { display:block; align-self:start; padding-top:8px; color:var(--experience-copper); font:500 12px/1.5 var(--pg-font-ui); font-variant-numeric:tabular-nums; letter-spacing:.06em; }
+.home-pathways .experience-path > .home-path-copy { display:flex; flex-direction:column; align-items:flex-start; gap:12px; min-width:0; }
+.home-pathways .experience-path strong { font:400 32px/1.25 var(--pg-font-display); text-wrap:balance; }
+.home-pathways .experience-path .home-path-copy > span { max-width:52ch; font-size:15px; line-height:1.7; }
+.home-pathways .experience-path > svg { width:24px; height:24px; }
 .home-pathways .experience-path:focus-visible strong { color:var(--experience-copper); }
-.home-pathways .journey-invite { gap:12px; margin:0; padding-top:16px; border-top:1px solid var(--experience-rule); }
+.home-pathways .journey-invite { grid-area:invite; align-self:end; gap:12px; margin:0; padding:0; border:0; }
 .home-pathways .journey-invite button { font-size:13px; font-weight:400; }
 .home-pathways .journey-invite button > svg { display:none; }
 .home-pathways .journey-invite.is-compact .journey-avatar { width:32px; height:32px; box-shadow:none; }
 .home-pathways .journey-avatar .peggy-mark { width:23px; height:23px; }
 .pg-root[data-theme='dark'] .threshold-atlas img { opacity:.88; }
-/* Let the longest title establish the row, without an empty line in every title. */
-@supports(grid-template-rows:subgrid) {
-  .home-pathways .experience-paths { row-gap:18px; }
-  .home-pathways .experience-path { display:grid; grid-template-columns:minmax(0,1fr); grid-template-rows:subgrid; grid-row:span 4; min-height:0; align-items:start; }
-  .home-pathways .experience-path > .home-path-number { grid-row:1; }
-  .home-pathways .experience-path > .home-path-copy { display:contents; }
-  .home-pathways .experience-path strong { grid-row:2; min-height:0; }
-  .home-pathways .experience-path .home-path-copy > span { grid-row:3; }
-  .home-pathways .experience-path > svg { grid-row:4; justify-self:end; align-self:end; }
-}
 @media(max-width:1099px) {
-  .home-pathways-intro { gap:32px; }
-  .home-pathways h2 { margin-top:10px; }
-  .home-pathways .experience-path { padding-inline:24px; }
-  .home-pathways .experience-path strong { font-size:24px; }
+  .home-pathways { column-gap:36px; }
+  .home-pathways-intro { gap:28px; }
+  .home-pathways .experience-path { grid-template-columns:20px minmax(0,1fr) 20px; gap:16px; }
+  .home-pathways .experience-path strong { font-size:25px; }
+  .home-pathways .experience-path > svg { width:20px; height:20px; }
 }
 @media(max-width:767px) {
   .experience-orientation { padding-block:48px; }
-  .home-pathways-intro { flex-direction:column; align-items:flex-start; gap:24px; margin-bottom:28px; }
-  .home-pathways h2 { margin:0; max-width:18ch; font-size:34px; text-wrap:initial; }
+  .home-pathways { grid-template-columns:minmax(0,1fr); grid-template-areas:'intro' 'paths' 'invite'; gap:24px; }
+  .home-pathways-intro { gap:24px; }
+  .experience-home .home-pathways h2 { max-width:18ch; font-size:34px; line-height:1.2; }
   .threshold-atlas { width:234px; max-width:80%; }
   .threshold-marks { margin-top:6px; }
-  .home-pathways .experience-paths { display:block; padding-bottom:4px; }
-  .home-pathways .experience-path { display:grid; grid-template-columns:20px minmax(0,1fr) 18px; grid-template-rows:auto; grid-row:auto; gap:14px; min-height:0; padding:24px 0; border:0; border-top:1px solid var(--experience-rule); }
-  .home-pathways .experience-path > .home-path-number { grid-row:auto; align-self:start; padding-top:5px; font-size:11px; }
-  .home-pathways .experience-path > .home-path-copy { display:flex; gap:8px; }
-  .home-pathways .experience-path strong { font-size:23px; min-height:0; }
+  .home-pathways .experience-path { min-height:0; padding:24px 0; }
+  .home-pathways .experience-path:first-child { border-top:1px solid var(--experience-rule); min-height:0; padding-top:24px; }
+  .home-pathways .experience-path:last-child { min-height:0; }
+  .home-pathways .experience-path > .home-path-number { padding-top:5px; font-size:11px; }
+  .home-pathways .experience-path > .home-path-copy { gap:8px; }
+  .home-pathways .experience-path strong { font-size:23px; }
   .home-pathways .experience-path .home-path-copy > span { font-size:14px; }
-  .home-pathways .experience-path > svg { grid-row:auto; align-self:center; width:18px; height:18px; margin:0; }
-  .home-pathways .journey-invite { padding-top:12px; }
+  .home-pathways .journey-invite { padding-top:12px; border-top:1px solid var(--experience-rule); }
 }
 @media(prefers-reduced-motion:reduce) { .threshold-marks > span { transition:none; } }

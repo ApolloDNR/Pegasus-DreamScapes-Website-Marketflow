@@ -4,7 +4,21 @@ Owner: Apollo Duran. Approved September 27, 2026. Starting source: `fc37a613ee64
 
 This is the active continuation checklist for the approved **Pegasus Experience Elevation Plan**. Keep stable IDs and record evidence before marking an item complete. Previous design passes remain historical evidence, not proof of this revision.
 
-## Latest continuation: sophisticated professional refinement
+## Latest continuation: editorial page and Peggy workspace
+
+Owner request: “Do better”, September 29, 2026. Baseline `375538823ddd5ba325378c6ce4e662bfdf4f6240`. Same recovery branch and draft PR #26. [Production specification and comparison](editorial-companion-design.md).
+
+| ID | Deliverable | Status / evidence |
+| --- | --- | --- |
+| J1 | Stronger visitor directory | Implemented. Editorial introduction and original engraving beside three open horizontal destination rows; responsive stack and real route/focus behavior. |
+| J2 | More compelling Nelson project story | Implemented. Original completed-kitchen photograph leads beside the smaller original before photograph and exact existing description/captions. |
+| J3 | Peggy beside the page | Implemented. 420px rail from 1440px, public content reflow, paper identity header and personal seal, current-context resize observation, real named tour itinerary. Narrow layouts retain floating controls. |
+| J4 | Rendered and functional acceptance | Complete locally. 227 files / 2,583 tests; TypeScript/build/budget/runtime checks; 92 journey + 64 guide + 46 chat states. Includes non-overlap, context after reflow, width restoration and longer tour outlines. |
+| J5 | Publish and report | Local acceptance complete. Current captures are ready. Publication and exact-source CI receipts are recorded on existing PR #26 and the owner report after this commit exists. Hosted delivery remains E8c. |
+
+E5b, E8c and E9 remain release dependencies. This revision adds no production photograph, package, provider, tracking or automatic service action.
+
+## Previous continuation: sophisticated professional refinement
 
 Owner request: September 29, 2026. Baseline `22226ad82d5415b3cc4794c8fd45ec2cc44c171e`, same recovery branch and draft PR #26. Full decisions, production sizing and concept/render comparison: [professional-refinement-design.md](professional-refinement-design.md).
 
@@ -14,7 +28,7 @@ Owner request: September 29, 2026. Baseline `22226ad82d5415b3cc4794c8fd45ec2cc44
 | S2 | Professional Peggy interface | Complete. Compact personal mark/header, clearer page context, quieter controls and composer; full disclosure and consent retained. |
 | S3 | Shared visual consistency | Complete. Smaller invitation seals, restrained navigation type, clear numbered onward links and matching spacing. |
 | S4 | Current rendered and functional verification | Complete locally. Final production build, TypeScript, bundle/runtime checks, 90 journey + 64 guide + 46 chat states. Final concept/render comparison at native viewports and responsive sizes. |
-| S5 | Existing PR, exact-source CI and owner report | Publication receipts to follow on PR #26 and the owner report after this source commit exists. Current screenshots and local evidence are captured. |
+| S5 | Existing PR, exact-source CI and owner report | Complete for source `3755388`. PR #26, run 436 (16/16 jobs) and owner report version 9 contain the publication receipts. Hosted delivery remains E8c. |
 
 The final full local regression passes 227 files / 2,583 tests. An initial run hit one environment-injected proxy-warning stderr assertion; the final run suppresses only that warning, and no assertion was weakened. Exact-source CI is recorded on PR #26 and the owner report. E5b, E8c and E9 remain unchanged release dependencies. This pass adds no new production asset, dependency, provider, business claim or automatic service action.
 

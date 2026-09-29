@@ -34,21 +34,44 @@ try {
   await pathways.getByRole('link').last().evaluate(el=>el.focus({preventScroll:true}));
   assert.equal(await pathways.getAttribute('data-preview'),'2');
   assert.equal(await pathways.getByRole('link').last().getAttribute('href'),'/deal-partners');
-  if(width >= 768) {
-    const rows=await pathways.locator('.experience-path').evaluateAll(links=>links.map(link=>({top:link.getBoundingClientRect().top,note:link.querySelector('.home-path-copy > span').getBoundingClientRect().top,arrow:link.querySelector(':scope > svg').getBoundingClientRect().bottom})));
-    for(const key of ['top','note','arrow']) assert(Math.max(...rows.map(row=>row[key]))-Math.min(...rows.map(row=>row[key])) < 2,`${width}: directory ${key} alignment`);
-  }
+  const rows=await pathways.locator('.experience-path').evaluateAll(links=>links.map(link=>({top:link.getBoundingClientRect().top,bottom:link.getBoundingClientRect().bottom,title:link.querySelector('strong').getBoundingClientRect().left,arrow:link.querySelector(':scope > svg').getBoundingClientRect().right})));
+  for(let i=1;i<rows.length;i++) assert(rows[i].top >= rows[i-1].bottom-1,`${width}: directory rows do not overlap`);
+  for(const key of ['title','arrow']) assert(Math.max(...rows.map(row=>row[key]))-Math.min(...rows.map(row=>row[key])) < 2,`${width}: directory ${key} alignment`);
   await capture(page,key,'illustrated-pathways');
   if(await page.locator('.peggy-fab').isVisible()) await page.locator('.peggy-fab').click();
   else { await page.getByRole('button',{name:'Open menu',exact:true}).click(); await page.getByRole('button',{name:'Talk to Peggy',exact:true}).click(); }
   await page.locator('.peggy-panel.is-open').waitFor();
+  if(width >= 1440) {
+    await page.waitForFunction(()=>document.querySelector('[data-peggy-page]').getBoundingClientRect().right <= document.querySelector('.peggy-panel').getBoundingClientRect().left+1);
+    assert(await page.locator('.experience-path').last().isVisible(),`${key}: routes remain visible beside Peggy`);
+    await page.locator('#home-proof-title').evaluate(el=>el.scrollIntoView({block:'start'}));
+    await page.waitForFunction(()=>document.querySelector('.peggy-view-preview > p')?.textContent.includes('Nelson Drive'));
+    await page.locator('#home-paths-title').evaluate(el=>el.scrollIntoView({block:'start'}));
+    await page.waitForFunction(()=>document.querySelector('.peggy-view-preview > p')?.textContent.includes('What brings you here'));
+    await page.locator('.peggy-close').click();
+    assert(await page.locator('[data-peggy-page]').evaluate(el=>Math.abs(el.getBoundingClientRect().width-innerWidth)<2),`${key}: closing restores page width`);
+    await page.locator('.peggy-fab').click();
+  }
   await capture(page,key,'companion-field-note');
   await page.locator('.peggy-panel').getByRole('button',{name:/Show me around/}).click();
   const trail=page.getByRole('navigation',{name:'Page tour sections'});
   assert.equal(await trail.getByRole('button').count(),await page.locator('[data-peggy-page] h1,[data-peggy-page] h2').count());
   await trail.getByRole('button').nth(1).click();
   assert.equal(await trail.getByRole('button').nth(1).getAttribute('aria-current'),'step');
+  if(width >= 1440) assert(await page.evaluate(()=>document.querySelector('[data-peggy-page]').getBoundingClientRect().right <= document.querySelector('.peggy-tour').getBoundingClientRect().left+1),`${key}: tour leaves page visible`);
   await capture(page,key,'tour-trail');
+  if(width >= 1440) {
+    // Exercise the guide's supported longer outlines without changing public copy.
+    await page.locator('[data-peggy-page]').evaluate(el=>{const fixture=document.createElement('div');fixture.dataset.tourFixture='';for(let i=0;i<12;i++){const h=document.createElement('h2');h.textContent=`Synthetic tour stop ${i+1}`;fixture.append(h);}el.append(fixture);});
+    await page.waitForFunction(()=>document.querySelectorAll('.peggy-tour-trail button').length===18);
+    await trail.getByRole('button').last().click();
+    assert(await trail.getByRole('button').last().evaluate(el=>{const r=el.getBoundingClientRect(),n=el.closest('nav').getBoundingClientRect();return r.top>=n.top-1 && r.bottom<=n.bottom+1;}),`${key}: active stop stays visible in a longer outline`);
+    assert(await page.locator('.peggy-tour-controls').evaluate(el=>el.getBoundingClientRect().bottom<=innerHeight),`${key}: longer outline leaves tour controls reachable`);
+    await capture(page,key,'long-outline-fixture');
+    await trail.getByRole('button').nth(1).click();
+    await page.locator('[data-tour-fixture]').evaluate(el=>el.remove());
+    await page.waitForFunction(()=>document.querySelectorAll('.peggy-tour-trail button').length===6);
+  }
   await trail.getByRole('button').nth(1).press('ArrowRight');
   assert.equal(await trail.getByRole('button').nth(2).getAttribute('aria-current'),'step');
   assert(await trail.getByRole('button').nth(2).evaluate(el=>el===document.activeElement));

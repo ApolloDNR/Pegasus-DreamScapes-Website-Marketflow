@@ -50,9 +50,12 @@ export function HomePageV51(_props: { go: Nav; openPeggy: () => void }) {
     </section>
     <section className="experience-evidence experience-section" data-hv="proof" aria-labelledby="home-proof-title">
       <div className="experience-wrap">
-        <div className="experience-section-head"><h2 id="home-proof-title" data-peggy-summary="Compare the actual Nelson Drive photographs. Open the project to inspect the renovation in more detail.">Nelson Drive,<br /> before and after.</h2><p>The renovation moved the cooktop to a waterfall island with seating. Navy cabinetry and a statement hood give the finished kitchen a clear focal point.</p></div>
-        <div className="experience-photo-pair">
-          <figure><img src="/images/nelson/kitchen-before.webp" alt="Nelson Drive kitchen before the renovation" width={1600} height={999} loading="lazy" decoding="async" /><figcaption>Before · Original kitchen</figcaption></figure>
+        <div className="experience-photo-pair experience-project">
+          <div className="experience-project-copy">
+            <h2 id="home-proof-title" data-peggy-summary="Compare the actual Nelson Drive photographs. Open the project to inspect the renovation in more detail.">Nelson Drive,<br /> before and after.</h2>
+            <figure><img src="/images/nelson/kitchen-before.webp" alt="Nelson Drive kitchen before the renovation" width={1600} height={999} loading="lazy" decoding="async" /><figcaption>Before · Original kitchen</figcaption></figure>
+            <p>The renovation moved the cooktop to a waterfall island with seating. Navy cabinetry and a statement hood give the finished kitchen a clear focal point.</p>
+          </div>
           <figure><img src="/images/nelson/kitchen-after.webp" alt="Nelson Drive kitchen after the renovation: navy cabinetry and a waterfall island" width={1600} height={996} loading="lazy" decoding="async" /><figcaption>After · Completed interior</figcaption></figure>
         </div>
         <div className="experience-proof-note"><p>See the original condition, the renovation decisions, and the documented budget and sale.</p><Link href="/projects/nelson-dr" className="experience-link">Explore the case study<ArrowRight aria-hidden="true" size={17} /></Link></div>

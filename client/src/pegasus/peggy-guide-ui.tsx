@@ -33,7 +33,10 @@ export function PeggyTourTrail({ sections, index, onMove }: { sections: GuideSec
   useEffect(() => {
     const nav = host.current;
     const current = nav?.querySelector<HTMLElement>('[aria-current="step"]');
-    if (nav && current) nav.scrollLeft = Math.max(0, current.offsetLeft - nav.clientWidth / 2 + current.offsetWidth / 2);
+    if (nav && current) {
+      nav.scrollLeft = Math.max(0, current.offsetLeft - nav.clientWidth / 2 + current.offsetWidth / 2);
+      nav.scrollTop = Math.max(0, current.offsetTop - nav.clientHeight / 2 + current.offsetHeight / 2);
+    }
   }, [index, sections.length]);
   return <nav className="peggy-tour-trail" aria-label="Page tour sections" ref={host}>
     {sections.map((section, stop) => <button key={stop} type="button" aria-label={`Go to section ${stop + 1}: ${section.label}`} aria-current={index === stop ? 'step' : undefined} data-before={stop < index} onClick={() => onMove(stop)} onKeyDown={event => {
@@ -42,7 +45,7 @@ export function PeggyTourTrail({ sections, index, onMove }: { sections: GuideSec
       event.preventDefault();
       onMove(target);
       host.current?.querySelectorAll<HTMLButtonElement>('button')[target]?.focus({ preventScroll: true });
-    }}><span>{stop + 1}</span></button>)}
+    }}><span>{stop + 1}</span><span className="peggy-tour-stop-label" aria-hidden="true">{section.label}</span></button>)}
   </nav>;
 }
 
