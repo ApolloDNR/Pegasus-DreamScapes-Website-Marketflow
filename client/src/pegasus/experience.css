@@ -223,10 +223,6 @@
 .pg-root :is(.ep-action,.id-button,.peggy-chip):active { filter:brightness(.96); }
 .pg-root :is(.id-button,.id-text-button,.ep-action) > svg { transition:transform var(--experience-motion-control) var(--experience-motion-ease); }
 .pg-root :is(.id-button,.id-text-button,.ep-action):hover > svg:last-child { transform:translateX(2px); }
-.peggy-input textarea { flex:1; min-width:0; max-height:160px; resize:vertical; border:0; background:transparent; color:var(--cream); font:400 16px/1.5 var(--pg-font-ui); padding:8px 0; }
-.peggy-input textarea:focus { outline:0; }
-.peggy-input textarea::placeholder { color:rgba(239,231,218,.6); }
-.peggy-context-note { margin:0 18px 12px; color:var(--cream); font:400 13px/1.5 var(--pg-font-ui); }
 .intake-lab-review { margin-top:20px; padding-top:18px; border-top:1px solid var(--experience-rule); }
 .intake-lab-review h3 { font-size:17px; }
 .intake-lab-review p { margin-top:10px; font-size:13px; line-height:1.7; overflow-wrap:anywhere; }
@@ -243,8 +239,3 @@
 .id-start-guide > .property-sketch { width:180px; margin-bottom:18px; }
 @media(max-width:420px) { .ep-property-context { gap:12px; } .ep-property-context .property-sketch { width:100px; } }
 .ep-context-actions { display:flex; align-items:center; flex-wrap:wrap; gap:12px 24px; }
-/* Peggy remains a navy surface in both appearances; inherited page ink is unsuitable here. */
-.peggy-panel { color:#efe7da; }
-.peggy-panel .pg-label,.peggy-panel [data-testid='peggy-send-disclosure'] { color:#d5d1c9; font:400 13px/1.6 var(--pg-font-ui); letter-spacing:normal; text-transform:none; }
-.peggy-head > button { color:#efe7da; }
-.peggy-head > .leading-none { flex:1; min-width:0; }

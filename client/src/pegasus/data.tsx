@@ -502,9 +502,9 @@ export const PEGGY_ROLES: { role: string; label: string; chips: string[]; follow
       'I have a tired rental and a tenant. What are my options?',
     ],
     followups: [
-      'Tell me about the property',
-      'How fast can you close?',
-      'What are my options here?',
+      'What property details should I gather?',
+      'How can timing affect the available paths?',
+      'What should I compare before deciding?',
     ],
   },
   {
@@ -512,7 +512,7 @@ export const PEGGY_ROLES: { role: string; label: string; chips: string[]; follow
     chips: [
       'I want buyer representation for a home purchase',
       'I am an investor looking for the next value-add',
-      'What is in the Pegasus inventory pipeline right now?',
+      'What should I verify before evaluating an investment property?',
     ],
     followups: [
       'What should I be looking for?',
@@ -529,7 +529,7 @@ export const PEGGY_ROLES: { role: string; label: string; chips: string[]; follow
     ],
     followups: [
       'How do I submit the deal?',
-      'What terms can I expect?',
+      'What needs to be verified before a submission?',
       'Run the spread in Strategy Lab',
     ],
   },
@@ -580,7 +580,7 @@ export const PEGGY_ROLES: { role: string; label: string; chips: string[]; follow
       'Just tell me how Pegasus works',
     ],
     followups: [
-      'Which lane fits my situation?',
+      'Which public path could help me explore my situation?',
       'What does this cost?',
       'I would rather talk to a person',
     ],
@@ -589,7 +589,7 @@ export const PEGGY_ROLES: { role: string; label: string; chips: string[]; follow
 
 /* Generic follow-up chips, used as a fallback when no role path is selected. */
 export const PEGGY_FOLLOWUPS: string[] = [
-  'Which lane fits my situation?',
+  'Which public path could help me explore my situation?',
   'What does this cost?',
   'Model the numbers in Strategy Lab',
   'I would rather talk to a person',

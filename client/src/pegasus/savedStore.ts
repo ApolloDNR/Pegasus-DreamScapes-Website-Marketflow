@@ -142,6 +142,20 @@ export function addChat(
   return result.ok ? { ok: true, value: row } : result;
 }
 
+/** An explicit save updates the same local copy as more turns are added. */
+export function updateChat(
+  id: string,
+  title: string,
+  transcript: ChatTurn[],
+): SavedStoreResult<SavedChat> {
+  const chats = listChats();
+  const existing = chats.find((chat) => chat.id === id);
+  if (!existing) return addChat(title, transcript);
+  const row = { ...existing, title, transcript };
+  const result = write(CHATS_KEY, chats.map((chat) => chat.id === id ? row : chat));
+  return result.ok ? { ok: true, value: row } : result;
+}
+
 export function deleteStrategy(id: string): SavedStoreResult<void> {
   return write(STRATEGIES_KEY, listStrategies().filter((s) => s.id !== id));
 }

@@ -70,6 +70,7 @@ try {
     await check(page, 'brief', key);
     await page.getByRole('button', { name: 'Prepare my inquiry', exact: true }).click();
     const draft = page.getByRole('textbox', { name: 'Talk to Peggy', exact: true });
+    await page.waitForFunction(() => document.querySelector('textarea[aria-label="Talk to Peggy"]')?.value.includes('Conservative'));
     assert.match(await draft.inputValue(), /Conservative/);
     assert.match(await draft.inputValue(), /Inherited property/);
     assert.equal(posts.length, 0, 'Opening Peggy must not send');

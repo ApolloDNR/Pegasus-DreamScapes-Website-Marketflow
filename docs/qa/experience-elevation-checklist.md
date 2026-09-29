@@ -19,7 +19,7 @@ This is the active continuation checklist for the approved **Pegasus Experience 
 | E6 | Attentive inquiry context and review | Complete locally | Supported facts/unknowns shown; edits propagate; retain form schema, consent, failure and receipt contracts |
 | E7 | Consistent branded brief, Copy and Print | Complete locally | Situation, scenario, numbers, unknowns and next check agree; readable without print backgrounds; no automatic sharing |
 | E8a | TypeScript, regression tests, build, bundle and rendered journey checks | Complete locally | Record exact commands, counts, failures and final source |
-| E8b | Publish source to existing draft PR #26 | Pending | Non-forced update and exact-source hosted CI |
+| E8b | Publish source to existing draft PR #26 | Complete (prior elevation phase) | Non-forced update and exact-source hosted CI |
 | E8c | Update and inspect existing protected Vercel preview | External dependency | Last attempt: deployment action unavailable; verify actual new deployment/source before claiming delivery |
 | E9 | Real service/device/user acceptance and production release | External dependency | Authorized intake/HQ/email receipts, authentication, physical phone keyboard, consenting task participants, owner/broker review; production/DNS remain outside this pass |
 
@@ -76,3 +76,40 @@ Local browser checks use the actual production build with explicit unavailable-b
 ### Bounded timing observations
 
 One unthrottled headless session per revision, local HTTP and blocked external traffic, is useful only as a coarse lab observation. Five programmatic React edits were timed through two animation frames. Parent median: 19.6ms; current median: 24.1ms (current range 12.0–38.6ms). Cold DOM/FCP: parent 250.6/644ms, current 244.6/636ms. Cached repeat DOM/FCP: parent 466.5/1428ms, current 234.9/760ms. This small, noisy sample supports no speed-improvement claim and is not field INP. Production field measurement and physical-device task review remain E9.
+
+## September 29: Peggy brand and interaction refinement
+
+Requested after owner visual review: keep the accepted direction, clean up the experience, strengthen Pegasus recognition, and modernize Peggy. Baseline: `a5ab85d25fc54249b4cbd1bc0c28ee9a03f3cf8c`. Existing approval still covers this branch and draft PR #26.
+
+| ID | Deliverable | Status | Acceptance |
+| --- | --- | --- | --- |
+| P1 | Recognizable Peggy by Pegasus | Complete | Official mark, named launcher, paper/navy/copper, clear AI identity, no simulated live status |
+| P2 | Cleaner, guided conversation | Complete | Progressive starting points, editable prompt selection, prepared-context review, full-width composer |
+| P3 | Reliable controls and recovery | Complete | Save latest into same device copy, explicit fresh chat, stop waiting, no late-reply crossover, editable failed drafts |
+| P4 | Current-source verification and publication | Verified locally; exact-source CI tracked on PR | TypeScript, regression/build/bundle gates, desktop/mobile/two-theme rendered checks, same PR |
+| P5 | Updated visual evidence and owner report | Captured locally; owner report updated after publication | Current screenshots, exact source, completed/pending checklist; no deployment or live-AI claim without proof |
+
+E5b, E8c and E9 remain the separate live-service, protected-hosting and real-device/user acceptance dependencies. This pass does not reset completed E items.
+
+### Peggy refinement evidence
+
+- The full suite passes 224 files / 2,555 tests. Seven new behavioral tests cover reviewed prompt selection, same-copy Save latest, confirmed fresh chat, aborted requests and late responses, empty-response recovery, and deliberate keyboard send. Focused tests were rerun after the final interaction fix.
+- TypeScript, production build, initial bundle budget and fail-closed serverless runtime checks pass. Initial JavaScript is 404,399 bytes raw / 120,972 bytes gzip (budget 475,000 / 145,000). No dependency or brand asset changed.
+- `scripts/check-peggy-experience.mjs` captures 46 states at 320, 390, 768 and 1440px in both themes, with short-screen and cookie-notice checks. Requests use isolated synthetic fixtures; there is no live AI or intake submission. Every state checks overflow, visible close/composer/privacy text, and WCAG A/AA rules through axe. This regression now runs in the existing PR build job and uploads source-labelled screenshots.
+- The existing owner → Lab → Peggy → inquiry → photo journey passes 48 states. Its draft assertion now waits for React to present the prepared context rather than reading the input before the update.
+- Rendered checks caught a real Stop waiting button-reuse bug: the stop click could inherit the replacement button’s submit behavior. Distinct button keys and preventing its default action ensure stopping never submits the restored draft. The browser regression asserts that request count stays unchanged.
+- Small-screen refinement keeps the send disclosure fully inside the panel above an open cookie notice. At constrained heights, the decorative opening and secondary status strip yield space to the editor. Long-form capability details remain available under About Peggy.
+
+### Fidelity ledger
+
+1. Preserved the official emblem, Playfair/Inter and approved paper/navy/copper palette; replaced the former tiny hover-only launcher with a named Peggy by Pegasus control.
+2. Replaced the dense navy paragraph with a navy brand header and a calm paper conversation body. Dark appearance uses the existing theme tokens.
+3. Starting choices use the site’s ruled editorial rows; secondary paths and explanatory details expand on request. All original route handlers remain.
+4. Prepared property context remains editable and unsent until Send. Selected question suggestions now follow that same review-first behavior.
+5. Conversation rows distinguish visitor messages, actual pending requests, replies and connection notices. Error notices are excluded from saved/handoff transcripts.
+6. Retained explicit AI identity, visible send/storage disclosure, early-access status, page-memory credentials and human-review limitations. No new live-service or voice capability is claimed.
+7. Current screenshots are from the built application. The approved older screenshot was used as the baseline; no image-generation redesign was needed for this focused refinement.
+
+Local rendering used the existing Playwright-based project workflow because Cloud Browser returned `net::ERR_BLOCKED_BY_CLIENT` for the local preview. Chromium was installed in an isolated QA workspace; no package/lockfile or application dependency changed. The host-injected Undici warning affected one strict stderr fixture on the first full run; `NODE_NO_WARNINGS=1` removed that host warning and the complete suite passed. No product test was skipped or weakened.
+
+The current source and final CI outcome are recorded in PR #26 and the owner’s persistent checklist. E5b, E8c and E9 remain open.

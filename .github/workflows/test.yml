@@ -131,6 +131,23 @@ jobs:
       - name: Build exact rendered QA client once
         run: npm run build
 
+      - name: Install matching Chromium for Peggy interaction checks
+        run: npx playwright-core install --with-deps chromium
+
+      - name: Verify Peggy interaction and responsive states
+        run: node scripts/check-peggy-experience.mjs
+        env:
+          PEGGY_SCREENSHOT_DIR: artifacts/peggy-refinement
+
+      - name: Upload Peggy interaction evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pegasus-peggy-refinement-${{ env.TESTED_SOURCE_SHA }}
+          path: artifacts/peggy-refinement
+          retention-days: 14
+          if-no-files-found: error
+
       - name: Record exact rendered QA build digest
         id: build-digest
         shell: bash
