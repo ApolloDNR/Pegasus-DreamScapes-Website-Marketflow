@@ -47,7 +47,8 @@ export function readSectionContext(root: HTMLElement, sections: GuideSection[], 
 }
 
 function activeSectionIndex(sections: GuideSection[]): number {
-  const anchor = Math.min(220, Math.max(130, innerHeight * 0.25));
+  const navigationHeight = document.querySelector('.site-nav')?.getBoundingClientRect().height ?? 0;
+  const anchor = Math.max(navigationHeight + 76, Math.min(220, Math.max(130, innerHeight * 0.25)));
   let index = 0;
   sections.forEach((section, i) => { if (section.element.getBoundingClientRect().top <= anchor) index = i; });
   return index;

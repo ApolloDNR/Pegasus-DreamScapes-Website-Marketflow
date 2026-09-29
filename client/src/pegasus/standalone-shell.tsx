@@ -5,6 +5,7 @@ import './public-reading.css';
 import type { Nav, Route, PeggyHandoff } from './theme';
 import { NavBar } from './nav';
 import { Footer } from './footer';
+import { JourneyContinuation } from './journey';
 import { Peggy } from './peggy';
 import { routeForUrl, urlFor } from './routes';
 import { useTheme } from '@/components/theme-provider';
@@ -100,6 +101,7 @@ export function PegasusStandaloneShell({
       <div className="public-reading-surface" data-theme={dataTheme} data-peggy-page>{children}</div>
 
       <div className="pg-root" data-theme={dataTheme}>
+        <JourneyContinuation path={location} />
         <Footer go={go} />
         <Peggy
           open={peggyOpen}

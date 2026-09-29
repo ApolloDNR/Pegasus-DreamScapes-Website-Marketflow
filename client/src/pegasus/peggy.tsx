@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useId, useState, useCallback } from 'react';
 import { X, Send, ArrowRight, ChevronDown, CornerDownLeft, Loader2, Bookmark, BookmarkCheck, Plus, FileText, Compass } from 'lucide-react';
 import type { ChatTurn, PeggyHandoff, Nav } from './theme';
 import { PEGGY_ROLES, PEGGY_FOLLOWUPS, PEGGY_SLA, PEGGY_COMPLIANCE, PEGGY_STATUS } from './data';
-import { BrandMark } from './primitives';
+import { PeggyMark } from './peggy-mark';
+import { JourneyWayfinder, PEGGY_GUIDE_REQUEST, type PeggyGuideRequest } from './journey';
 import { addChat, updateChat } from './savedStore';
 import {
   type PeggyConversationAccessResponse,
@@ -101,6 +102,7 @@ export function Peggy({
 }) {
   const panelId = useId();
   const composerHintId = useId();
+  const draftChoiceId = useId();
   const fabRef = useRef<HTMLButtonElement>(null);
   const openerRef = useRef<HTMLElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -125,6 +127,7 @@ export function Peggy({
   const [pinnedContext, setPinnedContext] = useState<PeggyPageContext | null>(null);
   const [choosingPath, setChoosingPath] = useState(false);
   const [tourIndex, setTourIndex] = useState<number | null>(null);
+  const [pendingQuestion, setPendingQuestion] = useState<{ prompt: string; context?: PeggyPageContext } | null>(null);
   const panelOpen = open && tourIndex === null;
   const pinned = pinnedContext;
   const restoreOpenerFocus = () => requestAnimationFrame(() => {
@@ -133,7 +136,7 @@ export function Peggy({
     target?.focus({ preventScroll: true });
   });
 
-  useEffect(() => { setPinnedContext(null); setTourIndex(null); setChoosingPath(false); }, [guide.path]);
+  useEffect(() => { setPinnedContext(null); setTourIndex(null); setChoosingPath(false); setPendingQuestion(null); }, [guide.path]);
   useEffect(() => { if (!open) setTourIndex(null); }, [open]);
   useEffect(() => {
     if (tourIndex === null) return;
@@ -348,20 +351,46 @@ export function Peggy({
   const role = PEGGY_ROLES.find((item) => item.role === pickedRole);
   const startTour = (index = 0) => { setTourIndex(index); setOpen(true); };
   const endTour = () => { setTourIndex(null); requestAnimationFrame(() => panelRef.current?.focus({ preventScroll: true })); };
+  const applyQuestion = (question: { prompt: string; context?: PeggyPageContext }) => {
+    setDraft(question.prompt);
+    if (question.context) { setPinnedContext(question.context); setIncludeContext(true); }
+    setPendingQuestion(null);
+    requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
+  };
+  const offerQuestion = (question: { prompt: string; context?: PeggyPageContext }) => {
+    if (streaming || (draft.trim() && draft !== question.prompt)) setPendingQuestion(question);
+    else applyQuestion(question);
+  };
   const explainSection = (index = guide.index, selectedText = guide.selectedText) => {
     const snapshot = guide.snapshot(index);
     if (!snapshot) return;
-    setPinnedContext({ ...snapshot, ...(selectedText ? { selection: selectedText } : {}) });
-    setIncludeContext(true);
-    setDraft(selectedText ? 'Explain the selected passage in plain language.' : `Explain “${snapshot.section}” in plain language. What should I notice here?`);
+    offerQuestion({ context: { ...snapshot, ...(selectedText ? { selection: selectedText } : {}) }, prompt: selectedText ? 'Explain the selected passage in plain language.' : `Explain “${snapshot.section}” in plain language. What should I notice here?` });
     setTourIndex(null);
     setOpen(true);
-    requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
   };
   const preparePrompt = (prompt: string) => {
-    setDraft(prompt);
-    inputRef.current?.focus();
+    offerQuestion({ prompt });
   };
+  useEffect(() => {
+    const receive = (event: Event) => {
+      const detail = (event as CustomEvent<PeggyGuideRequest>).detail;
+      if (!detail || !(detail.source instanceof HTMLElement) || !detail.source.isConnected) return;
+      openerRef.current = detail.source;
+      if (detail.mode === 'tour') startTour();
+      else if (detail.mode === 'explain') {
+        const root = document.querySelector('[data-peggy-page]');
+        const index = root?.contains(detail.source) ? guide.sections.findLastIndex(section => Boolean(section.element.compareDocumentPosition(detail.source) & Node.DOCUMENT_POSITION_FOLLOWING)) : guide.index;
+        explainSection(Math.max(0, index), '');
+      } else if (detail.mode === 'choose') { setTourIndex(null); setChoosingPath(true); setPickedRole(null); setOpen(true); }
+    };
+    window.addEventListener(PEGGY_GUIDE_REQUEST, receive);
+    return () => window.removeEventListener(PEGGY_GUIDE_REQUEST, receive);
+  });
+  useEffect(() => {
+    if (!pendingQuestion || !panelOpen) return;
+    const frame = requestAnimationFrame(() => panelRef.current?.querySelector<HTMLElement>('.peggy-draft-choice')?.focus({ preventScroll: true }));
+    return () => cancelAnimationFrame(frame);
+  }, [pendingQuestion, panelOpen]);
   const resetConversation = () => {
     requestGeneration.current += 1;
     abortRef.current?.abort();
@@ -377,6 +406,7 @@ export function Peggy({
     setConversationKey((key) => key + 1);
     setPinnedContext(null);
     setChoosingPath(false);
+    setPendingQuestion(null);
     requestAnimationFrame(() => panelRef.current?.focus({ preventScroll: true }));
   };
   const stopWaiting = () => {
@@ -404,19 +434,20 @@ export function Peggy({
 
   return (
     <>
+      <JourneyWayfinder path={guide.path} sections={guide.sections} index={guide.index} hidden={open} onAsk={() => explainSection(guide.index, '')} />
       {!open && guide.selectedText && <button type="button" className="peggy-selection-launcher" onClick={() => explainSection()}><FileText size={17} aria-hidden="true" />Ask Peggy about this</button>}
       <button ref={fabRef} type="button" onClick={() => open ? close() : setOpen(true)}
         aria-label={open ? 'Close Peggy' : 'Talk to Peggy, the Pegasus intake concierge'}
         aria-expanded={open} aria-controls={panelId}
         className={`peggy-fab ${open ? 'is-open' : ''}`} hidden={open}>
-        {open ? <X size={20} aria-hidden="true" /> : <BrandMark boxClassName="w-8 h-8" onDark />}
+        {open ? <X size={20} aria-hidden="true" /> : <PeggyMark size={34} />}
         {!open && <span className="peggy-fab-label">Ask Peggy <span>Your guide to Pegasus</span></span>}
       </button>
 
       <div ref={panelRef} id={panelId} className={`peggy-panel ${panelOpen ? 'is-open' : ''}`} role="dialog" aria-modal="false" tabIndex={-1}
         aria-label="Peggy, the Pegasus intake concierge" aria-hidden={!panelOpen} {...(!panelOpen ? { inert: '' } : {})}>
         <header className="peggy-head">
-          <div className="peggy-avatar"><BrandMark boxClassName="w-full h-full" onDark /></div>
+          <div className="peggy-avatar"><PeggyMark size={44} /></div>
           <div className="peggy-identity">
             <span className="peggy-brand">Pegasus Dreamscapes</span>
             <div className="peggy-name">Peggy <span>Your guide to Pegasus</span></div>
@@ -521,6 +552,11 @@ export function Peggy({
         </div>
 
         <div className="peggy-compose-area">
+          {pendingQuestion && <div className="peggy-draft-choice" role="group" tabIndex={-1} aria-label="Review a suggested question" aria-describedby={draftChoiceId}>
+            <p role="status">{streaming ? 'Peggy is still responding. Your next question is ready to review.' : 'You already have a draft. Keep it, or use this question.'}</p>
+            <p id={draftChoiceId}>{pendingQuestion.prompt}</p>
+            <div><button type="button" disabled={streaming} onClick={() => applyQuestion(pendingQuestion)}>Use this question</button><button type="button" onClick={() => { setPendingQuestion(null); inputRef.current?.focus(); }}>Keep my draft</button></div>
+          </div>}
           {pinned && includeContext && <div className="peggy-attached-context"><details><summary><FileText size={14} aria-hidden="true" /><span>{pinned.selection ? 'Selected passage' : pinned.section}</span><ChevronDown size={14} aria-hidden="true" /></summary><p>{pinned.selection || pinned.excerpt || pinned.section}</p><small>This snapshot stays attached while you scroll. Remove it to use the current view.</small></details><button type="button" aria-label="Remove attached page context" disabled={streaming} onClick={() => { setPinnedContext(null); guide.clearSelection(); }}><X size={16} aria-hidden="true" /></button></div>}
           {prepared && !conversationStarted && <p className="peggy-context-note"><FileText size={16} aria-hidden="true" /><span>Prepared draft · nothing sent yet</span></p>}
           <form className="peggy-input" onSubmit={(event) => { event.preventDefault(); send(draft); }}>

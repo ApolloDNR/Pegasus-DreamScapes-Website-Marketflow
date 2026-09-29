@@ -39,7 +39,8 @@ describe('Blueprint v1.1 mounted homepage', () => {
     const router = within(container.querySelector<HTMLElement>('[data-hv="router"]')!);
     const paths = router.getAllByRole('link');
     expect(paths.map(link => link.getAttribute('href'))).toEqual(['/property-owners', '/work-with-apollo', '/deal-partners']);
-    expect(router.queryByRole('button')).not.toBeInTheDocument();
+    expect(router.getAllByRole('button').map(button => button.textContent)).toEqual(['Want help choosing? Ask Peggy.']);
+    expect(container.querySelector('.experience-paths button')).toBeNull();
     paths.forEach(link => fireEvent.click(link));
     expect(history.slice(-3)).toEqual(['/property-owners', '/work-with-apollo', '/deal-partners']);
   });

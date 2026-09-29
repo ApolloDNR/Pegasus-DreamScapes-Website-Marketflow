@@ -1,3 +1,4 @@
+import { ExplainWithPeggy } from './journey';
 import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useSearch } from 'wouter';
 import { ArrowRight } from 'lucide-react';
@@ -40,14 +41,14 @@ export function DealPartnersPage({ go: _go }: { go: Nav }) {
       <p>Share the property or project, your role, and the help you are looking for. Pegasus considers each proposal individually; participation requires separate written terms.</p>
     </PageOpening>
     <section className="ep-section" data-testid="missing-composer"><div className="experience-wrap">
-      <h2>What does the deal need next?</h2>
+      <h2 data-peggy-summary="Choose the missing piece. The details explain which facts to gather and which questions need a separate agreement.">What does the deal need next?</h2>
       <div className="ep-choice-layout">
         <ResponsiveChoiceList id="partner-need" label="What the deal is missing" options={MISSING} value={idx} onChange={selectNeed} controls="partner-answer" className="ep-choices" itemClassName="ep-choice" />
-        <div className="ep-choice-answer" id="partner-answer" aria-live="polite" aria-atomic="true"><h3>{pick.label}</h3><p>{pick.records}</p><PageAction href={selectedNeedHref}>Bring this opportunity</PageAction><p className="ep-notice">{pick.limit}</p></div>
+        <div className="ep-choice-answer" id="partner-answer" aria-live="polite" aria-atomic="true"><h3>{pick.label}</h3><p>{pick.records}</p><PageAction href={selectedNeedHref}>Bring this opportunity</PageAction><p className="ep-notice">{pick.limit}</p><ExplainWithPeggy /></div>
       </div>
     </div></section>
     <section className="ep-section ep-dark"><div className="experience-wrap ep-split">
-      <div><h2>Put the proposal on the record.</h2><p>The intake can record a proposed principal, joint-venture, disposition, operating, brokerage, or referral role. Actual involvement would depend on capacity, diligence, applicable law, and separate written terms; receipt creates none of those relationships.</p></div>
+      <div><h2 data-peggy-summary="Identify the property, your authority and your proposed contribution. Sharing a proposal does not create a partnership or compensation agreement.">Put the proposal on the record.</h2><p>The intake can record a proposed principal, joint-venture, disposition, operating, brokerage, or referral role. Actual involvement would depend on capacity, diligence, applicable law, and separate written terms; receipt creates none of those relationships.</p></div>
       <div><ol className="ep-rows ep-numbered">
         <li><div><h3>Identify the opportunity.</h3><p>Include the property, known facts, current control, and relevant dates.</p></div></li>
         <li><div><h3>Define your contribution.</h3><p>Explain your role, authority, and the unresolved decisions.</p></div></li>

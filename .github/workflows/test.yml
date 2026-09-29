@@ -162,6 +162,20 @@ jobs:
           retention-days: 14
           if-no-files-found: error
 
+      - name: Verify shared page journeys and Peggy draft continuity
+        run: node scripts/check-journey-refinement.mjs
+        env:
+          JOURNEY_SCREENSHOT_DIR: artifacts/journey-refinement
+
+      - name: Upload shared journey evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pegasus-journey-refinement-${{ env.TESTED_SOURCE_SHA }}
+          path: artifacts/journey-refinement
+          retention-days: 14
+          if-no-files-found: error
+
       - name: Record exact rendered QA build digest
         id: build-digest
         shell: bash

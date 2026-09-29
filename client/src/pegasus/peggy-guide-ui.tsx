@@ -1,6 +1,7 @@
 import { ArrowLeft, ArrowRight, ChevronDown, Compass, FileText, ListTree, X } from 'lucide-react';
 import type { PeggyPageContext } from '@shared/peggy-page-context';
 import type { GuideSection } from './peggy-page-guide';
+import { PeggyMark } from './peggy-mark';
 
 export function PeggyLocation({ context, label, sections, onVisit }: { context: PeggyPageContext; label: string; sections: GuideSection[]; onVisit: (index: number) => void }) {
   return <details className="peggy-location">
@@ -30,7 +31,7 @@ export function PeggyTour({ section, index, total, context, onMove, onEnd, onAsk
   const excerpt = context?.excerpt ?? '';
   const firstSentence = excerpt.match(/^.{40,260}?[.!?](?:\s|$)/)?.[0]?.trim();
   return <aside className="peggy-tour" aria-label="Peggy page guide" tabIndex={-1}>
-    <header><Compass size={20} aria-hidden="true" /><span>Peggy is showing you around</span><button type="button" onClick={onEnd} aria-label="End page tour"><X size={20} aria-hidden="true" /></button></header>
+    <header><PeggyMark size={27} /><span>Peggy is showing you around</span><button type="button" onClick={onEnd} aria-label="End page tour"><X size={20} aria-hidden="true" /></button></header>
     <div className="peggy-tour-body">
       <div className="peggy-tour-step" aria-live="polite" aria-atomic="true"><span>{String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</span><h2>{section.title}</h2></div>
       <p>{section.summary || firstSentence || (excerpt.length > 220 ? `${excerpt.slice(0, 217)}…` : excerpt) || 'Take a look at this section. You can ask Peggy to help explain it.'}</p>

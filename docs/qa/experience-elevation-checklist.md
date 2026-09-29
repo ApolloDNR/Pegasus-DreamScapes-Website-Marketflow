@@ -131,3 +131,21 @@ Local rendering used the existing Playwright-based project workflow because Clou
 The current source and final CI outcome are recorded in PR #26 and the owner’s persistent checklist. E5b, E8c and E9 remain open.
 
 Published-source CI run 426 passed the product build, full regression suite, new 46-state Peggy gate and the public route checks. One older core journey attempted to click Submit a Property while its new shortcut group was collapsed. The QA-only follow-up explicitly expands “Go straight to a tool or path” before the existing route assertion. It does not force-click, skip the action, relax the assertion or alter application code. The final source and replacement CI run are recorded on PR #26 and in the owner report.
+
+## September 29: coherent guided website journey
+
+Owner direction: extend Peggy's interactive, guided feel throughout the public experience and give her a personal mark. This reopens the design scope while preserving the approved company identity, public facts, six Home sections, original photos, nine Lab paths, eight calculators and transaction boundaries. Baseline `90144c07e2aee7df189558ee9d1104f021e95593`; same draft PR #26.
+
+| ID | Outcome | Source status |
+| --- | --- | --- |
+| J1 | Winged-P personal mark across Peggy launcher, panel, tour and guidance entries | Complete |
+| J2 | Public-page section index, outline and contextual Ask, with keyboard focus and measured header clearance | Complete |
+| J3 | Shared tour invitations, contextual explanation, unsent-draft preservation and pending-response isolation | Complete |
+| J4 | Route-specific onward links and optional review-before-submit explanation | Complete |
+| J5 | Three-task Tools finder with all eight actual calculators and existing saved-work/review paths | Complete |
+| J6 | Consistent public actions, typography, responsive rules, reduced motion and authored tour summaries | Complete |
+| J7 | Unit/build/browser evidence, exact-source CI, PR publication and owner checklist | Local verification complete; publication outcome is recorded on PR #26 and the persistent owner report |
+
+Local regression suite: 227 files / 2,579 tests. TypeScript, production build, budget and serverless-runtime cases pass. New rendered gate covers 64 normal width/theme states and adds two phone enlarged-text states. Prior guide/chat suites pass 64/46 states with intercepted response fixtures. The final focus and measured-header change additionally passes focused regressions; hosted CI executes the final full source. Initial JS is 427,086 B raw / 127,919 B gzip, within 475,000 / 145,000 limits. The new journey gate is part of the existing rendered-build CI job.
+
+See `journey-refinement-design.md` for concepts, copy inventory, design tokens, fidelity ledger, intentional adaptations and prioritized next ideas. No new live AI or actual inquiry was sent. E5b configured Peggy, E8c exact-source protected hosting and E9 live receipts / physical device / participant acceptance remain open.

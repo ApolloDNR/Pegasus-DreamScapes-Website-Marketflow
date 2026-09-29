@@ -5,7 +5,7 @@ export function OurWorkPage({ go: _go }: { go: Nav }) {
   return <article className="experience-page">
     <PageOpening title="The work, in detail."><p>A completed East Bay residential transformation, documented from its starting condition to the finished home.</p></PageOpening>
     <section className="ep-section"><div className="experience-wrap">
-      <div className="ep-section-title"><h2>Nelson Drive.</h2><p>Richmond / El Sobrante Area, California</p></div>
+      <div className="ep-section-title"><h2 data-peggy-summary="This is the documented Nelson Drive project. Compare the real photographs and follow the case study for the recorded scope and financial information.">Nelson Drive.</h2><p>Richmond / El Sobrante Area, California</p></div>
       <figure className="ep-wide-photo"><img src="/images/nelson/curb.webp" alt="Nelson Drive exterior after the renovation" width={1600} height={1067} loading="eager" decoding="async" /><figcaption>The completed property · Real project photography</figcaption></figure>
       <div className="ep-split ep-rule" id="project-record"><div><h3 id="project-lessons">From dated interiors to a coherent home.</h3><p>Explore the kitchen, living spaces, and bathrooms through the original project photographs.</p></div><div><p>The case study keeps the documented scope, known financial figures, and limits of the available record together.</p><PageAction href="/projects/nelson-dr">Explore the case study</PageAction></div></div>
     </div></section>

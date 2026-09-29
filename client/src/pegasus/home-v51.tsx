@@ -5,6 +5,7 @@ import type { Nav } from './theme';
 import { HOME_PATHS, PUBLIC_ACTIONS, REPRESENTATION_NOTICE, SUBMISSION_NOTICE } from './public-content';
 import './experience.css';
 import './arrival-refinement.css';
+import { BeforeYouBegin, GuideInvite } from './journey';
 
 const OpportunityPlan = lazy(() => import('./opportunity-plan').then(module => ({ default: module.OpportunityPlan })));
 
@@ -49,6 +50,7 @@ export function HomePageV51(_props: { go: Nav; openPeggy: () => void }) {
         <div className="experience-paths">{HOME_PATHS.map(path => <Link key={path.href} href={path.href} className="experience-path">
           <span><strong>{path.label}</strong><span>{path.note}</span></span><ArrowRight aria-hidden="true" size={22} />
         </Link>)}</div>
+        <GuideInvite compact choose />
       </div>
     </section>
     <section className="experience-evidence experience-section" data-hv="proof" aria-labelledby="home-proof-title">
@@ -82,6 +84,7 @@ export function HomePageV51(_props: { go: Nav; openPeggy: () => void }) {
     <section className="experience-invitation experience-section" data-hv="final" aria-labelledby="home-invitation-title">
       <div className="experience-wrap"><h2 id="home-invitation-title" data-peggy-summary="When you are ready, bring your property or question forward. You can review your information before submitting it for possible consideration.">Start with what you have.</h2><p>A property, a challenge, or an idea. You don’t need a finished plan.</p>
         <div className="experience-actions"><Link href={PUBLIC_ACTIONS.opportunity.href} className="experience-button">{PUBLIC_ACTIONS.opportunity.label}<ArrowRight aria-hidden="true" size={18} /></Link><Link href={PUBLIC_ACTIONS.contact.href} className="experience-link">{PUBLIC_ACTIONS.contact.label}<ArrowRight aria-hidden="true" size={17} /></Link></div>
+        <BeforeYouBegin />
         <p className="experience-notice">{SUBMISSION_NOTICE}</p>
       </div>
     </section>

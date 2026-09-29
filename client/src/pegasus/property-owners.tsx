@@ -1,3 +1,4 @@
+import { ExplainWithPeggy } from './journey';
 import React, { useEffect, useState } from 'react';
 import { useLocation, useSearch } from 'wouter';
 import type { Nav } from './theme';
@@ -41,7 +42,7 @@ export function PropertyOwnersPage({ go: _go }: { go: Nav }) {
     </PageOpening>
     <section className="ep-section" data-testid="situation-stepper">
       <div className="experience-wrap">
-        <h2>What are you working through?</h2>
+        <h2 data-peggy-summary="Choose the situation closest to yours. The questions and next steps update with your choice, and you can carry that context into the intake or Strategy Lab.">What are you working through?</h2>
         <div className="ep-choice-layout">
           <ResponsiveChoiceList id="owner-situation" label="Common owner situations" options={SITUATIONS} value={idx} onChange={selectSituation} controls="owner-path" className="ep-choices" itemClassName="ep-choice" />
           <div className="ep-choice-answer" id="owner-path" aria-live="polite" aria-atomic="true">
@@ -49,13 +50,13 @@ export function PropertyOwnersPage({ go: _go }: { go: Nav }) {
             <div className="ep-context-actions"><PageAction href={selectedSituationHref}>Start with this situation</PageAction>
             <PageAction href={`/strategy-lab?owner_situation=${encodeURIComponent(SITUATIONS[idx].label)}`} secondary>Explore the numbers first</PageAction></div>
             <div className="ep-property-context"><PropertySketch focus={[2, 4, 6, 8].includes(idx) ? 'access' : [5, 7].includes(idx) ? 'site' : 'scope'} /><p>{[2, 4, 6, 8].includes(idx) ? 'Ownership · Access · Timing' : [5, 7].includes(idx) ? 'Site · Permits · Intended use' : 'Condition · Scope · Current use'}<small>Questions to establish for your property.</small></p></div>
-            <p className="ep-notice">{SITUATIONS[idx].limit}</p>
+            <p className="ep-notice">{SITUATIONS[idx].limit}</p><ExplainWithPeggy />
           </div>
         </div>
       </div>
     </section>
     <section className="ep-section ep-warm"><div className="experience-wrap ep-split">
-      <div><h2>Different paths. Clear roles.</h2><p>Pegasus considers opportunities case by case, with any acquisition, project role, or licensed representation defined separately.</p></div>
+      <div><h2 data-peggy-summary="A possible acquisition, a project role and licensed representation are different relationships. Compare them here before choosing a conversation.">Different paths. Clear roles.</h2><p>Pegasus considers opportunities case by case, with any acquisition, project role, or licensed representation defined separately.</p></div>
       <div><dl className="ep-rows">
         <div><dt>A possible direct acquisition</dt><dd>A purchase would require property-specific diligence, capacity, and accepted written terms.</dd></div>
         <div><dt>A project or renovation conversation</dt><dd>Scope, qualifications, permits, responsibilities, and availability must be established for the specific work.</dd></div>
@@ -64,7 +65,7 @@ export function PropertyOwnersPage({ go: _go }: { go: Nav }) {
     </div></section>
     <ProjectEvidence />
     <section className="ep-section ep-process"><div className="experience-wrap">
-      <h2>Start with what you know.</h2>
+      <h2 data-peggy-summary="Bring the facts you know, mark estimates and unknowns, and review your information before submitting. You do not need a finished plan.">Start with what you know.</h2>
       <ol className="ep-rows ep-numbered">
         <li><div><h3>Describe the property.</h3><p>Add the address, condition, occupancy, and what you want to resolve.</p></div></li>
         <li><div><h3>Add the context.</h3><p>Identify estimates and unknowns. Share only what you are authorized to share; supporting files remain subject to the site privacy terms.</p></div></li>

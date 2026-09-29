@@ -1,5 +1,11 @@
 # Pegasus website continuation status
 
+## September 29: shared guided journey
+
+Apollo requested Peggy's own memorable identity and the same guided feel throughout the public site. The source refinement adds the winged-P mark, local tour invitations, current-section wayfinding, contextual question preparation with draft preservation, relevant onward links, review-before-submit guidance and the three-task Tools finder. The company identity, original images, six Home sections, routes, calculators and service contracts remain.
+
+The checklist is J1–J7 in `experience-elevation-checklist.md`; design and fidelity evidence is `journey-refinement-design.md`. Local full suite passes 227 files / 2,579 tests, build/type/budget/runtime checks, 64 guide and 46 chat states. The new rendered journey gate covers normal phone/tablet/desktop themes plus enlarged text. Exact publication/CI and protected-preview outcomes are recorded on the existing draft PR #26 and persistent owner report after this commit. E5b, E8c and E9 remain separately tracked release dependencies.
+
 ## September 27: approved experience elevation
 
 Apollo approved the Pegasus Experience Elevation Plan and requested a persistent checklist and a completed/pending report whenever work stops. This pass starts from `fc37a613ee6439f4090149ccd407551a33c4e037` on the existing recovery branch and draft PR #26. The active ledger is [experience-elevation-checklist.md](experience-elevation-checklist.md).

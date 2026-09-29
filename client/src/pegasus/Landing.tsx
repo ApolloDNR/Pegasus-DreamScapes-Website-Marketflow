@@ -6,6 +6,7 @@ import { CATEGORIES } from './data';
 import { NavBar } from './nav';
 import { Peggy } from './peggy';
 import { Footer } from './footer';
+import { JourneyContinuation } from './journey';
 import { HomePageV51 } from './home-v51';
 import { routeForUrl, urlFor } from './routes';
 import { useSEO } from '@/hooks/use-seo';
@@ -177,6 +178,7 @@ export function Landing() {
         </Suspense>
       </main>
 
+      <JourneyContinuation path={location} />
       <Footer go={go} />
 
       <Peggy open={peggyOpen} setOpen={setPeggyPanel} toStrategyLab={toStrategyLab} onHandoffToReview={onHandoffToReview} go={go} toSubmit={toSubmit} initialRole={peggyRole} initialPrompt={peggyPrompt} pagePath={location} />

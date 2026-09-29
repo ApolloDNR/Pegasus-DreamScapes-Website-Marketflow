@@ -1,3 +1,4 @@
+import { ExplainWithPeggy } from './journey';
 import { useState } from 'react';
 import type { Nav } from './theme';
 import { PageAction, PageOpening, PageClosing, ProjectEvidence } from './experience-page';
@@ -59,11 +60,11 @@ export function HowWeOperatePage({ go: _go }: { go: Nav }) {
   return <article className="experience-page">
     <PageOpening title="From property to plan to execution." action={{ href: '/bring-an-opportunity', label: 'Bring an Opportunity' }}><p>Understand the property, establish the role and terms, then organize the work an accepted project requires.</p></PageOpening>
     <section className="ep-section" id="operating-sequence" data-testid="lifecycle-rail"><div className="experience-wrap">
-      <h2>Five stages. One connected process.</h2>
+      <h2 data-peggy-summary="Choose a stage to see the work and questions it involves. The process moves from understanding the opportunity to learning from the outcome.">Five stages. One connected process.</h2>
       <div className="ep-stage-rail" role="group" aria-label="The five operating stages">{STAGES.map((item,index) => <button type="button" key={item.num} aria-pressed={index === stageIdx} aria-controls="operating-stage" onClick={() => setStageIdx(index)}><span>{item.num}</span><strong>{item.name}</strong></button>)}</div>
-      <div className="ep-split ep-rule" id="operating-stage" aria-live="polite" aria-atomic="true"><div><h3>{stage.claim}</h3><p>{stage.detail}</p></div><div><h3>Questions to resolve</h3><ul className="ep-rows">{stage.decided.map(item => <li key={item}>{item}</li>)}</ul></div></div>
+      <div className="ep-split ep-rule" id="operating-stage" aria-live="polite" aria-atomic="true"><div><h3>{stage.claim}</h3><p>{stage.detail}</p><ExplainWithPeggy /></div><div><h3>Questions to resolve</h3><ul className="ep-rows">{stage.decided.map(item => <li key={item}>{item}</li>)}</ul></div></div>
     </div></section>
-    <section className="ep-section ep-dark" id="operating-roles"><div className="experience-wrap ep-split"><div><h2>Agree the role before the work.</h2><p>A direct acquisition, joint venture, or defined operating role creates different responsibilities. Any Pegasus participation depends on fit, diligence, availability, qualification, and a separate written agreement.</p></div><dl className="ep-rows">{ROLES.map(([name,description]) => <div key={name}><dt>{name}</dt><dd>{description}</dd></div>)}</dl></div></section>
+    <section className="ep-section ep-dark" id="operating-roles"><div className="experience-wrap ep-split"><div><h2 data-peggy-summary="The same property can involve different roles. Establish who is responsible for what before relying on a plan or starting work.">Agree the role before the work.</h2><p>A direct acquisition, joint venture, or defined operating role creates different responsibilities. Any Pegasus participation depends on fit, diligence, availability, qualification, and a separate written agreement.</p></div><dl className="ep-rows">{ROLES.map(([name,description]) => <div key={name}><dt>{name}</dt><dd>{description}</dd></div>)}</dl></div></section>
     <section className="ep-section" id="strategy-structure"><div className="experience-wrap ep-split"><div><h2>The property plan.</h2><p>Renovate and sell. Rent and hold. Add a unit. List it as-is. Pass. The strategy begins with the property’s facts, constraints, and economics.</p></div><div><h2>The transaction terms.</h2><p>Keep four decisions explicit: Pegasus’s role, the agreement that controls the property, the source and terms of funding, and each party’s compensation. A purchase, option, joint venture, or separately licensed listing needs its own authority and written terms.</p></div></div></section>
     <ProjectEvidence title="A project you can examine." />
     <PageClosing title="Start with the property and your objective." />
