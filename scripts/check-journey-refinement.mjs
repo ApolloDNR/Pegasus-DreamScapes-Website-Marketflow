@@ -28,6 +28,26 @@ try {
   await context.route('**/*',route=>{if(route.request().method()!=='GET'){writes.push(route.request().url());return route.abort();} return new URL(route.request().url()).origin===origin?route.continue():route.abort();});
   await context.addInitScript(theme=>{localStorage.setItem('pegasus-ui-theme',theme);localStorage.setItem('pegasus-cookie-consent',JSON.stringify({essential:true,analytics:false,marketing:false,decidedAt:'2026-01-01T00:00:00.000Z'}));},theme);
   const page=await context.newPage();currentPage=page;page.on('pageerror',error=>errors.push(error.message));
+  await page.goto(origin+'/'); await page.locator('.home-pathways').waitFor();
+  await page.locator('#home-paths-title').evaluate(el=>el.scrollIntoView({block:'start'}));
+  const pathways=page.locator('.home-pathways');
+  await pathways.getByRole('link').last().evaluate(el=>el.focus({preventScroll:true}));
+  assert.equal(await pathways.getAttribute('data-preview'),'2');
+  assert.equal(await pathways.getByRole('link').last().getAttribute('href'),'/deal-partners');
+  await capture(page,key,'illustrated-pathways');
+  if(await page.locator('.peggy-fab').isVisible()) await page.locator('.peggy-fab').click();
+  else { await page.getByRole('button',{name:'Open menu',exact:true}).click(); await page.getByRole('button',{name:'Talk to Peggy',exact:true}).click(); }
+  await page.locator('.peggy-panel.is-open').waitFor();
+  await capture(page,key,'companion-field-note');
+  await page.locator('.peggy-panel').getByRole('button',{name:/Show me around/}).click();
+  const trail=page.getByRole('navigation',{name:'Page tour sections'});
+  assert.equal(await trail.getByRole('button').count(),await page.locator('[data-peggy-page] h1,[data-peggy-page] h2').count());
+  await trail.getByRole('button').nth(1).click();
+  assert.equal(await trail.getByRole('button').nth(1).getAttribute('aria-current'),'step');
+  await capture(page,key,'tour-trail');
+  await trail.getByRole('button').nth(1).press('ArrowRight');
+  assert.equal(await trail.getByRole('button').nth(2).getAttribute('aria-current'),'step');
+  assert(await trail.getByRole('button').nth(2).evaluate(el=>el===document.activeElement));
   await page.goto(origin+'/property-owners'); await page.locator('.ep-opening').waitFor();
   await capture(page,key,'opening');
   assert.equal(await page.locator('.journey-wayfinder').count(),0);

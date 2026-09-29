@@ -1,5 +1,11 @@
 # Pegasus website continuation status
 
+## September 29: allegorical experience refinement
+
+Apollo asked to keep playfulness and seriousness while making the experience more memorable. The public path chooser now pairs three engraved thresholds with its three existing direct links; focus/hover changes the connecting path locally. Peggy uses a personal seal, compass, open context note and a tour trail driven by actual page sections. Shared continuation uses the same visual language. No new section, route, factual claim, provider, dependency or transaction behavior.
+
+A1–A4 source implementation and A5 local verification are complete. TypeScript, 227 files / 2,583 tests, production build, bundle budget and four runtime cases pass. Final journey QA covers 90 rendered states, plus the existing 64 guide / 46 chat checks before a final typography-only phone correction. Concepts and actual production screens were inspected at 1536 × 1024, with phone/tablet, themes and enlarged text. The full fidelity ledger is `allegorical-refinement-design.md`. Current-source CI and delivery evidence are recorded on PR #26 and the persistent report after publication. The previous deployment-action failure is not represented as a successful preview update; live Peggy, actual receipts and physical-device/user acceptance remain open.
+
 ## September 29: shared guided journey
 
 Apollo requested Peggy's own memorable identity and the same guided feel throughout the public site. The source refinement adds the winged-P mark, local tour invitations, current-section wayfinding, contextual question preparation with draft preservation, relevant onward links, review-before-submit guidance and the three-task Tools finder. The company identity, original images, six Home sections, routes, calculators and service contracts remain.

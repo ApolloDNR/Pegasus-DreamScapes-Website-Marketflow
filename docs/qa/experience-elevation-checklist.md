@@ -149,3 +149,10 @@ Owner direction: extend Peggy's interactive, guided feel throughout the public e
 Local regression suite: 227 files / 2,579 tests. TypeScript, production build, budget and serverless-runtime cases pass. New rendered gate covers 64 normal width/theme states and adds two phone enlarged-text states. Prior guide/chat suites pass 64/46 states with intercepted response fixtures. The final focus and measured-header change additionally passes focused regressions; hosted CI executes the final full source. Initial JS is 427,086 B raw / 127,919 B gzip, within 475,000 / 145,000 limits. The new journey gate is part of the existing rendered-build CI job.
 
 See `journey-refinement-design.md` for concepts, copy inventory, design tokens, fidelity ledger, intentional adaptations and prioritized next ideas. No new live AI or actual inquiry was sent. E5b configured Peggy, E8c exact-source protected hosting and E9 live receipts / physical device / participant acceptance remain open.
+
+
+## September 29: playful and serious, with purposeful allegory
+
+The owner requested another refinement while retaining the existing feel. A1–A4 are complete: three engraved audience thresholds with local focus/hover paths; Peggy's personal seal and open context note; a real navigable tour trail; shared compass/route continuation. The existing three direct destinations, six Home sections, copy, photographs and all application contracts remain.
+
+A5 local verification passes: 227 files / 2,583 tests, TypeScript, production build, bundle budget, four runtime cases, 90 final journey states, and the existing 64 guide / 46 chat checks. Final narrow-screen type was checked again through the 90-state gate; exact-source CI repeats every suite. Design system, intentional adaptations and comparison ledger: `allegorical-refinement-design.md`. Source publication, CI and the protected-preview result are recorded on PR #26 and the owner report. E5b, E8c and E9 remain separate acceptance work.

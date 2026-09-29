@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GuideInvite, ExplainWithPeggy, JourneyContinuation, JourneyWayfinder } from '@/pegasus/journey';
 import { Peggy } from '@/pegasus/peggy';
 import { ToolsPage } from '@/pegasus/tools';
+import { HomePathways } from '@/pegasus/home-pathways';
 
 const callbacks = { toStrategyLab: vi.fn(), onHandoffToReview: vi.fn(), go: vi.fn(), toSubmit: vi.fn() };
 function PublicPage() {
@@ -20,6 +21,32 @@ beforeEach(() => {
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
 
 describe('the shared public journey', () => {
+  it('keeps illustrated paths as direct links and responds to keyboard focus without a request', () => {
+    render(<HomePathways />);
+    const links = screen.getAllByRole('link');
+    expect(links.map(link => link.getAttribute('href'))).toEqual(['/property-owners', '/work-with-apollo', '/deal-partners']);
+    fireEvent.focus(links[2]);
+    expect(links[2].closest('.home-pathways')).toHaveAttribute('data-preview', '2');
+    expect(fetch).not.toHaveBeenCalled();
+  });
+  it('navigates the actual tour outline with the trail and keyboard, without sending context', async () => {
+    render(<PublicPage />);
+    fireEvent.click(screen.getByRole('button', { name:'Show me around' }));
+    const tour = await screen.findByRole('complementary', { name:'Peggy page guide' });
+    const trail = within(tour).getByRole('navigation', { name:'Page tour sections' });
+    const last = within(trail).getByRole('button', { name:'Go to section 3: Next steps' });
+    fireEvent.click(last);
+    expect(last).toHaveAttribute('aria-current', 'step');
+    expect(within(tour).getByRole('heading')).toHaveTextContent('Next steps');
+    fireEvent.keyDown(last, { key:'ArrowLeft' });
+    const middle = within(trail).getByRole('button', { name:'Go to section 2: Repairs and scope' });
+    expect(middle).toHaveFocus();
+    expect(middle).toHaveAttribute('aria-current', 'step');
+    fireEvent.keyDown(middle, { key:'Home' });
+    expect(within(trail).getByRole('button', { name:'Go to section 1: Introduction' })).toHaveFocus();
+    expect(within(tour).getByRole('heading')).toHaveTextContent('Property introduction');
+    expect(fetch).not.toHaveBeenCalled();
+  });
   it('starts a local tour from the page and restores focus when the guide closes', async () => {
     render(<PublicPage />);
     const opener = screen.getByRole('button', { name:'Show me around' });

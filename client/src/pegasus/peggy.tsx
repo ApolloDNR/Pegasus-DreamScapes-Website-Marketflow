@@ -572,7 +572,7 @@ export function Peggy({
           <p className="peggy-disclosure" data-testid="peggy-send-disclosure">By sending, your message{includeContext && (guide.context || pinned) ? ' and page context are' : ' is'} stored and processed by an AI service. <a href="/privacy">Privacy Policy</a>.</p>
         </div>
       </div>
-      {open && tourIndex !== null && guide.sections[tourIndex] && <PeggyTour section={guide.sections[tourIndex]} index={tourIndex} total={guide.sections.length} context={guide.snapshot(tourIndex)} onMove={setTourIndex} onEnd={endTour} onAsk={() => explainSection(tourIndex, '')} />}
+      {open && tourIndex !== null && guide.sections[tourIndex] && <PeggyTour section={guide.sections[tourIndex]} index={tourIndex} sections={guide.sections} context={guide.snapshot(tourIndex)} onMove={setTourIndex} onEnd={endTour} onAsk={() => explainSection(tourIndex, '')} />}
     </>
   );
 }

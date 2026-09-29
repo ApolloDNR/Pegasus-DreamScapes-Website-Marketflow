@@ -3,6 +3,7 @@ import { Link } from 'wouter';
 import { ArrowRight, ChevronDown } from 'lucide-react';
 import type { GuideSection } from './peggy-page-guide';
 import { PeggyMark } from './peggy-mark';
+import { JourneyCompass } from './wayfinding-art';
 import './journey.css';
 
 export const PEGGY_GUIDE_REQUEST = 'pegasus:guide-request';
@@ -68,10 +69,10 @@ export function JourneyContinuation({ path }: { path: string }) {
   if (!next?.length) return null;
   return <section className="journey-continuation" aria-labelledby={id}>
     <div className="experience-wrap journey-continuation-grid">
-      <div><h2 id={id}>Keep exploring.</h2><p>A useful next step, at your pace.</p></div>
-      <div><div className="journey-next-links">{next.map(key => {
+      <div className="journey-continuation-intro"><JourneyCompass size={76} /><h2 id={id}>Keep exploring.</h2><p>A useful next step, at your pace.</p></div>
+      <div><div className="journey-next-links">{next.map((key, index) => {
         const item = destinations[key];
-        return <Link key={key} href={item.href}><strong>{item.title}</strong><span>{item.note}</span><ArrowRight size={21} aria-hidden="true" /></Link>;
+        return <Link key={key} href={item.href}><span className="journey-next-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span><strong>{item.title}</strong><span className="journey-next-note">{item.note}</span><ArrowRight size={21} aria-hidden="true" /></Link>;
       })}</div><GuideInvite compact choose /></div>
     </div>
   </section>;

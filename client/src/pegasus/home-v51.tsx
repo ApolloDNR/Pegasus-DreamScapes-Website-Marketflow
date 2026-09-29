@@ -2,10 +2,11 @@ import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Link } from 'wouter';
 import { ArrowRight } from 'lucide-react';
 import type { Nav } from './theme';
-import { HOME_PATHS, PUBLIC_ACTIONS, REPRESENTATION_NOTICE, SUBMISSION_NOTICE } from './public-content';
+import { PUBLIC_ACTIONS, REPRESENTATION_NOTICE, SUBMISSION_NOTICE } from './public-content';
 import './experience.css';
 import './arrival-refinement.css';
-import { BeforeYouBegin, GuideInvite } from './journey';
+import { BeforeYouBegin } from './journey';
+import { HomePathways } from './home-pathways';
 
 const OpportunityPlan = lazy(() => import('./opportunity-plan').then(module => ({ default: module.OpportunityPlan })));
 
@@ -45,13 +46,7 @@ export function HomePageV51(_props: { go: Nav; openPeggy: () => void }) {
       <p className="experience-wrap experience-image-notice">Architectural vision · East Bay, California · Not property inventory</p>
     </section>
     <section className="experience-orientation experience-section" data-hv="router" aria-labelledby="home-paths-title">
-      <div className="experience-wrap">
-        <h2 id="home-paths-title" data-peggy-summary="Choose the path that fits your situation. Each opens a different way to begin.">What brings you here?</h2>
-        <div className="experience-paths">{HOME_PATHS.map(path => <Link key={path.href} href={path.href} className="experience-path">
-          <span><strong>{path.label}</strong><span>{path.note}</span></span><ArrowRight aria-hidden="true" size={22} />
-        </Link>)}</div>
-        <GuideInvite compact choose />
-      </div>
+      <HomePathways />
     </section>
     <section className="experience-evidence experience-section" data-hv="proof" aria-labelledby="home-proof-title">
       <div className="experience-wrap">

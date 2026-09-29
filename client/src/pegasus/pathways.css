@@ -1,0 +1,54 @@
+/* Three doorways, three real destinations. The art never gates a link. */
+.experience-orientation { background:var(--experience-paper); padding-block:72px; }
+.home-pathways { display:grid; grid-template-columns:minmax(0,.9fr) minmax(0,1.5fr); gap:64px; align-items:center; }
+.home-pathways-intro { padding-right:40px; border-right:1px solid var(--experience-rule); }
+.home-pathways h2 { max-width:10ch; font-size:clamp(40px,3.65vw,56px); margin:0 0 28px; text-wrap:initial; }
+.threshold-atlas { max-width:420px; margin:0 auto; color:var(--experience-copper); }
+.threshold-numbers { display:grid; grid-template-columns:repeat(3,1fr); margin-bottom:6px; text-align:center; font:400 14px/1.4 var(--pg-font-display); color:var(--experience-muted); }
+.threshold-numbers [data-active='true'] { color:var(--experience-copper); }
+.threshold-atlas img { display:block; width:100%; height:auto; }
+.threshold-atlas > svg { display:block; width:100%; height:auto; margin-top:-3px; overflow:visible; }
+.threshold-atlas svg g { stroke:var(--experience-rule); fill:var(--experience-rule); transition:stroke 220ms,fill 220ms; }
+.threshold-atlas svg path { fill:none; stroke-width:1.1; }
+.threshold-atlas svg g[data-active='true'] { stroke:var(--experience-copper); fill:var(--experience-copper); }
+.threshold-atlas svg g[data-active='true'] path { stroke-width:1.7; }
+.threshold-origin { fill:var(--experience-copper); }
+.home-pathways .journey-invite { flex-direction:column; text-align:center; gap:8px; margin-top:12px; }
+.home-pathways .journey-invite button { justify-content:center; font-size:13px; text-align:center; }
+.home-pathways .journey-invite button > svg { display:none; }
+.home-pathways .journey-avatar { width:54px; height:54px; }
+.home-pathways .experience-path { display:grid; grid-template-columns:24px minmax(0,1fr) 22px; gap:24px; padding:30px 0; min-height:148px; }
+.home-pathways .experience-path:first-child { border-top:0; }
+.home-pathways .experience-path:last-child { border-bottom:0; }
+.home-pathways .experience-path > .home-path-number { display:block; align-self:start; padding-top:7px; color:var(--experience-copper); font:400 16px/1.4 var(--pg-font-display); }
+.home-pathways .experience-path > .home-path-copy { display:flex; flex-direction:column; align-items:flex-start; gap:10px; }
+.home-pathways .experience-path strong { font-size:clamp(25px,2.15vw,32px); }
+.home-pathways .experience-path .home-path-copy > span { max-width:48ch; font-size:15px; line-height:1.65; }
+.home-pathways .experience-path:focus-visible strong { color:var(--experience-copper); }
+.pg-root[data-theme='dark'] .threshold-atlas img { opacity:.88; }
+@media(max-width:1099px) {
+  .home-pathways { grid-template-columns:minmax(0,.85fr) minmax(0,1.4fr); gap:32px; }
+  .home-pathways-intro { padding-right:24px; }
+  .home-pathways .experience-path { gap:14px; }
+  .home-pathways h2 { font-size:40px; }
+}
+@media(max-width:767px) {
+  .experience-orientation { padding-block:48px; }
+  .home-pathways { grid-template-columns:1fr; gap:24px; }
+  .home-pathways-intro { display:contents; }
+  .home-pathways h2 { max-width:15ch; margin:0; font-size:34px; }
+  .home-pathways .threshold-atlas { width:100%; max-width:300px; margin-top:0; }
+  .threshold-atlas > svg { height:46px; }
+  .threshold-numbers { font-size:12px; }
+  .home-pathways .experience-paths { grid-row:3; }
+  .home-pathways .experience-path { min-height:0; padding:22px 0; gap:12px; grid-template-columns:22px minmax(0,1fr) 18px; }
+  .home-pathways .experience-path:first-child { border-top:1px solid var(--experience-rule); }
+  .home-pathways .experience-path:last-child { border-bottom:1px solid var(--experience-rule); }
+  .home-pathways .experience-path > .home-path-number { font-size:13px; padding-top:5px; }
+  .home-pathways .experience-path strong { font-size:23px; }
+  .home-pathways .experience-path .home-path-copy > span { font-size:14px; }
+  .home-pathways .journey-invite { grid-row:4; flex-direction:row; text-align:left; gap:12px; margin:0; }
+  .home-pathways .journey-invite button { text-align:left; justify-content:flex-start; }
+  .home-pathways .journey-avatar { width:44px; height:44px; }
+}
+@media(prefers-reduced-motion:reduce) { .threshold-atlas svg g { transition:none; } }

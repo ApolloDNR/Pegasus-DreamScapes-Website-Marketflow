@@ -115,3 +115,36 @@
   .peggy-attached-context { margin-bottom:4px; }
   .peggy-tour-body > p { display:none; }
 }
+
+/* Peggy as a field guide: a personal seal, compass and an honest sense of place. */
+.pg-root .peggy-head .peggy-avatar { width:54px; height:54px; border:1px solid #d9a47c; border-radius:50%; padding:8px; flex:none; }
+.pg-root .peggy-head .peggy-avatar .peggy-mark { width:36px; height:36px; }
+.peggy-welcome-heading { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+.peggy-welcome-heading .journey-compass { margin-top:4px; }
+.peggy-view-preview { padding:0 0 8px; border:0; background:none; border-radius:0; }
+.peggy-view-preview > span { display:flex; align-items:center; gap:10px; font-size:11px; letter-spacing:0; text-transform:none; }
+.peggy-view-preview > span::before { content:''; width:6px; height:6px; border-radius:50%; background:currentColor; }
+.peggy-view-preview > span::after { content:''; flex:1; height:1px; background:var(--experience-rule); }
+.peggy-view-preview > p { margin-block:10px 6px; }
+.peggy-tour header .peggy-tour-seal { display:grid; place-items:center; width:40px; height:40px; border:1px solid #d9a47c; border-radius:50%; flex:none; }
+.peggy-tour-trail { position:relative; display:flex; overflow-x:auto; padding:4px 0 10px; margin:0 0 6px; overscroll-behavior-x:contain; scrollbar-width:thin; }
+.peggy-tour-trail button { position:relative; isolation:isolate; flex:1 0 44px; min-width:44px; min-height:44px; display:grid; place-items:center; color:var(--experience-muted); font:400 11px/1 var(--pg-font-ui); }
+.peggy-tour-trail button::before { content:''; position:absolute; z-index:-1; inset-inline:0; top:50%; height:1px; background:var(--experience-rule); }
+.peggy-tour-trail button:first-child::before { left:50%; }
+.peggy-tour-trail button:last-child::before { right:50%; }
+.peggy-tour-trail button > span { display:grid; place-items:center; width:24px; height:24px; border:1px solid var(--experience-rule); border-radius:50%; background:var(--experience-paper); }
+.peggy-tour-trail button[data-before='true'] > span { border-color:var(--experience-copper); color:var(--experience-copper); }
+.peggy-tour-trail button[aria-current='step'] > span { border-color:var(--experience-copper); background:var(--experience-copper); color:var(--experience-paper); box-shadow:0 0 0 3px var(--experience-paper),0 0 0 4px var(--experience-copper); }
+.peggy-tour-trail button:hover > span { border-color:var(--experience-copper); }
+.peggy-tour-trail button:focus-visible { outline-offset:-2px; border-radius:3px; }
+@media(max-width:640px) {
+  .pg-root .peggy-head .peggy-avatar { width:46px; height:46px; padding:6px; }
+  .pg-root .peggy-head .peggy-avatar .peggy-mark { width:31px; height:31px; }
+  .peggy-welcome-heading .journey-compass { width:42px; height:42px; }
+  .peggy-welcome-heading { gap:8px; }
+}
+@media(max-height:600px) {
+  .peggy-welcome-heading .journey-compass { display:none; }
+  .peggy-tour-trail { padding-bottom:2px; margin-bottom:0; }
+}
+@media(max-width:360px) { .peggy-welcome-heading .journey-compass { display:none; } }
