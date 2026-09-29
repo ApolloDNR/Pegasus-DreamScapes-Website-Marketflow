@@ -146,7 +146,7 @@ export function Landing() {
 
       <NavBar go={go} route={route} theme={theme} toggleTheme={toggleTheme} scrolled={scrolled} openPeggy={openPeggy} />
 
-      <main id="main-content" key={route} className="page-in" tabIndex={-1}>
+      <main id="main-content" key={route} className="page-in" tabIndex={-1} data-peggy-page>
         <Suspense fallback={<PageLoader />}>
           {/* Blueprint v1.1 homepage (six sections). The issue-#22 HomePage stays
               exported for reference but no longer mounts. The homepage remains
@@ -179,7 +179,7 @@ export function Landing() {
 
       <Footer go={go} />
 
-      <Peggy open={peggyOpen} setOpen={setPeggyPanel} toStrategyLab={toStrategyLab} onHandoffToReview={onHandoffToReview} go={go} toSubmit={toSubmit} initialRole={peggyRole} initialPrompt={peggyPrompt} />
+      <Peggy open={peggyOpen} setOpen={setPeggyPanel} toStrategyLab={toStrategyLab} onHandoffToReview={onHandoffToReview} go={go} toSubmit={toSubmit} initialRole={peggyRole} initialPrompt={peggyPrompt} pagePath={location} />
     </div>
   );
 }

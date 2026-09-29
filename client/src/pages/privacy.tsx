@@ -89,12 +89,13 @@ export default function Privacy() {
               </p>
               <p>
                 When you chat with Peggy, we collect the conversation content you send and associate it with a server-created conversation record.
+                {' '}When Page context is included, the message also shares a bounded snapshot of the public page and section you are reading, and any passage you deliberately attach. You can inspect this context and turn it off before sending. Browsing, scrolling and taking the page tour do not send a chat message. The guide does not read form fields, saved records or other browser tabs. Displayed Strategy Lab results may be included in the section text when you choose to send with Page context on.
               </p>
               <p>
                 If you create an account, the authentication provider receives your email and password and Pegasus receives an account identifier, account identity, declared role, and sign-in activity. Pegasus does not receive a readable copy of your password. Private MarketFlow product activity can include access requests, saved records, messages, and actions inside the controlled pilot.
               </p>
               <p>
-                A browser-only Strategy Lab draft stays in local browser storage unless you deliberately submit its facts through an intake. If a share control is available and you create a public share link, anyone with that bearer link may see the information rendered on that page until the link is removed or disabled.
+                A browser-only Strategy Lab draft stays in local browser storage unless you deliberately share its facts through an intake, a prepared Peggy message, or an included page-context snapshot. If a share control is available and you create a public share link, anyone with that bearer link may see the information rendered on that page until the link is removed or disabled.
               </p>
               <p>
                 Public forms are not intended for financial account numbers, social security numbers, government IDs, health information, or other sensitive personal categories. Do not submit those items through the public site.

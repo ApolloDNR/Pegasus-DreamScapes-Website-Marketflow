@@ -77,6 +77,7 @@ try {
     const dialog = page.getByRole('dialog', { name: 'Peggy, the Pegasus intake concierge', exact: true });
     const input = dialog.getByRole('textbox', { name: 'Talk to Peggy', exact: true });
     await check(page, key, 'welcome');
+    await dialog.getByRole('button', { name: 'Find my next step', exact: true }).click();
     await dialog.getByRole('button', { name: 'I want to sell a property', exact: true }).click();
     await dialog.getByRole('button', { name: 'I inherited a house and I am not sure what to do with it', exact: true }).click();
     assert.equal(posts, 0, 'Selecting a suggested question must not send');
@@ -105,9 +106,8 @@ try {
     await check(page, key, 'conversation-fixture');
     await dialog.getByRole('button', { name: 'New chat', exact: true }).click();
     await dialog.getByRole('button', { name: 'Start fresh', exact: true }).click();
-    await dialog.getByText('First, who am I helping?', { exact: true }).waitFor();
+    await dialog.getByRole('button', { name: 'Explain this section', exact: true }).waitFor();
     assert.equal(await input.inputValue(), '');
-    await dialog.getByText('First, who am I helping?', { exact: true }).waitFor();
     if (width < 768 && theme === 'light') {
       await page.setViewportSize({ width, height: 420 });
       await check(page, key, 'short-viewport');

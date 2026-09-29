@@ -1,0 +1,117 @@
+/* The companion uses Pegasus's existing paper, ink, type and emblem. */
+.pg-root .peggy-panel { width:min(440px,calc(100vw - 32px)); bottom:24px; max-height:min(860px,calc(var(--peggy-viewport-height,100dvh) - 120px)); }
+.pg-root .peggy-fab[hidden] { display:none; }
+.pg-root .peggy-head { padding:18px 16px 16px 20px; }
+.pg-root .peggy-name { font-size:30px; gap:4px 9px; }
+.pg-root .peggy-name span { font-size:11px; }
+.peggy-ai-label { display:block; margin-top:5px; color:#d9c9b7; font:400 10px/1.4 var(--pg-font-ui); }
+.pg-root .peggy-thread { padding:20px 24px 6px; }
+.pg-root .peggy-welcome { margin:0 0 20px; }
+.pg-root .peggy-welcome h2 { font-size:32px; line-height:1.15; letter-spacing:0; margin-bottom:12px; text-wrap:initial; }
+.pg-root .peggy-welcome p { line-height:1.65; }
+.peggy-location { flex:0 1 auto; min-height:48px; overflow:auto; border-bottom:1px solid var(--experience-rule); }
+.peggy-location > summary { display:flex; align-items:center; gap:12px; min-height:48px; padding:10px 24px; list-style:none; cursor:pointer; color:var(--experience-copper); font:400 12px/1.5 var(--pg-font-ui); }
+.peggy-location > summary::-webkit-details-marker { display:none; }
+.peggy-location > summary > span { flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
+.peggy-location > summary strong { font-weight:500; }
+.peggy-location > summary svg { flex:none; }
+.peggy-location[open] > summary > svg:last-child { transform:rotate(180deg); }
+.peggy-location-content { padding:4px 24px 16px; font-size:13px; max-height:250px; overflow:auto; }
+.peggy-location-content > p { margin:0 0 12px; }
+.peggy-location nav { border-top:1px solid var(--experience-rule); }
+.peggy-location nav button { display:flex; align-items:center; gap:12px; width:100%; padding:10px 0; min-height:44px; text-align:left; font:400 12px/1.5 var(--pg-font-ui); }
+.peggy-location nav button > span { color:var(--experience-copper); font-size:10px; }
+.peggy-location nav button > svg { margin-left:auto; flex:none; }
+.peggy-location nav button:hover { color:var(--experience-copper); }
+.peggy-view-preview { margin:0 0 14px; padding:12px 14px; border-left:3px solid var(--experience-copper); background:var(--experience-limestone); border-radius:3px; }
+.peggy-view-preview > span { display:block; color:var(--experience-copper); font-size:10px; letter-spacing:.05em; text-transform:uppercase; }
+.peggy-view-preview > p { margin:6px 0; font:400 18px/1.45 var(--pg-font-display); max-height:104px; overflow:auto; overflow-wrap:anywhere; }
+.peggy-view-preview > small { display:block; color:var(--experience-muted); font-size:11px; }
+.peggy-explain { display:flex; align-items:center; gap:14px; width:100%; min-height:54px; padding:13px 16px; background:var(--experience-text); color:var(--experience-paper); border-radius:5px; font:500 14px/1.4 var(--pg-font-ui); text-align:left; }
+.peggy-explain > span { flex:1; }
+.peggy-explain svg { flex:none; }
+.peggy-explain:hover { background:var(--experience-copper); }
+.peggy-guide-actions { margin-top:12px; }
+.peggy-guide-actions button { display:flex; align-items:center; gap:14px; padding:12px 2px; min-height:54px; width:100%; border-top:1px solid var(--experience-rule); text-align:left; font:400 14px/1.5 var(--pg-font-ui); }
+.peggy-guide-actions button > span { flex:1; }
+.peggy-guide-actions button small { display:block; color:var(--experience-muted); font-size:11px; margin-top:2px; }
+.peggy-guide-actions button svg { flex:none; color:var(--experience-copper); }
+.peggy-guide-actions button:hover { color:var(--experience-copper); }
+.pg-root .peggy-compose-area { padding:14px 20px; }
+.pg-root .peggy-input { padding:10px 12px 8px; }
+.pg-root .peggy-input textarea { font-size:14px; line-height:1.5; }
+.peggy-context-toggle { display:inline-flex; align-items:center; gap:8px; min-height:44px; color:var(--experience-muted); font:400 11px/1.4 var(--pg-font-ui); cursor:pointer; }
+.peggy-context-toggle input { width:16px; height:16px; flex:none; accent-color:var(--experience-copper); }
+.peggy-context-toggle input:focus-visible { outline:2px solid var(--experience-copper); outline-offset:3px; }
+.pg-root .peggy-disclosure { font-size:11px; line-height:1.6; margin:8px 0 0; }
+.peggy-attached-context { display:flex; align-items:flex-start; gap:6px; margin-bottom:10px; padding:0 2px; color:var(--experience-copper); }
+.peggy-attached-context details { flex:1; min-width:0; }
+.peggy-attached-context summary { display:flex; align-items:center; gap:6px; min-height:36px; font-size:11px; list-style:none; cursor:pointer; }
+.peggy-attached-context summary::-webkit-details-marker { display:none; }
+.peggy-attached-context summary span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; flex:1; }
+.peggy-attached-context summary svg { flex:none; }
+.peggy-attached-context p,.peggy-message-source p { max-height:120px; overflow:auto; overflow-wrap:anywhere; color:var(--experience-muted); font-size:12px; line-height:1.6; margin:0 0 8px; }
+.peggy-attached-context small { display:block; font-size:11px; color:var(--experience-muted); }
+.peggy-attached-context > button { display:grid; place-items:center; min-width:36px; min-height:36px; }
+.peggy-message-source { max-width:100%; font-size:11px; color:var(--experience-copper); margin-bottom:8px; }
+.peggy-message-source > summary { cursor:pointer; overflow-wrap:anywhere; }
+.peggy-message-source p { margin-top:8px; }
+.peggy-selection-launcher { position:fixed; right:24px; bottom:96px; z-index:56; display:flex; align-items:center; gap:8px; padding:12px 16px; min-height:44px; background:var(--experience-paper); color:var(--experience-text); border:1px solid var(--experience-copper); border-radius:5px; box-shadow:0 8px 30px #09142126; font:500 13px/1.4 var(--pg-font-ui); }
+.peggy-tour { position:fixed; right:24px; bottom:24px; width:min(420px,calc(100vw - 32px)); z-index:55; border:1px solid var(--experience-rule); border-radius:8px; overflow:hidden; background:var(--experience-paper); color:var(--experience-text); box-shadow:0 16px 52px -16px #09142166; font:400 14px/1.6 var(--pg-font-ui); max-height:calc(100dvh - 120px); overflow-y:auto; }
+.peggy-tour:focus { outline:none; }
+.peggy-tour header { display:flex; align-items:center; gap:12px; padding:10px 14px 10px 20px; background:#132a38; color:#f5efe4; font-size:13px; }
+.peggy-tour header > span { flex:1; }
+.peggy-tour header > svg { color:#e1c5af; flex:none; }
+.peggy-tour header button { display:grid; place-items:center; width:44px; height:44px; flex:none; }
+.peggy-tour-body { padding:18px 22px 12px; }
+.peggy-tour-step > span { color:var(--experience-copper); font-size:11px; }
+.peggy-tour h2 { font:400 24px/1.25 var(--pg-font-display); margin:8px 0 10px; }
+.peggy-tour-body > p { color:var(--experience-muted); font-size:13px; margin:0 0 16px; }
+.peggy-tour-controls { display:flex; gap:12px; }
+.peggy-tour-controls > button { display:flex; justify-content:center; align-items:center; min-height:44px; min-width:44px; border:1px solid var(--experience-rule); border-radius:4px; }
+.peggy-tour-controls > button:disabled { opacity:.4; cursor:not-allowed; }
+.peggy-tour-controls .peggy-tour-next { justify-content:space-between; gap:16px; flex:1; background:var(--experience-text); color:var(--experience-paper); padding:10px 16px; font-size:13px; }
+.peggy-tour-ask { display:block; margin:4px auto 0; min-height:44px; text-decoration:underline; text-underline-offset:4px; font-size:13px; }
+.peggy-tour-body > small { display:block; text-align:center; color:var(--experience-muted); font-size:10px; }
+.peggy-tour button:focus-visible,.peggy-selection-launcher:focus-visible { outline:2px solid var(--experience-copper); outline-offset:3px; }
+.peggy-tour header button:focus-visible { outline-color:#e1c5af; }
+.peggy-tour-target { scroll-margin-top:128px; position:relative; }
+.peggy-tour-target::before { content:''; position:absolute; left:-10px; top:0; bottom:0; width:3px; background:#a06b48; border-radius:2px; }
+.pg-cookie-visible .peggy-tour { bottom:110px; max-height:calc(100dvh - 210px); }
+.pg-cookie-visible .peggy-selection-launcher { bottom:156px; }
+.pg-root.pg-cookie-visible .peggy-panel,.pg-cookie-visible .pg-root .peggy-panel { bottom:110px; max-height:min(760px,calc(var(--peggy-viewport-height,100dvh) - 210px)); }
+@media (max-width:640px) {
+  .pg-root .peggy-panel { bottom:calc(16px + env(safe-area-inset-bottom,0px) + var(--peggy-keyboard-offset,0px)); max-height:calc(var(--peggy-viewport-height,100dvh) - 32px - env(safe-area-inset-bottom,0px)); }
+  .pg-root .peggy-head { padding:12px 12px 12px 16px; }
+  .pg-root .peggy-thread { padding:18px 18px 4px; }
+  .pg-root .peggy-welcome h2 { font-size:29px; }
+  .pg-root .peggy-welcome { margin-bottom:16px; }
+  .pg-root .peggy-name { font-size:26px; }
+  .pg-root .peggy-name span { font-size:10px; }
+  .pg-root .peggy-brand { font-size:9px; }
+  .peggy-location > summary { padding-inline:18px; }
+  .peggy-location-content { padding-inline:18px; }
+  .pg-root .peggy-compose-area { padding:12px 14px; }
+  .pg-root .peggy-input textarea { font-size:16px; }
+  .pg-root .peggy-disclosure { font-size:11px; }
+  .pg-root.pg-cookie-visible .peggy-panel,.pg-cookie-visible .pg-root .peggy-panel { bottom:calc(116px + env(safe-area-inset-bottom,0px) + var(--peggy-keyboard-offset,0px)); max-height:calc(var(--peggy-viewport-height,100dvh) - 132px - env(safe-area-inset-bottom,0px)); }
+  .peggy-tour { right:16px; bottom:calc(16px + env(safe-area-inset-bottom,0px)); }
+  .peggy-tour-body { padding:14px 18px 12px; }
+  .peggy-tour h2 { font-size:23px; }
+  .peggy-selection-launcher { right:16px; bottom:24px; }
+}
+@media (max-height:600px) {
+  .pg-root .peggy-head { padding-block:6px; }
+  .pg-root .peggy-name { font-size:24px; }
+  .pg-root .peggy-name span { display:none; }
+  .peggy-ai-label { margin-top:2px; }
+  .pg-root .peggy-thread { padding-block:0; }
+  .pg-root .peggy-compose-area { padding-block:8px; }
+  .peggy-location { min-height:36px; }
+  .peggy-location > summary { min-height:36px; padding-block:6px; }
+  .peggy-view-preview { display:none; }
+  .peggy-attached-context summary { min-height:28px; }
+  .peggy-attached-context > button { min-height:28px; }
+  .peggy-attached-context { margin-bottom:4px; }
+  .peggy-tour-body > p { display:none; }
+}

@@ -4,6 +4,22 @@ Owner: Apollo Duran. Approved September 27, 2026. Starting source: `fc37a613ee64
 
 This is the active continuation checklist for the approved **Pegasus Experience Elevation Plan**. Keep stable IDs and record evidence before marking an item complete. Previous design passes remain historical evidence, not proof of this revision.
 
+## Current continuation: Peggy page companion
+
+Owner request: September 28, 2026, Los Angeles. Baseline `74bc58c6f634b7319bf020f088d10aa35116bbe7`. Same branch and draft PR #26. [Design specification and fidelity ledger](../design/peggy-page-guide.md).
+
+| ID | Deliverable | Status / evidence |
+| --- | --- | --- |
+| G1 | Distinctive Peggy companion interface | Complete. Original Pegasus emblem, navy identity, cream reading surface, live location, section preview and Explain / Tour / Next step actions. |
+| G2 | Current public page and section awareness | Complete. Bounded, inspectable snapshots; public-route allowlist; form/private/saved exclusion; no URL query data; explicit context-off control. |
+| G3 | Local walkthrough and selected-passage explanations | Complete. Real page stops, previous/next/end, section emphasis, authored six-stop Home guide, reviewed questions and frozen source attachments. Nothing sends automatically. |
+| G4 | Context-aware service and reliable existing chat | Complete in source. Bounded untrusted user-channel context, per-turn sources, no page facts in intake extraction. Existing access, stop/reset/save and prepared-property contracts retained. Live conversational acceptance remains E5b. |
+| G5 | Verification, source publication and current report | Local verification complete. TypeScript, production build, bundle/runtime checks, 226 files / 2,571 tests, final focus checks, 64 guide states and 46 chat states. Exact publication and CI receipts are recorded on the existing PR and owner report. |
+
+Browser review uses the production build in isolated Chromium because Cloud Browser returned `net::ERR_BLOCKED_BY_CLIENT` for the owned local preview. The 64-state guide matrix adds desktop/tablet/mobile light/dark context, tour, selection, source, Lab and route checks to the existing 46 Peggy states. It caught and repaired a mobile-menu inert-state race; the return-focus check also covers ending a tour before closing chat. No live AI or intake requests were sent. The current screenshots are actual application renders. E8c (protected preview delivery), E5b (real Peggy) and E9 (service, physical-device and participant acceptance) remain open.
+
+Do not redo the completed brand/guide work when resuming delivery. Preserve the current guide controls and source boundaries. The existing protected preview still requires a verified current deployment before its URL can be described as up to date.
+
 ## Checklist
 
 | ID | Deliverable | Status | Acceptance / evidence |

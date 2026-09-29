@@ -2645,9 +2645,10 @@ try {
     await fab.click();
     assert(await fab.getAttribute('aria-expanded') === 'true', 'Peggy did not open');
     assert(await panel.getAttribute('aria-hidden') === 'false', 'Peggy panel remained hidden');
-    await fab.click();
+    await panel.getByRole('button', { name: 'Close', exact: true }).click();
     assert(await fab.getAttribute('aria-expanded') === 'false', 'Peggy did not close');
     await fab.click();
+    await panel.getByRole('button', { name: 'Find my next step', exact: true }).click();
     await panel.getByText('Go straight to a tool or path', { exact: true }).click();
     await panel.getByTestId('peggy-route-submit').click();
     await page.waitForURL(/\/bring-an-opportunity$/);

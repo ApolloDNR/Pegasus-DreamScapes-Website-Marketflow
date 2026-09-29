@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useId, useState, useCallback } from 'react';
-import { X, Send, ArrowRight, ChevronDown, CornerDownLeft, Loader2, Bookmark, BookmarkCheck, Plus, FileText } from 'lucide-react';
+import { X, Send, ArrowRight, ChevronDown, CornerDownLeft, Loader2, Bookmark, BookmarkCheck, Plus, FileText, Compass } from 'lucide-react';
 import type { ChatTurn, PeggyHandoff, Nav } from './theme';
 import { PEGGY_ROLES, PEGGY_FOLLOWUPS, PEGGY_SLA, PEGGY_COMPLIANCE, PEGGY_STATUS } from './data';
 import { BrandMark } from './primitives';
@@ -8,6 +8,10 @@ import {
   type PeggyConversationAccessResponse,
 } from '@shared/peggy-access';
 import { peggyFetchWithSingleRefresh } from '@/lib/peggy-access';
+import type { PeggyPageContext } from '@shared/peggy-page-context';
+import { usePeggyPageGuide } from './peggy-page-guide';
+import { PeggyGuideWelcome, PeggyLocation, PeggyTour } from './peggy-guide-ui';
+import './peggy-guide.css';
 
 const GREETING =
   "I’m Peggy, Pegasus’s AI intake assistant. Tell me what you’re considering. I can help you explore the public paths and prepare your next question.";
@@ -15,7 +19,7 @@ const GREETING =
 const FALLBACK =
   "I can’t reach the chat service right now. Your draft is ready to edit and send again. You can also continue in Strategy Lab or share it for consideration.";
 
-type ChatMessage = { role: 'user' | 'assistant'; content: string; notice?: boolean };
+type ChatMessage = { role: 'user' | 'assistant'; content: string; notice?: boolean; pageContext?: PeggyPageContext };
 
 type HandoffAction =
   | { action: 'strategylab' }
@@ -83,6 +87,7 @@ export function Peggy({
   toSubmit,
   initialRole = null,
   initialPrompt = null,
+  pagePath = '/',
 }: {
   open: boolean;
   setOpen: (v: boolean) => void;
@@ -92,6 +97,7 @@ export function Peggy({
   toSubmit: (intent?: string) => void;
   initialRole?: string | null;
   initialPrompt?: string | null;
+  pagePath?: string;
 }) {
   const panelId = useId();
   const composerHintId = useId();
@@ -114,6 +120,32 @@ export function Peggy({
   const [prepared, setPrepared] = useState(false);
   const [confirmReset, setConfirmReset] = useState(false);
   const [conversationKey, setConversationKey] = useState(0);
+  const guide = usePeggyPageGuide(pagePath, true);
+  const [includeContext, setIncludeContext] = useState(true);
+  const [pinnedContext, setPinnedContext] = useState<PeggyPageContext | null>(null);
+  const [choosingPath, setChoosingPath] = useState(false);
+  const [tourIndex, setTourIndex] = useState<number | null>(null);
+  const panelOpen = open && tourIndex === null;
+  const pinned = pinnedContext;
+  const restoreOpenerFocus = () => requestAnimationFrame(() => {
+    const candidates = [openerRef.current, fabRef.current, document.querySelector<HTMLElement>('button[aria-label="Open menu"]')];
+    const target = candidates.find(element => element?.isConnected && element !== document.body && !element.closest('[hidden],[inert],[aria-hidden="true"]') && element.getBoundingClientRect().width > 0 && getComputedStyle(element).visibility !== 'hidden' && getComputedStyle(element).display !== 'none');
+    target?.focus({ preventScroll: true });
+  });
+
+  useEffect(() => { setPinnedContext(null); setTourIndex(null); setChoosingPath(false); }, [guide.path]);
+  useEffect(() => { if (!open) setTourIndex(null); }, [open]);
+  useEffect(() => {
+    if (tourIndex === null) return;
+    const section = guide.sections[tourIndex];
+    if (!section) { setTourIndex(null); return; }
+    section.element.classList.add('peggy-tour-target');
+    section.element.scrollIntoView?.({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    return () => section.element.classList.remove('peggy-tour-target');
+  }, [tourIndex, guide.sections]);
+  useEffect(() => {
+    if (tourIndex !== null) document.querySelector<HTMLElement>('.peggy-tour')?.focus({ preventScroll: true });
+  }, [tourIndex !== null]);
 
   // When the panel is opened from a page chip with a role already chosen,
   // skip the "who am I helping?" step and jump straight to that role's prompts.
@@ -138,19 +170,25 @@ export function Peggy({
       setConfirmReset(false);
       setConversationKey((key) => key + 1);
       setDraft(initialPrompt.trim());
+      setPinnedContext(null);
+      setIncludeContext(false);
+      setTourIndex(null);
     }
   }, [open, initialPrompt]);
 
   useEffect(() => {
     if (!open) return;
-    if (document.activeElement instanceof HTMLElement && !panelRef.current?.contains(document.activeElement)) openerRef.current = document.activeElement;
+    if (document.activeElement instanceof HTMLElement && document.activeElement !== document.body && !panelRef.current?.contains(document.activeElement) && !document.activeElement.closest('.peggy-tour')) openerRef.current = document.activeElement;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') { setOpen(false); (openerRef.current ?? fabRef.current)?.focus(); }
+      if (e.key === 'Escape') {
+        if (tourIndex !== null) { setTourIndex(null); requestAnimationFrame(() => panelRef.current?.focus({ preventScroll: true })); }
+        else { setOpen(false); restoreOpenerFocus(); }
+      }
     };
     document.addEventListener('keydown', onKey);
     const id = requestAnimationFrame(() => (initialPrompt ? inputRef.current : panelRef.current)?.focus({ preventScroll: true }));
     return () => { document.removeEventListener('keydown', onKey); cancelAnimationFrame(id); };
-  }, [open, setOpen, initialPrompt]);
+  }, [open, setOpen, initialPrompt, tourIndex !== null]);
 
   // Match the visible viewport when a mobile soft keyboard reduces usable space.
   useEffect(() => {
@@ -174,13 +212,13 @@ export function Peggy({
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
-  const close = () => { setOpen(false); (openerRef.current ?? fabRef.current)?.focus(); };
+  const close = () => { setOpen(false); restoreOpenerFocus(); };
 
   const transcriptTurns = useCallback(
     (msgs: ChatMessage[]): ChatTurn[] =>
       msgs
         .filter((m) => !m.notice)
-        .map((m) => ({ role: m.role, content: splitHandoff(m.content).text }))
+        .map((m) => ({ role: m.role, content: splitHandoff(m.content).text + (m.pageContext ? `\n\nPage: ${m.pageContext.page} / ${m.pageContext.section}\n${m.pageContext.selection || m.pageContext.excerpt}` : '') }))
         .filter((m) => m.content.length > 0),
     [],
   );
@@ -207,8 +245,8 @@ export function Peggy({
 
       setErrored(false);
       setDraft('');
-
-      const history = [...messages, { role: 'user' as const, content }];
+      const pageContext = includeContext ? (pinned ?? guide.snapshot()) : null;
+      const history = [...messages, { role: 'user' as const, content, ...(pageContext ? { pageContext } : {}) }];
       // Reserve a reply row while the JSON response is pending.
       setMessages([...history, { role: 'assistant', content: '' }]);
       setStreaming(true);
@@ -259,7 +297,7 @@ export function Peggy({
             body: JSON.stringify({
               conversationId: credential.id,
               message: content,
-              context: { surface: 'public-peggy' },
+              context: { surface: 'public-peggy', ...(pageContext ? { currentView: pageContext } : {}) },
             }),
             signal: controller.signal,
           },
@@ -278,9 +316,12 @@ export function Peggy({
           copy[copy.length - 1] = { role: 'assistant', content: reply };
           return copy;
         });
+        setPinnedContext(null);
+        guide.clearSelection();
       } catch (err) {
         if (!currentRequest() || controller.signal.aborted || (err as Error).name === 'AbortError') return;
         setDraft(content);
+        setPinnedContext(pageContext);
         setErrored(true);
         setMessages((prev) => {
           const copy = prev.slice();
@@ -297,7 +338,7 @@ export function Peggy({
         }
       }
     },
-    [messages, streaming],
+    [messages, streaming, includeContext, pinned, guide],
   );
 
   const conversationStarted = messages.some((m) => m.role === 'user');
@@ -305,6 +346,18 @@ export function Peggy({
   const lastAction = last?.role === 'assistant' ? splitHandoff(last.content).action : null;
 
   const role = PEGGY_ROLES.find((item) => item.role === pickedRole);
+  const startTour = (index = 0) => { setTourIndex(index); setOpen(true); };
+  const endTour = () => { setTourIndex(null); requestAnimationFrame(() => panelRef.current?.focus({ preventScroll: true })); };
+  const explainSection = (index = guide.index, selectedText = guide.selectedText) => {
+    const snapshot = guide.snapshot(index);
+    if (!snapshot) return;
+    setPinnedContext({ ...snapshot, ...(selectedText ? { selection: selectedText } : {}) });
+    setIncludeContext(true);
+    setDraft(selectedText ? 'Explain the selected passage in plain language.' : `Explain “${snapshot.section}” in plain language. What should I notice here?`);
+    setTourIndex(null);
+    setOpen(true);
+    requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
+  };
   const preparePrompt = (prompt: string) => {
     setDraft(prompt);
     inputRef.current?.focus();
@@ -322,6 +375,8 @@ export function Peggy({
     setPrepared(false);
     setConfirmReset(false);
     setConversationKey((key) => key + 1);
+    setPinnedContext(null);
+    setChoosingPath(false);
     requestAnimationFrame(() => panelRef.current?.focus({ preventScroll: true }));
   };
   const stopWaiting = () => {
@@ -330,8 +385,9 @@ export function Peggy({
     abortRef.current = null;
     // The server may have processed the sent turn. A retry gets fresh access.
     conversationAccessRef.current = null;
-    const lastSent = messages.findLast((message) => message.role === 'user')?.content ?? '';
-    setDraft(lastSent);
+    const lastSent = messages.findLast((message) => message.role === 'user');
+    setDraft(lastSent?.content ?? '');
+    setPinnedContext(lastSent?.pageContext ?? null);
     setMessages((previous) => [...previous.slice(0, -1), {
       role: 'assistant', notice: true,
       content: 'You stopped waiting. Your message may already have been processed. Your draft is ready if you want to send again.',
@@ -348,28 +404,27 @@ export function Peggy({
 
   return (
     <>
+      {!open && guide.selectedText && <button type="button" className="peggy-selection-launcher" onClick={() => explainSection()}><FileText size={17} aria-hidden="true" />Ask Peggy about this</button>}
       <button ref={fabRef} type="button" onClick={() => open ? close() : setOpen(true)}
         aria-label={open ? 'Close Peggy' : 'Talk to Peggy, the Pegasus intake concierge'}
         aria-expanded={open} aria-controls={panelId}
-        className={`peggy-fab ${open ? 'is-open' : ''}`}>
+        className={`peggy-fab ${open ? 'is-open' : ''}`} hidden={open}>
         {open ? <X size={20} aria-hidden="true" /> : <BrandMark boxClassName="w-8 h-8" onDark />}
-        {!open && <span className="peggy-fab-label">Ask Peggy <span>by Pegasus</span></span>}
+        {!open && <span className="peggy-fab-label">Ask Peggy <span>Your guide to Pegasus</span></span>}
       </button>
 
-      <div ref={panelRef} id={panelId} className={`peggy-panel ${open ? 'is-open' : ''}`} role="dialog" aria-modal="false" tabIndex={-1}
-        aria-label="Peggy, the Pegasus intake concierge" aria-hidden={!open} {...(!open ? { inert: '' } : {})}>
+      <div ref={panelRef} id={panelId} className={`peggy-panel ${panelOpen ? 'is-open' : ''}`} role="dialog" aria-modal="false" tabIndex={-1}
+        aria-label="Peggy, the Pegasus intake concierge" aria-hidden={!panelOpen} {...(!panelOpen ? { inert: '' } : {})}>
         <header className="peggy-head">
           <div className="peggy-avatar"><BrandMark boxClassName="w-full h-full" onDark /></div>
           <div className="peggy-identity">
             <span className="peggy-brand">Pegasus Dreamscapes</span>
-            <div className="peggy-name">Peggy <span>AI intake assistant</span></div>
+            <div className="peggy-name">Peggy <span>Your guide to Pegasus</span></div>
+            <span className="peggy-ai-label">AI assistant · early access</span>
           </div>
           <button type="button" onClick={close} aria-label="Close" className="peggy-close"><X size={20} aria-hidden="true" /></button>
         </header>
-        <div className="peggy-statusbar">
-          <span data-testid="peggy-status">{PEGGY_STATUS}</span>
-          <span>Clarity starts here</span>
-        </div>
+        {guide.context && <PeggyLocation context={guide.context} label={guide.sections[guide.index]?.label ?? guide.context.section} sections={guide.sections} onVisit={startTour} />}
 
         {conversationStarted && <div className="peggy-toolbar">
           <SaveChatButton key={conversationKey} turns={transcriptTurns(messages)} pending={streaming} />
@@ -384,8 +439,9 @@ export function Peggy({
         </div>}
 
         <div ref={scrollRef} className="peggy-thread">
-          {!conversationStarted && <div className={`peggy-welcome ${prepared ? 'is-prepared' : ''}`}>
-            <span className="peggy-eyebrow">{prepared ? 'Your conversation, prepared' : 'A Pegasus perspective'}</span>
+          {!conversationStarted && !prepared && !pickedRole && !choosingPath && guide.context && <PeggyGuideWelcome context={guide.context} selectedText={guide.selectedText} onExplain={() => explainSection()} onTour={() => startTour()} onNextStep={() => setChoosingPath(true)} />}
+          {!conversationStarted && (prepared || !guide.context || choosingPath || pickedRole) && <div className={`peggy-welcome ${prepared ? 'is-prepared' : ''}`}>
+            {guide.context && !prepared && <button type="button" className="peggy-text-button" onClick={() => { setChoosingPath(false); setPickedRole(null); }}><Compass size={15} aria-hidden="true" />Back to page guide</button>}
             <h2>{prepared ? 'Start with your context.' : <>A clearer<br />next step.</>}</h2>
             <p>{prepared ? 'Your property notes are ready below. Make them your own, then choose Send.' : 'Tell me what you’re considering. I can help you explore the public paths and prepare your next question.'}</p>
           </div>}
@@ -400,6 +456,7 @@ export function Peggy({
               if (!text && !isPending) return null;
               return <div key={index} className={`peggy-message ${isAssistant ? 'is-peggy' : 'is-user'} ${message.notice ? 'is-notice' : ''}`}>
                 <span className="peggy-message-label">{message.notice ? 'Connection update' : isAssistant ? 'Peggy' : 'You'}</span>
+                {message.pageContext && <details className="peggy-message-source"><summary>About: {message.pageContext.section}</summary><p>{message.pageContext.selection || message.pageContext.excerpt}</p></details>}
                 <div className={`peggy-bubble ${isAssistant ? 'is-peggy' : 'is-user'}`}>
                   {isPending ? <span className="peggy-pending"><Loader2 size={16} className="animate-spin" aria-hidden="true" /> Preparing a response…</span> : text}
                 </div>
@@ -414,7 +471,7 @@ export function Peggy({
             Share for Consideration <ArrowRight size={16} aria-hidden="true" />
           </button>}
 
-          {!conversationStarted && !prepared && !pickedRole && <section className="peggy-start" aria-label="Choose a starting point">
+          {!conversationStarted && !prepared && !pickedRole && (!guide.context || choosingPath) && <section className="peggy-start" aria-label="Choose a starting point">
             <p className="peggy-section-label">First, who am I helping?</p>
             <div className="peggy-choices">{PEGGY_ROLES.filter((item) => ['seller', 'buyer', 'explore'].includes(item.role)).map(roleChoice)}</div>
             <details className="peggy-details"><summary>More starting points <ChevronDown size={15} aria-hidden="true" /></summary>
@@ -444,7 +501,7 @@ export function Peggy({
             <button type="button" className="peggy-text-button" onClick={() => { toStrategyLab(); setOpen(false); }}>Open Strategy Lab <ArrowRight size={15} aria-hidden="true" /></button>
           </div>}
 
-          {!prepared && !conversationStarted && <details className="peggy-details peggy-shortcuts">
+          {!prepared && !conversationStarted && (!guide.context || choosingPath || pickedRole) && <details className="peggy-details peggy-shortcuts">
             <summary>Go straight to a tool or path <ChevronDown size={15} aria-hidden="true" /></summary>
             <div className="peggy-choices">
               <button type="button" data-testid="peggy-route-strategylab" className="peggy-choice" onClick={() => { toStrategyLab(); setOpen(false); }}><span>Strategy Lab</span><ArrowRight size={16} aria-hidden="true" /></button>
@@ -456,7 +513,7 @@ export function Peggy({
 
           <details className="peggy-details peggy-about">
             <summary>About Peggy <ChevronDown size={15} aria-hidden="true" /></summary>
-            <p>{PEGGY_STATUS}.</p>
+            <p data-testid="peggy-status">{PEGGY_STATUS}.</p>
             <p data-testid="peggy-compliance">{PEGGY_COMPLIANCE}</p>
             <p>{PEGGY_SLA}</p>
             <p>Save chat keeps a transcript copy on this device. Conversation access stays in page memory. Phone and voice remain in development.</p>
@@ -464,19 +521,22 @@ export function Peggy({
         </div>
 
         <div className="peggy-compose-area">
+          {pinned && includeContext && <div className="peggy-attached-context"><details><summary><FileText size={14} aria-hidden="true" /><span>{pinned.selection ? 'Selected passage' : pinned.section}</span><ChevronDown size={14} aria-hidden="true" /></summary><p>{pinned.selection || pinned.excerpt || pinned.section}</p><small>This snapshot stays attached while you scroll. Remove it to use the current view.</small></details><button type="button" aria-label="Remove attached page context" disabled={streaming} onClick={() => { setPinnedContext(null); guide.clearSelection(); }}><X size={16} aria-hidden="true" /></button></div>}
           {prepared && !conversationStarted && <p className="peggy-context-note"><FileText size={16} aria-hidden="true" /><span>Prepared draft · nothing sent yet</span></p>}
           <form className="peggy-input" onSubmit={(event) => { event.preventDefault(); send(draft); }}>
-            <textarea ref={inputRef} aria-label="Talk to Peggy" aria-describedby={composerHintId} placeholder="What are you considering?" rows={prepared && !conversationStarted ? 4 : 2} maxLength={4000}
+            <textarea ref={inputRef} aria-label="Talk to Peggy" aria-describedby={composerHintId} placeholder={guide.context ? 'Ask about what you’re looking at…' : 'What are you considering?'} rows={prepared && !conversationStarted ? 4 : 2} maxLength={4000}
               value={draft} onChange={(event) => setDraft(event.target.value)} disabled={streaming}
               onKeyDown={(event) => { if (event.key === 'Enter' && (event.metaKey || event.ctrlKey) && !event.nativeEvent.isComposing) { event.preventDefault(); send(draft); } }} />
             <div className="peggy-compose-tools">
-              <span id={composerHintId}>{draft.length > 3600 ? `${draft.length.toLocaleString()} / 4,000` : '⌘ / Ctrl + Enter to send'}</span>
+              {guide.context ? <label className="peggy-context-toggle"><input type="checkbox" checked={includeContext} disabled={streaming} onChange={event => setIncludeContext(event.target.checked)} /><span>Page context {includeContext ? 'included' : 'off'}</span></label> : <span>{draft.length > 3600 ? `${draft.length.toLocaleString()} / 4,000` : '⌘ / Ctrl + Enter to send'}</span>}
+              <span id={composerHintId} className="sr-only">Control or Command plus Enter to send. {includeContext && guide.context ? 'Includes the page context shown above.' : 'Page context is off.'}</span>
               {streaming ? <button key="stop" type="button" className="peggy-stop" onClick={(event) => { event.preventDefault(); stopWaiting(); }}>Stop waiting</button> : <button key="send" type="submit" aria-label="Send" disabled={!draft.trim() || draft.trim().length > 4000}>Send <Send size={15} aria-hidden="true" /></button>}
             </div>
           </form>
-          <p className="peggy-disclosure" data-testid="peggy-send-disclosure">By sending, your message is stored and processed by an AI service. <a href="/privacy">Privacy Policy</a>.</p>
+          <p className="peggy-disclosure" data-testid="peggy-send-disclosure">By sending, your message{includeContext && (guide.context || pinned) ? ' and page context are' : ' is'} stored and processed by an AI service. <a href="/privacy">Privacy Policy</a>.</p>
         </div>
       </div>
+      {open && tourIndex !== null && guide.sections[tourIndex] && <PeggyTour section={guide.sections[tourIndex]} index={tourIndex} total={guide.sections.length} context={guide.snapshot(tourIndex)} onMove={setTourIndex} onEnd={endTour} onAsk={() => explainSection(tourIndex, '')} />}
     </>
   );
 }

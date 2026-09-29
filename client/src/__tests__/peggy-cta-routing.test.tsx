@@ -152,7 +152,8 @@ describe("Peggy 'Or go straight to' chips navigate to real routes (Task #214)", 
     it(`${testid} → ${expected}`, () => {
       const { container, history } = renderLanding("/");
       const panel = openPeggy(container);
-
+      fireEvent.click(within(panel).getByRole('button', { name: 'Find my next step' }));
+      fireEvent.click(within(panel).getByText('Go straight to a tool or path'));
       const chip = panel.querySelector<HTMLButtonElement>(
         `[data-testid="${testid}"]`,
       );
@@ -176,6 +177,8 @@ describe("Peggy 'Or go straight to' chips navigate to real routes (Task #214)", 
   it("renders all four quick-route chips", () => {
     const { container } = renderLanding("/");
     const panel = openPeggy(container);
+    fireEvent.click(within(panel).getByRole('button', { name: 'Find my next step' }));
+    fireEvent.click(within(panel).getByText('Go straight to a tool or path'));
     for (const { testid } of CHIPS) {
       expect(
         panel.querySelector(`[data-testid="${testid}"]`),

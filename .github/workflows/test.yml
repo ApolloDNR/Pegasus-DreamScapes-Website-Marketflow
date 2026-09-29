@@ -148,6 +148,20 @@ jobs:
           retention-days: 14
           if-no-files-found: error
 
+      - name: Verify Peggy page-guide context and walkthroughs
+        run: node scripts/check-peggy-guide.mjs
+        env:
+          PEGGY_GUIDE_SCREENSHOT_DIR: artifacts/peggy-guide
+
+      - name: Upload Peggy page-guide evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pegasus-peggy-guide-${{ env.TESTED_SOURCE_SHA }}
+          path: artifacts/peggy-guide
+          retention-days: 14
+          if-no-files-found: error
+
       - name: Record exact rendered QA build digest
         id: build-digest
         shell: bash

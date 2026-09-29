@@ -97,7 +97,7 @@ export function PegasusStandaloneShell({
         />
       </div>
 
-      <div className="public-reading-surface" data-theme={dataTheme}>{children}</div>
+      <div className="public-reading-surface" data-theme={dataTheme} data-peggy-page>{children}</div>
 
       <div className="pg-root" data-theme={dataTheme}>
         <Footer go={go} />
@@ -109,6 +109,7 @@ export function PegasusStandaloneShell({
           go={go}
           toSubmit={toSubmit}
           initialRole={peggyRole}
+          pagePath={location}
         />
       </div>
     </>
