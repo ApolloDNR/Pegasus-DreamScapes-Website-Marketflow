@@ -13,13 +13,7 @@ export function JourneyCompass({ size = 64 }: { size?: number }) {
 /** Local path preview only. The actual links remain the accessible navigation. */
 export function ThresholdPaths({ active }: { active: number }) {
   return <div className="threshold-atlas" aria-hidden="true">
-    <div className="threshold-numbers">{[0, 1, 2].map(index => <span key={index} data-active={active === index}>{String(index + 1).padStart(2, '0')}</span>)}</div>
     <img src="/images/journey/three-thresholds.webp" width={1200} height={400} alt="" loading="lazy" decoding="async" />
-    <svg viewBox="0 0 360 108" fill="none" focusable="false">
-      {['M64 4C64 54 180 42 180 96', 'M180 4V96', 'M296 4C296 54 180 42 180 96'].map((d, index) => <g key={index} data-active={active === index}>
-        <path d={d} pathLength="1" /><circle cx={[64, 180, 296][index]} cy="4" r="3" />
-      </g>)}
-      <circle className="threshold-origin" cx="180" cy="96" r="6" />
-    </svg>
+    <div className="threshold-marks">{[0, 1, 2].map(index => <span key={index} data-active={active === index} />)}</div>
   </div>;
 }

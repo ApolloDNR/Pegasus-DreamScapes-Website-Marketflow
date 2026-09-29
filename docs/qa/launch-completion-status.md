@@ -1,5 +1,13 @@
 # Pegasus website continuation status
 
+## September 29: professional editorial refinement
+
+Apollo requested a more sophisticated, premium and professional feel while retaining the playful classical identity. The starting-path section now uses one smaller engraving, three open aligned columns and a quiet Peggy invitation. Peggy has a compact personal header, clearer current-page note and restrained controls; shared navigation and onward sections follow the same hierarchy. The six Home sections, approved headline, company identity, original photographs, routes and behavior contracts remain.
+
+S1–S4 implementation and local visual/interaction verification are complete. All 227 files / 2,583 tests, final production build, TypeScript, bundle/runtime checks and the 90-state journey, 64-state guide and 46-state chat suites pass. Initial JavaScript is 429,201 bytes raw / 128,641 bytes gzip. Final concept/render comparison covers native 1536 x 1024 and 952 x 1652 viewports plus mobile/tablet, both themes and enlarged text. The complete design and fidelity ledger is `professional-refinement-design.md`.
+
+S5 publication, exact-source CI and the owner report are recorded on the existing draft PR #26 and persistent checklist after this commit exists. E8c protected-preview delivery, E5b live Peggy answers, and E9 actual service receipts/physical-device/user acceptance remain separate. Prior hosted success does not verify this revision, and prior deployment failures are not delivery evidence.
+
 ## September 29: allegorical experience refinement
 
 Apollo asked to keep playfulness and seriousness while making the experience more memorable. The public path chooser now pairs three engraved thresholds with its three existing direct links; focus/hover changes the connecting path locally. Peggy uses a personal seal, compass, open context note and a tour trail driven by actual page sections. Shared continuation uses the same visual language. No new section, route, factual claim, provider, dependency or transaction behavior.

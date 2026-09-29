@@ -3,7 +3,6 @@ import { ArrowLeft, ArrowRight, ChevronDown, Compass, FileText, Route, X } from 
 import type { PeggyPageContext } from '@shared/peggy-page-context';
 import type { GuideSection } from './peggy-page-guide';
 import { PeggyMark } from './peggy-mark';
-import { JourneyCompass } from './wayfinding-art';
 
 export function PeggyLocation({ context, label, sections, onVisit }: { context: PeggyPageContext; label: string; sections: GuideSection[]; onVisit: (index: number) => void }) {
   return <details className="peggy-location">
@@ -19,7 +18,7 @@ export function PeggyLocation({ context, label, sections, onVisit }: { context: 
 
 export function PeggyGuideWelcome({ context, selectedText, onExplain, onTour, onNextStep }: { context: PeggyPageContext; selectedText: string; onExplain: () => void; onTour: () => void; onNextStep: () => void }) {
   return <section className="peggy-guide-welcome" aria-label="Explore with Peggy">
-    <div className="peggy-welcome"><div className="peggy-welcome-heading"><h2>Let’s look at this<br />together.</h2><JourneyCompass size={54} /></div><p>I can explain this section, show you around, or help you find your next step.</p></div>
+    <div className="peggy-welcome"><h2>Let’s look at this<br />together.</h2><p>I can explain this section, show you around, or help you find your next step.</p></div>
     <div className="peggy-view-preview"><span>{selectedText ? 'Your selection' : 'You’re viewing'}</span><p>{selectedText ? `“${selectedText}”` : context.section}</p><small>Page context is ready when you send.</small></div>
     <button type="button" className="peggy-explain" onClick={onExplain}><FileText size={20} aria-hidden="true" /><span>{selectedText ? 'Explain my selection' : 'Explain this section'}</span><ArrowRight size={18} aria-hidden="true" /></button>
     <div className="peggy-guide-actions">

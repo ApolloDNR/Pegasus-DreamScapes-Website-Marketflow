@@ -449,7 +449,6 @@ export function Peggy({
         <header className="peggy-head">
           <div className="peggy-avatar"><PeggyMark size={44} /></div>
           <div className="peggy-identity">
-            <span className="peggy-brand">Pegasus Dreamscapes</span>
             <div className="peggy-name">Peggy <span>Your guide to Pegasus</span></div>
             <span className="peggy-ai-label">AI assistant · early access</span>
           </div>

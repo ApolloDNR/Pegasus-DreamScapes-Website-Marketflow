@@ -34,6 +34,10 @@ try {
   await pathways.getByRole('link').last().evaluate(el=>el.focus({preventScroll:true}));
   assert.equal(await pathways.getAttribute('data-preview'),'2');
   assert.equal(await pathways.getByRole('link').last().getAttribute('href'),'/deal-partners');
+  if(width >= 768) {
+    const rows=await pathways.locator('.experience-path').evaluateAll(links=>links.map(link=>({top:link.getBoundingClientRect().top,note:link.querySelector('.home-path-copy > span').getBoundingClientRect().top,arrow:link.querySelector(':scope > svg').getBoundingClientRect().bottom})));
+    for(const key of ['top','note','arrow']) assert(Math.max(...rows.map(row=>row[key]))-Math.min(...rows.map(row=>row[key])) < 2,`${width}: directory ${key} alignment`);
+  }
   await capture(page,key,'illustrated-pathways');
   if(await page.locator('.peggy-fab').isVisible()) await page.locator('.peggy-fab').click();
   else { await page.getByRole('button',{name:'Open menu',exact:true}).click(); await page.getByRole('button',{name:'Talk to Peggy',exact:true}).click(); }

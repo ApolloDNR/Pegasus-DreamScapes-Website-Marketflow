@@ -94,9 +94,9 @@
 .pg-brand-mark[data-on-dark='true'] { background:#f5efe4; border-radius:3px; padding:3px; }
 .site-brand > span:last-child { display:flex; flex-direction:column; gap:8px; }
 .site-wordmark { font:400 22px/1.05 var(--pg-font-display); white-space:nowrap; }
-.site-brand-caption { font:400 13px/1.25 var(--pg-font-ui); color:#d9a47c; white-space:nowrap; }
+.site-brand-caption { font:400 11px/1.4 var(--pg-font-ui); letter-spacing:.04em; color:#d9a47c; white-space:nowrap; }
 .site-desktop-links { display:flex; align-items:center; gap:20px; margin-left:auto; }
-.site-nav-link { display:inline-flex; align-items:center; gap:6px; min-height:48px; font:500 15px/1.4 var(--pg-font-ui); white-space:nowrap; border-bottom:2px solid transparent; }
+.site-nav-link { display:inline-flex; align-items:center; gap:6px; min-height:48px; font:500 14px/1.4 var(--pg-font-ui); white-space:nowrap; border-bottom:1px solid transparent; }
 .site-nav-link:hover,.site-nav-link[aria-current='page'],.site-nav-link[data-active] { color:#e4b999; border-bottom-color:#d9a47c; }
 .site-nav :is(a,button,input,summary):focus-visible,.site-mobile-menu :is(a,button,input,summary):focus-visible { outline:2px solid #efd5be; outline-offset:4px; }
 .site-estate { position:relative; }

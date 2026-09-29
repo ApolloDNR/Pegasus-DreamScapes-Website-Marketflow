@@ -4,7 +4,21 @@ Owner: Apollo Duran. Approved September 27, 2026. Starting source: `fc37a613ee64
 
 This is the active continuation checklist for the approved **Pegasus Experience Elevation Plan**. Keep stable IDs and record evidence before marking an item complete. Previous design passes remain historical evidence, not proof of this revision.
 
-## Current continuation: Peggy page companion
+## Latest continuation: sophisticated professional refinement
+
+Owner request: September 29, 2026. Baseline `22226ad82d5415b3cc4794c8fd45ec2cc44c171e`, same recovery branch and draft PR #26. Full decisions, production sizing and concept/render comparison: [professional-refinement-design.md](professional-refinement-design.md).
+
+| ID | Deliverable | Status / evidence |
+| --- | --- | --- |
+| S1 | Editorial visitor directory | Complete. Restrained existing engraving, three clear direct links, responsive aligned columns and rows. |
+| S2 | Professional Peggy interface | Complete. Compact personal mark/header, clearer page context, quieter controls and composer; full disclosure and consent retained. |
+| S3 | Shared visual consistency | Complete. Smaller invitation seals, restrained navigation type, clear numbered onward links and matching spacing. |
+| S4 | Current rendered and functional verification | Complete locally. Final production build, TypeScript, bundle/runtime checks, 90 journey + 64 guide + 46 chat states. Final concept/render comparison at native viewports and responsive sizes. |
+| S5 | Existing PR, exact-source CI and owner report | Publication receipts to follow on PR #26 and the owner report after this source commit exists. Current screenshots and local evidence are captured. |
+
+The final full local regression passes 227 files / 2,583 tests. An initial run hit one environment-injected proxy-warning stderr assertion; the final run suppresses only that warning, and no assertion was weakened. Exact-source CI is recorded on PR #26 and the owner report. E5b, E8c and E9 remain unchanged release dependencies. This pass adds no new production asset, dependency, provider, business claim or automatic service action.
+
+## Previous continuation: Peggy page companion
 
 Owner request: September 28, 2026, Los Angeles. Baseline `74bc58c6f634b7319bf020f088d10aa35116bbe7`. Same branch and draft PR #26. [Design specification and fidelity ledger](../design/peggy-page-guide.md).
 
