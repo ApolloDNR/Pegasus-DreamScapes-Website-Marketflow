@@ -7,6 +7,7 @@ const SHELL_FILES = [
   "client/src/pegasus/pages.tsx",
   "client/src/pegasus/blocks.tsx",
   "client/src/pegasus/home-v51.tsx",
+  "client/src/pegasus/home-project.tsx",
   "client/src/pegasus/about-v6.tsx",
   "client/src/pegasus/footer.tsx",
   "client/src/pegasus/public-content.ts",
@@ -29,7 +30,7 @@ describe("mounted Pegasus public truth contract", () => {
     expect(landing).toContain("module.WorkWithApolloPage");
     expect(landing).toContain("<Footer go={go}");
     expect(landing).toContain("import('./how-we-operate')");
-    expect(SHELL_FILES).toHaveLength(12);
+    expect(SHELL_FILES).toHaveLength(13);
   });
 
   it("does not restore retired staffing, workflow, timing, or transaction promises", () => {
@@ -81,7 +82,7 @@ describe("mounted Pegasus public truth contract", () => {
   });
 
   it("does not imply that the Nelson record proves brokerage or project roles", () => {
-    const home = read("client/src/pegasus/home-v51.tsx");
+    const home = [read("client/src/pegasus/home-v51.tsx"), read("client/src/pegasus/home-project.tsx")].join('\n');
     const aboutAndPages = [
       read("client/src/pegasus/about-v6.tsx"),
       read("client/src/pegasus/pages.tsx"),

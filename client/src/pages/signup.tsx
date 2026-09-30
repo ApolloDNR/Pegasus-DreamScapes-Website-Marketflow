@@ -156,8 +156,8 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 px-4 pt-24 pb-12">
-      <Card className="w-full max-w-lg">
+    <div className="account-page min-h-screen flex items-center justify-center px-4 pt-24 pb-12">
+      <Card className="account-form w-full max-w-lg">
         <CardHeader className="space-y-2 text-center">
           <h1
             className="text-3xl font-serif font-semibold leading-none tracking-tight"

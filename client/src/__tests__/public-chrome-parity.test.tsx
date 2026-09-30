@@ -52,32 +52,22 @@ function componentRoutesFromApp(): string[] {
 
 // Surfaces that intentionally keep the legacy global chrome and are therefore
 // out of scope for the public-premium-chrome contract:
-//   • /login, /signup, /forgot-password, /reset-password — auth forms.
 //   • /admin/*        — admin-only surfaces (own in-page auth).
 //   • private /marketflow/* operator and auth surfaces. The landing,
 //     request-access page, and public criteria belong to the premium public
 //     journey and must not be blanket-excluded with the private product.
-//   • /snapshot/*     — shared-analysis snapshot links are functional output
-//                       surfaces (an operator-generated share view), not part
-//                       of the public marketing site, and carry their own
-//                       layout rather than the marketing chrome.
+// Public account forms and shared-analysis reports use the same navigation
+// as their entry pages. Their authentication/data boundaries are unchanged.
 // Dynamic :param routes are excluded only from the literal-URL classification
 // assertions (no canned id), but their prefix is still covered below.
-const AUTH_FORMS = new Set([
-  "/login",
-  "/signup",
-  "/forgot-password",
-  "/reset-password",
-]);
 const PUBLIC_MARKETFLOW = new Set(["/marketflow/access", "/marketflow/buyboxes"]);
 const isAdmin = (u: string) => u.startsWith("/admin");
 const isPrivateMarketflow = (u: string) =>
   u.startsWith("/marketflow/") && !PUBLIC_MARKETFLOW.has(u);
-const isSnapshot = (u: string) => u.startsWith("/snapshot");
 const isDynamic = (u: string) => u.includes(":");
 
 function isExcluded(u: string): boolean {
-  return AUTH_FORMS.has(u) || isAdmin(u) || isPrivateMarketflow(u) || isSnapshot(u);
+  return isAdmin(u) || isPrivateMarketflow(u);
 }
 
 // A url wears the new premium chrome (prototype OR standalone) — i.e. NOT the

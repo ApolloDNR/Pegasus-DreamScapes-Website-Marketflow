@@ -3,7 +3,9 @@ import { Link } from 'wouter';
 import { ArrowRight } from 'lucide-react';
 import { SUBMISSION_NOTICE } from './public-content';
 import { BeforeYouBegin, GuideInvite, ExplainWithPeggy } from './journey';
+import { CinematicScene } from './cinematic-scene';
 import './experience-page.css';
+import './page-compositions.css';
 
 export function PageAction({ href, children, secondary = false }: { href: string; children: ReactNode; secondary?: boolean }) {
   const className = secondary ? 'experience-link' : 'experience-button';
@@ -15,22 +17,28 @@ export function PageAction({ href, children, secondary = false }: { href: string
   return <Link href={href} className={className}>{content}</Link>;
 }
 
-export function PageOpening({ title, children, action, secondaryAction, image }: {
+export function PageOpening({ title, children, action, secondaryAction, image, composition }: {
   title: string; children: ReactNode; action?: { label: string; href: string };
   secondaryAction?: { label: string; href: string };
+  composition?: 'chapter' | 'landscape' | 'portrait' | 'reading';
   image?: { src: string; alt: string; width: number; height: number; caption?: string; portrait?: boolean };
 }) {
-  return <header className={`ep-opening${image ? ' ep-opening-with-image' : ''}`}>
+  const layout = composition ?? (image ? (image.portrait ? 'portrait' : 'landscape') : 'chapter');
+  const scene = layout === 'landscape' && image;
+  return <header className={`ep-opening ep-opening-${layout}${image ? ' ep-opening-with-image' : ''}`}>
+    {scene && <CinematicScene {...image} priority />}
     <div className="experience-wrap ep-opening-grid">
-      <div className="ep-opening-copy"><h1>{title}</h1><div className="ep-intro">{children}</div>
+      <div className="ep-opening-copy"><h1>{title}</h1><div className="ep-opening-body"><div className="ep-intro">{children}</div>
         {action && <div className="experience-actions"><PageAction href={action.href}>{action.label}</PageAction>{secondaryAction && <PageAction href={secondaryAction.href} secondary>{secondaryAction.label}</PageAction>}</div>}
-        <GuideInvite />
+        <GuideInvite compact />
       </div>
-      {image && <figure className={image.portrait ? 'ep-opening-image ep-portrait' : 'ep-opening-image'}>
+      </div>
+      {image && !scene && <figure className={image.portrait ? 'ep-opening-image ep-portrait' : 'ep-opening-image'}>
         <img src={image.src} alt={image.alt} width={image.width} height={image.height} loading="eager" decoding="async" />
         {image.caption && <figcaption>{image.caption}</figcaption>}
       </figure>}
     </div>
+    {scene && image.caption && <p className="experience-wrap ep-scene-caption">{image.caption}</p>}
   </header>;
 }
 

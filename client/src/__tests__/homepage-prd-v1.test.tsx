@@ -96,7 +96,9 @@ describe("Homepage premium editorial contract", () => {
     const { container } = renderHome();
     const arrival = within(container.querySelector<HTMLElement>('[data-hv="arrival"]')!);
     expect(arrival.getByRole('heading', { level:1 })).toHaveTextContent('Complex real estate, a clear way forward.');
-    expect(arrival.getAllByRole('link').map(link => link.getAttribute('href'))).toEqual(['/bring-an-opportunity','/our-work']);
+    const actions = within(container.querySelector<HTMLElement>('.experience-arrival .experience-actions')!);
+    expect(actions.getAllByRole('link').map(link => link.getAttribute('href'))).toEqual(['/bring-an-opportunity','/our-work']);
+    expect(arrival.getByRole('link', { name: 'Explore Pegasus' })).toHaveAttribute('href', '#home-paths-title');
     expect(arrival.getByText(/Property strategy, renovation insight/)).toBeInTheDocument();
   });
   it("does not repeat the old proof rail", () => {

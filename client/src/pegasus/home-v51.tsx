@@ -1,12 +1,15 @@
 import React, { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Link } from 'wouter';
-import { ArrowRight } from 'lucide-react';
+import { ArrowDown, ArrowRight } from 'lucide-react';
 import type { Nav } from './theme';
 import { PUBLIC_ACTIONS, REPRESENTATION_NOTICE, SUBMISSION_NOTICE } from './public-content';
 import './experience.css';
 import './arrival-refinement.css';
 import { BeforeYouBegin } from './journey';
 import { HomePathways } from './home-pathways';
+import { HomeProject } from './home-project';
+import { CinematicScene } from './cinematic-scene';
+import './cinematic.css';
 
 const OpportunityPlan = lazy(() => import('./opportunity-plan').then(module => ({ default: module.OpportunityPlan })));
 
@@ -32,8 +35,8 @@ function DeferredOpportunityPlan() {
 export function HomePageV51(_props: { go: Nav; openPeggy: () => void }) {
   return <div className="experience-home">
     <section className="experience-arrival" data-hv="arrival" data-hero-composition="approved-bay-colonnade-v1">
-      <img className="experience-hero-image" src="/images/hero/pegasus-v6-arrival.webp" data-testid="approved-home-hero-image"
-        width={1672} height={941} alt="" loading="eager" decoding="async" {...{ fetchpriority: 'high' }} />
+      <CinematicScene src="/images/hero/pegasus-v6-arrival.webp" testId="approved-home-hero-image"
+        width={1672} height={941} priority imageClassName="experience-hero-image" />
       <div className="experience-wrap experience-arrival-copy">
         <p className="experience-geography">Contra Costa &amp; Alameda</p>
         <h1 data-peggy-summary="Start with the big picture: Pegasus connects property strategy, renovation insight and execution in the East Bay."><span>Complex real estate,</span><br /> <em>a clear way forward.</em></h1>
@@ -43,24 +46,15 @@ export function HomePageV51(_props: { go: Nav; openPeggy: () => void }) {
           <Link href={PUBLIC_ACTIONS.work.href} className="experience-link">{PUBLIC_ACTIONS.work.label}<ArrowRight aria-hidden="true" size={17} /></Link>
         </div>
       </div>
-      <p className="experience-wrap experience-image-notice">Architectural vision · East Bay, California · Not property inventory</p>
+      <div className="experience-wrap cinematic-arrival-foot">
+        <p className="experience-image-notice">Architectural vision · East Bay, California · Not property inventory</p>
+        <a href="#home-paths-title" className="cinematic-explore"><ArrowDown size={20} aria-hidden="true" />Explore Pegasus</a>
+      </div>
     </section>
     <section className="experience-orientation experience-section" data-hv="router" aria-labelledby="home-paths-title">
       <HomePathways />
     </section>
-    <section className="experience-evidence experience-section" data-hv="proof" aria-labelledby="home-proof-title">
-      <div className="experience-wrap">
-        <div className="experience-photo-pair experience-project">
-          <div className="experience-project-copy">
-            <h2 id="home-proof-title" data-peggy-summary="Compare the actual Nelson Drive photographs. Open the project to inspect the renovation in more detail.">Nelson Drive,<br /> before and after.</h2>
-            <figure><img src="/images/nelson/kitchen-before.webp" alt="Nelson Drive kitchen before the renovation" width={1600} height={999} loading="lazy" decoding="async" /><figcaption>Before · Original kitchen</figcaption></figure>
-            <p>The renovation moved the cooktop to a waterfall island with seating. Navy cabinetry and a statement hood give the finished kitchen a clear focal point.</p>
-          </div>
-          <figure><img src="/images/nelson/kitchen-after.webp" alt="Nelson Drive kitchen after the renovation: navy cabinetry and a waterfall island" width={1600} height={996} loading="lazy" decoding="async" /><figcaption>After · Completed interior</figcaption></figure>
-        </div>
-        <div className="experience-proof-note"><p>See the original condition, the renovation decisions, and the documented budget and sale.</p><Link href="/projects/nelson-dr" className="experience-link">Explore the case study<ArrowRight aria-hidden="true" size={17} /></Link></div>
-      </div>
-    </section>
+    <HomeProject />
     <section className="experience-founder experience-section" data-hv="founder" aria-labelledby="home-founder-title">
       <div className="experience-wrap experience-founder-layout">
         <figure><img src="/images/founder/apollo.webp" alt="Apollo Duran, founder of Pegasus Dreamscapes" width={1100} height={1375} loading="lazy" decoding="async" /></figure>
@@ -74,16 +68,18 @@ export function HomePageV51(_props: { go: Nav; openPeggy: () => void }) {
     </section>
     <section className="experience-usefulness experience-section" data-hv="plan" aria-labelledby="home-tool-title">
       <div className="experience-wrap">
-        <div className="experience-section-head"><h2 id="home-tool-title" data-peggy-summary="Explore a question in Opportunity Plan, or open Strategy Lab to work through your own assumptions. These tools help you prepare; they do not make a property decision.">A clearer view<br /> of the next move.</h2><p>Not sure where to begin? Pick a question below, or go straight to Strategy Lab.</p></div>
+        <div className="experience-section-head"><h2 id="home-tool-title" data-peggy-summary="Explore a question in Opportunity Plan, or open Strategy Lab to work through your own assumptions. These tools help you prepare; they do not make a property decision.">A clearer view<br /> of the <em>next move.</em></h2><p>Not sure where to begin? Pick a question below, or go straight to Strategy Lab.</p></div>
         <DeferredOpportunityPlan />
         <div className="experience-actions"><Link href={PUBLIC_ACTIONS.lab.href} className="experience-button">{PUBLIC_ACTIONS.lab.label}<ArrowRight aria-hidden="true" size={18} /></Link><Link href={PUBLIC_ACTIONS.tools.href} className="experience-link">{PUBLIC_ACTIONS.tools.label}<ArrowRight aria-hidden="true" size={17} /></Link></div>
       </div>
     </section>
     <section className="experience-invitation experience-section" data-hv="final" aria-labelledby="home-invitation-title">
-      <div className="experience-wrap"><h2 id="home-invitation-title" data-peggy-summary="When you are ready, bring your property or question forward. You can review your information before submitting it for possible consideration.">Start with what you have.</h2><p>A property, a challenge, or an idea. You don’t need a finished plan.</p>
+      <CinematicScene src="/images/hero/pegasus-v6-arrival.webp" width={1672} height={941} />
+      <div className="experience-wrap"><h2 id="home-invitation-title" data-peggy-summary="When you are ready, bring your property or question forward. You can review your information before submitting it for possible consideration.">Start with<br /> what you <em>have.</em></h2><p>A property, a challenge, or an idea. You don’t need a finished plan.</p>
         <div className="experience-actions"><Link href={PUBLIC_ACTIONS.opportunity.href} className="experience-button">{PUBLIC_ACTIONS.opportunity.label}<ArrowRight aria-hidden="true" size={18} /></Link><Link href={PUBLIC_ACTIONS.contact.href} className="experience-link">{PUBLIC_ACTIONS.contact.label}<ArrowRight aria-hidden="true" size={17} /></Link></div>
         <BeforeYouBegin />
         <p className="experience-notice">{SUBMISSION_NOTICE}</p>
+        <p className="cinematic-closing-caption">Architectural vision · Not property inventory</p>
       </div>
     </section>
   </div>;

@@ -23,8 +23,10 @@ export function ToolsPage() {
     if (reveal) requestAnimationFrame(() => panel.current?.focus({ preventScroll: false }));
   };
   return <div className="experience-tools tools-journey"><div className="experience-wrap">
-    <h1 data-peggy-summary="Choose what you need to do: understand a property, check an estimate, or return to saved work. Each tool helps you prepare questions using your own assumptions.">Useful tools.<br /> Clearer decisions.</h1>
-    <p>Work through the assumptions yourself, or ask about a scoped property review.</p>
+    <header className="tools-opening">
+      <h1 data-peggy-summary="Choose what you need to do: understand a property, check an estimate, or return to saved work. Each tool helps you prepare questions using your own assumptions.">Useful tools.<br /> Clearer decisions.</h1>
+      <div><p>Work through the assumptions yourself, or ask about a scoped property review.</p><GuideInvite compact /></div>
+    </header>
     <section className="tools-finder" aria-label="Find a useful tool">
       <div className="tools-task-list" role="group" aria-label="What would you like to do?">{TASKS.map((label, index) => <button type="button" key={label} aria-pressed={task === index} aria-controls="tools-task-detail" onClick={() => selectTask(index)}>
         <span>{String(index + 1).padStart(2, '0')}</span><strong>{label}</strong><ArrowRight size={19} aria-hidden="true" />

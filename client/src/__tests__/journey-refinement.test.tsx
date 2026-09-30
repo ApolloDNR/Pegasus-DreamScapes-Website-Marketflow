@@ -107,7 +107,7 @@ describe('the shared public journey', () => {
     const {rerender}=render(<JourneyContinuation path="/property-owners?owner_situation=repairs" />);
     expect(screen.getByRole('link',{name:/See the work/})).toHaveAttribute('href','/our-work');
     for(const path of ['/bring-an-opportunity','/saved','/strategy-lab','/marketplace/buyer']) {
-      rerender(<JourneyContinuation path={path}/>);expect(screen.queryByRole('heading',{name:'Keep exploring.'})).not.toBeInTheDocument();
+      rerender(<JourneyContinuation path={path}/>);expect(screen.queryByRole('region')).not.toBeInTheDocument();
     }
   });
   it('dismisses the section outline with Escape and focuses the chosen heading', () => {
@@ -115,7 +115,7 @@ describe('the shared public journey', () => {
     elements.forEach(element=>document.body.append(element));
     const sections=elements.map((element,index)=>({element,title:`Section ${index}`,label:`Section ${index}`}));
     render(<JourneyWayfinder path="/about" sections={sections} index={1} hidden={false} onAsk={vi.fn()} />);
-    const toggle=screen.getByRole('button',{name:/02 \/ 03/});fireEvent.click(toggle);
+    const toggle=screen.getByRole('button',{name:/Section 2 of 3/});fireEvent.click(toggle);
     fireEvent.keyDown(document,{key:'Escape'});expect(toggle).toHaveFocus();expect(toggle).toHaveAttribute('aria-expanded','false');
     fireEvent.click(toggle);fireEvent.click(screen.getByRole('button',{name:/03\s*Section 2/}));expect(elements[2]).toHaveFocus();
     elements.forEach(element=>element.remove());

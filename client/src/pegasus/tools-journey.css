@@ -1,3 +1,7 @@
+.tools-opening { display:grid; grid-template-columns:1.3fr 1fr; gap:80px; align-items:center; margin-bottom:56px; }
+.tools-opening > div { border-top:1px solid var(--experience-copper); padding-top:20px; }
+.tools-opening > div > p { color:var(--experience-muted); max-width:42ch; font-size:18px; line-height:1.7; }
+.tools-opening .journey-invite { margin-top:20px; }
 .tools-finder { display:grid; grid-template-columns:minmax(240px,.7fr) minmax(0,1.5fr); gap:44px; margin-top:36px; padding:30px 0; border-block:1px solid var(--experience-rule); }
 .tools-task-list { display:flex; flex-direction:column; gap:0; }
 .tools-task-list button { display:flex; align-items:center; gap:18px; min-height:92px; padding:18px 16px; border-top:1px solid var(--experience-rule); border-left:3px solid transparent; text-align:left; color:var(--experience-text); transition:background-color 160ms; }
@@ -31,6 +35,8 @@
 .tools-network { margin-top:40px; }
 @media (max-width:1199px) { .tools-lab-layout { grid-template-columns:1fr; } .tools-lab-layout .property-sketch { display:none; } }
 @media (max-width:767px) {
+  .tools-opening { grid-template-columns:1fr; gap:28px; margin-bottom:28px; }
+  .tools-opening > div > p { font-size:16px; }
   .tools-finder { grid-template-columns:1fr; gap:28px; margin-top:28px; padding:20px 0 28px; }
   .tools-task-list button { min-height:64px; padding:12px; gap:12px; }
   .tools-task-list button strong { font-size:21px; }

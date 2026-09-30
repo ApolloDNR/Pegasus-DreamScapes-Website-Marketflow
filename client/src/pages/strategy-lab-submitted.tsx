@@ -59,7 +59,7 @@ export default function StrategyLabSubmittedPage() {
           : "The owner-scoped record exists. Keep this reference for your records; Pegasus may contact you only if it elects to consider the information or needs clarification.";
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="receipt-page min-h-screen bg-background text-foreground">
       <section className="max-w-3xl mx-auto px-6 lg:px-10 py-20">
         <div className="text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-4">
           Submission receipt

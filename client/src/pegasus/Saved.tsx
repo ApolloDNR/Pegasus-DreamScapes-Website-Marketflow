@@ -46,7 +46,7 @@ export function SavedPage({ go }: { go: Nav }) {
   const chatRows = useSavedChats();
 
   return <article className="experience-page ep-saved">
-    <PageOpening title="Your saved work."><p>Resume a Strategy Lab draft or read a saved Peggy conversation. These records stay in this browser; saving does not submit them for review.</p></PageOpening>
+    <PageOpening title="Your saved work." composition="reading"><p>Resume a Strategy Lab draft or read a saved Peggy conversation. These records stay in this browser; saving does not submit them for review.</p></PageOpening>
     <section className="ep-section"><div className="experience-wrap ep-split">
       <div><h2>Strategy Lab draft</h2>{strategyDraft ? <div className="ep-rule"><h3>{strategyDraft.title}</h3><p className="ep-notice">Browser draft · Saved {fmtDate(strategyDraft.savedAt)}</p><p>Resume the exact visitor-entered state stored by the current Strategy Lab. The draft remains automated and unverified.</p><PageAction href="/strategy-lab">Resume in Strategy Lab</PageAction></div> : <div className="ep-rule"><p>No current Strategy Lab draft is saved in this browser.</p><PageAction href="/strategy-lab">Open Strategy Lab</PageAction></div>}</div>
       <div><h2>Peggy conversations</h2>{chatRows.length === 0 && <div className="ep-rule"><p>You have not saved a conversation yet.</p><PageAction href="/peggy" secondary>Talk to Peggy</PageAction></div>}

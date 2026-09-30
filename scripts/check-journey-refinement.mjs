@@ -45,9 +45,9 @@ try {
     await page.waitForFunction(()=>document.querySelector('[data-peggy-page]').getBoundingClientRect().right <= document.querySelector('.peggy-panel').getBoundingClientRect().left+1);
     assert(await page.locator('.experience-path').last().isVisible(),`${key}: routes remain visible beside Peggy`);
     await page.locator('#home-proof-title').evaluate(el=>el.scrollIntoView({block:'start'}));
-    await page.waitForFunction(()=>document.querySelector('.peggy-view-preview > p')?.textContent.includes('Nelson Drive'));
+    await page.waitForFunction(()=>document.querySelector('.peggy-location > summary')?.textContent.includes('Nelson Drive'));
     await page.locator('#home-paths-title').evaluate(el=>el.scrollIntoView({block:'start'}));
-    await page.waitForFunction(()=>document.querySelector('.peggy-view-preview > p')?.textContent.includes('What brings you here'));
+    await page.waitForFunction(()=>document.querySelector('.peggy-location > summary')?.textContent.includes('What brings you here'));
     await page.locator('.peggy-close').click();
     assert(await page.locator('[data-peggy-page]').evaluate(el=>Math.abs(el.getBoundingClientRect().width-innerWidth)<2),`${key}: closing restores page width`);
     await page.locator('.peggy-fab').click();

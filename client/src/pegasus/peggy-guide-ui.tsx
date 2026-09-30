@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { ArrowLeft, ArrowRight, ChevronDown, Compass, FileText, Route, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, ChevronDown, Compass, X } from 'lucide-react';
 import type { PeggyPageContext } from '@shared/peggy-page-context';
 import type { GuideSection } from './peggy-page-guide';
 import { PeggyMark } from './peggy-mark';
@@ -16,14 +16,27 @@ export function PeggyLocation({ context, label, sections, onVisit }: { context: 
   </details>;
 }
 
-export function PeggyGuideWelcome({ context, selectedText, onExplain, onTour, onNextStep }: { context: PeggyPageContext; selectedText: string; onExplain: () => void; onTour: () => void; onNextStep: () => void }) {
+function guideExcerpt(text: string): string {
+  const trimmed = text.trim();
+  if (trimmed.length <= 280) return trimmed;
+  const completeSentence = trimmed.slice(0, 280).match(/^.{40,}[.!?](?=\s|$)/)?.[0];
+  if (completeSentence) return completeSentence;
+  return `${trimmed.slice(0, 277).replace(/\s+\S*$/, '')}…`;
+}
+
+export function PeggyGuideWelcome({ context, summary, selectedText, onExplain, onTour, onNextStep }: { context: PeggyPageContext; summary?: string; selectedText: string; onExplain: () => void; onTour: () => void; onNextStep: () => void }) {
+  const overview = guideExcerpt(summary || context.excerpt || 'Choose an explanation, explore the page, or prepare a question for Peggy.');
   return <section className="peggy-guide-welcome" aria-label="Explore with Peggy">
-    <div className="peggy-welcome"><h2>Let’s look at this<br />together.</h2><p>I can explain this section, show you around, or help you find your next step.</p></div>
-    <div className="peggy-view-preview"><span>{selectedText ? 'Your selection' : 'You’re viewing'}</span><p>{selectedText ? `“${selectedText}”` : context.section}</p><small>Page context is ready when you send.</small></div>
-    <button type="button" className="peggy-explain" onClick={onExplain}><FileText size={20} aria-hidden="true" /><span>{selectedText ? 'Explain my selection' : 'Explain this section'}</span><ArrowRight size={18} aria-hidden="true" /></button>
+    <div className="peggy-at-a-glance">
+      <span className="peggy-guide-label">Page guide</span>
+      <h2>{selectedText ? 'Let’s unpack this.' : 'At a glance.'}</h2>
+      {selectedText ? <blockquote>{selectedText}</blockquote> : <p data-testid="peggy-local-summary">{overview}</p>}
+      <small className="peggy-guide-source">{selectedText ? 'Your selected passage' : summary ? 'A guide to this section' : context.excerpt ? 'From this section' : 'Explore this page'}<span>Nothing sent yet</span></small>
+    </div>
+    <button type="button" className="peggy-explain" onClick={onExplain}><span>{selectedText ? 'Explain my selection' : 'Explain this section'}</span><ArrowRight size={18} aria-hidden="true" /></button>
     <div className="peggy-guide-actions">
-      <button type="button" onClick={onTour}><Compass size={21} aria-hidden="true" /><span>Show me around<small>A short walk through this page</small></span><ArrowRight size={17} aria-hidden="true" /></button>
-      <button type="button" onClick={onNextStep}><Route size={21} aria-hidden="true" /><span>Find my next step</span><ArrowRight size={17} aria-hidden="true" /></button>
+      <button type="button" onClick={onTour}><span>Show me around<small>A short walk through this page</small></span><ArrowRight size={17} aria-hidden="true" /></button>
+      <button type="button" onClick={onNextStep}><span>Find my next step</span><ArrowRight size={17} aria-hidden="true" /></button>
     </div>
   </section>;
 }

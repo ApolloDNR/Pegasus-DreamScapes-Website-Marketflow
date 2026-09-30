@@ -86,8 +86,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 px-4 pt-24 pb-12">
-      <Card className="w-full max-w-md">
+    <div className="account-page min-h-screen flex items-center justify-center px-4 pt-24 pb-12">
+      <Card className="account-form w-full max-w-md">
         <CardHeader className="space-y-2 text-center">
           <h1
             className="text-3xl font-serif font-semibold tracking-tight"

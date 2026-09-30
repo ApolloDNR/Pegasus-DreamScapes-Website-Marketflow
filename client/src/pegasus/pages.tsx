@@ -130,7 +130,9 @@ export function InvestmentsPage({ go: _go, openPeggy: _openPeggy }: { go: Nav; o
    ================================================================ */
 export function DevelopmentPage({ go: _go }: { go: Nav }) {
   return <article className="experience-page">
-    <PageOpening title="A practical plan for the work ahead." action={{ href: '/bring-an-opportunity?intent=explore', label: 'Discuss a project' }}><p>Start with the property, proposed scope, budget, and constraints. Renovation and ground-up work each need clearly defined responsibilities.</p></PageOpening>
+    <PageOpening title="A practical plan for the work ahead."
+      image={{ src:'/images/pegasus-craft-blueprint.webp', alt:'Architectural plans being examined at a worktable', width:1280, height:896, caption:'Planning study · Illustrative scene' }}
+      action={{ href: '/bring-an-opportunity?intent=explore', label: 'Discuss a project' }}><p>Start with the property, proposed scope, budget, and constraints. Renovation and ground-up work each need clearly defined responsibilities.</p></PageOpening>
     <section id="development-framework" className="ep-section"><div className="experience-wrap ep-split">
       <h2>Define the work before it starts.</h2>
       <ol className="ep-rows ep-numbered">

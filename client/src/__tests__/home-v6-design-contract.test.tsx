@@ -17,7 +17,9 @@ describe('Blueprint v1.1 mounted homepage', () => {
     const arrival = within(container.querySelector<HTMLElement>('[data-hv="arrival"]')!);
     expect(arrival.getByTestId('approved-home-hero-image')).toHaveAttribute('src', '/images/hero/pegasus-v6-arrival.webp');
     expect(arrival.getByRole('heading', { level: 1 })).toHaveTextContent('Complex real estate, a clear way forward.');
-    expect(arrival.getAllByRole('link').map(link => link.textContent)).toEqual(['Bring an Opportunity', 'See Our Work']);
+    const actions = within(container.querySelector<HTMLElement>('.experience-arrival .experience-actions')!);
+    expect(actions.getAllByRole('link').map(link => link.textContent)).toEqual(['Bring an Opportunity', 'See Our Work']);
+    expect(arrival.getByRole('link', { name: 'Explore Pegasus' })).toHaveAttribute('href', '#home-paths-title');
     expect(arrival.getByText(/Property strategy, renovation insight/)).toHaveTextContent('Led by Apollo Duran.');
     expect(arrival.getByText(/Architectural vision/)).toBeInTheDocument();
   });

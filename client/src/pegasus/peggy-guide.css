@@ -1,19 +1,19 @@
 /* The companion uses Pegasus's existing paper, ink, type and emblem. */
 .pg-root .peggy-panel { width:min(440px,calc(100vw - 32px)); bottom:24px; max-height:min(860px,calc(var(--peggy-viewport-height,100dvh) - 120px)); }
 .pg-root .peggy-fab[hidden] { display:none; }
-.pg-root .peggy-head { padding:18px 16px 18px 24px; border-top-width:1px; }
-.pg-root .peggy-name { font-size:26px; gap:4px 10px; margin-top:0; }
-.pg-root .peggy-name span { font-size:11px; }
-.peggy-ai-label { display:block; margin-top:5px; color:#d9c9b7; font:400 11px/1.4 var(--pg-font-ui); }
-.pg-root .peggy-thread { padding:24px 24px 8px; }
+.pg-root .peggy-head { padding:20px 20px 20px 24px; border-top-width:1px; }
+.pg-root .peggy-name { display:block; font-size:29px; line-height:1.08; margin-top:0; }
+.pg-root .peggy-name span { display:block; margin-top:5px; font-size:11px; line-height:1.5; }
+.peggy-ai-label { display:block; margin-top:3px; font:400 10px/1.5 var(--pg-font-ui); }
+.pg-root .peggy-thread { padding:28px 24px 8px; }
 .pg-root .peggy-welcome { margin:0 0 20px; }
 .pg-root .peggy-welcome h2 { font-size:27px; line-height:1.25; letter-spacing:0; margin-bottom:12px; text-wrap:initial; }
 .pg-root .peggy-welcome p { line-height:1.65; max-width:none; }
 .peggy-location { flex:0 1 auto; min-height:48px; overflow:auto; border-bottom:1px solid var(--experience-rule); }
-.peggy-location > summary { display:flex; align-items:center; gap:12px; min-height:48px; padding:10px 24px; list-style:none; cursor:pointer; color:var(--experience-copper); font:400 12px/1.5 var(--pg-font-ui); }
+.peggy-location > summary { display:flex; align-items:center; gap:10px; min-height:48px; padding:11px 24px; list-style:none; cursor:pointer; color:var(--experience-muted); font:400 12px/1.5 var(--pg-font-ui); }
 .peggy-location > summary::-webkit-details-marker { display:none; }
 .peggy-location > summary > span { flex:1; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; }
-.peggy-location > summary strong { font-weight:500; }
+.peggy-location > summary strong { color:var(--experience-text); font-weight:500; }
 .peggy-location > summary svg { flex:none; }
 .peggy-location[open] > summary > svg:last-child { transform:rotate(180deg); }
 .peggy-location-content { padding:4px 24px 16px; font-size:13px; max-height:250px; overflow:auto; }
@@ -23,24 +23,29 @@
 .peggy-location nav button > span { color:var(--experience-copper); font-size:10px; }
 .peggy-location nav button > svg { margin-left:auto; flex:none; }
 .peggy-location nav button:hover { color:var(--experience-copper); }
-/* Context reads as a small field note, distinct from marketing headings. */
-.peggy-view-preview { margin:0 0 20px; padding:0; }
-.peggy-view-preview > span { display:flex; align-items:center; gap:12px; color:var(--experience-copper); font:500 10px/1.5 var(--pg-font-ui); letter-spacing:.08em; text-transform:uppercase; }
-.peggy-view-preview > span::after { content:''; flex:1; height:1px; background:var(--experience-rule); }
-.peggy-view-preview > p { margin:8px 0 5px; font:500 15px/1.5 var(--pg-font-ui); max-height:104px; overflow:auto; overflow-wrap:anywhere; }
-.peggy-view-preview > small { display:block; color:var(--experience-muted); font:400 11px/1.6 var(--pg-font-ui); }
-.peggy-explain { display:flex; align-items:center; gap:14px; width:100%; min-height:50px; padding:13px 16px; background:var(--experience-text); color:var(--experience-paper); border-radius:4px; font:500 14px/1.4 var(--pg-font-ui); text-align:left; }
+/* An authored page summary is immediately useful without impersonating an AI reply. */
+.peggy-at-a-glance { margin:0 0 26px; }
+.peggy-guide-label { color:var(--experience-copper); font:500 10px/1.5 var(--pg-font-ui); letter-spacing:.11em; text-transform:uppercase; }
+.pg-root .peggy-at-a-glance h2 { margin:12px 0 16px; color:var(--experience-text); font:400 34px/1.13 var(--pg-font-display); letter-spacing:-.025em; }
+.peggy-at-a-glance > p,.peggy-at-a-glance > blockquote { color:var(--experience-text); font:400 15px/1.75 var(--pg-font-ui); margin:0; overflow-wrap:anywhere; }
+.peggy-at-a-glance > blockquote { border-left:2px solid var(--experience-copper); padding-left:16px; max-height:180px; overflow:auto; }
+.peggy-guide-source { display:flex; align-items:center; flex-wrap:wrap; gap:4px 8px; margin-top:18px; color:var(--experience-muted); font:400 10px/1.5 var(--pg-font-ui); }
+.peggy-guide-source::before { content:''; width:20px; height:1px; margin-right:2px; background:var(--experience-copper); }
+.peggy-guide-source > span { margin-left:auto; }
+.peggy-explain { display:flex; align-items:center; gap:14px; width:100%; min-height:52px; padding:15px 18px; background:var(--experience-text); color:var(--experience-paper); border-radius:4px; font:500 14px/1.4 var(--pg-font-ui); text-align:left; }
 .peggy-explain > span { flex:1; }
 .peggy-explain svg { flex:none; width:18px; height:18px; }
 .peggy-explain:hover { background:var(--experience-copper); }
-.peggy-guide-actions { margin-top:12px; }
-.peggy-guide-actions button { display:flex; align-items:center; gap:14px; padding:12px 2px; min-height:54px; width:100%; border-top:1px solid var(--experience-rule); text-align:left; font:400 14px/1.5 var(--pg-font-ui); }
+.peggy-guide-actions { display:grid; gap:10px; margin-top:10px; }
+.peggy-guide-actions button { display:flex; align-items:center; gap:14px; padding:13px 17px; min-height:52px; width:100%; border:1px solid var(--experience-rule); border-radius:4px; text-align:left; font:400 14px/1.5 var(--pg-font-ui); transition:background-color 160ms,border-color 160ms; }
 .peggy-guide-actions button > span { flex:1; }
-.peggy-guide-actions button small { display:block; color:var(--experience-muted); font-size:11px; margin-top:2px; }
+.peggy-guide-actions button small { display:block; color:var(--experience-muted); font-size:11px; margin-top:3px; }
 .peggy-guide-actions button svg { flex:none; width:18px; height:18px; color:var(--experience-copper); }
-.peggy-guide-actions button:hover { color:var(--experience-copper); }
-.pg-root .peggy-compose-area { padding:14px 24px 16px; }
-.pg-root .peggy-input { padding:12px 12px 8px; border-radius:4px; background:color-mix(in srgb,var(--experience-paper) 65%,white); }
+.peggy-guide-actions button:hover { background:var(--experience-limestone); border-color:var(--experience-copper); }
+.pg-root .peggy-about { margin-top:18px; }
+.pg-root .peggy-compose-area { padding:16px 24px 18px; }
+.peggy-compose-label { margin:0 0 10px; color:var(--experience-text); font:400 17px/1.35 var(--pg-font-display); }
+.pg-root .peggy-input { padding:12px 12px 8px; border-radius:5px; background:color-mix(in srgb,var(--experience-paper) 65%,white); }
 .pg-root[data-theme='dark'] .peggy-input { background:var(--experience-limestone); }
 .pg-root .peggy-input textarea { font-size:14px; line-height:1.5; }
 .peggy-context-toggle { display:inline-flex; align-items:center; gap:8px; min-height:44px; color:var(--experience-muted); font:400 11px/1.4 var(--pg-font-ui); cursor:pointer; }
@@ -86,7 +91,11 @@
 @media (max-width:640px) {
   .pg-root .peggy-panel { bottom:calc(16px + env(safe-area-inset-bottom,0px) + var(--peggy-keyboard-offset,0px)); max-height:calc(var(--peggy-viewport-height,100dvh) - 32px - env(safe-area-inset-bottom,0px)); }
   .pg-root .peggy-head { padding:12px 12px 12px 16px; }
-  .pg-root .peggy-thread { padding:18px 18px 4px; }
+  .pg-root .peggy-thread { padding:22px 20px 4px; }
+  .pg-root .peggy-at-a-glance h2 { font-size:30px; margin-bottom:12px; }
+  .peggy-at-a-glance { margin-bottom:22px; }
+  .peggy-at-a-glance > p,.peggy-at-a-glance > blockquote { font-size:14px; line-height:1.7; }
+  .peggy-guide-source { margin-top:14px; }
   .pg-root .peggy-welcome h2 { font-size:26px; }
   .pg-root .peggy-welcome { margin-bottom:16px; }
   .pg-root .peggy-name { font-size:25px; }
@@ -112,7 +121,8 @@
   .pg-root .peggy-compose-area { padding-block:8px; }
   .peggy-location { min-height:36px; }
   .peggy-location > summary { min-height:36px; padding-block:6px; }
-  .peggy-view-preview { display:none; }
+  .peggy-compose-label { margin-bottom:6px; font-size:15px; }
+  .peggy-at-a-glance { margin-top:14px; }
   .peggy-attached-context summary { min-height:28px; }
   .peggy-attached-context > button { min-height:28px; }
   .peggy-attached-context { margin-bottom:4px; }
@@ -120,7 +130,7 @@
 }
 
 /* Peggy as a field guide: a personal seal, compass and an honest sense of place. */
-.pg-root .peggy-head .peggy-avatar { width:44px; height:44px; border:1px solid #d9a47c; border-radius:50%; padding:6px; flex:none; }
+.pg-root .peggy-head .peggy-avatar { width:46px; height:46px; border:1px solid #b8875c; border-radius:50%; padding:7px; flex:none; }
 .pg-root .peggy-head .peggy-avatar .peggy-mark { width:30px; height:30px; }
 .peggy-tour header .peggy-tour-seal { display:grid; place-items:center; width:40px; height:40px; border:1px solid #d9a47c; border-radius:50%; flex:none; }
 .peggy-tour-stop-label { display:none; }
@@ -144,9 +154,9 @@
 
 /* The seal owns the identity; the surrounding paper keeps the reading calm. */
 .pg-root .peggy-head { background:var(--experience-paper); color:var(--experience-text); border-top:0; border-bottom:1px solid var(--experience-rule); }
-.pg-root .peggy-head .peggy-avatar { background:#132a38; }
+.pg-root .peggy-head .peggy-avatar { background:#0b1d29; }
 .pg-root .peggy-name span,.pg-root .peggy-ai-label { color:var(--experience-muted); }
-.pg-root .peggy-close { color:var(--experience-text); border-color:var(--experience-rule); }
+.pg-root .peggy-close { color:var(--experience-text); border-color:transparent; align-self:flex-start; }
 .pg-root .peggy-close:hover { background:var(--experience-limestone); }
 .pg-root .peggy-head button:focus-visible { outline-color:var(--experience-copper); }
 /* On wide displays the companion shares the workspace instead of covering it.
@@ -158,14 +168,14 @@
     max-height:none; height:auto; border:0; border-left:1px solid var(--experience-rule);
     border-radius:0; box-shadow:none;
   }
-  .peggy-workspace .peggy-head { padding:24px; }
-  .peggy-workspace .peggy-head .peggy-avatar { width:52px; height:52px; padding:8px; }
+  .peggy-workspace .peggy-head { padding:22px 20px 22px 24px; }
+  .peggy-workspace .peggy-head .peggy-avatar { width:48px; height:48px; padding:7px; }
   .peggy-workspace .peggy-head .peggy-avatar .peggy-mark { width:34px; height:34px; }
-  .peggy-workspace .peggy-name { font-size:32px; }
+  .peggy-workspace .peggy-name { font-size:29px; }
   .peggy-workspace .peggy-name span { font-size:11px; }
   .peggy-workspace .peggy-welcome h2 { font-size:30px; }
   .peggy-workspace .peggy-thread { padding-top:28px; }
-  .peggy-workspace .peggy-compose-area { padding-bottom:24px; }
+  .peggy-workspace .peggy-compose-area { padding-top:20px; padding-bottom:22px; }
   .peggy-workspace .peggy-tour { display:flex; flex-direction:column; }
   .peggy-workspace .peggy-tour header { padding:20px 18px 20px 24px; background:var(--experience-paper); color:var(--experience-text); border-bottom:1px solid var(--experience-rule); }
   .peggy-workspace .peggy-tour header .peggy-tour-seal { background:#132a38; }

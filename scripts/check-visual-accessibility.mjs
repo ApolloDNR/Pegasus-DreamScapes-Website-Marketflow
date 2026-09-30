@@ -2059,26 +2059,26 @@ try {
         const frame = geometry.boxes[0];
         const image = geometry.boxes[1];
         assert(frame && image, `Hero frame or image was missing at ${viewport.width}px`);
+        // Cinematic arrival uses a full scene at every width. The bounded
+        // 32px overscan provides scroll depth without exposing an image edge.
+        // Retain the exact same source, crop, and geometry across themes.
+        assert(
+          Math.abs(frame.x - image.x) <= 2
+            && Math.abs(frame.width - image.width) <= 2
+            && image.y <= frame.y + 2 && image.y >= frame.y - 34
+            && image.y + image.height >= frame.y + frame.height - 2
+            && image.height <= frame.height + 66,
+          `Hero scene did not cover its stable frame at ${viewport.width}px: frame=${JSON.stringify(frame)} image=${JSON.stringify(image)}`,
+        );
         if (viewport.width <= 700) {
           const actions = geometry.boxes[4];
           const notice = geometry.boxes[5];
           assert(actions && notice, 'Mobile hero lost its actions or architectural-vision label');
           assert(
-            Math.abs(frame.x - image.x) <= 2
-              && Math.abs(frame.width - image.width) <= 2
-              && image.height >= 168 && image.height <= 242
-              && image.y >= actions.y + actions.height + 16
-              && notice.y >= image.y + image.height - 2
+            actions.x >= frame.x && actions.x + actions.width <= frame.x + frame.width
+              && notice.y >= actions.y + actions.height + 16
               && notice.y + notice.height <= frame.y + frame.height + 2,
-            `Mobile hero photo band was clipped, obscured or misplaced: frame=${JSON.stringify(frame)} image=${JSON.stringify(image)}`,
-          );
-        } else {
-          assert(
-            Math.abs(frame.x - image.x) <= 2
-              && Math.abs(frame.y - image.y) <= 2
-              && Math.abs(frame.width - image.width) <= 2
-              && Math.abs(frame.height - image.height) <= 2,
-            `Hero image did not fill its stable frame at ${viewport.width}px: frame=${JSON.stringify(frame)} image=${JSON.stringify(image)}`,
+            `Mobile hero actions or caption escaped the scene: frame=${JSON.stringify(frame)} actions=${JSON.stringify(actions)} notice=${JSON.stringify(notice)}`,
           );
         }
       }

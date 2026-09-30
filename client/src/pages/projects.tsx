@@ -6,6 +6,7 @@ import { ArrowRight, MapPin } from "lucide-react";
 import type { Project } from "@shared/schema";
 import { NELSON_FACTS, NELSON_PUBLIC_DESCRIPTION, NELSON_PUBLIC_HIGHLIGHTS, NELSON_COST_DISCLOSURE } from "@shared/nelson-facts";
 import "@/pegasus/editorial-pages.css";
+import { CinematicScene } from '@/pegasus/cinematic-scene';
 
 function isNelsonProject(project: Project): boolean {
   return project.slug === NELSON_FACTS.slug;
@@ -52,7 +53,7 @@ export default function Projects() {
   return (
     <div className="pg-editorial projects-editorial min-h-screen">
       <section className="editorial-hero projects-hero">
-        <img src="/images/nelson/nelson-hero-1280.jpg" alt="The completed Nelson Drive residence in Richmond, California" width="1280" height="853" fetchPriority="high" className="editorial-hero-image" />
+        <CinematicScene src="/images/nelson/nelson-hero-1280.jpg" alt="The completed Nelson Drive residence in Richmond, California" width={1280} height={853} priority imageClassName="editorial-hero-image" />
         <div className="editorial-hero-shade" />
         <div className="editorial-wrap relative">
           <p className="editorial-kicker">Case Studies · Documented Work</p>

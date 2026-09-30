@@ -16,7 +16,7 @@ export default function SnapshotStatus() {
   });
 
   return (
-    <div className="min-h-screen bg-background pt-24 pb-32">
+    <div className="receipt-page min-h-screen bg-background pt-24 pb-32">
       <div className="max-w-3xl mx-auto px-6 lg:px-12">
         <motion.div
           initial={{ opacity: 0, y: 16 }}

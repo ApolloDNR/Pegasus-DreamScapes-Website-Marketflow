@@ -83,8 +83,8 @@ export function isPegasusUrl(path: string): boolean {
 
 // Public surfaces the prototype shell does NOT own, but which should still wear
 // the pegasus NavBar/Footer chrome (instead of the legacy global chrome) so the
-// public site reads as one coherent experience. Private MarketFlow auth and
-// operator surfaces intentionally keep the legacy chrome; its public access
+// public site reads as one coherent experience. Private MarketFlow operator
+// surfaces retain their own chrome; public account, shared-report, access
 // and criteria pages belong to the premium public journey. Pages with a LIGHT top section
 // are listed in STANDALONE_SOLID_NAV so the nav renders solid (not the
 // transparent-over-dark-hero treatment) and stays legible.
@@ -116,6 +116,10 @@ const STANDALONE_SOLID_NAV: string[] = [
   // the unified chrome so users don't drop to the legacy site mid-conversion.
   '/strategy-lab/submitted',
   '/strategy-lab/blueprint-confirmed',
+  '/login',
+  '/signup',
+  '/forgot-password',
+  '/reset-password',
 ];
 
 // Prefix-matched standalone routes. `/projects/...` detail/case-study pages
@@ -123,7 +127,7 @@ const STANDALONE_SOLID_NAV: string[] = [
 const STANDALONE_DARK_PREFIX: string[] = [
   '/projects/',
 ];
-const STANDALONE_SOLID_PREFIX: string[] = [];
+const STANDALONE_SOLID_PREFIX: string[] = ['/snapshot/'];
 const STANDALONE_CHROME_PREFIX: string[] = [
   ...STANDALONE_DARK_PREFIX,
   ...STANDALONE_SOLID_PREFIX,

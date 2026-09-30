@@ -47,13 +47,28 @@ describe('Peggy as a companion to the current page', () => {
     expect(screen.getByRole('button', { name: 'Explain this section' })).toBeVisible();
     secondTop = 130;
     fireEvent.scroll(window);
-    await waitFor(() => expect(document.querySelector('.peggy-view-preview p')).toHaveTextContent('Actual second section'));
+    await waitFor(() => expect(screen.getByTestId('peggy-local-summary')).toHaveTextContent('A real public explanation.'));
     expect(fetcher).not.toHaveBeenCalled();
     send('Explain what I am looking at.');
     await screen.findByText('Synthetic reply');
     const body = JSON.parse(String(fetcher.mock.calls.find(([url]) => url === '/api/peggy/chat')?.[1]?.body));
     expect(body.context.currentView).toEqual({ path: '/', page: 'Home', section: 'Actual second section', excerpt: 'A real public explanation.' });
     expect(document.querySelector('.peggy-message-source')).toHaveTextContent('Actual second section');
+  });
+
+  it('shows the authored section guide immediately without representing it as an AI response', async () => {
+    const fetcher = setupFetch();
+    render(<Page />);
+    expect(screen.getByTestId('peggy-local-summary')).toHaveTextContent('Published introduction.');
+    expect(screen.getByRole('log', { name: 'Conversation with Peggy' })).toBeEmptyDOMElement();
+    act(() => {
+      document.querySelector('[data-second]')!.setAttribute('data-peggy-summary', 'Compare the choices here before deciding where to begin.');
+      secondTop = 130;
+    });
+    fireEvent.resize(window);
+    await waitFor(() => expect(screen.getByTestId('peggy-local-summary')).toHaveTextContent('Compare the choices here before deciding where to begin.'));
+    expect(screen.getByText('A guide to this section')).toBeVisible();
+    expect(fetcher).not.toHaveBeenCalled();
   });
 
   it('keeps an explained section pinned while the visitor scrolls and sends only after review', async () => {
@@ -63,7 +78,7 @@ describe('Peggy as a companion to the current page', () => {
     expect(screen.getByRole('textbox', { name: 'Talk to Peggy' })).toHaveValue('Explain “Welcome to Pegasus” in plain language. What should I notice here?');
     expect(fetcher).not.toHaveBeenCalled();
     secondTop = 130; fireEvent.scroll(window);
-    await waitFor(() => expect(document.querySelector('.peggy-view-preview p')).toHaveTextContent('Actual second section'));
+    await waitFor(() => expect(screen.getByTestId('peggy-local-summary')).toHaveTextContent('A real public explanation.'));
     fireEvent.click(screen.getByRole('button', { name: 'Send' }));
     await screen.findByText('Synthetic reply');
     const body = JSON.parse(String(fetcher.mock.calls.find(([url]) => url === '/api/peggy/chat')?.[1]?.body));
@@ -130,9 +145,9 @@ describe('Peggy as a companion to the current page', () => {
   it('refreshes section text when the public tool view changes', async () => {
     render(<Page />);
     secondTop = 130; fireEvent.scroll(window);
-    await waitFor(() => expect(document.querySelector('.peggy-view-preview p')).toHaveTextContent('Actual second section'));
+    await waitFor(() => expect(screen.getByTestId('peggy-local-summary')).toHaveTextContent('A real public explanation.'));
     act(() => { document.querySelector('[data-second]')!.textContent = 'Changed model view'; });
-    await waitFor(() => expect(document.querySelector('.peggy-view-preview p')).toHaveTextContent('Changed model view'));
+    await waitFor(() => expect(document.querySelector('.peggy-location > summary')).toHaveTextContent('Changed model view'));
   });
 
   it('restores page awareness after the mobile menu releases its inert background', async () => {

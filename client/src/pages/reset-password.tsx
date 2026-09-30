@@ -167,8 +167,8 @@ export default function ResetPasswordPage() {
   if (resetState === "expired" || resetState === "invalid") {
     const expired = resetState === "expired";
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 px-4 pt-24 pb-12">
-        <Card className="w-full max-w-md">
+      <div className="account-page min-h-screen flex items-center justify-center px-4 pt-24 pb-12">
+        <Card className="account-form w-full max-w-md">
           <CardHeader className="space-y-3 text-center">
             <AlertCircle className="h-10 w-10 text-destructive mx-auto" aria-hidden="true" />
             <h1 className="text-3xl font-serif font-semibold tracking-tight">
@@ -203,8 +203,8 @@ export default function ResetPasswordPage() {
 
   if (resetState === "success") {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 px-4 pt-24 pb-12">
-        <Card className="w-full max-w-md">
+      <div className="account-page min-h-screen flex items-center justify-center px-4 pt-24 pb-12">
+        <Card className="account-form w-full max-w-md">
           <CardHeader className="space-y-3 text-center">
             <CheckCircle2 className="h-10 w-10 text-primary mx-auto" aria-hidden="true" />
             <h1 className="text-3xl font-serif font-semibold tracking-tight">
@@ -230,8 +230,8 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-muted/30 px-4 pt-24 pb-12">
-      <Card className="w-full max-w-md">
+    <div className="account-page min-h-screen flex items-center justify-center px-4 pt-24 pb-12">
+      <Card className="account-form w-full max-w-md">
         <CardHeader className="space-y-2 text-center">
           <h1 className="text-3xl font-serif font-semibold tracking-tight">
             Choose a new password

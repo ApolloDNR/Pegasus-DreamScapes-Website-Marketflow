@@ -1,0 +1,39 @@
+/* Account and receipt pages use the same reading grid as the public site. */
+.public-reading-surface .account-page {
+  min-height: min(900px, 100svh);
+  align-items: flex-start;
+  padding: 156px 24px 88px;
+  background: hsl(var(--background));
+}
+.public-reading-surface .account-form {
+  max-width: 560px;
+  border: 0;
+  border-top: 1px solid hsl(var(--primary));
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.public-reading-surface .account-form > div { padding: 28px 0 0; }
+.public-reading-surface .account-form > div:first-child { text-align: left; }
+.public-reading-surface .account-form h1 {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-size: clamp(32px, 3.2vw, 44px);
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1.16;
+  margin-bottom: 16px;
+}
+.public-reading-surface .account-form input {
+  min-height: 48px;
+  border-radius: 2px;
+  font-size: 16px;
+}
+.public-reading-surface .account-form button[type="submit"] { min-height: 48px; border-radius: 2px; }
+.public-reading-surface .account-form label { font-size: 14px; }
+.public-reading-surface .receipt-page { padding-top: 156px; }
+.public-reading-surface .receipt-page > section { padding-top: 0; }
+.public-reading-surface .receipt-page h1 { letter-spacing: 0; font-weight: 400; }
+@media(max-width: 767px) {
+  .public-reading-surface .account-page { padding-top: 124px; padding-bottom: 64px; }
+  .public-reading-surface .receipt-page { padding-top: 124px; }
+}

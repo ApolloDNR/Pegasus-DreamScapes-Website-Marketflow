@@ -449,7 +449,7 @@ export function Peggy({
         <header className="peggy-head">
           <div className="peggy-avatar"><PeggyMark size={44} /></div>
           <div className="peggy-identity">
-            <div className="peggy-name">Peggy <span>Your guide to Pegasus</span></div>
+            <div className="peggy-name">Peggy <span>Your page companion</span></div>
             <span className="peggy-ai-label">AI assistant · early access</span>
           </div>
           <button type="button" onClick={close} aria-label="Close" className="peggy-close"><X size={20} aria-hidden="true" /></button>
@@ -469,7 +469,7 @@ export function Peggy({
         </div>}
 
         <div ref={scrollRef} className="peggy-thread">
-          {!conversationStarted && !prepared && !pickedRole && !choosingPath && guide.context && <PeggyGuideWelcome context={guide.context} selectedText={guide.selectedText} onExplain={() => explainSection()} onTour={() => startTour()} onNextStep={() => setChoosingPath(true)} />}
+          {!conversationStarted && !prepared && !pickedRole && !choosingPath && guide.context && <PeggyGuideWelcome context={guide.context} summary={guide.sections[guide.index]?.summary} selectedText={guide.selectedText} onExplain={() => explainSection()} onTour={() => startTour()} onNextStep={() => setChoosingPath(true)} />}
           {!conversationStarted && (prepared || !guide.context || choosingPath || pickedRole) && <div className={`peggy-welcome ${prepared ? 'is-prepared' : ''}`}>
             {guide.context && !prepared && <button type="button" className="peggy-text-button" onClick={() => { setChoosingPath(false); setPickedRole(null); }}><Compass size={15} aria-hidden="true" />Back to page guide</button>}
             <h2>{prepared ? 'Start with your context.' : <>A clearer<br />next step.</>}</h2>
@@ -551,6 +551,7 @@ export function Peggy({
         </div>
 
         <div className="peggy-compose-area">
+          <p className="peggy-compose-label">Ask Peggy a question</p>
           {pendingQuestion && <div className="peggy-draft-choice" role="group" tabIndex={-1} aria-label="Review a suggested question" aria-describedby={draftChoiceId}>
             <p role="status">{streaming ? 'Peggy is still responding. Your next question is ready to review.' : 'You already have a draft. Keep it, or use this question.'}</p>
             <p id={draftChoiceId}>{pendingQuestion.prompt}</p>

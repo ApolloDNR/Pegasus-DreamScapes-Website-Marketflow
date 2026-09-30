@@ -3,7 +3,6 @@ import { Link } from 'wouter';
 import { ArrowRight, ChevronDown } from 'lucide-react';
 import type { GuideSection } from './peggy-page-guide';
 import { PeggyMark } from './peggy-mark';
-import { JourneyCompass } from './wayfinding-art';
 import './journey.css';
 
 export const PEGGY_GUIDE_REQUEST = 'pegasus:guide-request';
@@ -39,16 +38,19 @@ export function BeforeYouBegin() {
   </details>;
 }
 
-type Destination = { href: string; title: string; note: string };
+type Destination = {
+  href: string; title: string; note: string; action: string;
+  image?: { src: string; alt: string; width: number; height: number };
+};
 const destinations: Record<string, Destination> = {
-  work: { href: '/our-work', title: 'See the work', note: 'Explore a completed project and the decisions behind it.' },
-  process: { href: '/how-we-operate', title: 'How we operate', note: 'Understand the process from first conversation to handoff.' },
-  owners: { href: '/property-owners', title: 'Start with your property', note: 'Find the starting point that fits your situation.' },
-  partners: { href: '/deal-partners', title: 'Find the missing piece', note: 'Explore the roles and questions around a potential partnership.' },
-  tools: { href: '/tools', title: 'Work through the details', note: 'Choose a tool to explore your own assumptions.' },
-  about: { href: '/about', title: 'Meet Apollo', note: 'Get to know the person behind Pegasus Dreamscapes.' },
-  representation: { href: '/work-with-apollo', title: 'Buy or sell with Apollo', note: 'Learn about licensed real estate representation.' },
-  faq: { href: '/faq', title: 'A few useful answers', note: 'Read common questions before starting a conversation.' },
+  work: { href: '/our-work', title: 'See the work', note: 'Explore a completed project and the decisions behind it.', action: 'View Our Work', image: { src: '/images/nelson/kitchen-after.webp', alt: 'The completed Nelson Drive kitchen with navy cabinetry and a waterfall island', width: 1600, height: 996 } },
+  process: { href: '/how-we-operate', title: 'How we operate', note: 'Understand the process from first conversation to handoff.', action: 'Explore the approach' },
+  owners: { href: '/property-owners', title: 'Start with your property', note: 'Find the starting point that fits your situation.', action: 'Explore your options' },
+  partners: { href: '/deal-partners', title: 'Find the missing piece', note: 'Explore the roles and questions around a potential partnership.', action: 'Explore partnership paths' },
+  tools: { href: '/tools', title: 'Work through the details', note: 'Choose a tool to explore your own assumptions.', action: 'Find a useful tool' },
+  about: { href: '/about', title: 'Meet Apollo', note: 'Get to know the person behind Pegasus Dreamscapes.', action: 'Meet the founder', image: { src: '/images/founder/apollo.webp', alt: 'Apollo Duran, founder of Pegasus Dreamscapes', width: 1100, height: 1375 } },
+  representation: { href: '/work-with-apollo', title: 'Buy or sell with Apollo', note: 'Learn about licensed real estate representation.', action: 'Explore representation', image: { src: '/images/founder/apollo.webp', alt: 'Apollo Duran', width: 1100, height: 1375 } },
+  faq: { href: '/faq', title: 'A few useful answers', note: 'Read common questions before starting a conversation.', action: 'Read the answers' },
 };
 // Deliberate whitelist: never add exploration chrome to a transaction or private workspace.
 export const JOURNEY_ROUTES: Record<string, readonly string[]> = {
@@ -67,13 +69,19 @@ export function JourneyContinuation({ path }: { path: string }) {
   const id = useId();
   const next = JOURNEY_ROUTES[journeyPath(path)];
   if (!next?.length) return null;
+  const primary = destinations[next[0]];
   return <section className="journey-continuation" aria-labelledby={id}>
     <div className="experience-wrap journey-continuation-grid">
-      <div className="journey-continuation-intro"><JourneyCompass size={76} /><h2 id={id}>Keep exploring.</h2><p>A useful next step, at your pace.</p></div>
-      <div><div className="journey-next-links">{next.map((key, index) => {
+      <div className="journey-continuation-intro"><h2 id={id}>A clear next step.</h2><p>Take a closer look, at your pace.</p><GuideInvite compact choose /></div>
+      <div className="journey-destinations">
+        <Link href={primary.href} className={`journey-destination-feature${primary.image ? ' has-image' : ''}`} aria-label={primary.title}>
+          {primary.image && <span className="journey-destination-image"><img {...primary.image} loading="lazy" decoding="async" /></span>}
+          <span className="journey-destination-copy"><strong>{primary.title}</strong><span className="journey-destination-note">{primary.note}</span><span className="journey-destination-action">{primary.action}<ArrowRight size={20} aria-hidden="true" /></span></span>
+        </Link>
+        <div className="journey-next-links">{next.slice(1).map(key => {
         const item = destinations[key];
-        return <Link key={key} href={item.href}><span className="journey-next-number" aria-hidden="true">{String(index + 1).padStart(2, '0')}</span><strong>{item.title}</strong><span className="journey-next-note">{item.note}</span><ArrowRight size={21} aria-hidden="true" /></Link>;
-      })}</div><GuideInvite compact choose /></div>
+        return <Link key={key} href={item.href}><strong>{item.title}</strong><span className="journey-next-note">{item.note}</span><ArrowRight size={20} aria-hidden="true" /></Link>;
+      })}</div></div>
     </div>
   </section>;
 }
@@ -96,6 +104,15 @@ export function JourneyWayfinder({ path, sections, index, hidden, onAsk }: {
     return () => { observer.disconnect(); document.documentElement.style.removeProperty('--journey-nav-height'); };
   }, []);
   useEffect(() => {
+    const row = host.current?.querySelector<HTMLElement>('.journey-wayfinder-row');
+    if (!row || typeof ResizeObserver === 'undefined') return;
+    const update = () => document.documentElement.style.setProperty('--journey-wayfinder-row-height', `${row.getBoundingClientRect().height}px`);
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(row);
+    return () => { observer.disconnect(); document.documentElement.style.removeProperty('--journey-wayfinder-row-height'); };
+  }, [path, hidden, index, sections.length]);
+  useEffect(() => {
     if (!expanded) return;
     const dismiss = (event: PointerEvent) => { if (event.target instanceof Node && !host.current?.contains(event.target)) setExpanded(false); };
     const escape = (event: KeyboardEvent) => { if (event.key === 'Escape') { setExpanded(false); toggle.current?.focus(); } };
@@ -112,8 +129,8 @@ export function JourneyWayfinder({ path, sections, index, hidden, onAsk }: {
   };
   return <nav ref={host} className="journey-wayfinder" aria-label="Explore this page">
     <div className="experience-wrap journey-wayfinder-row">
-      <button ref={toggle} type="button" className="journey-section-toggle" aria-expanded={expanded} aria-controls={id} onClick={() => setExpanded(!expanded)}>
-        <span className="journey-section-count">{String(index + 1).padStart(2, '0')} / {String(sections.length).padStart(2, '0')}</span>
+      <button ref={toggle} type="button" className="journey-section-toggle" aria-label={`Show page sections. Section ${index + 1} of ${sections.length}: ${sections[index]?.label}`} aria-expanded={expanded} aria-controls={id} onClick={() => setExpanded(!expanded)}>
+        <span className="journey-section-count">{`${index + 1} of ${sections.length}`}</span>
         <span className="journey-section-name">{sections[index]?.label}</span><ChevronDown size={16} aria-hidden="true" />
       </button>
       <button className="journey-wayfinder-ask" type="button" onClick={() => { setExpanded(false); onAsk(); }}><span className="journey-avatar"><PeggyMark size={23} /></span><span>Ask Peggy</span></button>

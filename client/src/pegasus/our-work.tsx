@@ -3,7 +3,11 @@ import { PageAction, PageOpening, PageClosing } from './experience-page';
 
 export function OurWorkPage({ go: _go }: { go: Nav }) {
   return <article className="experience-page">
-    <PageOpening title="The work, in detail."><p>A completed East Bay residential transformation, documented from its starting condition to the finished home.</p></PageOpening>
+    <PageOpening title="The work, in detail."
+      image={{ src:'/images/nelson/kitchen-after.webp', alt:'The completed Nelson Drive kitchen with navy cabinetry and a waterfall island', width:1600, height:996, caption:'Nelson Drive · Original project photography' }}
+      action={{ href:'#project-record', label:'Explore Nelson Drive' }}>
+      <p>A completed East Bay residential transformation, documented from its starting condition to the finished home.</p>
+    </PageOpening>
     <section className="ep-section"><div className="experience-wrap">
       <div className="ep-section-title"><h2 data-peggy-summary="This is the documented Nelson Drive project. Compare the real photographs and follow the case study for the recorded scope and financial information.">Nelson Drive.</h2><p>Richmond / El Sobrante Area, California</p></div>
       <figure className="ep-wide-photo"><img src="/images/nelson/curb.webp" alt="Nelson Drive exterior after the renovation" width={1600} height={1067} loading="eager" decoding="async" /><figcaption>The completed property · Real project photography</figcaption></figure>
