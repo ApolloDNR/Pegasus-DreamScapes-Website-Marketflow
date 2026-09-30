@@ -226,7 +226,7 @@ export default function LoginPage() {
                 DreamScaper
               </Button>
             </div>
-            <p className="text-[11px] text-muted-foreground/80 text-center mt-3">
+            <p className="text-[11px] text-muted-foreground text-center mt-3">
               Preview roles are walkthrough lenses only. They do not create approval,
               private access, or submission privileges.
             </p>

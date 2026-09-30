@@ -121,7 +121,10 @@
   .pg-root .peggy-compose-area { padding-block:8px; }
   .peggy-location { min-height:36px; }
   .peggy-location > summary { min-height:36px; padding-block:6px; }
-  .peggy-compose-label { margin-bottom:6px; font-size:15px; }
+  /* The textarea already has an accessible label. In a short viewport, give
+     the composer and its send disclosure the space used by this visual title. */
+  .peggy-compose-label { display:none; }
+  .pg-root .peggy-input { padding:8px; }
   .peggy-at-a-glance { margin-top:14px; }
   .peggy-attached-context summary { min-height:28px; }
   .peggy-attached-context > button { min-height:28px; }

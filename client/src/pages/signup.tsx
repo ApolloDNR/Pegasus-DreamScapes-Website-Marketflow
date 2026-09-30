@@ -453,7 +453,7 @@ export default function SignupPage() {
               <Eye className="w-4 h-4 mr-2" />
               Explore as Guest
             </Button>
-            <p className="text-[11px] text-muted-foreground/80 text-center mt-3">
+            <p className="text-[11px] text-muted-foreground text-center mt-3">
               Preview only. Private-beta walkthrough. No real actions.
             </p>
           </div>
