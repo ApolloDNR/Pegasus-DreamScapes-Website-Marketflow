@@ -1480,7 +1480,7 @@ async function exercisePublicDesign(page, route, viewport, health) {
   if (route.startsWith('/snapshot/property/')) {
     const clearOpening = await page.locator('h1').first().evaluate(heading => {
       const label = heading.parentElement?.firstElementChild?.getBoundingClientRect();
-      const header = document.querySelector('header')?.getBoundingClientRect();
+      const header = document.querySelector('.site-nav, header')?.getBoundingClientRect();
       return label && (!header || label.top >= header.bottom - 1);
     });
     assert(clearOpening, 'Shared snapshot source label must clear the fixed navigation');

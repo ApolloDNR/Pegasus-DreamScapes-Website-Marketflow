@@ -157,7 +157,7 @@ export default function SnapshotPropertyPage() {
         </div>
       </section>
 
-      <main className="max-w-[1180px] mx-auto px-6 lg:px-10 py-10 lg:py-14 space-y-12">
+      <div className="max-w-[1180px] mx-auto px-6 lg:px-10 py-10 lg:py-14 space-y-12">
         <section
           className="border border-[hsl(var(--copper))]/35 bg-card text-card-foreground px-5 py-4"
           aria-label="Snapshot source and verification status"
@@ -291,7 +291,7 @@ export default function SnapshotPropertyPage() {
             This output is based on user-entered, unverified inputs and automated assumptions. It does not represent a Pegasus review or recommendation. It is not an offer, valuation, appraisal, financing commitment, investment advice, or guarantee. Comp bands, ARV, rent estimates, and modeled funding assumptions require independent human verification.
           </p>
         </section>
-      </main>
+      </div>
     </div>
   );
 }
