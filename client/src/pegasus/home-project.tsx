@@ -22,7 +22,7 @@ export function HomeProject() {
     <div className="experience-wrap">
       <div className="home-project-heading">
         <h2 id="home-proof-title" data-peggy-summary="Compare the actual Nelson Drive photographs. Open the project to inspect the renovation in more detail.">Nelson Drive,<br /> before and after.</h2>
-        <p>The renovation moved the cooktop to a waterfall island with seating. Navy cabinetry and a statement hood give the finished kitchen a clear focal point.</p>
+        <p>A dated East Bay home, renewed across the kitchen, living spaces, and bathrooms. Follow the changes and the recorded acquisition, improvement budget, and sale.</p>
       </div>
 
       <div className="home-project-photographs">

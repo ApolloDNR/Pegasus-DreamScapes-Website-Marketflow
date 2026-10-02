@@ -58,7 +58,7 @@ export function HowWeOperatePage({ go: _go }: { go: Nav }) {
   const [stageIdx, setStageIdx] = useState(0);
   const stage = STAGES[stageIdx];
   return <article className="experience-page">
-    <PageOpening title="From property to plan to execution." action={{ href: '/bring-an-opportunity', label: 'Bring an Opportunity' }}><p>Understand the property, establish the role and terms, then organize the work an accepted project requires.</p></PageOpening>
+    <PageOpening title="From property to plan to execution." action={{ href: '/bring-an-opportunity', label: 'Start a conversation' }}><p>Understand the property, establish the role and terms, then organize the work an accepted project requires.</p></PageOpening>
     <section className="ep-section" id="operating-sequence" data-testid="lifecycle-rail"><div className="experience-wrap">
       <h2 data-peggy-summary="Choose a stage to see the work and questions it involves. The process moves from understanding the opportunity to learning from the outcome.">Five stages. One connected process.</h2>
       <div className="ep-stage-rail" role="group" aria-label="The five operating stages">{STAGES.map((item,index) => <button type="button" key={item.num} aria-pressed={index === stageIdx} aria-controls="operating-stage" onClick={() => setStageIdx(index)}><span>{item.num}</span><strong>{item.name}</strong></button>)}</div>

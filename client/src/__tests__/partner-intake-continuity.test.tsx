@@ -31,7 +31,7 @@ function completeIntake() {
   fireEvent.change(screen.getByLabelText('Full name (required)'), { target: { value: 'Synthetic Partner QA' } });
   fireEvent.change(screen.getByLabelText('Email (required)'), { target: { value: 'partner-qa@example.com' } });
   fireEvent.click(screen.getByRole('checkbox'));
-  fireEvent.click(screen.getByRole('button', { name: 'Record Opportunity' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Send inquiry' }));
 }
 
 beforeEach(() => {

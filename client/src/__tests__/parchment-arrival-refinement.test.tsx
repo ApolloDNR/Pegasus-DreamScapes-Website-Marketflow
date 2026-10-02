@@ -31,6 +31,7 @@ describe('Approved parchment arrival refinement', () => {
   it('describes each stable planner control with its visible everyday question', () => {
     const { container } = mount(<OpportunityPlan />);
     const plan = within(container);
+    fireEvent.click(plan.getByRole('button', { name: 'More planning questions' }));
     expect(within(container.querySelector<HTMLElement>('.op-choices')!).getAllByRole('button')).toHaveLength(8);
     expect(plan.getByRole('button', { name: 'Can the property move forward?' })).toHaveAccessibleDescription('Control');
     expect(plan.getByRole('button', { name: 'Do the numbers make sense?' })).toHaveAccessibleDescription('Underwriting');

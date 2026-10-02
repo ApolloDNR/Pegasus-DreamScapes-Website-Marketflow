@@ -284,7 +284,7 @@ describe("Pegasus public-shell navigation accessibility", () => {
     const coreSection = menu.querySelector<HTMLElement>('.site-mobile-body')!;
     const coreLinks = Array.from(menu.querySelectorAll<HTMLAnchorElement>('.site-mobile-link'));
     expect(coreLinks.map(link=>link.getAttribute('href'))).toEqual(['/our-work','/tools','/about']);
-    expect(within(menu).getByRole('link',{name:'Bring an Opportunity'})).toHaveAttribute('href','/bring-an-opportunity');
+    expect(within(menu).getByRole('link',{name:'Start a conversation'})).toHaveAttribute('href','/bring-an-opportunity');
     expect(menu.querySelector('a[href="/marketflow"]')).not.toBeInTheDocument();
 
     await user.click(within(coreSection!).getByRole("link", { name: "Our Work" }));
@@ -425,7 +425,7 @@ describe("Pegasus Strategy Lab workspace accessibility", () => {
     });
 
     expect(
-      within(main).getByText(/Pegasus Intelligence Desk/),
+      within(main).getByText(/Compare property costs and outcomes./),
     ).toBeInTheDocument();
     expect(
       within(main).queryByLabelText(/Strategy Lab operating record/i),
@@ -449,7 +449,7 @@ describe("Pegasus Strategy Lab workspace accessibility", () => {
     const main = container.querySelector("main");
     expect(main).toBeTruthy();
 
-    const basisStep = within(main!).getByRole("button", { name: "Assumptions" });
+    const basisStep = within(main!).getByRole("button", { name: "Start a property" });
     fireEvent.click(basisStep);
 
     const heading = await within(main!).findByRole("heading", {
@@ -469,7 +469,7 @@ describe("Pegasus Strategy Lab workspace accessibility", () => {
     const { container } = renderLanding("/strategy-lab");
     const main = container.querySelector("main")!;
 
-    await user.click(within(main).getByRole("button", { name: "Assumptions" }));
+    await user.click(within(main).getByRole("button", { name: "Start a property" }));
     const acquisition = within(main).getByRole("textbox", {
       name: /Acquisition or current basis/i,
     });
@@ -514,7 +514,7 @@ describe("Pegasus Strategy Lab workspace accessibility", () => {
     const { container, history } = renderLanding("/strategy-lab");
     const main = container.querySelector("main")!;
 
-    await user.click(within(main).getByRole("button", { name: "Assumptions" }));
+    await user.click(within(main).getByRole("button", { name: "Start a property" }));
     await user.type(
       within(main).getByRole("textbox", { name: /Property address or city/i }),
       "19 Bay View Ave, Walnut Creek",
@@ -573,7 +573,7 @@ describe("Pegasus Strategy Lab workspace accessibility", () => {
       const { container } = renderLanding("/strategy-lab");
       const main = container.querySelector("main")!;
       await user.click(
-        within(main).getByRole("button", { name: /Open calculators/i }),
+        within(main).getByRole("button", { name: "Use a calculator" }),
       );
 
       const panel = await within(main).findByRole("region", {
@@ -618,7 +618,7 @@ describe("Pegasus Strategy Lab workspace accessibility", () => {
       const { container } = renderLanding("/strategy-lab");
       const main = container.querySelector("main")!;
       await user.click(
-        within(main).getByRole("button", { name: /Open calculators/i }),
+        within(main).getByRole("button", { name: "Use a calculator" }),
       );
 
       const panel = await within(main).findByRole("region", {
@@ -673,7 +673,7 @@ describe("Pegasus Strategy Lab workspace accessibility", () => {
 });
 
 describe("Pegasus v6 live About routing", () => {
-  it("uses real canonical links for both Bring an Opportunity actions", async () => {
+  it("uses real canonical links for both Start a conversation actions", async () => {
     const { container } = renderLanding("/about");
 
     await screen.findByRole("heading", {
@@ -691,7 +691,7 @@ describe("Pegasus v6 live About routing", () => {
     }
 
     expect(
-      within(main!).queryByRole("button", { name: /Bring an Opportunity/i }),
+      within(main!).queryByRole("button", { name: /Start a conversation/i }),
     ).not.toBeInTheDocument();
   });
 });

@@ -88,14 +88,14 @@
   .home-project-notes { margin-left:0; }
 }
 @media (max-width:767px) {
-  .pg-root .experience-arrival { min-height:780px; min-height:100svh; padding:148px 0 176px; justify-content:flex-start; }
+  .pg-root .experience-arrival { min-height:700px; padding:128px 0 144px; justify-content:flex-start; }
   .pg-root .experience-arrival h1 { font-size:clamp(38px,8.8vw,58px); line-height:1.13; margin:22px 0; max-width:18ch; }
   .pg-root .experience-arrival h1 > span,.pg-root .experience-arrival h1 > em { display:block; }
   .pg-root .experience-arrival h1 > br { display:none; }
   .pg-root .experience-arrival .experience-geography { font-size:11px; letter-spacing:.08em; }
   .pg-root .experience-arrival .experience-intro { font-size:16px; line-height:1.65; max-width:36ch; }
   .pg-root .experience-arrival::before { background:linear-gradient(90deg,rgba(5,20,31,.83),rgba(5,20,31,.55) 70%,rgba(5,20,31,.28)),linear-gradient(0deg,rgba(5,20,31,.78),transparent 45%); }
-  .cinematic-scene .cinematic-scene-image { object-position:72% 54%; }
+  .cinematic-scene .cinematic-scene-image { object-position:88% 54%; }
   .pg-root .experience-arrival .experience-actions { gap:12px 24px; margin-top:28px; }
   .pg-root .experience-arrival .experience-button { padding:14px 18px; font-size:14px; }
   .cinematic-arrival-foot { align-items:flex-start; flex-direction:column-reverse; gap:16px; bottom:24px; }
@@ -104,8 +104,8 @@
   .experience-home .experience-section { padding-block:60px; }
   .experience-home .home-pathways { grid-template-columns:1fr; grid-template-areas:'intro' 'paths' 'invite'; gap:28px; }
   .experience-home .home-pathways h2 { font-size:40px; max-width:13ch; }
-  .experience-home .home-pathways-intro { gap:18px; }
-  .experience-home .threshold-atlas { width:280px; margin:0; }
+  .experience-home .home-pathways-intro { gap:12px; }
+  .experience-home .threshold-atlas { width:176px; margin:0; }
   .home-pathways .experience-path,.home-pathways .experience-path:first-child,.home-pathways .experience-path:last-child { min-height:0; padding:24px 12px; }
   .home-pathways .experience-path strong { font-size:25px; }
   .experience-home .home-pathways .journey-invite { padding-left:0; }

@@ -18,7 +18,7 @@ describe('Blueprint v1.1 mounted homepage', () => {
     expect(arrival.getByTestId('approved-home-hero-image')).toHaveAttribute('src', '/images/hero/pegasus-v6-arrival.webp');
     expect(arrival.getByRole('heading', { level: 1 })).toHaveTextContent('Complex real estate, a clear way forward.');
     const actions = within(container.querySelector<HTMLElement>('.experience-arrival .experience-actions')!);
-    expect(actions.getAllByRole('link').map(link => link.textContent)).toEqual(['Bring an Opportunity', 'See Our Work']);
+    expect(actions.getAllByRole('link').map(link => link.textContent)).toEqual(['Start a conversation', 'See Our Work']);
     expect(arrival.getByRole('link', { name: 'Explore Pegasus' })).toHaveAttribute('href', '#home-paths-title');
     expect(arrival.getByText(/Property strategy, renovation insight/)).toHaveTextContent('Led by Apollo Duran.');
     expect(arrival.getByText(/Architectural vision/)).toBeInTheDocument();
@@ -26,7 +26,7 @@ describe('Blueprint v1.1 mounted homepage', () => {
   it('routes the arrival actions as normal links', () => {
     const { container, history } = renderHome();
     const arrival = within(container.querySelector<HTMLElement>('[data-hv="arrival"]')!);
-    fireEvent.click(arrival.getByRole('link', { name: 'Bring an Opportunity' }));
+    fireEvent.click(arrival.getByRole('link', { name: 'Start a conversation' }));
     expect(history.at(-1)).toBe('/bring-an-opportunity');
     fireEvent.click(arrival.getByRole('link', { name: 'See Our Work' }));
     expect(history.at(-1)).toBe('/our-work');
@@ -66,10 +66,17 @@ describe('Blueprint v1.1 mounted homepage', () => {
     fireEvent.click(section.getByRole('button', { name: 'Open the planning guide' }));
     const plan = within(await section.findByTestId('opportunity-plan'));
     const desktopChoices = within(plan.getByRole('group', { name: 'What is your deal missing?' }));
+    expect(desktopChoices.getAllByRole('button')).toHaveLength(3);
+    const more = plan.getByRole('button', { name: 'More planning questions' });
+    fireEvent.click(more);
+    expect(more).toHaveAttribute('aria-expanded', 'true');
     expect(desktopChoices.getAllByRole('button')).toHaveLength(8);
     const capital = desktopChoices.getByRole('button', { name: 'What would funding require?' });
     fireEvent.click(capital);
     expect(capital).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(more);
+    expect(more).toHaveAttribute('aria-expanded', 'false');
+    expect(capital).toBeVisible();
     expect(plan.getByRole('link', { name: 'Model the assumptions' })).toHaveAttribute('href', '/strategy-lab');
     expect(plan.getByText(/does not arrange funding or imply that capital is available/)).toBeInTheDocument();
     fireEvent.click(capital);

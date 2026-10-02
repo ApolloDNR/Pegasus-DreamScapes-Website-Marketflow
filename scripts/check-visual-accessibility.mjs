@@ -1513,7 +1513,7 @@ async function exercisePublicDesign(page, route, viewport, health) {
     '/referral': { hero: '.ep-opening', label: 'Share an introduction', href: '#category-inquiry' },
     '/capital': { hero: '.ep-opening', label: 'Continue an introduction', href: '#capital-introduction' },
     '/development': { hero: '.ep-opening', label: 'Discuss a project', href: '/bring-an-opportunity?intent=explore' },
-    '/how-we-operate': { hero: '.ep-opening', label: 'Bring an Opportunity', href: '/bring-an-opportunity' },
+    '/how-we-operate': { hero: '.ep-opening', label: 'Start a conversation', href: '/bring-an-opportunity' },
   };
   const arrival = arrivalActions[route];
   if (arrival) {
@@ -1583,6 +1583,10 @@ async function exercisePublicDesign(page, route, viewport, health) {
     ];
     const compactPlan = viewport.width <= 900;
     const selector = plan.getByRole('button', { name: /^Choose a planning question/ });
+    if (!compactPlan) {
+      assert(await plan.locator('.op-choices button:visible').count() === 3, 'Planner should open with three questions');
+      await plan.getByRole('button', { name: 'More planning questions', exact: true }).click();
+    }
     for (const [, question, companion, title, href] of planningNeeds) {
       const choice = plan.locator('.op-choices').getByRole('button', { name: question, exact: true, includeHidden: true });
       if (compactPlan) {
@@ -2107,7 +2111,7 @@ try {
     await openPage(page, '/');
     const homepagePrimaryCta = page
       .locator('[data-hv="arrival"]')
-      .getByRole('link', { name: 'Bring an Opportunity', exact: true });
+      .getByRole('link', { name: 'Start a conversation', exact: true });
     assert(await homepagePrimaryCta.count() === 1, 'Homepage hero did not expose one primary conversion CTA');
     await homepagePrimaryCta.waitFor({ state: 'visible' });
     assert(
@@ -2117,7 +2121,7 @@ try {
     await homepagePrimaryCta.click();
     await page.waitForURL(/\/bring-an-opportunity$/);
     const destinationHeading = page.getByRole('heading', {
-      name: 'Bring an Opportunity',
+      name: 'Tell us what you have.',
       level: 1,
       exact: true,
     });
@@ -2254,7 +2258,7 @@ try {
           (response) => response.url() === `${baseUrl}/api/opportunities` && response.status() === 503,
           { timeout: 10_000 },
         ));
-        await page.getByRole('button', { name: 'Record Opportunity', exact: true }).click();
+        await page.getByRole('button', { name: 'Send inquiry', exact: true }).click();
         unwrapBrowserEvent(await firstRequestObserved);
         const pending = page.getByRole('button', { name: 'Recording…', exact: true });
         await pending.waitFor({ state: 'visible', timeout: 5_000 });
@@ -2337,7 +2341,7 @@ try {
 
     await openPage(page, '/tools');
     await page.getByRole('link', { name: 'Open Strategy Lab', exact: true }).first().click();
-    await page.getByRole('button', { name: 'Assumptions', exact: true }).click();
+    await page.getByRole('button', { name: 'Start a property', exact: true }).click();
     await page.getByLabel('Property address or city').fill('291 Pegasus Way, Richmond');
     await page.getByLabel('Acquisition or current basis').fill('600000');
     await page.getByLabel('Scope / improvement budget').fill('105000');

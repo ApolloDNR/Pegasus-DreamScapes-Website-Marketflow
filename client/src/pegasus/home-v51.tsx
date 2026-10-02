@@ -25,7 +25,7 @@ function DeferredOpportunityPlan() {
     return () => observer.disconnect();
   }, []);
   const fallback = <div className="experience-plan-placeholder">
-    <h3>Opportunity Plan</h3>
+    <h3>A question to start with.</h3>
     <p>Pick the question closest to your situation. Exploring is optional.</p>
     <button type="button" className="experience-link" onClick={() => setReady(true)}>Open the planning guide <ArrowRight aria-hidden="true" size={17} /></button>
   </div>;
@@ -68,7 +68,7 @@ export function HomePageV51(_props: { go: Nav; openPeggy: () => void }) {
     </section>
     <section className="experience-usefulness experience-section" data-hv="plan" aria-labelledby="home-tool-title">
       <div className="experience-wrap">
-        <div className="experience-section-head"><h2 id="home-tool-title" data-peggy-summary="Explore a question in Opportunity Plan, or open Strategy Lab to work through your own assumptions. These tools help you prepare; they do not make a property decision.">A clearer view<br /> of the <em>next move.</em></h2><p>Not sure where to begin? Pick a question below, or go straight to Strategy Lab.</p></div>
+        <div className="experience-section-head"><h2 id="home-tool-title" data-peggy-summary="Choose a planning question, or open Strategy Lab to work through your own assumptions. These tools help you prepare; they do not make a property decision.">A clearer view<br /> of the <em>next move.</em></h2><p>Not sure where to begin? Pick a question below, or go straight to Strategy Lab.</p></div>
         <DeferredOpportunityPlan />
         <div className="experience-actions"><Link href={PUBLIC_ACTIONS.lab.href} className="experience-button">{PUBLIC_ACTIONS.lab.label}<ArrowRight aria-hidden="true" size={18} /></Link><Link href={PUBLIC_ACTIONS.tools.href} className="experience-link">{PUBLIC_ACTIONS.tools.label}<ArrowRight aria-hidden="true" size={17} /></Link></div>
       </div>

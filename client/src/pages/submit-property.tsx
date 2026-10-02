@@ -50,7 +50,7 @@ const GOALS = ["Sell", "Get offer", "Partner / JV", "List through Apollo / Kelle
 // the public intake offers only email and phone-call follow-up.
 const CONTACT_METHODS = ["Phone call", "Email", "Any"];
 
-const STEPS = ["Bringing", "Property", "Situation", "Goal", "Contact"] as const;
+const STEPS = ["Start", "Property", "Situation", "Goal", "Contact"] as const;
 
 /** Lane CTAs deep-link with an intent; it preselects the §14 answer. */
 const INTENT_TO_VISITOR: Record<string, string> = {
@@ -227,7 +227,7 @@ function ChoiceGrid({ options, value, onPick, cols = 2 }:
 
 export default function SubmitPropertyPage() {
   useSEO({
-    title: "Bring an Opportunity",
+    title: "Start a conversation",
     description: "Record a property, contract, project, or plan for possible consideration. Submission does not promise review, routing, service, or response timing.",
     image: "/og/submit.png",
   });
@@ -507,8 +507,9 @@ export default function SubmitPropertyPage() {
       <div className="mx-auto max-w-5xl">
         <div className="intake-opening max-w-3xl">
           <h1 className="font-serif text-4xl sm:text-5xl leading-tight text-[#0b1d29] dark:text-[#fcfaf6]">
-            Bring an Opportunity
+            Tell us what you have.
           </h1>
+          <p className="intake-intro">A property, a project, or a question. Share what you know, then review it before sending.</p>
           {(utm.ownerSituationLabel || strategyLabBrief?.ownerSituation) && <p className="mt-3 text-sm leading-relaxed text-[#6b5f4d] dark:text-[#b9a888]">Starting with {utm.ownerSituationLabel || strategyLabBrief?.ownerSituation}. Add what you know; you can edit the situation before sending.</p>}
           {utm.partnerNeed && (
             <p className="mt-3 text-sm leading-relaxed text-[#6b5f4d] dark:text-[#b9a888]">
@@ -564,11 +565,17 @@ export default function SubmitPropertyPage() {
                 data-testid="intake-step-heading"
                 className="font-serif text-2xl text-[#0b1d29] dark:text-[#fcfaf6] mb-6"
               >
-                What are you bringing to Pegasus?
+                What would you like to discuss?
               </legend>
-              <ChoiceGrid options={VISITOR_TYPES}
+              <ChoiceGrid options={VISITOR_TYPES.slice(0, 4)}
                 value={VISITOR_TYPES.find((v) => v.value === form.visitorType)?.label ?? ""}
                 onPick={(labelPicked) => set({ visitorType: VISITOR_TYPES.find((v) => v.label === labelPicked)!.value })} />
+              <details className="intake-other-ways" open={VISITOR_TYPES.slice(4).some(v => v.value === form.visitorType) || undefined}>
+                <summary>Other ways to connect<ChevronDown aria-hidden="true" size={17} /></summary>
+                <ChoiceGrid options={VISITOR_TYPES.slice(4)}
+                  value={VISITOR_TYPES.find((v) => v.value === form.visitorType)?.label ?? ""}
+                  onPick={(labelPicked) => set({ visitorType: VISITOR_TYPES.find((v) => v.label === labelPicked)!.value })} />
+              </details>
             </fieldset>
           )}
 
@@ -675,7 +682,7 @@ export default function SubmitPropertyPage() {
               <details className="intake-review" open>
                 <summary>Review your inquiry</summary>
                 <dl>{[
-                  ['Bringing', VISITOR_TYPES.find(item => item.value === form.visitorType)?.label || form.visitorType, 0],
+                  ['Starting point', VISITOR_TYPES.find(item => item.value === form.visitorType)?.label || form.visitorType, 0],
                   ['Property or area', (form.propertyAddress || form.city || form.zipCode) ? [form.propertyAddress, form.city, form.state, form.zipCode].filter(Boolean).join(', ') : 'Not provided', 1],
                   ['Situation', form.situation || 'Not provided', 2],
                   ['Goal', form.goal || 'Not provided', 3],
@@ -823,7 +830,7 @@ export default function SubmitPropertyPage() {
               aria-describedby={step === 4 ? "sp-contact-requirements sp-contact-validation" : undefined}
               className="inline-flex min-h-12 items-center justify-center gap-2 border border-[#975735] bg-[#975735] px-6 py-3.5 text-[15px] font-semibold text-white transition-colors hover:bg-[#975735] disabled:cursor-not-allowed disabled:opacity-45 sm:px-8">
               {submit.isPending ? <Loader2 className="h-4 w-4 motion-safe:animate-spin" aria-hidden="true" /> : null}
-              {submit.isPending ? "Recording…" : step < 4 ? "Continue" : "Record Opportunity"}
+              {submit.isPending ? "Recording…" : step < 4 ? "Continue" : "Send inquiry"}
               {step < 4 && !submit.isPending && <ArrowRight className="h-4 w-4" aria-hidden="true" />}
             </button>
           </div>
@@ -847,10 +854,9 @@ export default function SubmitPropertyPage() {
             <p className="text-[13px] font-semibold uppercase tracking-[0.12em] text-[#975735] dark:text-[#c88a5d]">What happens next</p>
             <ol className="mt-5 space-y-5">
               {[
-                ["Received", "A valid receipt confirms a private record, not a public listing."],
-                ["Possible consideration", "Pegasus may assess fit, information needs, and current capacity."],
-                ["Possible next step", "If Pegasus elects to proceed, it may request information or discuss a lane."],
-                ["Separate terms", "Any analysis, offer, service, representation, referral, or transaction requires its own terms."],
+                ["Share the basics", "Describe your property or project and the question you want to resolve."],
+                ["Review and send", "Check your summary and choose how you can be contacted."],
+                ["After submission", "A valid receipt confirms your private inquiry was recorded. If Pegasus chooses to proceed, it may ask for details or discuss the fit."],
               ].map(([t, d], i) => (
                 <li key={t} className="flex gap-3">
                   <span className="mt-px font-serif text-[15px] leading-none text-[#975735] dark:text-[#c88a5d]">{`0${i + 1}`}</span>
@@ -861,6 +867,7 @@ export default function SubmitPropertyPage() {
                 </li>
               ))}
             </ol>
+            <p className="mt-5 text-[13px] leading-relaxed text-[#6b5f4d] dark:text-[#b9a888]">Any analysis, offer, service, representation, referral, or transaction requires separate terms.</p>
             <div className="mt-6 border-t border-[#d8cdbc] pt-5 dark:border-[#2a3a4e]">
               <ul className="space-y-2 text-[13px] leading-relaxed text-[#6b5f4d] dark:text-[#b9a888]">
                 <li className="flex gap-2"><span aria-hidden="true" className="mt-1.5 h-1 w-1 rounded-full bg-[#975735]" />No review or response-time commitment</li>

@@ -13,12 +13,33 @@ function desk() {
 }
 
 describe('Public Intelligence Desk', () => {
+  it('includes the visible calculator label in its accessible name on the empty desk', () => {
+    desk();
+    expect(screen.getByText('Use a calculator')).toHaveAccessibleName('Use a calculator');
+  });
+
+  it.each(['empty', 'working'] as const)('returns calculator focus to its %s desk opener', async state => {
+    desk();
+    if (state === 'working') fireEvent.click(screen.getByRole('button', { name: 'Start a property' }));
+    const opener = screen.getByRole('button', { name: state === 'empty' ? 'Use a calculator' : 'Open calculators' });
+    expect(opener).toHaveTextContent(state === 'empty' ? 'Use a calculator' : 'Calculators');
+    fireEvent.click(opener);
+    const panel = await screen.findByRole('region', { name: 'Decision calculators' });
+    await waitFor(() => expect(panel).toHaveFocus());
+    fireEvent.click(within(panel).getByRole('button', { name: 'Close calculators' }));
+    expect(screen.queryByRole('region', { name: 'Decision calculators' })).not.toBeInTheDocument();
+    expect(opener).toHaveFocus();
+  });
+
   it('opens without a fabricated analysis and keeps all five views keyboard reachable', async () => {
     desk();
+    expect(screen.queryByRole('navigation', { name: 'Analysis views' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Save locally' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Clear desk' })).not.toBeInTheDocument();
+    fireEvent.click(await screen.findByRole('button', { name: 'Start a property' }));
     const nav = await screen.findByRole('navigation', { name: 'Analysis views' });
     expect(within(nav).getAllByRole('button').map(button => button.textContent)).toEqual(['Overview', 'Assumptions', 'Scenarios', 'Risk', 'Memo']);
     expect(screen.queryByText('Leading path')).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole('button', { name: 'Start a property' }));
     await waitFor(() => expect(screen.getByRole('heading', { name: 'Model assumptions' })).toHaveFocus());
     expect(screen.getByRole('textbox', { name: 'Acquisition or current basis' })).toBeVisible();
   });

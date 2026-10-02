@@ -14,11 +14,13 @@ const NEEDS = [
   { key: 'disposition', question: 'Sell, refinance, or keep it?', label: 'Disposition', companion: 'Buyer', title: 'Compare selling with keeping it.', caption: 'Use your own numbers to explore a sale, listing, refinance, or hold. The model compares assumptions; it does not recommend an outcome.', href: '/strategy-lab', action: 'Compare the modeled paths' },
   { key: 'assetops', question: 'What would ownership involve?', label: 'Asset operations', companion: 'Underwriting', title: 'Look beyond the purchase.', caption: 'Consider rent, maintenance, reserves, and the work of managing the property. Start with what you know and leave unknown costs open.', href: '/strategy-lab', action: 'Explore a hold scenario' },
 ] as const;
+const FIRST_QUESTIONS = ['underwriting', 'development', 'disposition'];
 
 export function OpportunityPlan() {
   const resultId = useId();
   const chooserRef = useRef<HTMLButtonElement>(null);
   const [chooserOpen, setChooserOpen] = useState(false);
+  const [allQuestions, setAllQuestions] = useState(false);
   const [active, setActive] = useState<string | null>(null);
   const selected = NEEDS.find((need) => need.key === active);
   const closeChooser = () => {
@@ -33,7 +35,7 @@ export function OpportunityPlan() {
 
   return (
     <div className="op-plan" data-testid="opportunity-plan">
-      <div className="op-plan-bar"><h3>Opportunity Plan</h3><p>Choose a question to find a useful next step.</p></div>
+      <div className="op-plan-bar"><h3>A question to start with.</h3><p>Choose a question to find a useful next step.</p></div>
       <div className="op-plan-body">
         <div className="op-choice-column">
           <div className="op-mobile-choice" onKeyDown={event => {
@@ -52,13 +54,17 @@ export function OpportunityPlan() {
               </div>
             </div>
           </div>
-          <div className="op-choices" role="group" aria-label="What is your deal missing?">
+          <div className="op-choices" id={`${resultId}-desktop-questions`} role="group" aria-label="What is your deal missing?">
             {NEEDS.map(need => <button key={need.key} type="button" aria-label={need.question} aria-pressed={active === need.key}
+              hidden={!allQuestions && !FIRST_QUESTIONS.includes(need.key) && active !== need.key}
               aria-controls={resultId} aria-describedby={`${resultId}-${need.key}-label`} onClick={() => setActive(active === need.key ? null : need.key)}>
               <span><small>{need.question}</small><strong id={`${resultId}-${need.key}-label`}>{need.label}</strong></span>
               {active === need.key ? <Check aria-hidden="true" /> : <span className="op-choice-mark" aria-hidden="true" />}
             </button>)}
           </div>
+          <button type="button" className="op-more" aria-expanded={allQuestions} aria-controls={`${resultId}-desktop-questions`} onClick={() => setAllQuestions(open => !open)}>
+            {allQuestions ? 'Fewer planning questions' : 'More planning questions'}<ChevronDown aria-hidden="true" />
+          </button>
         </div>
         <div className="op-result" id={resultId} aria-live="polite" aria-atomic="true">
           <div className="op-read">

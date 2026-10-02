@@ -254,7 +254,7 @@ describe("rendered visual-accessibility gate contract", () => {
     expect(interaction).toContain("email: 'qa.intake@example.com'");
     expect(interaction).toContain("consentAccepted: true");
     expect(interaction).toContain(
-      "getByRole('button', { name: 'Record Opportunity', exact: true })",
+      "getByRole('button', { name: 'Send inquiry', exact: true })",
     );
     expect(interaction).toContain(
       "getByRole('button', { name: 'Recording…', exact: true })",
@@ -869,13 +869,13 @@ describe("rendered visual-accessibility gate contract", () => {
     );
 
     expect(interaction).toContain("[data-hv=\"arrival\"]");
-    expect(interaction).toContain("getByRole('link', { name: 'Bring an Opportunity', exact: true })");
+    expect(interaction).toContain("getByRole('link', { name: 'Start a conversation', exact: true })");
     expect(interaction).toContain("waitFor({ state: 'visible' })");
     expect(interaction).toContain("getAttribute('href')");
     expect(interaction).toContain("/bring-an-opportunity");
     expect(interaction).toContain("await homepagePrimaryCta.click()");
     expect(interaction).toContain("await page.waitForURL(/\\/bring-an-opportunity$/)");
-    expect(interaction).toContain("name: 'Bring an Opportunity'");
+    expect(interaction).toContain("name: 'Tell us what you have.'");
     expect(interaction).toContain("destinationHeading.waitFor({ state: 'visible' })");
     expect(interaction).not.toContain("nav a[");
   });

@@ -1,6 +1,6 @@
 // Shared public labels and destinations. Blueprint v1.1, September 14, 2026.
 export const PUBLIC_ACTIONS = {
-  opportunity: { label: 'Bring an Opportunity', href: '/bring-an-opportunity' },
+  opportunity: { label: 'Start a conversation', href: '/bring-an-opportunity' },
   work: { label: 'See Our Work', href: '/our-work' },
   lab: { label: 'Open Strategy Lab', href: '/strategy-lab' },
   tools: { label: 'Explore Tools', href: '/tools' },

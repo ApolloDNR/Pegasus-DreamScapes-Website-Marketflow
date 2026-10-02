@@ -75,14 +75,14 @@ afterEach(() => {
   window.history.pushState({}, "", "/");
 });
 
-describe("Bring an Opportunity interaction states", () => {
+describe("Start a conversation interaction states", () => {
   it("announces every step and deliberately focuses its prompt", async () => {
     renderPage();
 
     const liveRegion = screen.getByTestId("intake-live-status");
     const bringingPrompt = screen.getByTestId("intake-step-heading");
     await waitFor(() => expect(bringingPrompt).toHaveFocus());
-    expect(liveRegion).toHaveTextContent("Step 1 of 5: Bringing");
+    expect(liveRegion).toHaveTextContent("Step 1 of 5: Start");
 
     fireEvent.click(screen.getByRole("button", { name: /^A property I own/ }));
     fireEvent.click(screen.getByRole("button", { name: "Continue" }));
@@ -93,11 +93,11 @@ describe("Bring an Opportunity interaction states", () => {
     expect(liveRegion).toHaveTextContent("Step 2 of 5: Property");
     expect(screen.getByTestId("intake-live-status")).toBe(liveRegion);
 
-    fireEvent.click(screen.getByRole("button", { name: "Return to Bringing" }));
+    fireEvent.click(screen.getByRole("button", { name: "Return to Start" }));
     await waitFor(() => {
       expect(screen.getByTestId("intake-step-heading")).toHaveFocus();
     });
-    expect(liveRegion).toHaveTextContent("Step 1 of 5: Bringing");
+    expect(liveRegion).toHaveTextContent("Step 1 of 5: Start");
   });
 
   it("names the pending state and locks every step-navigation control", async () => {
@@ -108,7 +108,7 @@ describe("Bring an Opportunity interaction states", () => {
     fillRequiredContact();
 
     const liveRegion = screen.getByTestId("intake-live-status");
-    fireEvent.click(screen.getByRole("button", { name: "Record Opportunity" }));
+    fireEvent.click(screen.getByRole("button", { name: "Send inquiry" }));
 
     const pending = await screen.findByRole("button", {
       name: "Recording…",
@@ -151,7 +151,7 @@ describe("Bring an Opportunity interaction states", () => {
     fillRequiredContact();
 
     const liveRegion = screen.getByTestId("intake-live-status");
-    fireEvent.click(screen.getByRole("button", { name: "Record Opportunity" }));
+    fireEvent.click(screen.getByRole("button", { name: "Send inquiry" }));
 
     const failure = await screen.findByRole("alert");
     expect(failure).toHaveTextContent("We could not record your submission");

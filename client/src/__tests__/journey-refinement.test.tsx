@@ -104,9 +104,9 @@ describe('the shared public journey', () => {
     expect(screen.getByRole('region',{name:'Continue my work'})).toHaveTextContent('does not mean it was submitted');
   });
   it('keeps curated continuation off intake, saved work and private routes', () => {
-    const {rerender}=render(<JourneyContinuation path="/property-owners?owner_situation=repairs" />);
+    const {rerender}=render(<JourneyContinuation path="/how-we-operate?ref=example" />);
     expect(screen.getByRole('link',{name:/See the work/})).toHaveAttribute('href','/our-work');
-    for(const path of ['/bring-an-opportunity','/saved','/strategy-lab','/marketplace/buyer']) {
+    for(const path of ['/property-owners?owner_situation=repairs','/property-owners','/our-work','/bring-an-opportunity','/saved','/strategy-lab','/marketplace/buyer']) {
       rerender(<JourneyContinuation path={path}/>);expect(screen.queryByRole('region')).not.toBeInTheDocument();
     }
   });

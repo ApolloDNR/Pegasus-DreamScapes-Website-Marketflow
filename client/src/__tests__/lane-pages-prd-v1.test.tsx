@@ -140,7 +140,7 @@ describe("Lane pages PRD v1 contract (issue #22)", () => {
     for (const label of ["Real Estate", "Our Work", "Tools", "About"]) {
       expect(nav.textContent, `missing primary nav item: ${label}`).toContain(label);
     }
-    expect(nav.textContent).toContain("Bring an Opportunity");
+    expect(nav.textContent).toContain("Start a conversation");
     expect(nav.querySelector('a[href="/marketflow"]')).toBeNull();
     expect(nav.querySelector('a.pg-navlink[href="/strategy-lab"]')).toBeNull();
     expect(nav.querySelector('a[href="/tools"]')).toHaveTextContent('Tools');

@@ -56,10 +56,10 @@ export function PropertyOwnersPage({ go: _go }: { go: Nav }) {
       </div>
     </section>
     <section className="ep-section ep-warm"><div className="experience-wrap ep-split">
-      <div><h2 data-peggy-summary="A possible acquisition, a project role and licensed representation are different relationships. Compare them here before choosing a conversation.">Different paths. Clear roles.</h2><p>Pegasus considers opportunities case by case, with any acquisition, project role, or licensed representation defined separately.</p></div>
+      <div><h2 data-peggy-summary="A possible acquisition, a project role and licensed representation are different relationships. Compare them here before choosing a conversation.">What would help you move forward?</h2><p>You may want to discuss a direct purchase, work through a renovation, or sell with an agent. Start with the outcome you have in mind.</p></div>
       <div><dl className="ep-rows">
-        <div><dt>A possible direct acquisition</dt><dd>A purchase would require property-specific diligence, capacity, and accepted written terms.</dd></div>
-        <div><dt>A project or renovation conversation</dt><dd>Scope, qualifications, permits, responsibilities, and availability must be established for the specific work.</dd></div>
+        <div><dt>Discuss a direct purchase</dt><dd>A purchase would require property-specific diligence, capacity, and accepted written terms.</dd></div>
+        <div><dt>Plan a project or renovation</dt><dd>Scope, qualifications, permits, responsibilities, and availability must be established for the specific work.</dd></div>
         <div><dt>Selling with representation</dt><dd>Discuss a separately documented brokerage relationship with Apollo.</dd></div>
       </dl><PageAction href="/work-with-apollo" secondary>Buy or sell with Apollo</PageAction><p className="ep-notice ep-rule">{REPRESENTATION_NOTICE}</p></div>
     </div></section>
@@ -73,6 +73,7 @@ export function PropertyOwnersPage({ go: _go }: { go: Nav }) {
       </ol>
     </div></section>
     <PageClosing title="Tell us about the property." href={selectedSituationHref} label="Tell us about the property">
+      <p>Tell us where things stand, what you want to change, and any date that matters. You can review everything before sending.</p>
       <p className="ep-notice">Submission may be considered, but no written review, response, route, or offer is promised. It is not a valuation, appraisal, legal opinion, foreclosure-rescue service, representation agreement, or closing commitment.</p>
     </PageClosing>
   </article>;

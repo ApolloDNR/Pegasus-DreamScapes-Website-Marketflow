@@ -18,6 +18,12 @@
 .intake-page { padding-top:136px; background:var(--experience-paper,#f5efe4); color:var(--experience-text,#0b1d29); }
 .intake-page h1 { font:400 clamp(30px,3.5vw,44px)/1.2 'Playfair Display',Georgia,serif; letter-spacing:0; text-wrap:balance; }
 .intake-opening { margin-bottom:20px; }
+.intake-intro { max-width:54ch; margin:18px 0 28px; font-size:17px; line-height:1.65; color:hsl(var(--muted-foreground)); }
+.intake-other-ways { margin-top:20px; }
+.intake-other-ways summary { display:flex; align-items:center; justify-content:space-between; gap:16px; min-height:48px; cursor:pointer; color:hsl(var(--primary)); font-size:15px; font-weight:500; list-style:none; }
+.intake-other-ways summary::-webkit-details-marker { display:none; }
+.intake-other-ways summary:focus-visible { outline:2px solid currentColor; outline-offset:4px; }
+.intake-other-ways[open] summary svg { transform:rotate(180deg); }
 .intake-draft-note { max-width:65ch; font-size:14px; line-height:1.5; color:#5c6265; margin:0 0 18px; }
 .intake-page [aria-label='Form progress'] { margin-bottom:12px; }
 .intake-working-form { padding-block:22px; }

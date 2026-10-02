@@ -108,7 +108,7 @@ describe("public business-lane boundaries", () => {
     window.history.pushState({}, "", `/bring-an-opportunity?intent=${intent}`);
     renderPublic(<SubmitPropertyPage />, `/bring-an-opportunity?intent=${intent}`);
 
-    fireEvent.click(screen.getByRole("button", { name: "Return to Bringing" }));
+    fireEvent.click(screen.getByRole("button", { name: "Return to Start" }));
     const choice = screen.getByRole("button", { name: new RegExp(`${label.source}.*${description.source}`, "i") });
     expect(choice).toHaveAttribute("aria-pressed", "true");
   });

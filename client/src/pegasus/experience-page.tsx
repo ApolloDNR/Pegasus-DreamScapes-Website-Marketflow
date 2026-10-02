@@ -42,7 +42,7 @@ export function PageOpening({ title, children, action, secondaryAction, image, c
   </header>;
 }
 
-export function PageClosing({ title = 'Start with what you have.', children, href = '/bring-an-opportunity', label = 'Bring an Opportunity' }: {
+export function PageClosing({ title = 'Start with what you have.', children, href = '/bring-an-opportunity', label = 'Start a conversation' }: {
   title?: string; children?: ReactNode; href?: string; label?: string;
 }) {
   return <section className="ep-section ep-dark ep-closing"><div className="experience-wrap ep-split">

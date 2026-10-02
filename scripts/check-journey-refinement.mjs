@@ -99,8 +99,12 @@ try {
   assert(await page.evaluate(()=>document.activeElement?.tagName==='H2'));
   await page.locator('.ep-closing .journey-before summary').click();
   await capture(page,key,'closing');
+  assert.equal(await page.locator('.journey-continuation').count(),0,`${key}: owners keeps one closing`);
+  // The owner and Our Work pages end with their own closing; the process page retains curated onward links.
+  await page.goto(origin+'/how-we-operate');await page.locator('.ep-opening').waitFor();
   const next=page.locator('.journey-continuation');await next.scrollIntoViewIfNeeded();await capture(page,key,'continuation');
   await next.getByRole('link',{name:/See the work/}).click();await page.getByRole('heading',{name:'The work, in detail.'}).waitFor();
+  assert.equal(await page.locator('.journey-continuation').count(),0,`${key}: Our Work keeps one closing`);
   await page.goto(origin+'/tools');await page.locator('.tools-finder').waitFor();await capture(page,key,'tools');
   await page.getByRole('button',{name:'Explore eight calculators'}).click();
   assert.equal(await page.locator('.tools-calculators a').count(),8);await capture(page,key,'calculators');

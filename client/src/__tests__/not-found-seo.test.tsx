@@ -36,7 +36,7 @@ describe("client 404 page", () => {
       expect(document.head.querySelector('link[rel="canonical"]')).toBeNull();
     });
     expect(
-      screen.getByRole("link", { name: /bring an opportunity/i }),
+      screen.getByRole("link", { name: /start a conversation/i }),
     ).toHaveAttribute("href", "/bring-an-opportunity");
   });
 });

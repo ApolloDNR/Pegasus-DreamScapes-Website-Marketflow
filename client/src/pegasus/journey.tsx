@@ -54,8 +54,8 @@ const destinations: Record<string, Destination> = {
 };
 // Deliberate whitelist: never add exploration chrome to a transaction or private workspace.
 export const JOURNEY_ROUTES: Record<string, readonly string[]> = {
-  '/': [], '/property-owners': ['work', 'process'], '/deal-partners': ['process', 'work'],
-  '/how-we-operate': ['work', 'tools'], '/our-work': ['process', 'owners'], '/development': ['work', 'process'],
+  '/': [], '/property-owners': [], '/deal-partners': ['process', 'work'],
+  '/how-we-operate': ['work', 'tools'], '/our-work': [], '/development': ['work', 'process'],
   '/tools': ['process', 'faq'], '/about': ['work', 'process'], '/work-with-apollo': ['about', 'owners'],
   '/buyers': ['representation', 'tools'], '/operators': ['process', 'partners'], '/referral': ['partners', 'process'],
   '/capital': ['process', 'work'], '/ecosystem': ['process', 'partners'], '/marketflow': ['partners', 'process'],

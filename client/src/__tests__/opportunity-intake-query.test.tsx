@@ -45,7 +45,7 @@ afterEach(() => {
   window.history.pushState({}, "", "/");
 });
 
-describe("Bring an Opportunity query contract", () => {
+describe("Start a conversation query contract", () => {
   it.each([
     ["Significant repairs", "Major repairs"],
     ["Vacant property", "Vacant"],
@@ -91,7 +91,7 @@ describe("Bring an Opportunity query contract", () => {
       target: { value: "ada@example.com" },
     });
     fireEvent.click(screen.getByRole("checkbox"));
-    fireEvent.click(screen.getByRole("button", { name: "Record Opportunity" }));
+    fireEvent.click(screen.getByRole("button", { name: "Send inquiry" }));
 
     await waitFor(() => expect(apiRequestMock).toHaveBeenCalledTimes(1));
     const [method, path, payload] = apiRequestMock.mock.calls[0] as [
@@ -139,7 +139,7 @@ describe("Bring an Opportunity query contract", () => {
       target: { value: "ada@example.com" },
     });
     fireEvent.click(screen.getByRole("checkbox"));
-    fireEvent.click(screen.getByRole("button", { name: "Record Opportunity" }));
+    fireEvent.click(screen.getByRole("button", { name: "Send inquiry" }));
 
     await waitFor(() => expect(apiRequestMock).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(window.sessionStorage.getItem(STRATEGY_LAB_HANDOFF_SESSION_KEY)).toBeNull());
@@ -200,7 +200,7 @@ describe("Bring an Opportunity query contract", () => {
       target: { value: "ada@example.com" },
     });
     fireEvent.click(screen.getByRole("checkbox"));
-    fireEvent.click(screen.getByRole("button", { name: "Record Opportunity" }));
+    fireEvent.click(screen.getByRole("button", { name: "Send inquiry" }));
 
     await waitFor(() => expect(apiRequestMock).toHaveBeenCalledTimes(1));
     const payload = apiRequestMock.mock.calls[0][2] as Record<string, unknown>;
@@ -258,7 +258,7 @@ describe("Bring an Opportunity query contract", () => {
       target: { value: "ada@example.com" },
     });
     fireEvent.click(screen.getByRole("checkbox"));
-    fireEvent.click(screen.getByRole("button", { name: "Record Opportunity" }));
+    fireEvent.click(screen.getByRole("button", { name: "Send inquiry" }));
 
     await waitFor(() => expect(apiRequestMock).toHaveBeenCalledTimes(1));
     const payload = apiRequestMock.mock.calls[0][2] as Record<string, unknown>;
@@ -284,7 +284,7 @@ describe("Bring an Opportunity query contract", () => {
         "Full name, email, and contact consent are required. Phone and scheduling details are optional.",
       ),
     ).toBeInTheDocument();
-    const submitButton = screen.getByRole("button", { name: "Record Opportunity" });
+    const submitButton = screen.getByRole("button", { name: "Send inquiry" });
     expect(submitButton).toBeEnabled();
 
     fireEvent.click(submitButton);
