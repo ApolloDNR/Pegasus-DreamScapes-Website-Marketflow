@@ -11,6 +11,7 @@ import { useParams, Link } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Download, ArrowRight, AlertTriangle, ShieldCheck } from "lucide-react";
 import { useSEO } from "@/hooks/use-seo";
+import { ApiError } from "@/lib/queryClient";
 import type { StrategySnapshot, LaneFitResult, RiskFlag, CapitalStackEntry } from "@shared/strategy-lab/types";
 
 interface SharedPropertyInput {
@@ -63,7 +64,7 @@ export default function SnapshotPropertyPage() {
   const params = useParams<{ token: string }>();
   const token = params.token;
 
-  const { data, isLoading, isError } = useQuery<SharedAnalysis>({
+  const { data, isLoading, isError, error } = useQuery<SharedAnalysis>({
     queryKey: ["/api/property-analyses/by-token", token],
   });
 
@@ -103,12 +104,13 @@ export default function SnapshotPropertyPage() {
     );
   }
   if (isError || !data) {
+    const isNotFound = error instanceof ApiError && error.isNotFound;
     return (
       <div className="min-h-screen bg-background flex items-center justify-center px-6">
         <div className="max-w-md text-center">
-          <div className={`text-[10px] uppercase tracking-[0.28em] font-supporting font-semibold mb-3 ${BODY_ACCENT_CLASS}`}>Snapshot not found</div>
-          <h1 className="font-serif text-3xl font-semibold mb-3">This share link has expired or was retracted.</h1>
-          <p className="text-sm text-muted-foreground mb-6">If you need a fresh read on this property, contact apollo@pegasusdreamscapes.com.</p>
+          <div className={`text-[10px] uppercase tracking-[0.28em] font-supporting font-semibold mb-3 ${BODY_ACCENT_CLASS}`}>{isNotFound ? "Snapshot not found" : "Shared snapshot"}</div>
+          <h1 className="font-serif text-3xl font-semibold mb-3">{isNotFound ? "This share link has expired or was retracted." : "This snapshot is temporarily unavailable."}</h1>
+          <p className="text-sm text-muted-foreground mb-6">{isNotFound ? "If you need a fresh read on this property, contact apollo@pegasusdreamscapes.com." : "We could not verify the share link right now. Try again in a moment."}</p>
           <Link href="/strategy-lab" className={`inline-block px-5 py-2.5 text-sm font-supporting font-semibold ${ACTION_CLASS}`}>Open Strategy Lab</Link>
         </div>
       </div>
