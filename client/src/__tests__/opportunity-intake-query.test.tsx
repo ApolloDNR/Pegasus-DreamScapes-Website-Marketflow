@@ -29,6 +29,7 @@ function renderPage() {
 }
 
 beforeEach(() => {
+  sessionStorage.clear();
   clearStrategyLabHandoff();
   window.history.pushState(
     {},

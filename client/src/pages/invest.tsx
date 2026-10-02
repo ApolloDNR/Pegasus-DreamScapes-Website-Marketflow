@@ -28,7 +28,7 @@ import { useSEO } from "@/hooks/use-seo";
 import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/animations";
 const founderApolloPath = "/images/founder/apollo.webp";
 import { insertInvestorLeadSchema, type InsertInvestorLead, type InsertLead } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
+import { useIntakeRequest } from "@/lib/intake-idempotency";
 import {
   TrendingUp,
   FileCheck,
@@ -525,6 +525,7 @@ function InvestorFormSection() {
     },
   });
 
+  const sendIntake = useIntakeRequest("invest", "/api/leads");
   const mutation = useMutation({
     mutationFn: async (data: InsertInvestorLead) => {
       const nameParts = data.name.split(' ');
@@ -551,7 +552,7 @@ function InvestorFormSection() {
         notes: data.notes,
       };
 
-      return await apiRequest("POST", "/api/leads", unifiedLead);
+      return await sendIntake(unifiedLead);
     },
     onSuccess: () => {
       setSubmitted(true);

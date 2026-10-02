@@ -34,7 +34,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/use-seo";
 import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/animations";
 import type { InsertLead } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
+import { useIntakeRequest } from "@/lib/intake-idempotency";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { useUpload } from "@/hooks/use-upload";
 import { z } from "zod";
@@ -462,6 +462,7 @@ function LeadFormSection() {
     },
   });
 
+  const sendIntake = useIntakeRequest("sell", "/api/leads");
   const mutation = useMutation({
     mutationFn: async (data: SellerFormValues) => {
       const nameParts = data.name.split(' ');
@@ -498,7 +499,7 @@ function LeadFormSection() {
         notes: data.notes,
       };
 
-      return await apiRequest("POST", "/api/leads", unifiedLead);
+      return await sendIntake(unifiedLead);
     },
     onSuccess: () => {
       setSubmitted(true);

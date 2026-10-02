@@ -1,270 +1,59 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import express from "express";
-import type { AddressInfo } from "node:net";
-import type { Server } from "node:http";
-
-const testState = vi.hoisted(() => ({
-  inserted: [] as Array<Record<string, unknown>>,
-  hqForward: vi.fn(),
-  sendEmail: vi.fn(),
-}));
-
-vi.mock("../db", () => ({
-  db: {
-    insert: vi.fn(() => ({
-      values: vi.fn((values: Record<string, unknown>) => ({
-        returning: vi.fn(async () => {
-          const row = {
-            id: `opportunity-${testState.inserted.length + 1}`,
-            createdAt: new Date("2026-07-22T12:00:00.000Z"),
-            updatedAt: new Date("2026-07-22T12:00:00.000Z"),
-            ...values,
-          };
-          testState.inserted.push(row);
-          return [row];
-        }),
-      })),
-    })),
+import { afterAll,beforeAll,beforeEach,describe,expect,it,vi } from 'vitest';
+import express from 'express';
+import type {AddressInfo} from 'node:net';
+import type {Server} from 'node:http';
+const state=vi.hoisted(()=>({record:vi.fn(),mail:vi.fn(),forward:vi.fn()}));
+vi.mock('../db',()=>({db:{}}));
+vi.mock('../website/intake',()=>({recordWebsiteInquiry:state.record}));
+vi.mock('../email',()=>({sendEmail:state.mail}));
+vi.mock('../integrations/hq-client',()=>({forward:state.forward,outreachReasonForLeadType:()=> 'property_review'}));
+import {IntakeConfigurationError,IntakeConflictError} from '../website/intake-policy';
+const {registerOpportunityRoutes}=await import('../opportunityRoutes');
+let server:Server;let url:string;
+const payload={visitorType:'owner',contactName:'Synthetic Owner',email:'synthetic@example.test',propertyAddress:'100 Synthetic Ave',consentAccepted:true,hp_company:'',ts_elapsed_ms:4000};
+beforeAll(async()=>{const app=express();app.use(express.json());const pass:express.RequestHandler=(_q,_s,n)=>n();registerOpportunityRoutes(app,{isAuthenticated:pass,requireStaffRole:pass,publicIntakeRateLimit:pass});await new Promise<void>(r=>{server=app.listen(0,r);});url=`http://127.0.0.1:${(server.address() as AddressInfo).port}`;});
+afterAll(async()=>{await new Promise<void>((r,j)=>server.close(e=>e?j(e):r()));});
+beforeEach(()=>{vi.clearAllMocks();state.record.mockImplementation(async(input:any)=>({record:{type:'opportunity',id:'1a7cd03f-d138-4f8e-8c62-73864d5cc0fd'},duplicate:false,row:{id:'1a7cd03f-d138-4f8e-8c62-73864d5cc0fd',status:'New',recommendedLane:input.payload.recommendedLane,assignedDepartment:input.payload.assignedDepartment}}));});
+const post=(changes:Record<string,unknown>={},key?:string)=>fetch(`${url}/api/opportunities`,{method:'POST',headers:{'content-type':'application/json',...(key?{'Idempotency-Key':key}:{})},body:JSON.stringify({...payload,...changes})});
+describe('opportunity route atomic intake boundary',()=>{
+ it.each(['List through Apollo / Keller Williams', 'Hold / rent', 'Find buyer'])(
+  'preserves investor mandate facts while routing goal %s for neutral review',
+  async (goal) => {
+   const mandate = {
+    visitorType: 'buyer',
+    sourcePage: '/bring-an-opportunity',
+    leadSource: 'public_website_v1',
+    goal,
+    notes: 'Seeking an East Bay duplex within the stated investment budget.',
+   };
+   const response = await post(mandate);
+   expect(response.status).toBe(201);
+   expect(await response.json()).toEqual({
+    id: '1a7cd03f-d138-4f8e-8c62-73864d5cc0fd',
+    status: 'New',
+    recommendedLane: 'Investor mandate → human review',
+    assignedDepartment: 'Strategy Review',
+   });
+   const recorded = state.record.mock.calls[0][0];
+   expect(recorded.kind).toBe('opportunity');
+   expect(recorded.payload).toMatchObject({
+    ...mandate,
+    recommendedLane: 'Investor mandate → human review',
+    assignedDepartment: 'Strategy Review',
+   });
+   expect(recorded.payload).not.toHaveProperty('leadType');
+   expect(recorded.payload).not.toHaveProperty('intent');
+   expect(state.mail).not.toHaveBeenCalled();
+   expect(state.forward).not.toHaveBeenCalled();
   },
-}));
+ );
+ it('preserves 201 receipt and delegates validated routed facts to atomic intake',async()=>{const key='44f6cd06-c045-4c31-b17b-3c8b2431e315';const response=await post({},key);expect(response.status).toBe(201);expect(await response.json()).toEqual({id:'1a7cd03f-d138-4f8e-8c62-73864d5cc0fd',status:'New',recommendedLane:'Acquisitions → (Development) → Dispositions',assignedDepartment:'Acquisitions'});expect(state.record).toHaveBeenCalledWith(expect.objectContaining({kind:'opportunity',idempotencyKey:key,authSubject:null,payload:expect.objectContaining({consentAccepted:true,contactName:'Synthetic Owner',assignedDepartment:'Acquisitions'})}),expect.anything());expect(state.mail).not.toHaveBeenCalled();expect(state.forward).not.toHaveBeenCalled();});
+ it('does not return a recorded receipt when atomic persistence fails',async()=>{state.record.mockRejectedValueOnce(new Error('synthetic queue failure'));const response=await post();expect(response.status).toBe(500);expect(await response.json()).not.toHaveProperty('id');});
+ it('does not manufacture CA-only property address for a strategy inquiry',async()=>{expect((await post({visitorType:'strategy_only',propertyAddress:undefined,state:'CA',leadSource:'blueprint_request'})).status).toBe(201);expect(state.record.mock.calls[0][0].payload.propertyAddress).toBeUndefined();});
+ it('returns clear unavailable when organization is unconfigured',async()=>{state.record.mockRejectedValueOnce(new IntakeConfigurationError('Website intake is not configured'));expect((await post()).status).toBe(503);});
+ it('returns explicit conflict for reused key with different facts',async()=>{state.record.mockRejectedValueOnce(new IntakeConflictError('This request key belongs to a different submission.'));expect((await post()).status).toBe(409);});
+ it('rejects malformed idempotency keys before persistence',async()=>{expect((await post({},'bad-key')).status).toBe(400);expect(state.record).not.toHaveBeenCalled();});
+ it('keeps anti-spam and required consent before persistence',async()=>{expect((await post({ts_elapsed_ms:1})).status).toBe(400);expect((await post({hp_company:'bot'})).status).toBe(400);expect((await post({consentAccepted:false})).status).toBe(400);expect(state.record).not.toHaveBeenCalled();});
+ it('replay preserves its original creation receipt after staff status changes',async()=>{state.record.mockResolvedValueOnce({record:{type:'opportunity',id:'1a7cd03f-d138-4f8e-8c62-73864d5cc0fd'},duplicate:true,row:{status:'Reviewed',recommendedLane:'Property Review',assignedDepartment:'Acquisitions'}});const response=await post();expect(response.status).toBe(201);expect((await response.json()).status).toBe('New');});
 
-vi.mock("../email", () => ({
-  sendEmail: testState.sendEmail,
-}));
-
-vi.mock("../integrations/hq-client", () => ({
-  forward: testState.hqForward,
-  outreachReasonForLeadType: (leadType: string) => {
-    const reasons: Record<string, string> = {
-      submit: "property_review",
-      seller: "property_review",
-      vendor: "vendor_application",
-      investor: "capital_inquiry",
-      buyer: "buyer_inquiry",
-      contact: "general_inquiry",
-      blueprint_request: "paid_blueprint_request",
-    };
-    return reasons[leadType] ?? "general_inquiry";
-  },
-}));
-
-const {
-  OPPORTUNITY_CONTACT_CONSENT_VERSION,
-  registerOpportunityRoutes,
-} = await import("../opportunityRoutes");
-
-let server: Server;
-let baseUrl = "";
-const originalStaffEmail = process.env.STAFF_NOTIFICATION_EMAIL;
-const originalInternalEmail = process.env.INTERNAL_NOTIFY_EMAIL;
-
-function validSubmission(overrides: Record<string, unknown> = {}) {
-  return {
-    visitorType: "owner",
-    contactName: "Taylor Owner",
-    email: "taylor@example.com",
-    phone: "510-555-0101",
-    propertyAddress: "123 Bay View Ave",
-    city: "Oakland",
-    state: "CA",
-    zipCode: "94610",
-    propertyType: "Single-family",
-    condition: "Needs repairs",
-    estimatedValue: 875_000,
-    sourcePage: "bring-an-opportunity",
-    leadSource: "website",
-    utmCampaign: "east-bay-owner-intake",
-    consentAccepted: true,
-    hp_company: "",
-    ts_elapsed_ms: 4_000,
-    ...overrides,
-  };
-}
-
-async function postOpportunity(overrides: Record<string, unknown> = {}) {
-  return fetch(`${baseUrl}/api/opportunities`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(validSubmission(overrides)),
-  });
-}
-
-beforeAll(async () => {
-  const app = express();
-  app.use(express.json());
-  const pass: express.RequestHandler = (_req, _res, next) => next();
-  registerOpportunityRoutes(app, {
-    isAuthenticated: pass,
-    requireStaffRole: pass,
-    publicIntakeRateLimit: pass,
-  });
-  await new Promise<void>((resolve) => {
-    server = app.listen(0, () => resolve());
-  });
-  baseUrl = `http://127.0.0.1:${(server.address() as AddressInfo).port}`;
-});
-
-afterAll(async () => {
-  await new Promise<void>((resolve, reject) =>
-    server.close((error) => (error ? reject(error) : resolve())),
-  );
-  if (originalStaffEmail === undefined) delete process.env.STAFF_NOTIFICATION_EMAIL;
-  else process.env.STAFF_NOTIFICATION_EMAIL = originalStaffEmail;
-  if (originalInternalEmail === undefined) delete process.env.INTERNAL_NOTIFY_EMAIL;
-  else process.env.INTERNAL_NOTIFY_EMAIL = originalInternalEmail;
-});
-
-beforeEach(() => {
-  testState.inserted.length = 0;
-  testState.hqForward.mockReset().mockResolvedValue({
-    outboxId: 41,
-    idempotencyKey: "00000000-0000-4000-8000-000000000041",
-    queued: true,
-  });
-  testState.sendEmail.mockReset().mockResolvedValue(undefined);
-  delete process.env.STAFF_NOTIFICATION_EMAIL;
-  delete process.env.INTERNAL_NOTIFY_EMAIL;
-});
-
-describe("POST /api/opportunities — durable HQ intake", () => {
-  it("queues a canonical HQ payload while preserving the existing 201 response", async () => {
-    const response = await postOpportunity();
-
-    expect(response.status).toBe(201);
-    expect(await response.json()).toEqual({
-      id: "opportunity-1",
-      status: "New",
-      recommendedLane: "Acquisitions → (Development) → Dispositions",
-      assignedDepartment: "Acquisitions",
-    });
-    expect(testState.hqForward).toHaveBeenCalledTimes(1);
-    expect(testState.inserted[0]).toEqual(expect.objectContaining({
-      consentAccepted: true,
-      consentCopyVersion: OPPORTUNITY_CONTACT_CONSENT_VERSION,
-      consentCapturedAt: expect.any(Date),
-    }));
-    expect(testState.hqForward).toHaveBeenCalledWith({
-      surface: "lead",
-      payload: {
-        propertyAddress: "123 Bay View Ave, Oakland, CA 94610",
-        contactName: "Taylor Owner",
-        contactEmail: "taylor@example.com",
-        contactPhone: "510-555-0101",
-        outreachReason: "property_review",
-        sourceChannel: "website:bring-an-opportunity",
-        consentContact: true,
-        consentCcpaAcknowledged: false,
-        extra: expect.objectContaining({
-          consentAudit: {
-            consentContact: true,
-            consentCcpaAcknowledged: false,
-            version: OPPORTUNITY_CONTACT_CONSENT_VERSION,
-            capturedAt: expect.any(String),
-          },
-          opportunityId: "opportunity-1",
-          visitorType: "owner",
-          recommendedLane: "Acquisitions → (Development) → Dispositions",
-          assignedDepartment: "Acquisitions",
-          propertyType: "Single-family",
-          condition: "Needs repairs",
-          estimatedValue: 875_000,
-          utmCampaign: "east-bay-owner-intake",
-        }),
-      },
-    });
-  });
-
-  it("attempts the durable queue but keeps HQ failure non-blocking", async () => {
-    testState.hqForward.mockRejectedValueOnce(new Error("outbox unavailable"));
-    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-
-    const response = await postOpportunity();
-
-    expect(testState.hqForward).toHaveBeenCalledTimes(1);
-    expect(response.status).toBe(201);
-    expect(await response.json()).toEqual(expect.objectContaining({
-      id: "opportunity-1",
-      status: "New",
-    }));
-    expect(errorSpy).toHaveBeenCalledWith(
-      "[hq-forward] opportunity queue error (non-blocking):",
-      expect.any(Error),
-    );
-    errorSpy.mockRestore();
-  });
-
-  it("preserves Blueprint triage and does not manufacture a CA-only address", async () => {
-    const response = await postOpportunity({
-      visitorType: "strategy_only",
-      leadSource: "blueprint_request",
-      sourcePage: "/bring-an-opportunity",
-      propertyAddress: undefined,
-      city: undefined,
-      state: "CA",
-      zipCode: undefined,
-    });
-
-    expect(response.status).toBe(201);
-    expect(testState.hqForward).toHaveBeenCalledWith({
-      surface: "lead",
-      payload: expect.objectContaining({
-        propertyAddress: undefined,
-        outreachReason: "paid_blueprint_request",
-        sourceChannel: "website:bring-an-opportunity",
-        consentContact: true,
-        consentCcpaAcknowledged: false,
-      }),
-    });
-  });
-});
-
-describe("POST /api/opportunities — staff notification address", () => {
-  it("prefers the documented STAFF_NOTIFICATION_EMAIL setting", async () => {
-    process.env.STAFF_NOTIFICATION_EMAIL = "intake@pegasus.test";
-    process.env.INTERNAL_NOTIFY_EMAIL = "legacy@pegasus.test";
-
-    const response = await postOpportunity();
-
-    expect(response.status).toBe(201);
-    expect(testState.sendEmail).toHaveBeenNthCalledWith(
-      1,
-      expect.objectContaining({ to: "intake@pegasus.test" }),
-    );
-  });
-
-  it("retains INTERNAL_NOTIFY_EMAIL as a legacy fallback", async () => {
-    process.env.INTERNAL_NOTIFY_EMAIL = "legacy@pegasus.test";
-
-    const response = await postOpportunity();
-
-    expect(response.status).toBe(201);
-    expect(testState.sendEmail).toHaveBeenNthCalledWith(
-      1,
-      expect.objectContaining({ to: "legacy@pegasus.test" }),
-    );
-  });
-});
-
-describe("POST /api/opportunities — submitter receipt truth contract", () => {
-  it("sends the bounded receipt policy without promising review or routing", async () => {
-    const response = await postOpportunity();
-
-    expect(response.status).toBe(201);
-    const submitterReceipt = testState.sendEmail.mock.calls
-      .map(([message]) => message as { to?: string; subject?: string; text?: string })
-      .find((message) => message.to === "taylor@example.com");
-
-    expect(submitterReceipt).toEqual({
-      to: "taylor@example.com",
-      subject: "Pegasus Dreamscapes received your submission",
-      text:
-        "Pegasus Dreamscapes recorded your submission for possible consideration. " +
-        "If Pegasus elects to engage, it will contact you. " +
-        "This receipt does not promise review, routing, a response, an offer, representation, referral, service, or a transaction. " +
-        "No agency or other relationship or agreement is created by submitting this form.",
-    });
-    expect(submitterReceipt?.text).not.toMatch(
-      /will review|appropriate lane|will follow up/i,
-    );
-  });
 });

@@ -91,8 +91,8 @@ export default function Terms() {
                 do not operate a public investment marketplace or securities platform.
               </p>
               <p>
-                The site lists Paolo "Apollo" Duran as a California real estate agent, DRE #02333658,
-                affiliated with Keller Williams East Bay. Visitors should independently verify current
+                Paolo Ariel “Apollo” Duran Ramirez is a California real estate salesperson, DRE #02333658,
+                with responsible broker BMP Realty Inc DBA Keller Williams Realty-East Bay. Visitors should independently verify current
                 license and affiliation information before relying on it. Each office is independently owned and operated.
               </p>
             </LegalBlock>

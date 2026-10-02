@@ -276,13 +276,10 @@ describe("POST /api/supabase/provision-user — authenticated self-provisioning"
 });
 
 describe("production route wiring", () => {
-  it("registers self-provisioning with the existing hybrid-auth middleware", () => {
-    const routesSource = fs.readFileSync(
-      path.join(process.cwd(), "server/routes.ts"),
-      "utf8",
-    );
-    expect(routesSource).toMatch(
-      /registerUserProvisioningRoute\(app,\s*\{[\s\S]*?isAuthenticated:\s*isHybridAuthenticated/,
-    );
+  it("keeps legacy self-provisioning disabled with shared platform identity", () => {
+    const routesSource = fs.readFileSync(path.join(process.cwd(), "server/routes.ts"), "utf8");
+    expect(routesSource).not.toMatch(/registerUserProvisioningRoute\(app,/);
+    expect(routesSource).toMatch(/app\.post\('\/api\/supabase\/provision-user',[\s\S]*?res\.status\(503\)/);
+    expect(routesSource).toContain("Account setup is managed through the shared Pegasus platform.");
   });
 });

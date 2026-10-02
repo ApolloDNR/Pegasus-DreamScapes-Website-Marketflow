@@ -32,10 +32,6 @@ describe("protected client transport migration", () => {
       "client/src/components/document-attachments.tsx",
       "/api/uploads/request-url",
     ],
-    [
-      "client/src/contexts/supabase-auth-context.tsx",
-      "/api/supabase/profile/",
-    ],
   ])("%s sends %s through authenticatedRequest", (file, endpoint) => {
     const fileSource = source(file);
     expect(fileSource).toContain("authenticatedRequest");
@@ -43,6 +39,17 @@ describe("protected client transport migration", () => {
     expect(fileSource).not.toMatch(
       new RegExp(`fetch\\([^\\n]*${endpoint.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`),
     );
+  });
+
+  it("hydrates shared accounts with the current event session bearer", () => {
+    const contextSource = source("client/src/contexts/supabase-auth-context.tsx");
+    const authSource = source("client/src/lib/website-auth.ts");
+    expect(contextSource).toContain("getWebsiteAuthProfile");
+    expect(contextSource).not.toContain("/api/supabase/profile/");
+    expect(authSource).toContain("session.access_token.trim()");
+    expect(authSource).toContain("fetch('/api/auth/user'");
+    expect(authSource).toContain("Authorization: `Bearer ${token}`");
+    expect(authSource).toContain("account?.id !== session.user.id");
   });
 
   it("authenticates upload-ticket requests without wrapping the presigned PUT", () => {

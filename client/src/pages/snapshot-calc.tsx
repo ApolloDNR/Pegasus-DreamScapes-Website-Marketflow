@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useSEO } from "@/hooks/use-seo";
+import { ApiError } from "@/lib/queryClient";
 import { Loader2, AlertCircle, ArrowRight, Calculator, FileDown, Send } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -215,7 +216,7 @@ export default function SnapshotCalc() {
     noCanonical: true,
   });
 
-  const { data, isLoading, isError } = useQuery<PublicSharedAnalysis>({
+  const { data, isLoading, isError, error } = useQuery<PublicSharedAnalysis>({
     queryKey: ["/api/shared-analyses", token],
     enabled: !!token,
   });
@@ -228,13 +229,14 @@ export default function SnapshotCalc() {
     );
   }
   if (isError || !data) {
+    const isNotFound = error instanceof ApiError && error.isNotFound;
     return (
       <div className="min-h-screen pt-32 px-6">
         <div className="max-w-xl mx-auto text-center space-y-4">
           <AlertCircle className="w-10 h-10 text-muted-foreground mx-auto" />
-          <h1 className="font-serif text-3xl font-semibold">Snapshot not found</h1>
+          <h1 className="font-serif text-3xl font-semibold">{isNotFound ? "Snapshot not found" : "This snapshot is temporarily unavailable."}</h1>
           <p className="text-muted-foreground">
-            This share link is no longer active. The owner may have removed it.
+            {isNotFound ? "This share link is no longer active. The owner may have removed it." : "We could not verify the share link right now. Try again in a moment."}
           </p>
           <Link href="/strategy-lab?tool=calculators">
             <Button>Open the calculators</Button>

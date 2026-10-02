@@ -1,11 +1,13 @@
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
+  act,
   cleanup,
   fireEvent,
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Router } from "wouter";
@@ -83,16 +85,24 @@ function submitRepresentationRequest() {
   fireEvent.submit(submit.closest("form")!);
 }
 
+const settlePendingRequests: Array<() => void> = [];
+
 beforeEach(() => {
+  sessionStorage.clear();
   setReducedMotion(false);
   Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
     configurable: true,
     value: vi.fn(),
   });
-  apiRequestMock.mockImplementation(() => new Promise(() => undefined));
+  apiRequestMock.mockImplementation(() => new Promise<Response>((_resolve, reject) => {
+    settlePendingRequests.push(() => reject(new Error("Test request settled")));
+  }));
 });
 
-afterEach(() => {
+afterEach(async () => {
+  await act(async () => {
+    settlePendingRequests.splice(0).forEach((settle) => settle());
+  });
   cleanup();
   apiRequestMock.mockReset();
   trackEventMock.mockReset();
@@ -100,6 +110,18 @@ afterEach(() => {
 });
 
 describe("mounted Work With Apollo representation handoff", () => {
+  it("keeps the full licensed identity and broker beside representation entry and form", () => {
+    renderPage();
+    const opening = document.querySelector('.ep-opening')!;
+    const formSection = document.querySelector('#apollo-lead')!;
+    for (const region of [opening, formSection]) {
+      expect(region).toHaveTextContent('Paolo Ariel “Apollo” Duran Ramirez');
+      expect(region).toHaveTextContent('DRE #02333658');
+      expect(region).toHaveTextContent('BMP Realty Inc DBA Keller Williams Realty-East Bay');
+    }
+    expect(within(opening as HTMLElement).getByRole('heading', {level: 1})).toHaveTextContent('Buy or sell with Apollo.');
+  });
+
   it("synchronizes Buyer and Seller choices with the real form field and submitted lane", async () => {
     renderPage();
 

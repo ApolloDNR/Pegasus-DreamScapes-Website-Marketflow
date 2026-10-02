@@ -18,7 +18,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useSEO } from "@/hooks/use-seo";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest } from "@/lib/queryClient";
+import { useIntakeRequest } from "@/lib/intake-idempotency";
 import { trackEvent } from "@/lib/analytics";
 import { SuccessView } from "@/components/success-view";
 import {
@@ -183,6 +183,7 @@ export default function SubmitPage() {
     formMountedAt.current = Date.now();
   }, []);
 
+  const sendIntake = useIntakeRequest("legacy-submit", "/api/leads");
   const mutation = useMutation({
     mutationFn: async (data: SubmitFormValues) => {
       const elapsedMs = Date.now() - formMountedAt.current;
@@ -221,7 +222,7 @@ export default function SubmitPage() {
           ts_elapsed_ms: elapsedMs,
         },
       };
-      return apiRequest("POST", "/api/leads", payload);
+      return sendIntake(payload);
     },
     onSuccess: () => {
       // Brief §11 analytics — submit lifecycle complete.

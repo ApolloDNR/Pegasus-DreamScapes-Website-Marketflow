@@ -32,6 +32,7 @@ function dependencies(
     ),
     seedPersistentData: vi.fn(async () => undefined),
     startHqRecoveryWorker: vi.fn(async () => undefined),
+    startNotificationWorker: vi.fn(async () => undefined),
     startPeggyReportScheduler: vi.fn(async () => undefined),
     setupStatic: vi.fn(async () => undefined),
     setupVite: vi.fn(async () => undefined),
@@ -109,14 +110,21 @@ describe("listener-free application factory", () => {
     expect(testDependencies.registerRoutes).toHaveBeenCalledOnce();
     expect(testDependencies.seedPersistentData).not.toHaveBeenCalled();
     expect(testDependencies.startHqRecoveryWorker).not.toHaveBeenCalled();
+    expect(testDependencies.startNotificationWorker).not.toHaveBeenCalled();
     expect(testDependencies.startPeggyReportScheduler).not.toHaveBeenCalled();
     expect(testDependencies.setupStatic).toHaveBeenCalledOnce();
     expect(testDependencies.setupVite).not.toHaveBeenCalled();
   });
 
-  it("retains seeds, workers, and Vite for the persistent development server", async () => {
+  it("starts explicitly enabled tasks and Vite for the persistent development server", async () => {
     const testDependencies = dependencies();
-    const environment = { NODE_ENV: "development", APP_ENV: "development" };
+    const environment = {
+      NODE_ENV: "development", APP_ENV: "development",
+      PEGASUS_ENABLE_SEEDING: "true",
+      PEGASUS_ENABLE_HQ_DELIVERY_WORKER: "true",
+      PEGASUS_ENABLE_NOTIFICATION_WORKER: "true",
+      PEGASUS_ENABLE_PEGGY_REPORTS: "true",
+    };
     const { httpServer } = await createApplication({
       runtime: "persistent",
       environment,
@@ -125,7 +133,9 @@ describe("listener-free application factory", () => {
 
     expect(httpServer.listening).toBe(false);
     expect(testDependencies.seedPersistentData).toHaveBeenCalledWith(environment);
-    expect(testDependencies.startHqRecoveryWorker).toHaveBeenCalledWith(httpServer);
+    const context = { runtime: "persistent", environment };
+    expect(testDependencies.startHqRecoveryWorker).toHaveBeenCalledWith(httpServer, context);
+    expect(testDependencies.startNotificationWorker).toHaveBeenCalledWith(httpServer, context);
     expect(testDependencies.startPeggyReportScheduler).toHaveBeenCalledOnce();
     expect(testDependencies.setupVite).toHaveBeenCalledOnce();
     expect(testDependencies.setupStatic).not.toHaveBeenCalled();

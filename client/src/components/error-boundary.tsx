@@ -62,7 +62,7 @@ export class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundarySt
                 <RefreshCw className="h-4 w-4 text-primary" />
                 Try again
               </Button>
-              <Link href="/">
+              <Link href="/" onClick={this.handleReset}>
                 <Button className="gap-2 w-full sm:w-auto min-h-[44px] px-6 bg-primary hover:bg-primary/90">
                   <Home className="h-4 w-4" />
                   Back to home

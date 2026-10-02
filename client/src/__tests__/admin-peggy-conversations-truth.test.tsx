@@ -28,6 +28,8 @@ function deferred<T>() {
 }
 
 const conversation: PeggyConversation = {
+  orgId: null,
+  authSubject: null,
   id: 17,
   userId: null,
   sessionId: "session-17",
@@ -65,6 +67,7 @@ const conversation: PeggyConversation = {
 };
 
 const message: PeggyMessage = {
+  orgId: null,
   id: 44,
   conversationId: 17,
   role: "user",

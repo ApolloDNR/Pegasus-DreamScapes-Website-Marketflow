@@ -61,6 +61,7 @@ function fillRequiredContact() {
 }
 
 beforeEach(() => {
+  sessionStorage.clear();
   window.history.pushState({}, "", "/bring-an-opportunity");
   Object.defineProperty(window, "scrollTo", {
     configurable: true,
@@ -169,9 +170,10 @@ describe("Start a conversation interaction states", () => {
     expect(retrying).toHaveAttribute("aria-disabled", "true");
     expect(retrying).toHaveAttribute("aria-busy", "true");
     expect(liveRegion).toHaveTextContent("Retrying your submission");
-    expect(apiRequestMock).toHaveBeenCalledTimes(2);
+    await waitFor(() => expect(apiRequestMock).toHaveBeenCalledTimes(2));
     fireEvent.click(retrying);
     expect(apiRequestMock).toHaveBeenCalledTimes(2);
+    expect(apiRequestMock.mock.calls[1][3]["Idempotency-Key"]).toBe(apiRequestMock.mock.calls[0][3]["Idempotency-Key"]);
     for (const call of apiRequestMock.mock.calls) {
       expect(call[0]).toBe("POST");
       expect(call[1]).toBe("/api/opportunities");

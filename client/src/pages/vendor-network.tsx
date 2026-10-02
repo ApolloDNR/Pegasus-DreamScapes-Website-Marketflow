@@ -21,8 +21,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/use-seo";
 import { ScrollReveal } from "@/components/animations";
-import { apiRequest } from "@/lib/queryClient";
-import { readLeadReceipt } from "@/lib/lead-receipt";
+import { useIntakeRequest } from "@/lib/intake-idempotency";
 import { PageOpening, PageAction } from "@/pegasus/experience-page";
 import { type InsertLead } from "@shared/schema";
 import { HeroPicture } from "@/components/hero-picture";
@@ -329,6 +328,7 @@ function VendorFormSection() {
     },
   });
 
+  const sendIntake = useIntakeRequest("vendor-network", "/api/leads");
   const mutation = useMutation({
     mutationFn: async (data: VendorFormValues) => {
       const nameParts = data.name.split(" ");
@@ -362,7 +362,7 @@ function VendorFormSection() {
         consentCcpaAcknowledged: data.consentContact,
       };
 
-      return readLeadReceipt(await apiRequest("POST", "/api/leads", payload));
+      return sendIntake(payload);
     },
     onSettled: () => { inFlightRef.current = false; },
     onSuccess: () => {

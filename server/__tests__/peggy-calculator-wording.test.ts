@@ -183,7 +183,7 @@ describe("Peggy calculator explanation wording", () => {
     const analyze = sliceBetweenOnce(
       source,
       "export async function analyzeCalculatorResults(",
-      "// Task #151",
+      "export default",
       "calculator analyzer",
     );
     const builderCall =

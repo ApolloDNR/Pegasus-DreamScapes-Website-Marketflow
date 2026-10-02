@@ -3,7 +3,7 @@ import { Link } from "wouter";
 import { Mail, MapPin, ArrowUpRight, Phone, LogIn, BarChart3, Linkedin, Shield } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { trackEvent } from "@/lib/analytics";
-import { apiRequest } from "@/lib/queryClient";
+import { useIntakeRequest } from "@/lib/intake-idempotency";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -91,9 +91,10 @@ function FooterEmailCapture() {
   const [name, setName] = useState("");
   const [marketingConsent, setMarketingConsent] = useState(false);
 
+  const sendIntake = useIntakeRequest("footer-newsletter", "/api/leads");
   const mutation = useMutation({
     mutationFn: async () => {
-      return apiRequest("POST", "/api/leads", {
+      return sendIntake({
         leadType: "newsletter",
         source: "footer_email_capture",
         firstName: name,

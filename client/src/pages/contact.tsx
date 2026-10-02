@@ -19,7 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useSEO } from "@/hooks/use-seo";
 import { ScrollReveal } from "@/components/animations";
 import { insertContactSchema, type InsertContact, type InsertLead } from "@shared/schema";
-import { apiRequest } from "@/lib/queryClient";
+import { useIntakeRequest } from "@/lib/intake-idempotency";
 import { z } from "zod";
 import {
   Mail,
@@ -223,6 +223,7 @@ function ContactFormSection() {
     defaultValues: { name: "", email: "", phone: "", subject: "", message: "" },
   });
 
+  const sendIntake = useIntakeRequest("contact", "/api/leads");
   const mutation = useMutation({
     mutationFn: async (data: InsertContact) => {
       const nameParts = data.name.split(' ');
@@ -240,7 +241,7 @@ function ContactFormSection() {
         notes: data.message,
       };
 
-      return await apiRequest("POST", "/api/leads", unifiedLead);
+      return await sendIntake(unifiedLead);
     },
     onSuccess: () => {
       setSubmitted(true);

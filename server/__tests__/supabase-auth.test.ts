@@ -46,7 +46,6 @@ describe("extractSupabaseUser", () => {
       claims: {
         sub: "verified-user",
         email: "verified@example.com",
-        primary_role: "investor",
       },
     });
   });

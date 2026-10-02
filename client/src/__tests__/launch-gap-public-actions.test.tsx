@@ -52,13 +52,14 @@ function renderWithProviders(node: React.ReactNode) {
 }
 
 afterEach(() => {
+  sessionStorage.clear();
   cleanup();
   apiRequestMock.mockReset();
 });
 
 describe("launch-gap public action truth", () => {
   it("requires explicit newsletter consent and forwards the recorded consent", async () => {
-    apiRequestMock.mockResolvedValue(new Response("{}", { status: 201 }));
+    apiRequestMock.mockResolvedValue(new Response(JSON.stringify({ id: 101, stage: "new" }), { status: 201 }));
     const user = userEvent.setup({ delay: null });
     renderWithProviders(<Footer />);
 
@@ -81,7 +82,7 @@ describe("launch-gap public action truth", () => {
         email: "reader@example.com",
         consentContact: true,
         consentCcpaAcknowledged: true,
-      });
+      }, { "Idempotency-Key": expect.stringMatching(/^[0-9a-f-]{36}$/) });
     });
     expect(screen.getByText("You're in.")).toBeInTheDocument();
   });

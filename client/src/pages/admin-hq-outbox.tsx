@@ -8,32 +8,32 @@ import { Loader2, RefreshCw, CheckCircle2, AlertCircle, XCircle, Clock } from "l
 import { PrivateDataError } from "@/components/private-data-state";
 
 type HqOutboxRow = {
-  id: number;
+  id: string;
   idempotencyKey: string;
   surface: string;
-  sourceId: number | null;
+  sourceId: string | number | null;
   payload: any;
-  status: "pending" | "forwarding" | "forwarded" | "failed";
+  status: "pending" | "processing" | "delivered" | "quarantined";
   attempts: number;
   lastAttemptAt: string | null;
   lastError: string | null;
-  hqSubmissionId: string | null;
-  forwardedAt: string | null;
+  receipt: { inquiryId?: string; reference?: string } | null;
+  deliveredAt: string | null;
   createdAt: string;
 };
 
-type HqOutboxPayload = { rows: HqOutboxRow[]; hqHealthy: boolean };
+type HqOutboxPayload = { rows: HqOutboxRow[]; transportConfigured: boolean; legacyRequiresReview: boolean };
 
 function isHqOutboxPayload(value: unknown): value is HqOutboxPayload {
   if (!value || typeof value !== "object" || Array.isArray(value)) return false;
   const candidate = value as Partial<HqOutboxPayload>;
-  return Array.isArray(candidate.rows) && typeof candidate.hqHealthy === "boolean";
+  return Array.isArray(candidate.rows) && typeof candidate.transportConfigured === "boolean";
 }
 
 const statusIcon = (s: string) => {
-  if (s === "forwarded") return <CheckCircle2 className="h-4 w-4 text-green-600" />;
-  if (s === "failed") return <XCircle className="h-4 w-4 text-red-600" />;
-  if (s === "forwarding") return <Loader2 className="h-4 w-4 animate-spin text-blue-600" />;
+  if (s === "delivered") return <CheckCircle2 className="h-4 w-4 text-green-600" />;
+  if (s === "quarantined") return <XCircle className="h-4 w-4 text-red-600" />;
+  if (s === "processing") return <Loader2 className="h-4 w-4 animate-spin text-blue-600" />;
   return <Clock className="h-4 w-4 text-amber-600" />;
 };
 
@@ -56,7 +56,7 @@ export default function AdminHqOutbox() {
   });
 
   const retry = useMutation({
-    mutationFn: async (id: number) => apiRequest("POST", `/api/admin/hq-outbox/${id}/retry`),
+    mutationFn: async (id: string) => apiRequest("POST", `/api/admin/hq-outbox/${id}/retry`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["/api/admin/hq-outbox"] }),
   });
 
@@ -70,19 +70,19 @@ export default function AdminHqOutbox() {
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       <div className="mb-6 rounded-md border-l-4 border-copper bg-cream p-4 text-sm text-navy" data-testid="banner-hq-system-of-record">
-        This page reports website-to-HQ forwarding attempts. Confirm the corresponding record in Pegasus HQ before treating a capture as received there.
+        This page reports recorded website-to-HQ delivery attempts. A verified HQ receipt confirms acceptance by HQ, not a business response. Quarantined or legacy work requires review; requeueing pending work does not confirm delivery.
       </div>
 
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-3xl font-display text-navy">Pegasus HQ Outbox</h1>
           <div className="mt-1 flex items-center gap-2 text-sm text-muted-foreground">
-            <span>HQ endpoint health:</span>
+            <span>HQ connection setup:</span>
             <Badge
               variant={
                 isLoading || dataUnavailable
                   ? "outline"
-                  : hasVerifiedData && data.hqHealthy
+                  : hasVerifiedData && data.transportConfigured
                     ? "default"
                     : "destructive"
               }
@@ -92,9 +92,9 @@ export default function AdminHqOutbox() {
                 ? "Checking…"
                 : dataUnavailable
                   ? "Unavailable"
-                    : hasVerifiedData && data.hqHealthy
-                    ? "Live"
-                    : "Reported down — captures remain queued"}
+                    : hasVerifiedData && data.transportConfigured
+                    ? "Connection configured"
+                    : "Not configured — captures remain queued"}
             </Badge>
           </div>
         </div>
@@ -107,9 +107,9 @@ export default function AdminHqOutbox() {
           >
             <option value="">All statuses</option>
             <option value="pending">Pending</option>
-            <option value="forwarding">Forwarding</option>
-            <option value="forwarded">Forwarded</option>
-            <option value="failed">Failed</option>
+            <option value="processing">Processing</option>
+            <option value="delivered">HQ receipt verified</option>
+            <option value="quarantined">Needs review</option>
           </select>
           <Button
             onClick={() => drain.mutate()}
@@ -117,7 +117,7 @@ export default function AdminHqOutbox() {
             data-testid="button-drain-pending"
           >
             {drain.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <RefreshCw className="h-4 w-4 mr-2" />}
-            Drain pending
+            Requeue pending
           </Button>
         </div>
       </div>
@@ -127,7 +127,7 @@ export default function AdminHqOutbox() {
       {dataUnavailable && (
         <PrivateDataError
           title="HQ outbox unavailable"
-          description="The outbox request failed, so queue contents and endpoint health cannot be verified. No empty-queue or outage claim is shown from this failed response."
+          description="The outbox request failed, so queue contents and connection setup cannot be verified. No empty-queue or outage claim is shown from this failed response."
           onRetry={() => void refetch()}
           isRetrying={isFetching}
           testId="state-hq-outbox-error"
@@ -159,13 +159,13 @@ export default function AdminHqOutbox() {
                   <span className="font-mono text-sm">#{row.id}</span>
                   <Badge variant="outline">{row.surface}</Badge>
                   <Badge>{row.status}</Badge>
-                  {row.hqSubmissionId && (
+                  {row.receipt?.inquiryId && (
                     <span className="text-xs text-muted-foreground" data-testid={`text-hq-id-${row.id}`}>
-                      HQ: {row.hqSubmissionId}
+                      HQ: {row.receipt?.reference || row.receipt?.inquiryId}
                     </span>
                   )}
                 </div>
-                {(row.status === "failed" || row.status === "pending") && (
+                {(row.status === "pending") && (
                   <Button
                     size="sm"
                     variant="outline"
@@ -179,8 +179,8 @@ export default function AdminHqOutbox() {
               </CardTitle>
             </CardHeader>
             <CardContent className="text-sm space-y-1">
-              <div><strong>Contact:</strong> {row.payload?.contactName} ({row.payload?.outreachReason})</div>
-              {row.payload?.propertyAddress && <div><strong>Property:</strong> {row.payload.propertyAddress}</div>}
+              <div><strong>Contact:</strong> <span>{row.payload?.submission?.captured?.contactName || [row.payload?.submission?.captured?.firstName, row.payload?.submission?.captured?.lastName].filter(Boolean).join(" ") || "Not provided"}</span></div>
+              {(row.payload?.submission?.captured?.propertyAddress || row.payload?.submission?.captured?.address) && <div><strong>Property:</strong> {row.payload.submission.captured.propertyAddress || row.payload.submission.captured.address}</div>}
               <div className="text-xs text-muted-foreground">
                 Attempts: {row.attempts} · Created: {new Date(row.createdAt).toLocaleString()}
                 {row.lastAttemptAt && ` · Last: ${new Date(row.lastAttemptAt).toLocaleString()}`}

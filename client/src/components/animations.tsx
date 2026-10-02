@@ -200,17 +200,20 @@ export function StaggerChildren({
   className = "",
   staggerDelay = 0.1
 }: StaggerChildrenProps) {
+  const reduceMotion = usePrefersReducedMotion();
+
   return (
     <motion.div
-      initial="initial"
-      whileInView="animate"
+      initial={reduceMotion ? false : "initial"}
+      animate={reduceMotion ? "animate" : undefined}
+      whileInView={reduceMotion ? undefined : "animate"}
       viewport={{ once: true, amount: 0.08 }}
       variants={{
         initial: {},
         animate: {
           transition: {
-            staggerChildren: staggerDelay,
-            delayChildren: 0.05
+            staggerChildren: reduceMotion ? 0 : staggerDelay,
+            delayChildren: reduceMotion ? 0 : 0.05
           }
         }
       }}
@@ -222,9 +225,19 @@ export function StaggerChildren({
 }
 
 export function StaggerItem({ children, className = "" }: { children: ReactNode; className?: string }) {
+  const reduceMotion = usePrefersReducedMotion();
+
   return (
     <motion.div
-      variants={staggerItem}
+      initial={reduceMotion ? false : undefined}
+      animate={reduceMotion ? "animate" : undefined}
+      variants={reduceMotion ? {
+        animate: {
+          opacity: 1,
+          y: 0,
+          transition: { duration: 0 }
+        }
+      } : staggerItem}
       className={className}
     >
       {children}

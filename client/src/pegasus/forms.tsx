@@ -2,12 +2,12 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 import { useLocation } from 'wouter';
 import { ArrowRight, Check, ChevronDown, Mail, Phone, MapPin, ConciergeBell, AlertCircle, Loader2, Bookmark, BookmarkCheck } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
-import { readLeadReceipt } from '@/lib/lead-receipt';
+import { useIntakeRequest } from '@/lib/intake-idempotency';
 import type { Nav, FormCfg, PeggyHandoff } from './theme';
 import { usd0, SectionHead, ContourLines, BrandMark, IMG } from './primitives';
 import { addStrategy, type StrategyPreview } from './savedStore';
 import { tierRangeFor, NOT_A_VALUATION_DISCLOSURE } from '@/lib/strategy-tier-ranges';
+import { REPRESENTATION_IDENTITY } from './public-content';
 import { trackEvent } from '@/lib/analytics';
 import {
   classifyPegasusLead,
@@ -159,10 +159,11 @@ export function LeadForm({
   const startedAt = useRef(Date.now());
   const inFlightRef = useRef(false);
   const [hpCompany, setHpCompany] = useState('');
+  const sendIntake = useIntakeRequest(`pegasus-lane:${cfg.intent}`, "/api/leads");
   const createLead = useMutation({
     mutationFn: async (payload: Record<string, unknown>) => {
-      const res = await apiRequest('POST', '/api/leads', payload);
-      return readLeadReceipt(res);
+      const res = await sendIntake(payload);
+      return res;
     },
   });
   const [form, setForm] = useState({
@@ -392,6 +393,7 @@ export function LeadSection({
               ['--accent' as string]: navy ? 'var(--accent-bright)' : 'var(--accent-ink)',
             }}>{cfg.heading}</Heading>
           <p className={`leading-relaxed mb-10 max-w-md ${navy ? 'text-[var(--cream)]/75' : 'text-[var(--muted)]'}`}>{cfg.lead}</p>
+          {cfg.intent === 'representation' && <p className="ep-notice">{REPRESENTATION_IDENTITY}</p>}
           <div className={`space-y-5 pg-label !text-[14px] !tracking-normal !normal-case ${navy ? 'text-[var(--cream)]/80' : 'text-[var(--text-2)]'}`}>
             <a href="mailto:apollo@pegasusdreamscapes.com" className="link-underline flex items-center gap-3"><Mail className={`w-4 h-4 ${ic}`} /> apollo@pegasusdreamscapes.com</a>
             <a href="tel:9257448525" className="link-underline flex items-center gap-3"><Phone className={`w-4 h-4 ${ic}`} /> 925-744-8525</a>
