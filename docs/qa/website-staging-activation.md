@@ -47,10 +47,15 @@ Missing HQ endpoint/token/organization or notification provider key/verified sen
 - Conversation/session signing: `SESSION_SECRET` or `PEGGY_CONVERSATION_ACCESS_SECRET`
 - Notifications: `SENDGRID_API_KEY`, `DEFAULT_FROM_EMAIL`, `STAFF_NOTIFICATION_EMAIL`, `PEGASUS_NOTIFICATION_ALLOWED_RECIPIENTS`
 - HQ website bridge: `PEGASUS_HQ_WEBSITE_INQUIRY_URL`, `PEGASUS_WEBSITE_INQUIRY_TOKEN`; the legacy `PEGASUS_HQ_PUBLIC_INTAKE_URL` is not a fallback for new delivery jobs
+- Optional protected HQ preview: `PEGASUS_HQ_DEPLOYMENT_BYPASS_TOKEN`, `PEGASUS_HQ_DEPLOYMENT_BYPASS_ORIGIN`; both are server-only configuration, separate from the required HQ Bearer credential
 - Peggy: `AI_INTEGRATIONS_OPENAI_API_KEY`; `AI_INTEGRATIONS_OPENAI_BASE_URL` only for the existing compatible proxy. The SDK's existing `OPENAI_API_KEY` fallback remains supported
 - Auth/member/admin: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`; never put the service-role key in the browser
 - Deployment: `APP_ENV`, `VERCEL_ENV` where provided by the host, `SITE_INDEXABLE`, `SITE_URL`, and the independent global/preview opt-ins above
 - Legacy daily reports, only if separately approved: `APOLLO_NOTIFICATION_EMAIL` and their existing provider requirements
+
+The optional protection token adds `x-vercel-protection-bypass` only when its approved origin exactly equals the configured versioned HQ endpoint's canonical HTTPS origin, including a non-default port if present. The origin must be bare, such as `https://hq.example.test`, with no trailing slash, credentials, path, query, fragment, whitespace or wildcard. An absent or empty token adds no header. A configured token with a missing, unsafe or mismatched origin, or a blank/CR/LF-containing token, disables the transport and worker before network requests or job claims. Endpoint and credentials are captured when the transport is created; client payloads and caller options cannot override its headers. Redirects remain rejected, and credentials must never appear in logs, receipts or client configuration.
+
+This optional source support does not create, read, install or authorize a real protection token. Secure configuration of an actual token and its exact approved HQ destination remains part of the separate activation approval; passing synthetic transport tests is not live protected-preview delivery evidence.
 
 ## Verification order
 

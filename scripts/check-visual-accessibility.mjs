@@ -1206,6 +1206,36 @@ const approvedMarketflowFixtures = {
 };
 
 async function installApprovedMarketflowStubs(page, { initialState = 'loading' } = {}) {
+  // Exercise the real browser-session -> bearer -> canonical-account flow.
+  // These synthetic credentials only exist in this page's loopback fixture;
+  // unrecognized provider requests still fail through the strict API handler.
+  const authConfig = {
+    url: `${baseUrl}/api/rendered-qa-supabase`,
+    anonKey: 'rendered-qa-anon-key',
+  };
+  const authSession = {
+    access_token: 'rendered-qa-marketflow-access-token',
+    refresh_token: 'rendered-qa-marketflow-refresh-token',
+    token_type: 'bearer',
+    expires_in: 3600,
+    expires_at: Math.floor(Date.now() / 1000) + 3600,
+    user: {
+      id: 'qa-marketflow-operator',
+      email: 'qa.marketflow@pegasus.test',
+      aud: 'authenticated',
+      role: 'authenticated',
+      app_metadata: {},
+      user_metadata: {},
+      created_at: '2026-01-01T00:00:00.000Z',
+    },
+  };
+  await page.addInitScript(({ storageKey, session }) => {
+    localStorage.setItem(storageKey, JSON.stringify(session));
+  }, {
+    storageKey: `sb-${new URL(authConfig.url).hostname.split('.')[0]}-auth-token`,
+    session: authSession,
+  });
+
   const inventoryState = {
     wholesale: initialState,
     capital: initialState,
@@ -1235,31 +1265,26 @@ async function installApprovedMarketflowStubs(page, { initialState = 'loading' }
     const method = request.method();
 
     if (pathname === '/api/site-content') return fulfillJson(route, 200, []);
-    if (pathname === '/api/config/supabase') return fulfillJson(route, 200, {});
+    if (pathname === '/api/config/supabase') return fulfillJson(route, 200, authConfig);
     if (pathname === '/api/config/google-maps') return fulfillJson(route, 200, {});
     if (pathname === '/api/auth/user') {
+      // The legacy account watcher can probe before SDK initialization. Keep
+      // the preview server's existing anonymous response until it has a token.
+      if (!request.headers().authorization) return route.fallback();
+      if (request.headers().authorization !== `Bearer ${authSession.access_token}`) {
+        return fulfillJson(route, 401, { message: 'Unauthorized' });
+      }
       return fulfillJson(route, 200, {
-        id: 'qa-marketflow-operator',
-        email: 'qa.marketflow@pegasus.test',
-        firstName: 'QA',
-        lastName: 'Operator',
-        role: 'pegasus_wholesaler',
+        id: authSession.user.id,
+        email: authSession.user.email,
+        displayName: 'QA Operator',
+        profileImageUrl: null,
+        primaryRole: 'pegasus_wholesaler',
         roles: ['pegasus_wholesaler'],
         isAdmin: false,
         isStaff: true,
-        createdAt: '2026-01-01T00:00:00.000Z',
-      });
-    }
-    if (pathname === '/api/supabase/profile/qa-marketflow-operator') {
-      return fulfillJson(route, 200, {
-        id: 'qa-marketflow-profile',
-        user_id: 'qa-marketflow-operator',
-        primary_role: 'pegasus_wholesaler',
-        display_name: 'QA Operator',
-        is_pegasus_badged: true,
-        pegasus_role_type: 'pegasus_wholesaler',
-        created_at: '2026-01-01T00:00:00.000Z',
-        updated_at: '2026-01-01T00:00:00.000Z',
+        isPegasusBadged: true,
+        supabaseAuth: true,
       });
     }
 

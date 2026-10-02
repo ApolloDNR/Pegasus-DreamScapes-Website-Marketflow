@@ -75,7 +75,7 @@ export function JourneyContinuation({ path }: { path: string }) {
       <div className="journey-continuation-intro"><h2 id={id}>A clear next step.</h2><p>Take a closer look, at your pace.</p><GuideInvite compact choose /></div>
       <div className="journey-destinations">
         <Link href={primary.href} className={`journey-destination-feature${primary.image ? ' has-image' : ''}`} aria-label={primary.title}>
-          {primary.image && <span className="journey-destination-image"><img {...primary.image} loading="lazy" decoding="async" /></span>}
+          {primary.image && <span className="journey-destination-image"><img {...primary.image} style={primary.image.height > primary.image.width ? { objectPosition: 'center top' } : undefined} loading="lazy" decoding="async" /></span>}
           <span className="journey-destination-copy"><strong>{primary.title}</strong><span className="journey-destination-note">{primary.note}</span><span className="journey-destination-action">{primary.action}<ArrowRight size={20} aria-hidden="true" /></span></span>
         </Link>
         <div className="journey-next-links">{next.slice(1).map(key => {

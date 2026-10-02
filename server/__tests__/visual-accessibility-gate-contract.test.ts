@@ -798,8 +798,8 @@ describe("rendered visual-accessibility gate contract", () => {
     );
 
     expect(source).toContain("async function installApprovedMarketflowStubs");
-    expect(source).toContain("primary_role: 'pegasus_wholesaler'");
-    expect(source).toContain("is_pegasus_badged: true");
+    expect(source).toContain("primaryRole: 'pegasus_wholesaler'");
+    expect(source).toContain("isPegasusBadged: true");
     for (const state of ['loading', 'error', 'empty']) {
       for (const presentation of [
         'wholesale-grid',

@@ -60,11 +60,23 @@ export function createWebsiteHqTransport(
   const endpoint = getConfiguredWebsiteHqEndpoint(environment);
   const token = environment.PEGASUS_WEBSITE_INQUIRY_TOKEN?.trim();
   if (!endpoint || !token || /[\r\n]/.test(token)) return null;
+  const bypassToken = environment.PEGASUS_HQ_DEPLOYMENT_BYPASS_TOKEN;
+  if (bypassToken) {
+    if (!bypassToken.trim() || /[\r\n]/.test(bypassToken)) return null;
+    const approvedOrigin = environment.PEGASUS_HQ_DEPLOYMENT_BYPASS_ORIGIN;
+    // Exact canonical origin equality excludes credentials, paths, query/hash,
+    // whitespace and alternate hosts/ports. Never expand approval to wildcards.
+    if (!approvedOrigin || approvedOrigin.includes('*') || approvedOrigin !== new URL(endpoint).origin) return null;
+  }
 
   return async (payload, options) => {
     const response = await fetcher(endpoint, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+        ...(bypassToken ? { 'x-vercel-protection-bypass': bypassToken } : {}),
+      },
       body: JSON.stringify(payload),
       signal: options?.signal ?? AbortSignal.timeout(REQUEST_TIMEOUT_MS),
       // Never forward the transport credential or private envelope to a redirect.
