@@ -1537,7 +1537,7 @@ async function exercisePublicDesign(page, route, viewport, health) {
     '/operators': { hero: '.ep-opening', label: 'Open the vendor application', href: '/vendor-network#vendor-form' },
     '/referral': { hero: '.ep-opening', label: 'Share an introduction', href: '#category-inquiry' },
     '/capital': { hero: '.ep-opening', label: 'Continue an introduction', href: '#capital-introduction' },
-    '/development': { hero: '.ep-opening', label: 'Discuss a project', href: '/bring-an-opportunity?intent=explore' },
+    '/development': { hero: '.ep-opening', label: 'Discuss an opportunity', href: '/bring-an-opportunity?intent=explore' },
     '/how-we-operate': { hero: '.ep-opening', label: 'Start a conversation', href: '/bring-an-opportunity' },
   };
   const arrival = arrivalActions[route];

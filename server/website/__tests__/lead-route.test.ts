@@ -11,6 +11,38 @@ afterAll(async()=>{await new Promise<void>((r,j)=>server.close(e=>e?j(e):r()));}
 beforeEach(()=>{state.record.mockReset().mockImplementation(async(input:any)=>({record:{type:'lead',id:7},duplicate:false,row:{id:7,...input.payload,orgId:'private',authSubject:'private'}}));});
 const post=(data:Record<string,unknown>=body,key='a5000000-0000-4000-8000-000000000002')=>fetch(`${base}/api/leads`,{method:'POST',headers:{'content-type':'application/json','Idempotency-Key':key},body:JSON.stringify(data)});
 describe('website lead route',()=>{
+ it.each([
+  ['Buy a home (Buyer representation)', 'buyer'],
+  ['List my property (Seller representation)', 'seller'],
+ ])('preserves explicit representation intent for %s', async (role, lane) => {
+  const leadData = {
+   intent: 'representation',
+   role,
+   context: 'East Bay representation request',
+   contextKind: 'context',
+   message: 'Please discuss representation with me.',
+  };
+  const response = await post({
+   ...body,
+   leadType: 'submit',
+   source: 'form',
+   consentContact: true,
+   ts_elapsed_ms: 4000,
+   leadData,
+  });
+  expect(response.status).toBe(201);
+  expect(await response.json()).toEqual({ id: 7, stage: 'new' });
+  const recorded = state.record.mock.calls[0][0];
+  expect(recorded.kind).toBe('lead');
+  expect(recorded.payload).toMatchObject({
+   leadType: lane,
+   source: 'form',
+   leadData: { ...leadData, lane },
+  });
+  expect(recorded.payload).not.toHaveProperty('visitorType');
+  expect(recorded.payload).not.toHaveProperty('assignedDepartment');
+  expect(recorded.payload).not.toHaveProperty('recommendedLane');
+ });
  it('preserves integer receipt and actual false consent, excludes private identity from response',async()=>{const r=await post();expect(r.status).toBe(201);const json=await r.json();expect(json.id).toBe(7);expect(json).not.toHaveProperty('orgId');expect(json).not.toHaveProperty('authSubject');expect(state.record.mock.calls[0][0].payload.leadData.consentAudit.consentContact).toBe(false);});
  it('keeps required consent and anti-spam gates before persistence',async()=>{expect((await post({...body,leadType:'submit',ts_elapsed_ms:4000})).status).toBe(400);expect((await post({...body,leadType:'submit',consentContact:true,ts_elapsed_ms:1})).status).toBe(400);expect(state.record).not.toHaveBeenCalled();});
  it('returns409 conflict and503 unavailable without success receipt',async()=>{state.record.mockRejectedValueOnce(new IntakeConflictError('different submission'));expect((await post()).status).toBe(409);state.record.mockRejectedValueOnce(new IntakeConfigurationError('unconfigured'));expect((await post()).status).toBe(503);});

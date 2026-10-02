@@ -7,7 +7,7 @@ describe("routeOpportunity (PRD §11.4 / schema doc §3)", () => {
     expect(routeOpportunity({ visitorType: "owner", situation: "Pre-foreclosure", goal: "Sell" }))
       .toMatchObject({ assignedDepartment: "Acquisitions" });
   });
-  it("routes list-through-KW goals to Work With Apollo regardless of type", () => {
+  it("routes owner list-through-KW goals to Work With Apollo", () => {
     expect(routeOpportunity({ visitorType: "owner", goal: "List through Apollo / Keller Williams" }))
       .toMatchObject({ assignedDepartment: "Work With Apollo / KW" });
   });
@@ -20,8 +20,19 @@ describe("routeOpportunity (PRD §11.4 / schema doc §3)", () => {
     expect(r.assignedDepartment).toBe("Acquisitions");
     expect(r.recommendedLane).toContain("MarketFlow");
   });
-  it("routes buyers to Work With Apollo / KW", () => {
-    expect(routeOpportunity({ visitorType: "buyer" }).assignedDepartment).toBe("Work With Apollo / KW");
+  it.each([
+    undefined,
+    null,
+    "",
+    "List through Apollo / Keller Williams",
+    "Keller Williams",
+    "Hold / rent",
+    "Find buyer",
+  ])("keeps investor-buyer goal %s in neutral mandate review", (goal) => {
+    expect(routeOpportunity({ visitorType: "buyer", goal })).toEqual({
+      recommendedLane: "Investor mandate → human review",
+      assignedDepartment: "Strategy Review",
+    });
   });
   it("routes capital partners to private review", () => {
     expect(routeOpportunity({ visitorType: "capital_partner" }).assignedDepartment).toBe("Private Capital Review");

@@ -8,6 +8,15 @@ export function routeOpportunity(o: {
   situation?: string | null;
   goal?: string | null;
 }): Routed {
+  // Opportunity buyers submit investor mandates. Representation is an explicit
+  // /api/leads intent; free-form goals here cannot select that separate path.
+  if (o.visitorType === "buyer") {
+    return {
+      recommendedLane: "Investor mandate → human review",
+      assignedDepartment: "Strategy Review",
+    };
+  }
+
   const situation = (o.situation ?? "").toLowerCase();
   const goal = (o.goal ?? "").toLowerCase();
 
@@ -49,11 +58,6 @@ export function routeOpportunity(o: {
         recommendedLane: "Acquisitions → Dispositions / MarketFlow",
         assignedDepartment: "Acquisitions",
       };
-    case "buyer":
-      return {
-        recommendedLane: "Work With Apollo / MarketFlow buyer network",
-        assignedDepartment: "Work With Apollo / KW",
-      };
     case "capital_partner":
       return {
         recommendedLane: "Private project-by-project review",
@@ -81,4 +85,3 @@ export function routeOpportunity(o: {
       };
   }
 }
-

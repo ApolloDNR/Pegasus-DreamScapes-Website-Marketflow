@@ -9,11 +9,13 @@ This bounded pass preserves the approved homepage, mobile composition, photograp
 - Development opens as an opportunity/partnership inquiry, with qualified-provider, licensing, permit, and separate-agreement boundaries near the first action. The technical diligence framework and intake destination remain.
 - The contact card describes property opportunities and development partnerships instead of implying a current construction service.
 
+- Investor-buyer opportunity records now retain neutral Strategy Review metadata for human review, including when goals mention listing, holding, or finding a buyer. They do not imply KW representation or MarketFlow access. Explicit buyer/seller representation remains a separate form. Original goal, source, visitor type, and notes are preserved.
+
 ## Verification
 
 Failing-first regressions reproduce the stuck error screen and missing identity/opportunity clarification. Focused tests cover recovery, retry, representation entry/form, footer visibility, development intent, and contact-card wording. Existing buyer/seller routing, consent, repeated-submit, and navigation checks remain in place.
 
-Local verification on Node 22.23.2 passes TypeScript, all 2,950 unit/component tests, production client/server compilation, bundle budgets, and all five serverless profiles. The 159 PostgreSQL tests are intentionally skipped by the unit runner and remain a separate exact-head CI gate. The final source is also subject to the exact-head rendered CI gates. The local full-suite command suppresses only the managed runtime’s injected UNDICI-EHPA warning, which otherwise contaminates a child-process empty-stderr assertion; application tests are unchanged. Local Chromium cannot launch because its socket is unavailable in this workspace; rendered claims must use the matching CI artifacts. A private hosting success alone does not prove those checks.
+Local verification on Node 22.23.2 passes TypeScript, all 2,961 unit/component tests, production client/server compilation, bundle budgets, and all five serverless profiles. The 159 PostgreSQL tests are intentionally skipped by the unit runner and remain a separate exact-head CI gate. The final source is also subject to the exact-head rendered CI gates. The local full-suite command suppresses only the managed runtime’s injected UNDICI-EHPA warning, which otherwise contaminates a child-process empty-stderr assertion; application tests are unchanged. The rendered gate’s Development action expectation was updated to the approved CTA label, keeping its destination and geometry checks intact. Local Chromium cannot launch because its socket is unavailable in this workspace; rendered claims must use the matching CI artifacts. A private hosting success alone does not prove those checks.
 
 ## Remaining launch decisions
 
