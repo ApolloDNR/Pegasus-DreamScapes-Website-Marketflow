@@ -33,7 +33,7 @@ async function checkRuntime() {
   });
   const port = server.address().port;
   const sendRequest = (path, method = "GET") => new Promise((resolve, reject) => {
-    const req = request({ hostname: "127.0.0.1", port, path, method }, (res) => {
+    const req = request({ hostname: "127.0.0.1", port, path, method, headers: method === "POST" ? { "content-type": "application/json" } : {} }, (res) => {
       let body = "";
       res.setEncoding("utf8");
       res.on("data", (chunk) => { body += chunk; });
@@ -41,7 +41,7 @@ async function checkRuntime() {
       res.on("error", reject);
     });
     req.on("error", reject);
-    req.end();
+    req.end(method === "POST" ? "{}" : undefined);
   });
 
   try {
@@ -72,6 +72,19 @@ async function checkRuntime() {
         assert.equal(JSON.parse(unavailable.body).code, "preview_backend_unavailable", path);
       }
     }
+    if (process.env.DATABASE_URL && !process.env.AI_INTEGRATIONS_OPENAI_API_KEY) {
+      for (const path of ["/api/peggy/conversations", "/api/peggy/conversations/new"]) {
+        const unavailable = await sendRequest(path, "POST");
+        assert.equal(unavailable.status, 503, path);
+        assert.equal(unavailable.headers["cache-control"], "no-store");
+        assert.deepEqual(JSON.parse(unavailable.body), {
+          code: "peggy_unavailable",
+          message: "Peggy is unavailable right now. Please try again later.",
+        });
+      }
+      const calculator = await sendRequest("/api/peggy/analyze-calculator", "POST");
+      assert.equal(calculator.status, 401, "Calculator authentication still runs before AI work");
+    }
     console.log("[serverless-runtime] PASS: " + (process.env.DATABASE_URL ? "configured" : "unconfigured") + " preview serves pages without build tools; unavailable APIs stay closed");
   } finally {
     await new Promise((resolve) => server.close(resolve));
@@ -81,7 +94,7 @@ async function checkRuntime() {
 if (process.argv.includes("--runtime-child")) {
   await checkRuntime();
 } else {
-  for (const profile of ["configured-preview", "unconfigured-preview", "file-preview", "unconfigured-production"]) {
+  for (const profile of ["configured-preview", "database-only-preview", "unconfigured-preview", "file-preview", "unconfigured-production"]) {
     const result = spawnSync(process.execPath, [fileURLToPath(import.meta.url), "--runtime-child"], {
       cwd: fileURLToPath(new URL("../", import.meta.url)),
       env: {
@@ -91,9 +104,11 @@ if (process.argv.includes("--runtime-child")) {
           APP_ENV: profile === "unconfigured-production" ? "production" : "preview",
           SITE_INDEXABLE: "false",
         }),
-        ...(profile === "configured-preview" ? {
+        ...(["configured-preview", "database-only-preview"].includes(profile) ? {
           SESSION_SECRET: "isolated-runtime-smoke-session-secret",
           DATABASE_URL: "postgresql://runtime:runtime@127.0.0.1:1/runtime",
+        } : {}),
+        ...(profile === "configured-preview" ? {
           AI_INTEGRATIONS_OPENAI_API_KEY: "runtime-smoke-only",
         } : {}),
       },

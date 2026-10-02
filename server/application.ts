@@ -30,7 +30,8 @@ export interface ApplicationDependencies {
   seedPersistentData: (
     environment: DeploymentEnvironment,
   ) => Promise<void>;
-  startPersistentWorkers: (httpServer: Server) => Promise<void>;
+  startHqRecoveryWorker: (httpServer: Server) => Promise<void>;
+  startPeggyReportScheduler: () => Promise<void>;
   setupStatic: (app: Express, runtime: ApplicationRuntime) => Promise<void>;
   setupVite: (httpServer: Server, app: Express) => Promise<void>;
 }
@@ -82,13 +83,14 @@ const defaultDependencies: ApplicationDependencies = {
     if (environment.NODE_ENV !== "production") await seedDealflowData();
   },
 
-  async startPersistentWorkers(httpServer) {
-    const [{ startPeggyCron }, hqClient] = await Promise.all([
-      import("./peggy-cron"),
-      import("./integrations/hq-client"),
-    ]);
+  async startHqRecoveryWorker(httpServer) {
+    const hqClient = await import("./integrations/hq-client");
     hqClient.startHqPendingRecoveryWorker();
     httpServer.once("close", hqClient.stopHqPendingRecoveryWorker);
+  },
+
+  async startPeggyReportScheduler() {
+    const { startPeggyCron } = await import("./peggy-cron");
     startPeggyCron();
   },
 
@@ -173,14 +175,26 @@ export async function createApplication(
   app.use(createApiRequestLogger((message) => log(message)));
   registerDeploymentRoutes(app, policy);
 
-  if (runtime === "persistent") {
+  // Preview startup must not seed data, recover queued HQ deliveries, or
+  // schedule outbound reports unless each task is explicitly enabled. These
+  // flags do not change direct request handling or non-preview behavior.
+  const isPreview = policy.appEnvironment === "preview";
+  if (
+    runtime === "persistent" &&
+    (!isPreview || environment.PEGASUS_PREVIEW_ENABLE_SEEDING === "true")
+  ) {
     await dependencies.seedPersistentData(environment);
   }
 
   await dependencies.registerRoutes(httpServer, app);
 
   if (runtime === "persistent") {
-    await dependencies.startPersistentWorkers(httpServer);
+    if (!isPreview || environment.PEGASUS_PREVIEW_ENABLE_HQ_RECOVERY === "true") {
+      await dependencies.startHqRecoveryWorker(httpServer);
+    }
+    if (!isPreview || environment.PEGASUS_PREVIEW_ENABLE_PEGGY_REPORTS === "true") {
+      await dependencies.startPeggyReportScheduler();
+    }
   }
 
   app.use(

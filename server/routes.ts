@@ -60,6 +60,7 @@ import { generateTermSheetPDF } from "./term-sheet-generator";
 import { generateCalculatorPDF, generateDealPacketPDF, generateSavedAnalysisPDF } from "./pdf";
 import { isPreviewHostname } from "@shared/preview-hosts";
 import peggy from "./peggy";
+import { PeggyUnavailableError, PEGGY_UNAVAILABLE_RESPONSE } from "./peggy-ai";
 import { registerPeggyIdentityRoutes } from "./peggy-route-auth";
 import { forward as hqForward, outreachReasonForLeadType, retryOutboxRow as hqRetryOutboxRow, drainPending as hqDrainPending, isHqHealthy } from "./integrations/hq-client";
 import { 
@@ -5670,6 +5671,9 @@ export async function registerRoutes(
       const result = await peggy.chat(message, conversationId, context);
       return res.json(result);
     } catch (error) {
+      if (error instanceof PeggyUnavailableError) {
+        return res.status(503).json(PEGGY_UNAVAILABLE_RESPONSE);
+      }
       console.error("Error in Peggy chat:", error);
       return res.status(500).json({ message: "Failed to get response from Peggy" });
     }

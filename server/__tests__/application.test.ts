@@ -31,7 +31,8 @@ function dependencies(
         }),
     ),
     seedPersistentData: vi.fn(async () => undefined),
-    startPersistentWorkers: vi.fn(async () => undefined),
+    startHqRecoveryWorker: vi.fn(async () => undefined),
+    startPeggyReportScheduler: vi.fn(async () => undefined),
     setupStatic: vi.fn(async () => undefined),
     setupVite: vi.fn(async () => undefined),
   };
@@ -107,7 +108,8 @@ describe("listener-free application factory", () => {
     expect(httpServer.listening).toBe(false);
     expect(testDependencies.registerRoutes).toHaveBeenCalledOnce();
     expect(testDependencies.seedPersistentData).not.toHaveBeenCalled();
-    expect(testDependencies.startPersistentWorkers).not.toHaveBeenCalled();
+    expect(testDependencies.startHqRecoveryWorker).not.toHaveBeenCalled();
+    expect(testDependencies.startPeggyReportScheduler).not.toHaveBeenCalled();
     expect(testDependencies.setupStatic).toHaveBeenCalledOnce();
     expect(testDependencies.setupVite).not.toHaveBeenCalled();
   });
@@ -123,7 +125,8 @@ describe("listener-free application factory", () => {
 
     expect(httpServer.listening).toBe(false);
     expect(testDependencies.seedPersistentData).toHaveBeenCalledWith(environment);
-    expect(testDependencies.startPersistentWorkers).toHaveBeenCalledWith(httpServer);
+    expect(testDependencies.startHqRecoveryWorker).toHaveBeenCalledWith(httpServer);
+    expect(testDependencies.startPeggyReportScheduler).toHaveBeenCalledOnce();
     expect(testDependencies.setupVite).toHaveBeenCalledOnce();
     expect(testDependencies.setupStatic).not.toHaveBeenCalled();
   });

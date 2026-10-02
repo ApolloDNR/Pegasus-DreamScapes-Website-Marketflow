@@ -1,6 +1,7 @@
 import type { Express, Request, RequestHandler } from "express";
 import type { PeggyConversation } from "@shared/schema";
 import type { PeggyContext } from "./peggy";
+import { PeggyUnavailableError, PEGGY_UNAVAILABLE_RESPONSE } from "./peggy-ai";
 
 export type PeggyParseResult<T> =
   | { ok: true; value: T }
@@ -252,7 +253,11 @@ export function registerPeggyIdentityRoutes(
       });
       const accessToken = dependencies.createAccessToken(conversation, secret);
       res.json({ id: conversation.id, accessToken });
-    } catch {
+    } catch (error) {
+      if (error instanceof PeggyUnavailableError) {
+        res.status(503).json(PEGGY_UNAVAILABLE_RESPONSE);
+        return;
+      }
       res.status(500).json({ message: "Internal server error" });
     }
   };
@@ -294,7 +299,11 @@ export function registerPeggyIdentityRoutes(
           ...parsed.value,
         });
         res.json(response);
-      } catch {
+      } catch (error) {
+        if (error instanceof PeggyUnavailableError) {
+          res.status(503).json(PEGGY_UNAVAILABLE_RESPONSE);
+          return;
+        }
         res.status(500).json({ message: "Internal server error" });
       }
     },

@@ -1,5 +1,23 @@
 # Pegasus HQ intake contract readiness
 
+## Current recheck: October 2, 2026
+
+Read-only checks at 02:53–02:55 UTC confirmed that the hardened preview remains draft [PR #289](https://github.com/ApolloDNR/Pegasus-HQ-Operating-system/pull/289), source `027095b73fa76867d673b1d2cc5ce3509b073d2b`. Its intake GET returned `503 not_configured`, contract version 2; health returned `503 degraded`, database connected but activity ledger blocked. These responses do not identify which configuration or database-contract gate remains missing.
+
+The Vercel-verified production alias `https://pegasus-hq-operating-system.vercel.app` serves older main source `5dc108996c0651fae118d821c5c1e7e6cb9bb69b`. Its intake GET returned `200 ready`, contract version 1. That source's readiness only checks service-role configuration presence, not persistence. Its health response was cached from June 8 with an Age header over ten million seconds, so HTTP 200 is not evidence of current downstream health. The website's historical `replit.md` names this production alias; the current release target still needs explicit confirmation.
+
+Both sources require an actual property address and both consent booleans true. The canonical website correctly records contact consent while leaving `consentCcpaAcknowledged` false; legitimate non-property inquiries may lack an address. Neither receiver therefore accepts the current website semantics safely. The production v1 schema accepts the flat shape but strips `extra`, losing narrative, opportunity correlation, routing and consent-audit metadata. V2 requires a strict versioned envelope and rejects `extra`/`sourceChannel`. Name/email/phone size limits also differ; do not truncate or synthesize historical records to force acceptance.
+
+Current source references:
+- [V2 schema](https://github.com/ApolloDNR/Pegasus-HQ-Operating-system/blob/027095b73fa76867d673b1d2cc5ce3509b073d2b/src/lib/public-intake/schema.ts)
+- [Production v1 schema](https://github.com/ApolloDNR/Pegasus-HQ-Operating-system/blob/5dc108996c0651fae118d821c5c1e7e6cb9bb69b/src/lib/public-intake/schema.ts)
+- [Production v1 readiness](https://github.com/ApolloDNR/Pegasus-HQ-Operating-system/blob/5dc108996c0651fae118d821c5c1e7e6cb9bb69b/src/lib/public-intake/readiness.ts)
+
+Before mapping or enabling forwarding, confirm the intended receiver version, non-property inquiry handling, actual privacy-acknowledgement requirement/copy, and which context HQ must retain. Preserve original idempotency keys and unsupported historical records for review. An HTTP 400 currently marks an outbox item terminal failed, so enabling an incompatible receiver would not be repaired by normal pending retries. No intake POST or provider/database/security configuration was performed in this recheck.
+
+## September 13 source-backed investigation
+
+
 Checked September 13, 2026. This is a source-backed integration finding, not a
 successful live delivery test. No HQ configuration, database, or receiver code
 was changed, and no intake POST was sent.

@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { getPeggyAIClient, PeggyUnavailableError } from "./peggy-ai";
 import { storage } from "./storage";
 import type { PeggyConversation, PeggyMessage, InsertPeggyConversation, InsertPeggyMessage } from "@shared/schema";
 import { messageWithPageContext, sanitizePeggyPageContext, type PeggyPageContext } from '@shared/peggy-page-context';
@@ -8,12 +8,6 @@ import {
 } from "@shared/peggy-calculator";
 // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
 const DEFAULT_MODEL = "gpt-5";
-
-// This is using Replit's AI Integrations service, which provides OpenAI-compatible API access without requiring your own OpenAI API key.
-const openai = new OpenAI({
-  baseURL: process.env.AI_INTEGRATIONS_OPENAI_BASE_URL,
-  apiKey: process.env.AI_INTEGRATIONS_OPENAI_API_KEY
-});
 
 // Peggy personality and system prompts.
 // Hardened in Task #151 with Empire Doctrine v1.0.2 + Amendment 2 §D rules:
@@ -637,6 +631,7 @@ export async function extractIntake(
 ): Promise<{ intake: PeggyIntake; disposition: PeggyDisposition | null; summary: string } | null> {
   if (transcript.length < 2) return null;
   try {
+    const openai = getPeggyAIClient();
     const completion = await openai.chat.completions.create({
       model: DEFAULT_MODEL,
       response_format: { type: "json_object" },
@@ -666,6 +661,7 @@ export async function extractIntake(
       summary: typeof parsed.summary === "string" ? parsed.summary : "",
     };
   } catch (err) {
+    if (err instanceof PeggyUnavailableError) return null;
     console.error("Peggy intake extraction failed:", err);
     return null;
   }
@@ -677,6 +673,7 @@ export async function chat(
   conversationId: number,
   context: PeggyContext = {}
 ): Promise<{ response: string; messageId: number; disposition?: PeggyDisposition | null; humanRequired?: boolean }> {
+  const openai = getPeggyAIClient();
   // Keep only the bounded public reading fields, including for direct API callers.
   const currentView = sanitizePeggyPageContext(context?.currentView);
   context = { ...context };
@@ -828,6 +825,7 @@ export async function startWebConversation({
   if (!correlationId.trim()) {
     throw new Error("Peggy web correlation is required");
   }
+  getPeggyAIClient();
 
   let title = 'New Conversation';
   if (context.page) {
