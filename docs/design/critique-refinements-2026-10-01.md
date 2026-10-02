@@ -43,3 +43,17 @@ Fresh local rendered QA is blocked: Chromium cannot create its required Unix soc
 Final local acceptance after the label fix: Node 22.23.2 typecheck; 228 test files / 2,597 tests; production build, bundle and four runtime cases passed. The shared rendered journey now checks that the owner and Our Work pages omit the intentionally removed extra continuation and exercises the retained onward link on How We Operate. Browser execution of that assertion remains an exact-source CI gate.
 
 The production dependency audit exits successfully at the repository's high-severity threshold, but reports one low-severity DOMPurify advisory (`GHSA-p98j-92pf-mc4p`). No `IN_PLACE` or `afterSanitize` hook usage was found in client/server/shared source. Dependency changes are not included in this bounded design recovery; do not describe the audit as zero vulnerabilities.
+
+## Rendered review and guide-boundary correction
+
+Exact-source CI for recovery commit `3fe2b9eabd0a9521f74642519784cfee472dff0b` passed the launch suite, merge compatibility, Peggy chat/guide/shared journeys and all eight public-route shards (46 routes at four widths in both themes). Both intake shards and the MarketFlow interaction shard passed. Core interactions passed nine journeys but failed the theme-refresh request-settlement invariant, so that revision's aggregate gate did **not** pass.
+
+Fresh artifact inspection covered the full Home, Our Work, initial inquiry and empty Lab at desktop and phone; owner openings and Tools at both sizes; guide/chat, selected pathway and dark closing/footer states. The six-section story, original photographs/emblem, cream/navy/copper hierarchy, progressive choices, form controls and truthful project outcome were retained. Screenshot provenance is the exact head and compiled-build digest recorded in each route artifact. CI fixtures are not live receipts.
+
+This inspection exposed the Lab guide reading toolbar and workspace text as its introduction. Actual-component red/green tests reproduced saved synthetic address/city, situation, objective and model output entering passive snapshots or selection context. The follow-up keeps public authored view guidance while marking working records, derived output, notices and calculators with the existing private-context boundary. The explicit Memo → reviewed Peggy draft remains available and is not sent on open. The browser gate now restores a synthetic private record and checks the outgoing page-context payload as well as the visible introductory copy.
+
+The theme journey now uses the existing strict settlement check after reload and before navigating away, with a sequencing regression test. It does not clear requests, relax timeouts, skip failures or weaken geometry checks. The next exact-source CI run must establish whether this resolves the Chromium lifecycle failure; logs alone did not prove its root cause.
+
+Contact and production readiness remain separate: the displayed phone needs owner reactivation/replacement confirmation, the business mailbox and live service chain need actual receipt verification, and this source is not a public production launch.
+
+Final follow-up local verification: Node 22.23.2 typecheck; all 229 test files / 2,607 tests; focused privacy and guide cases; production build/bundle budget; all four fail-closed deployment-entry cases; script syntax and diff hygiene pass. Current rendered/hosted acceptance is recorded after publication on the existing draft PR; no earlier green artifact is substituted for that exact revision.

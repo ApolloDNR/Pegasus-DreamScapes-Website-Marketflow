@@ -1994,7 +1994,7 @@ try {
     assert(!geometry?.overlapsConsent, `Peggy panel overlapped cookie consent: ${JSON.stringify(geometry)}`);
   });
 
-  await runInteraction('theme toggle persistence', { colorScheme: 'dark' }, async (page) => {
+  await runInteraction('theme toggle persistence', { colorScheme: 'dark' }, async (page, health) => {
     await openPage(page, '/');
     const root = page.locator('.pg-root');
     assert(await root.getAttribute('data-theme') !== 'dark', 'A new visitor with a dark OS did not start in parchment light mode');
@@ -2003,6 +2003,9 @@ try {
     await page.reload();
     await root.waitFor({ state: 'visible' });
     assert(await root.getAttribute('data-theme') === 'dark', 'The visitor dark-mode choice did not survive refresh');
+    // Root visibility can precede post-hydration font and image requests.
+    // Finish the refreshed document before hard-navigation tears it down.
+    await settleAfterInteraction(page, health);
     await openPage(page, '/property-owners');
     assert(await root.getAttribute('data-theme') === 'dark', 'Dark-mode choice did not follow navigation');
     await openPage(page, '/');

@@ -849,6 +849,22 @@ describe("rendered visual-accessibility gate contract", () => {
     expect(interaction).toContain("overlapsConsent");
   });
 
+  it("settles refreshed theme assets before leaving the reloaded document", () => {
+    const interaction = sliceBetween(
+      "await runInteraction('theme toggle persistence'",
+      "await runInteraction('homepage primary CTA'",
+    );
+    const reload = interaction.indexOf("await page.reload()");
+    const navigation = interaction.indexOf("await openPage(page, '/property-owners')");
+    const refreshSettlement = interaction.indexOf("await settleAfterInteraction(page, health)", reload);
+
+    expect(reload).toBeGreaterThanOrEqual(0);
+    expect(navigation).toBeGreaterThan(reload);
+    expect(refreshSettlement).toBeGreaterThan(reload);
+    expect(refreshSettlement).toBeLessThan(navigation);
+    expect(interaction).toContain("async (page, health) =>");
+  });
+
   it("bounds theme geometry rendering before and after every toggle", () => {
     const interaction = sliceBetween(
       "await runInteraction('theme toggle persistence'",

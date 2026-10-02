@@ -11,7 +11,7 @@ import { PropertySketch } from '../property-sketch';
 export function KeyEconomics({ analysis }: { analysis: ReadyAnalysis }) {
   const total = analysis.presentation.capitalStack.reduce((sum, row) => sum + row.amount, 0);
   const debt = analysis.presentation.capitalStack.find(row => row.source === 'conventional')?.amount;
-  return <section className="id-economics" aria-label="Key economics"><dl>{[
+  return <section className="id-economics" data-peggy-private aria-label="Key economics"><dl>{[
     ['Purchase basis', money(analysis.property.purchasePrice)],
     ['Acquisition + scope + reserve', money(total)],
     ['Cash required', money(analysis.presentation.totalCashIn)],

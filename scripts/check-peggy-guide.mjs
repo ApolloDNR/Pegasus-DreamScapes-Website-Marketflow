@@ -14,6 +14,8 @@ const out = process.env.PEGGY_GUIDE_SCREENSHOT_DIR || '/tmp/pegasus-guide-qa';
 await mkdir(out, { recursive: true });
 const axe = await readFile(new URL('../node_modules/axe-core/axe.min.js', import.meta.url), 'utf8');
 const evidence = [];
+const labIntroduction = 'Start with the property facts you know. Compare assumptions, explore scenarios and review the decision brief before choosing what to share.';
+const privateLabContext = /Private Canary|Distressed or time-sensitive|Preserve control or optionality|Save locally|Edit property|Clear property|Illustrative example|Synthetic example|\$/;
 let browser;
 let currentPage;
 async function settle(page) {
@@ -123,7 +125,37 @@ try {
     await openPeggy(page);
     await panel.getByRole('button', { name: 'Explain this section', exact: true }).waitFor();
     assert.match(await page.locator('.peggy-location strong').innerText(), /Strategy Lab/);
+    await page.waitForFunction(intro => document.querySelector('[data-testid="peggy-local-summary"]')?.textContent === intro, labIntroduction);
+    await page.locator('.peggy-location > summary').click();
+    assert.doesNotMatch(await panel.locator('.peggy-location-content > p').nth(1).innerText(), privateLabContext);
+    await page.locator('.peggy-location > summary').click();
     await check(page, key, 'strategy-lab');
+    // Restore a distinctly marked synthetic visitor record, then exercise the
+    // same passive guide and explicit Send boundary used by a real saved draft.
+    await page.evaluate(() => {
+      const fixture = JSON.parse(sessionStorage.getItem('pegasus.strategy-lab.working.v4'));
+      Object.assign(fixture.workspace.base, { address: '921 Private Canary Road', city: 'Private Canary Cove', situation: 'Distressed or time-sensitive', objective: 'Preserve control or optionality', illustrative: false });
+      localStorage.setItem('pegasus.strategy-lab.v4', JSON.stringify(fixture));
+      sessionStorage.removeItem('pegasus.strategy-lab.working.v4');
+    });
+    await page.reload();
+    await page.waitForFunction(() => document.querySelector('.id-property strong')?.textContent === '921 Private Canary Road');
+    await openPeggy(page);
+    await page.waitForFunction(intro => document.querySelector('[data-testid="peggy-local-summary"]')?.textContent === intro, labIntroduction);
+    await page.locator('.id-property strong').evaluate(element => {
+      const range = document.createRange(); range.selectNodeContents(element);
+      const selection = getSelection(); selection.removeAllRanges(); selection.addRange(range);
+      element.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+    });
+    assert.equal(await panel.getByRole('button', { name: 'Explain my selection', exact: true }).count(), 0);
+    const beforeLabSend = requests.length;
+    await panel.getByRole('button', { name: 'Explain this section', exact: true }).click();
+    assert.equal(requests.length, beforeLabSend, 'Preparing Lab context must not send the private workspace');
+    await panel.getByRole('button', { name: 'Send', exact: true }).click();
+    await panel.getByText(/^Synthetic guide response/).waitFor();
+    assert.equal(requests.at(-1).body.context.currentView.path, '/strategy-lab');
+    assert.doesNotMatch(JSON.stringify(requests.at(-1).body.context.currentView), privateLabContext);
+    await check(page, key, 'strategy-lab-private-context');
     await panel.getByRole('button', { name: 'Close', exact: true }).click();
     await page.goto(`${origin}/about?private=DO_NOT_SEND_QUERY`);
     await openPeggy(page);
