@@ -1,3 +1,10 @@
+import { registerWebsiteDeliveryAdmin } from "./website/delivery-admin";
+import { getVerifiedWebsiteAuthSubject } from "./website/identity";
+import { createWebsiteStaffGuard } from "./website/staff-guard";
+import { registerWebsiteAuthUserRoute } from "./website/auth-user";
+import { registerWebsiteStaffLeadRoutes } from "./website/staff-records";
+import { db as websiteDb } from "./db";
+import { registerWebsiteLeadRoute } from "./website/lead-route";
 import { randomUUID } from "node:crypto";
 import express, { type Express, type Request, type RequestHandler, type Response, type NextFunction } from "express";
 import { createServer, type Server } from "http";
@@ -262,17 +269,7 @@ const getAuthUserId = (req: any): string | null => {
   return null;
 };
 
-const getVerifiedPeggyUserId = (req: any): string | null => {
-  for (const candidate of [
-    req.user?.claims?.sub,
-    req.supabaseUser?.id,
-  ]) {
-    if (typeof candidate === "string" && candidate.trim()) {
-      return candidate.trim();
-    }
-  }
-  return null;
-};
+const getVerifiedPeggyUserId = (req: Request): string | null => getVerifiedWebsiteAuthSubject(req);
 
 const hasMarketflowStaffAccess = async (req: any, userId: string) => {
   const userEmail = req.user?.claims?.email || req.supabaseUser?.email;
@@ -367,6 +364,7 @@ export async function registerRoutes(
   
   // Add Supabase auth middleware to extract user from JWT tokens
   app.use(supabaseAuthMiddleware);
+  const requireWebsiteStaff = createWebsiteStaffGuard({ db: websiteDb });
 
   // SEO: robots.txt — preview/dev hosts are fully disallowed so the
   // Replit dev URL does not get indexed before launch. Production
@@ -533,13 +531,10 @@ export async function registerRoutes(
     });
   });
 
-  // Signup may create only the authenticated user's non-governed role.
-  registerUserProvisioningRoute(app, {
-    isAuthenticated: isHybridAuthenticated,
-    createUserProfile,
-    createUserReputation,
-    getUserRoles: (userId) => storage.getUserRoles(userId),
-    addUserRole: (entry) => storage.addUserRole(entry),
+  // Shared platform identity is authoritative. Legacy profile/role self-provisioning
+  // must not create a competing directory during the integration rollout.
+  app.post('/api/supabase/provision-user', (_req, res) => {
+    res.status(503).json({ message: 'Account setup is managed through the shared Pegasus platform.' });
   });
 
   // Raw profile reads are self-only; public profile cards use DTO routes.
@@ -693,15 +688,14 @@ export async function registerRoutes(
   registerAdminAuditRoutes(
     app,
     {
-      getAuthUserId,
       getAuditLogs: (options) => storage.getAuditLogs(options),
       getAuditLogCount: (options) => storage.getAuditLogCount(options),
-      getAuditLogById: (id) => storage.getAuditLogById(id),
+      getAuditLogById: (id, orgId) => storage.getAuditLogById(id, orgId),
       logError: (message, error) => console.error(message, error),
     },
     {
       authenticate: isHybridAuthenticated,
-      requireStaff: requireStaffRole,
+      requireStaff: requireWebsiteStaff,
     },
   );
 
@@ -1791,66 +1785,7 @@ export async function registerRoutes(
   });
 
   // Auth routes
-  app.get('/api/auth/user', isHybridAuthenticated, async (req: any, res) => {
-    try {
-      const userId = req.user.claims.sub;
-      const userEmail = (req.user.claims.email || "").toLowerCase();
-      
-      // Check if user is in admin email allowlist
-      const isAdminEmail = ADMIN_EMAILS.includes(userEmail);
-      
-      const supabaseProfile = await getUserProfile(userId);
-      
-      if (supabaseProfile) {
-        const role = supabaseProfile.primary_role;
-        const isPegasus = supabaseProfile.is_pegasus_badged || role?.startsWith('pegasus_');
-        
-        return res.json({
-          id: userId,
-          email: req.user.claims.email || supabaseProfile.display_name,
-          firstName: supabaseProfile.display_name?.split(' ')[0] || '',
-          lastName: supabaseProfile.display_name?.split(' ').slice(1).join(' ') || '',
-          profileImageUrl: supabaseProfile.avatar_url,
-          displayName: supabaseProfile.display_name,
-          primaryRole: role,
-          isPegasusBadged: isPegasus,
-          roles: [role],
-          isStaff: role === 'admin' || isPegasus || isAdminEmail,
-          isAdmin: isAdminEmail || role === 'admin',
-          isInvestor: role === 'investor',
-          isWholesaler: role === 'wholesaler' || role === 'pegasus_wholesaler',
-          isBuyer: role === 'buyer_retail' || role === 'buyer_investment',
-          isDreamscaper: role === 'dreamscaper' || role === 'pegasus_dreamscaper',
-          supabaseAuth: true
-        });
-      }
-      
-      const user = await storage.getUser(userId);
-      const roles = await storage.getUserRoles(userId);
-      const roleNames = roles.map(r => r.role);
-      const isStaff = roleNames.some(r => STAFF_ROLES.includes(r as any)) || isAdminEmail;
-      const isDreamscaper = roleNames.includes("dreamscaper") || roleNames.includes("operator");
-      
-      res.json({ 
-        ...user,
-        id: userId, // Always include id from claims
-        email: userEmail || user?.email || req.user.claims.email,
-        firstName: req.user.claims.first_name || user?.firstName || '',
-        lastName: req.user.claims.last_name || user?.lastName || '',
-        roles: roleNames,
-        isStaff,
-        isAdmin: isAdminEmail || roleNames.includes("admin"),
-        isInvestor: roleNames.includes("investor"),
-        isWholesaler: roleNames.includes("wholesaler"),
-        isBuyer: roleNames.includes("buyer"),
-        isDreamscaper,
-        supabaseAuth: false
-      });
-    } catch (error) {
-      console.error("Error fetching user:", error);
-      res.status(500).json({ message: "Failed to fetch user" });
-    }
-  });
+  registerWebsiteAuthUserRoute(app, websiteDb);
 
   // Dealflow stats route for authenticated users
   app.get('/api/dealflow/stats', isAuthenticated, async (req: any, res) => {
@@ -5594,6 +5529,7 @@ export async function registerRoutes(
   // PEGGY AI ASSISTANT ROUTES
   // =====================================================
 
+
   const requirePeggyConversationAccess =
     createPeggyConversationAccessGuard({
       getConversation: (id) => storage.getPeggyConversation(id),
@@ -5649,7 +5585,8 @@ export async function registerRoutes(
   // Get user's conversations list
   app.get("/api/peggy/conversations", isHybridAuthenticated, async (req: any, res) => {
     try {
-      const userId = req.user?.claims?.sub;
+      const userId = getVerifiedWebsiteAuthSubject(req);
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
       const conversations = await storage.getPeggyConversations(userId);
       return res.json(conversations);
     } catch (error) {
@@ -5702,15 +5639,8 @@ export async function registerRoutes(
       }
       const updated = await storage.updatePeggyConversation(id, patch);
 
-      // If this conversation ended on human_required, make sure Apollo got an email
-      if (updated?.disposition === "human_required" && !updated?.reportedAt) {
-        const { sendPeggyHumanRequired } = await import("./email");
-        await sendPeggyHumanRequired({
-          conversation: updated,
-          transcript: messages,
-          reason: updated.humanRequiredReason || "manual_finish",
-        });
-      }
+      // Human-required conversations remain visible in the authorized staff desk.
+      // Provider notifications require the separately approved delivery setup.
 
       return res.json(updated);
     } catch (error) {
@@ -5761,12 +5691,8 @@ export async function registerRoutes(
   );
 
   // Task #151 — admin: list last 30 days of Peggy conversations.
-  app.get("/api/admin/peggy/conversations", isHybridAuthenticated, async (req: any, res) => {
+  app.get("/api/admin/peggy/conversations", requireWebsiteStaff, async (req: any, res) => {
     try {
-      const userEmail = (req.user?.claims?.email || req.user?.email || "").toLowerCase();
-      if (!userEmail || !ADMIN_EMAILS.includes(userEmail)) {
-        return res.status(403).json({ message: "Admin access required" });
-      }
       const sinceMs = Date.now() - 30 * 24 * 60 * 60 * 1000;
       const conversations = await storage.getPeggyConversationsSince(sinceMs);
       res.json(conversations);
@@ -5777,12 +5703,8 @@ export async function registerRoutes(
   });
 
   // Task #151 — admin: fetch a single conversation + transcript.
-  app.get("/api/admin/peggy/conversations/:id", isHybridAuthenticated, async (req: any, res) => {
+  app.get("/api/admin/peggy/conversations/:id", requireWebsiteStaff, async (req: any, res) => {
     try {
-      const userEmail = (req.user?.claims?.email || req.user?.email || "").toLowerCase();
-      if (!userEmail || !ADMIN_EMAILS.includes(userEmail)) {
-        return res.status(403).json({ message: "Admin access required" });
-      }
       const id = Number(req.params.id);
       const conversation = await storage.getPeggyConversation(id);
       if (!conversation) return res.status(404).json({ message: "Conversation not found" });
@@ -5834,371 +5756,12 @@ export async function registerRoutes(
   // UNIFIED LEADS PIPELINE ROUTES
   // =====================================================
 
-  // Get all leads (staff only)
-  app.get("/api/hq/leads", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const leadType = req.query.leadType as string | undefined;
-      const stage = req.query.stage as string | undefined;
-      const assignedTo = req.query.assignedTo as string | undefined;
-      
-      const leads = await storage.getLeads({ leadType, stage, assignedTo });
-      res.json(leads);
-    } catch (error) {
-      console.error("Error fetching leads:", error);
-      res.status(500).json({ message: "Failed to fetch leads" });
-    }
-  });
-
-  // Get single lead (staff only)
-  app.get("/api/hq/leads/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const id = Number(req.params.id);
-      const lead = await storage.getLead(id);
-      
-      if (!lead) {
-        return res.status(404).json({ message: "Lead not found" });
-      }
-      
-      res.json(lead);
-    } catch (error) {
-      console.error("Error fetching lead:", error);
-      res.status(500).json({ message: "Failed to fetch lead" });
-    }
-  });
+  registerWebsiteStaffLeadRoutes(app, websiteDb);
 
   // Create a new lead (public or authenticated)
-  app.post("/api/leads", publicIntakeRateLimit, async (req: any, res) => {
-    try {
-      // Empire Doctrine v1.0.1 — server-truth anti-spam for /submit and
-      // /marketflow/access submissions. Honeypot hp_company must be empty;
-      // ts_elapsed_ms must be at least 3000 (3-second time-on-form).
-      // Client-side checks exist for UX, but the server is the
-      // authoritative gate so a scripted POST bypassing the React form
-      // cannot reach storage.
-      const lt = req.body?.leadType;
-      if (lt === "submit" || lt === "marketflow_access") {
-        const hp = req.body?.leadData?.hp_company ?? req.body?.hp_company ?? "";
-        if (typeof hp === "string" && hp.trim().length > 0) {
-          return res.status(400).json({ message: "Submission rejected." });
-        }
-        const elapsed = Number(
-          req.body?.leadData?.ts_elapsed_ms ?? req.body?.ts_elapsed_ms ?? 0,
-        );
-        if (!Number.isFinite(elapsed) || elapsed < 3000) {
-          return res.status(400).json({
-            message: "Form submitted too fast. Please try again.",
-          });
-        }
-        // Strip honeypot before persisting so it never lands in storage.
-        if (req.body?.leadData && typeof req.body.leadData === "object") {
-          delete req.body.leadData.hp_company;
-        }
-      }
+  registerWebsiteLeadRoute(app, { db: websiteDb, rateLimit: publicIntakeRateLimit });
 
-      // Consent is a factual, versioned part of the intake record. Only an
-      // explicit boolean counts; contact permission never doubles as a privacy
-      // acknowledgement. Migrated public surfaces must provide it before the
-      // lead is stored or forwarded.
-      const normalizedConsent = normalizeLeadConsent(req.body);
-      const consentRequirement = validateLeadConsentRequirement(lt, normalizedConsent);
-      if (!consentRequirement.ok) {
-        return res.status(400).json({ message: consentRequirement.message });
-      }
-      req.body.leadData = mergeLeadConsentAudit(req.body?.leadData, normalizedConsent, {
-        leadType: lt,
-        source: req.body?.source,
-      });
-
-      // Reusable Pegasus forms enter through the consent-gated `submit`
-      // surface, then receive a server-owned operational lane. Never trust a
-      // client-provided lane or treat generic context as a property address.
-      req.body = normalizePegasusLeadSubmission(req.body);
-
-      // Empire Doctrine v1.0.1 — explicit boundary mapping for MarketFlow
-      // access requests. /api/leads is the persistence path of record, but
-      // marketflow_access submissions are conceptually a distinct
-      // canonical shape — `marketflow_access_requests` — and we project
-      // them into that shape server-side so downstream consumers
-      // (analytics, future dedicated table) can subscribe to a stable
-      // contract independent of the underlying leads table.
-      if (lt === "marketflow_access") {
-        const ld: any = req.body?.leadData ?? {};
-        const marketflow_access_request = {
-          shape: "marketflow_access_requests",
-          version: 1,
-          firstName: req.body?.firstName ?? "",
-          lastName: req.body?.lastName ?? "",
-          email: req.body?.email ?? "",
-          role: ld.role ?? "",
-          introducedBy: ld.introducedBy ?? "",
-          notes: ld.notes ?? "",
-          consentContact: normalizedConsent.consentContact,
-          consentCcpaAcknowledged: normalizedConsent.consentCcpaAcknowledged,
-          source: req.body?.source ?? "marketflow_access_page",
-          submittedAt: new Date().toISOString(),
-        };
-        console.info("[marketflow_access_requests] accepted");
-        // Persist the canonical shape inside leadData under a versioned
-        // key so the leads row carries the full access-request envelope.
-        if (req.body?.leadData && typeof req.body.leadData === "object") {
-          req.body.leadData.marketflow_access_request = marketflow_access_request;
-        }
-      }
-
-      // Empire Doctrine v1.0.2 Amendment 1 C.8 — Pegasus Buyboxes free
-      // interest list. Submissions arrive as email-only signals; insert
-      // the canonical placeholder firstName + source so the request
-      // satisfies the leads schema without forcing the public form to
-      // ask for a name. The buybox identity lives in leadData.buyboxId.
-      if (lt === "buybox_interest") {
-        if (!req.body.firstName || typeof req.body.firstName !== "string" || !req.body.firstName.trim()) {
-          req.body.firstName = "Buybox Subscriber";
-        }
-        if (!req.body.source || typeof req.body.source !== "string" || !req.body.source.trim()) {
-          req.body.source = "buyboxes";
-        }
-      }
-
-      const parseResult = insertLeadSchema.safeParse(req.body);
-      if (!parseResult.success) {
-        return res.status(400).json({ 
-          message: "Invalid lead data", 
-          errors: fromError(parseResult.error).toString() 
-        });
-      }
-      
-      const lead = await storage.createLead(parseResult.data);
-
-      // Task #153 — Forward to Pegasus HQ. Outbox-first: this always
-      // queues; the network call is fire-and-forget. The site never
-      // blocks on HQ availability. leadType maps to outreachReason per
-      // the locked replit.md contract.
-      try {
-        const surface: "lead" | "vendor" | "buybox" =
-          parseResult.data.leadType === "vendor"
-            ? "vendor"
-            : parseResult.data.leadType === "buybox_interest"
-              ? "buybox"
-              : "lead";
-        await hqForward({
-          surface,
-          sourceId: lead.id,
-          payload: {
-            propertyAddress: parseResult.data.address || undefined,
-            contactName: `${parseResult.data.firstName || ""} ${parseResult.data.lastName || ""}`.trim() || "Unknown",
-            contactEmail: parseResult.data.email || undefined,
-            contactPhone: parseResult.data.phone || undefined,
-            outreachReason: outreachReasonForLeadType(parseResult.data.leadType),
-            sourceChannel: `website:${parseResult.data.source || parseResult.data.leadType}`,
-            consentContact: normalizedConsent.consentContact,
-            consentCcpaAcknowledged: normalizedConsent.consentCcpaAcknowledged,
-            extra: {
-              leadType: parseResult.data.leadType,
-              leadData: parseResult.data.leadData,
-              notes: parseResult.data.notes,
-            },
-          },
-        });
-      } catch (err) {
-        console.error("[hq-forward] queue error (non-blocking):", err);
-      }
-
-      // Send email notification based on lead type (non-blocking)
-      const leadData = parseResult.data;
-      const fullName = `${leadData.firstName || ''} ${leadData.lastName || ''}`.trim() || 'Unknown';
-      const operationalDetails = projectPegasusLeadOperationalDetails(leadData);
-      
-      if (leadData.leadType === 'seller') {
-        sendSellerLeadNotification({
-          name: fullName,
-          email: leadData.email || '',
-          phone: leadData.phone || '',
-          address: leadData.address || '',
-          propertyType: (leadData.leadData as any)?.propertyType || 'Unknown',
-          condition: (leadData.leadData as any)?.condition || 'Unknown',
-          timeline: (leadData.leadData as any)?.timeline || 'Unknown',
-          context: operationalDetails.context || undefined,
-          message: operationalDetails.message || undefined,
-          notes: leadData.notes || undefined,
-        }).catch(err => console.error('Failed to send seller lead notification:', err));
-      } else if (leadData.leadType === 'investor') {
-        sendInvestorLeadNotification({
-          name: fullName,
-          email: leadData.email || '',
-          phone: leadData.phone || '',
-          investmentRange: (leadData.leadData as any)?.investmentRange || 'Unknown',
-          strategy: (leadData.leadData as any)?.strategy || 'Unknown',
-          context: operationalDetails.context || undefined,
-          message: operationalDetails.message || undefined,
-          notes: leadData.notes || undefined,
-        }).catch(err => console.error('Failed to send investor lead notification:', err));
-      } else if (leadData.leadType === 'buyer') {
-        sendBuyerLeadNotification({
-          name: fullName,
-          email: leadData.email || '',
-          phone: leadData.phone || '',
-          buyerType: (leadData.leadData as any)?.buyerType || 'Unknown',
-          priceRange: (leadData.leadData as any)?.priceRange || 'Unknown',
-          locations: (leadData.leadData as any)?.locations,
-          context: operationalDetails.context || undefined,
-          message: operationalDetails.message || undefined,
-          notes: leadData.notes || undefined,
-        }).catch(err => console.error('Failed to send buyer lead notification:', err));
-      } else if (leadData.leadType === 'vendor') {
-        sendVendorLeadNotification({
-          name: fullName,
-          email: leadData.email || '',
-          phone: leadData.phone || '',
-          company: (leadData.leadData as any)?.company || (leadData.leadData as any)?.companyName,
-          trade: (leadData.leadData as any)?.trade || (leadData.leadData as any)?.tradeCategory || (leadData.leadData as any)?.category,
-          license: (leadData.leadData as any)?.license || (leadData.leadData as any)?.licenseNumber,
-          serviceArea: (leadData.leadData as any)?.serviceArea || (leadData.leadData as any)?.area,
-          context: operationalDetails.context || undefined,
-          message: operationalDetails.message || undefined,
-          notes: leadData.notes || undefined,
-        }).catch(err => console.error('Failed to send vendor lead notification:', err));
-      } else {
-        const notification = buildGenericLeadNotificationData({
-          ...leadData,
-          id: lead.id,
-        });
-        void sendEmail({
-          to: resolveStaffNotificationRecipient(),
-          subject: notification.subject,
-          text: notification.text,
-        })
-          .then((result) => {
-            if (!result.success) {
-              console.error('[lead-email] delivery failed:', result.error);
-            }
-          })
-          .catch((error) => console.error('[lead-email] delivery failed:', error));
-      }
-      
-      res.status(201).json(lead);
-    } catch (error) {
-      console.error("Error creating lead:", error);
-      res.status(500).json({ message: "Failed to create lead" });
-    }
-  });
-
-  // Task #153 — Pegasus HQ outbox admin. Read pending/failed/forwarded
-  // payloads, retry a failed row, drain all pending. Gated to admins.
-  const requireAdminEmail = async (req: any, res: Response, next: NextFunction) => {
-    const email = (req.user?.claims?.email || req.user?.email || "").toLowerCase();
-    if (!email || !ADMIN_EMAILS.includes(email)) {
-      return res.status(403).json({ message: "Forbidden" });
-    }
-    next();
-  };
-
-  app.get("/api/admin/hq-outbox", isHybridAuthenticated, requireAdminEmail, async (req, res) => {
-    try {
-      const status = (req.query.status as string) || undefined;
-      const limit = Number(req.query.limit) || 100;
-      const rows = await storage.getHqOutboxList({ status, limit });
-      const healthy = await isHqHealthy();
-      res.json({ rows, hqHealthy: healthy });
-    } catch (err) {
-      console.error("hq-outbox list error:", err);
-      res.status(500).json({ message: "Failed to load outbox" });
-    }
-  });
-
-  app.post("/api/admin/hq-outbox/:id/retry", isHybridAuthenticated, requireAdminEmail, async (req, res) => {
-    try {
-      const id = Number(req.params.id);
-      const result = await hqRetryOutboxRow(id);
-      res.json({ ok: !!result?.hq_submission_id, result });
-    } catch (err) {
-      console.error("hq-outbox retry error:", err);
-      res.status(500).json({ message: "Retry failed" });
-    }
-  });
-
-  app.post("/api/admin/hq-outbox/drain", isHybridAuthenticated, requireAdminEmail, async (_req, res) => {
-    try {
-      const result = await hqDrainPending(50);
-      res.json(result);
-    } catch (err) {
-      console.error("hq-outbox drain error:", err);
-      res.status(500).json({ message: "Drain failed" });
-    }
-  });
-
-  // HQ: list vendor applications submitted via /vendor-network
-  app.get("/api/hq/vendors", isAuthenticated, requireStaffRole, async (_req, res) => {
-    try {
-      const vendors = await storage.getLeads({ leadType: "vendor" });
-      return res.json(vendors);
-    } catch (error) {
-      console.error("Error fetching vendor leads:", error);
-      return res.status(500).json({ message: "Failed to fetch vendor applications" });
-    }
-  });
-
-  // Update lead (staff only)
-  app.patch("/api/hq/leads/:id", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const id = Number(req.params.id);
-      const lead = await storage.updateLead(id, req.body);
-      
-      if (!lead) {
-        return res.status(404).json({ message: "Lead not found" });
-      }
-      
-      res.json(lead);
-    } catch (error) {
-      console.error("Error updating lead:", error);
-      res.status(500).json({ message: "Failed to update lead" });
-    }
-  });
-
-  // Update lead stage (staff only)
-  app.patch("/api/hq/leads/:id/stage", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const id = Number(req.params.id);
-      const { stage } = req.body;
-      
-      if (!stage) {
-        return res.status(400).json({ message: "Stage is required" });
-      }
-      
-      const lead = await storage.updateLeadStage(id, stage);
-      
-      if (!lead) {
-        return res.status(404).json({ message: "Lead not found" });
-      }
-      
-      res.json(lead);
-    } catch (error) {
-      console.error("Error updating lead stage:", error);
-      res.status(500).json({ message: "Failed to update lead stage" });
-    }
-  });
-
-  // Assign lead (staff only)
-  app.patch("/api/hq/leads/:id/assign", isAuthenticated, requireStaffRole, async (req: any, res) => {
-    try {
-      const id = Number(req.params.id);
-      const { assignedTo } = req.body;
-      
-      if (!assignedTo) {
-        return res.status(400).json({ message: "assignedTo is required" });
-      }
-      
-      const lead = await storage.assignLead(id, assignedTo);
-      
-      if (!lead) {
-        return res.status(404).json({ message: "Lead not found" });
-      }
-      
-      res.json(lead);
-    } catch (error) {
-      console.error("Error assigning lead:", error);
-      res.status(500).json({ message: "Failed to assign lead" });
-    }
-  });
+  registerWebsiteDeliveryAdmin(app, websiteDb);
 
   // =====================================================
   // SAVED ANALYSES ROUTES (Enhanced Calculator Saves)

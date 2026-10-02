@@ -705,15 +705,13 @@ export async function chat(
       content: refusalText,
       model: 'refusal_guard',
     });
-    const updated = await storage.updatePeggyConversation(conversationId, {
+    await storage.updatePeggyConversation(conversationId, {
       humanRequired: true,
       humanRequiredReason: trigger,
       disposition: 'human_required',
     });
-    // Fire-and-forget immediate Apollo email
-    void notifyHumanRequired(conversationId, trigger).catch(err =>
-      console.error("Failed to send human_required notification:", err)
-    );
+    // Capture the escalation for staff review. Peggy has no approved durable
+    // notification/consent contract, so this must not send a legacy email.
     return {
       response: refusalText,
       messageId: assistantMessage.id,
@@ -748,7 +746,10 @@ export async function chat(
       temperature: 0.7,
     });
 
-    const rawContent = completion.choices[0]?.message?.content || "I'm sorry, I couldn't generate a response. Please try again.";
+    const rawContent = completion.choices[0]?.message?.content;
+    if (typeof rawContent !== "string" || !rawContent.trim()) {
+      throw new PeggyUnavailableError();
+    }
 
     // Task #151 — voice-rule post-output guard
     const { sanitized, violations } = applyPostOutputGuard(rawContent);
@@ -802,16 +803,9 @@ export async function chat(
       response: sanitized,
       messageId: assistantMessage.id,
     };
-  } catch (error: any) {
-    console.error('Peggy chat error:', error);
-    
-    // Save error message
-    const errorMessage = await storage.createPeggyMessage({
-      conversationId,
-      role: 'assistant',
-      content: "I apologize, but I'm having trouble connecting right now. Please try again in a moment.",
-    });
-    
+  } catch (error) {
+    // The submitted turn remains available for retry. A failed or empty
+    // provider response is not an assistant answer and must not become one.
     throw error;
   }
 }
@@ -914,16 +908,6 @@ export async function analyzeCalculatorResults({
     response: result.response,
     conversationId: conversation.id
   };
-}
-
-// Task #151 — immediate Apollo notification for §1695 / Fair Housing triggers.
-// Lazy-imported to avoid a circular dependency with server/email.ts.
-async function notifyHumanRequired(conversationId: number, reason: string): Promise<void> {
-  const { sendPeggyHumanRequired } = await import("./email");
-  const conversation = await storage.getPeggyConversation(conversationId);
-  if (!conversation) return;
-  const transcript = await storage.getPeggyMessages(conversationId);
-  await sendPeggyHumanRequired({ conversation, transcript, reason });
 }
 
 export default {

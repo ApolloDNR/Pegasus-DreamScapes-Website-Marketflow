@@ -56,7 +56,8 @@ export async function extractSupabaseUser(req: Request): Promise<SupabaseUser | 
       id: user.id,
       email: user.email || '',
       claims: {
-        ...user.user_metadata,
+        // Supabase user_metadata is editable by the user. Keep it out of the
+        // claims consumed by authorization; staff roles come from membership.
         sub: user.id,
         email: user.email || ''
       }

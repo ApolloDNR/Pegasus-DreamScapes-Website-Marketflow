@@ -1,0 +1,69 @@
+name: Isolated Website PostgreSQL Integration
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: website-integration-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  website-postgresql:
+    name: website PostgreSQL 17 exact-head integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: website_test_admin
+          POSTGRES_PASSWORD: website_ci_only
+          POSTGRES_DB: website_integration_test
+        ports:
+          - 55432:5432
+        options: >-
+          --health-cmd "pg_isready -U website_test_admin -d website_integration_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TESTED_SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      WEBSITE_TEST_DATABASE_URL: postgresql://website_test_admin:website_ci_only@127.0.0.1:55432/website_integration_test
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.TESTED_SOURCE_SHA }}
+      - name: Verify exact source head
+        run: test "$(git rev-parse HEAD)" = "$TESTED_SOURCE_SHA"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22.23.2'
+          cache: npm
+      - name: Pin npm
+        run: npm install --global npm@10.9.2
+      - name: Check portable dependency lock
+        run: node scripts/check-package-lock-registry.mjs
+      - run: npm ci
+      - name: Record source and migration provenance
+        run: |
+          mkdir -p artifacts/website-integration
+          git rev-parse HEAD > artifacts/website-integration/source-sha.txt
+          sha256sum migrations/website/*.sql > artifacts/website-integration/migration-sha256.txt
+          node --version > artifacts/website-integration/node-version.txt
+      - name: Verify isolated website storage, identity and intake
+        run: npm run test:integration:website 2>&1 | tee artifacts/website-integration/test-output.txt
+      - name: Typecheck complete application
+        run: npm run check
+      - name: Upload isolated integration evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: website-postgresql-${{ env.TESTED_SOURCE_SHA }}-${{ github.run_id }}
+          path: artifacts/website-integration
+          retention-days: 14
+          if-no-files-found: error

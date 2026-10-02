@@ -28,6 +28,7 @@ function renderPage() {
 }
 
 beforeEach(() => {
+  sessionStorage.clear();
   apiRequestMock.mockImplementation(() => new Promise(() => undefined));
 });
 
@@ -87,6 +88,7 @@ describe("capital relationship introduction", () => {
           message: "Apollo and I met through an East Bay operator.",
         }),
       }),
+      { "Idempotency-Key": expect.stringMatching(/^[0-9a-f-]{36}$/) },
     );
   });
 });

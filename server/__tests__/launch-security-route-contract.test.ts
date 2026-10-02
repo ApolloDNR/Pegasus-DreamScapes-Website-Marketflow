@@ -225,15 +225,8 @@ describe("launch security route contract", () => {
       "\n\nconst hasMarketflowStaffAccess",
       "narrow Peggy verified-user resolver",
     );
-    expect(verifiedResolver).toMatch(/req\.user\?\.claims\?\.sub/);
-    expect(verifiedResolver).toMatch(/req\.supabaseUser\?\.id/);
-    expect(verifiedResolver).toMatch(/for \(const candidate of \[/);
-    expect(verifiedResolver).toMatch(
-      /typeof candidate === "string" && candidate\.trim\(\)/,
-    );
-    expect(verifiedResolver).not.toMatch(
-      /req\.(?:session|body|query|headers)|req\.get\(/,
-    );
+    expect(verifiedResolver).toContain("getVerifiedWebsiteAuthSubject(req)");
+    expect(verifiedResolver).not.toMatch(/req\.(?:user|session|body|query|headers)|req\.get\(/);
     const oidcSetup = routesSource.indexOf("await setupAuth(app)");
     const supabaseSetup = routesSource.indexOf("app.use(supabaseAuthMiddleware)");
     const registrarSetup = routesSource.indexOf("registerPeggyIdentityRoutes(app, {");
@@ -255,7 +248,8 @@ describe("launch security route contract", () => {
       "// Send a message to Peggy",
       "owner history route",
     );
-    expect(ownerList).toMatch(/req\.user\?\.claims\?\.sub/);
+    expect(ownerList).toContain("getVerifiedWebsiteAuthSubject(req)");
+    expect(ownerList).toContain("if (!userId) return res.status(401)");
     expect(ownerList).toMatch(/storage\.getPeggyConversations\(userId\)/);
     expect(ownerList).not.toMatch(/sessionId|req\.sessionID|getOrCreate/);
     expect(peggyIdentitySource).not.toContain('app.get("/api/peggy/conversations"');
@@ -271,7 +265,7 @@ describe("launch security route contract", () => {
     const analyze = sliceBetweenOnce(
       peggySource,
       "export async function analyzeCalculatorResults(",
-      "// Task #151",
+      "export default",
       "calculator adapter",
     );
     expect(start).toMatch(/\{\s*userId,\s*correlationId,\s*context,?\s*\}/s);
@@ -353,8 +347,8 @@ describe("launch security route contract", () => {
     ]) expect(routesSource.indexOf(route), `${route} after public no-store`).toBeGreaterThan(publicPrefix);
     const adminPrefix = routesSource.indexOf('app.use("/api/admin/peggy", peggyIdentityNoStore);');
     for (const route of [
-      'app.get("/api/admin/peggy/conversations", isHybridAuthenticated,',
-      'app.get("/api/admin/peggy/conversations/:id", isHybridAuthenticated,',
+      'app.get("/api/admin/peggy/conversations", requireWebsiteStaff,',
+      'app.get("/api/admin/peggy/conversations/:id", requireWebsiteStaff,',
     ]) expect(routesSource.indexOf(route), `${route} after admin no-store`).toBeGreaterThan(adminPrefix);
   });
 });

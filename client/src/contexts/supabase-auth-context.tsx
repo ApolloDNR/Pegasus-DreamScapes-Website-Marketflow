@@ -1,18 +1,16 @@
-import { Fragment, createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import { Fragment, createContext, useContext, useEffect, useState, useCallback, useRef } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import {
-  ensureAuthenticatedUserProfile,
   getSupabase,
   type UserRole,
   type UserProfile,
 } from '@/lib/supabase';
 import {
-  authenticatedRequest,
   clearSessionQueries,
   transitionSessionPrincipal,
 } from '@/lib/queryClient';
+import { getWebsiteAuthProfile } from '@/lib/website-auth';
 import { 
-  isAdminRole, 
   isWholesalerRole, 
   isDreamscaperRole, 
   isInvestorRole, 
@@ -22,12 +20,6 @@ import {
   type MarketplaceRole,
   type MarketplacePermission
 } from '@shared/schema';
-
-// Admin email allowlist for site editing
-const ADMIN_EMAILS = [
-  "apollosynd@gmail.com",
-  "admin@pegasusdreamscapes.com",
-];
 
 interface SupabaseAuthContextType {
   user: User | null;
@@ -88,6 +80,10 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   });
   const [sessionEpoch, setSessionEpoch] = useState(0);
   const authUserIdRef = useRef<string | null>(null);
+  const desiredSessionRef = useRef<Session | null>(null);
+  const hydrationEpochRef = useRef(0);
+  const signingOutRef = useRef(false);
+  const refreshSessionRef = useRef<() => Promise<void>>(async () => {});
   const guestModeRef = useRef(isGuestMode);
   const guestRoleRef = useRef(guestRole);
   const cachePrincipalRef = useRef(
@@ -124,201 +120,110 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     setSessionEpoch((epoch) => epoch + 1);
   }, []);
 
-  const fetchProfile = useCallback(async (
-    userId: string,
-    accessToken?: string,
-  ) => {
-    try {
-      const token = accessToken?.trim();
-      const response = await authenticatedRequest(
-        `/api/supabase/profile/${userId}`,
-        {
-          headers: token
-            ? { Authorization: `Bearer ${token}` }
-            : undefined,
-        },
-      );
-      if (!response.ok) {
-        return null;
-      }
-      return await response.json() as UserProfile;
-    } catch (err) {
-      console.error('Error fetching profile:', err);
-      return null;
-    }
-  }, []);
-
-  const refreshProfile = useCallback(async () => {
-    if (user) {
-      const profileData = await fetchProfile(user.id);
-      setProfile(profileData);
-    }
-  }, [user, fetchProfile]);
+  const refreshProfile = useCallback(() => refreshSessionRef.current(), []);
 
   useEffect(() => {
     let mounted = true;
+    let unsubscribe: (() => void) | undefined;
+
+    const clearIdentity = () => {
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+      setBackendIsAdmin(false);
+    };
+
+    const hydrate = async (nextSession: Session | null, event?: string) => {
+      if (signingOutRef.current && nextSession) return;
+      const epoch = ++hydrationEpochRef.current;
+      desiredSessionRef.current = nextSession;
+      const nextSubject = nextSession?.user.id ?? null;
+      const identityChanged = authUserIdRef.current !== nextSubject;
+      if (identityChanged) {
+        clearIdentity();
+        setIsLoading(true);
+      }
+      transitionUserCache(nextSubject);
+      if (!nextSession) {
+        clearIdentity();
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const account = await getWebsiteAuthProfile(nextSession);
+        if (!mounted || epoch !== hydrationEpochRef.current) return;
+        if (!account) {
+          transitionUserCache(null);
+          clearIdentity();
+          return;
+        }
+        if (identityChanged) {
+          // Discard legacy requests that settled during identity hydration
+          // before allowing the newly verified subject's consumers to mount.
+          forceSessionReset(cachePrincipalRef.current);
+        }
+        setSession(nextSession);
+        setUser(nextSession.user);
+        setProfile(account.profile);
+        setBackendIsAdmin(account.isAdmin);
+
+        // Claim only an existing anonymous Lab snapshot after verified sign-in.
+        try {
+          const sid = window.localStorage.getItem('pegasus.lab.sessionId');
+          if (sid && (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED')) {
+            void fetch('/api/property-analyses/claim', {
+              method: 'POST',
+              credentials: 'include',
+              headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${nextSession.access_token}`,
+              },
+              body: JSON.stringify({ sessionId: sid }),
+            }).catch(() => undefined);
+          }
+        } catch {
+          // A blocked browser store must not undo verified authentication.
+        }
+      } catch {
+        if (!mounted || epoch !== hydrationEpochRef.current) return;
+        // An unavailable account service is not a revoked Supabase session.
+        // Preserve previously verified same-subject state, but never create
+        // a profile or privileges from the token's editable metadata.
+        setSession((previous) => previous?.user.id === nextSubject ? nextSession : previous);
+      } finally {
+        if (mounted && epoch === hydrationEpochRef.current) setIsLoading(false);
+      }
+    };
+    refreshSessionRef.current = () => hydrate(desiredSessionRef.current);
 
     const initAuth = async () => {
       try {
-        // First, check for Replit Auth user (primary auth method)
-        const replitAuthResponse = await fetch('/api/auth/user');
-        if (replitAuthResponse.ok) {
-          const replitUser = await replitAuthResponse.json();
-          if (replitUser?.id) {
-            // Fetch profile using Replit Auth user ID (external_user_id)
-            let profileData = await fetchProfile(replitUser.id);
-            
-            // If profile fetch fails, construct from Replit Auth user data
-            if (!profileData) {
-              const primaryRole = replitUser.isAdmin ? 'admin' : (replitUser.roles?.[0] || replitUser.role || 'investor');
-              const isPegasus = primaryRole.startsWith('pegasus_') || replitUser.isAdmin;
-              profileData = {
-                id: replitUser.id,
-                user_id: replitUser.id,
-                primary_role: primaryRole as UserRole,
-                display_name: `${replitUser.firstName || ''} ${replitUser.lastName || ''}`.trim() || replitUser.email?.split('@')[0] || 'User',
-                avatar_url: replitUser.profileImageUrl || undefined,
-                is_pegasus_badged: isPegasus || replitUser.isStaff || replitUser.isAdmin,
-                pegasus_role_type: isPegasus ? primaryRole : undefined,
-                created_at: replitUser.createdAt || new Date().toISOString(),
-                updated_at: replitUser.updatedAt || new Date().toISOString()
-              };
-            }
-            
-            // Also create a synthetic user object with email for admin detection
-            if (mounted) {
-              transitionUserCache(replitUser.id);
-              const syntheticUser = {
-                id: replitUser.id,
-                email: replitUser.email,
-                app_metadata: {},
-                user_metadata: {},
-                aud: 'authenticated',
-                created_at: replitUser.createdAt || new Date().toISOString()
-              } as User;
-              setUser(syntheticUser);
-              setProfile(profileData);
-              // Use backend's authoritative isAdmin flag
-              setBackendIsAdmin(Boolean(replitUser.isAdmin));
-              setIsLoading(false);
-            }
-            return;
-          }
-        }
-
-        // Fallback to Supabase Auth if no Replit Auth session
         const supabase = await getSupabase();
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        
-        if (mounted) {
-          if (currentSession?.user) {
-            transitionUserCache(currentSession.user.id);
-            const profileData = await ensureAuthenticatedUserProfile(
-              currentSession,
-              fetchProfile,
-            );
-            
-            if (profileData) {
-              setSession(currentSession);
-              setUser(currentSession.user);
-              setProfile(profileData);
-            } else {
-              await supabase.auth.signOut();
-              transitionUserCache(null);
-              setSession(null);
-              setUser(null);
-              setProfile(null);
-            }
-          } else {
-            transitionUserCache(null);
-            setSession(null);
-            setUser(null);
-            setProfile(null);
-          }
-          
-          setIsLoading(false);
-        }
-
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-          async (event, newSession) => {
-            if (mounted) {
-              if (newSession?.user) {
-                const identityChanged =
-                  authUserIdRef.current !== newSession.user.id;
-                if (identityChanged) {
-                  setSession(null);
-                  setUser(null);
-                  setProfile(null);
-                  setBackendIsAdmin(false);
-                }
-                transitionUserCache(newSession.user.id);
-                const profileData = await ensureAuthenticatedUserProfile(
-                  newSession,
-                  fetchProfile,
-                );
-                if (profileData) {
-                  if (identityChanged) {
-                    // The neutral remount above prevents stale display while
-                    // provisioning. Clear once more immediately before the new
-                    // identity mounts so any uncancellable legacy request that
-                    // settled in the interim cannot seed the next session.
-                    forceSessionReset(cachePrincipalRef.current);
-                  }
-                  setSession(newSession);
-                  setUser(newSession.user);
-                  setProfile(profileData);
-                  // Strategy Lab — claim anonymous snapshots (Task #84)
-                  try {
-                    const sid = window.localStorage.getItem("pegasus.lab.sessionId");
-                    if (sid && (event === "SIGNED_IN" || event === "TOKEN_REFRESHED")) {
-                      await fetch("/api/property-analyses/claim", {
-                        method: "POST",
-                        credentials: "include",
-                        headers: {
-                          "Content-Type": "application/json",
-                          Authorization: `Bearer ${newSession.access_token}`,
-                        },
-                        body: JSON.stringify({ sessionId: sid }),
-                      }).catch(() => undefined);
-                    }
-                  } catch {
-                    // localStorage / fetch unavailable — non-fatal.
-                  }
-                } else {
-                  transitionUserCache(null);
-                  setSession(null);
-                  setUser(null);
-                  setProfile(null);
-                }
-              } else {
-                transitionUserCache(null);
-                setSession(null);
-                setUser(null);
-                setProfile(null);
-              }
-            }
-          }
-        );
-
-        return () => {
-          subscription.unsubscribe();
-        };
-      } catch (error) {
-        // Auth init can fail benignly in environments without Supabase configured.
-        // Surface it at info level so it doesn't pollute Best-Practices audits.
-        console.info('[auth] Initialization completed without Supabase session.', error);
-        if (mounted) {
-          setIsLoading(false);
-        }
+        if (!mounted) return;
+        const initialEpoch = hydrationEpochRef.current;
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, nextSession) => {
+          // Do not await Supabase API calls inside its auth-state callback.
+          if (mounted) void hydrate(nextSession, event);
+        });
+        unsubscribe = () => subscription.unsubscribe();
+        const { data: { session: currentSession }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        // An auth event received while loading the initial snapshot wins.
+        if (mounted && hydrationEpochRef.current === initialEpoch) await hydrate(currentSession);
+      } catch {
+        if (mounted) setIsLoading(false);
       }
     };
-
-    initAuth();
+    void initAuth();
 
     return () => {
       mounted = false;
+      hydrationEpochRef.current += 1;
+      refreshSessionRef.current = async () => {};
+      unsubscribe?.();
     };
-  }, [fetchProfile, forceSessionReset, transitionUserCache]);
+  }, [forceSessionReset, transitionUserCache]);
 
   const signUp = async (
     email: string, 
@@ -329,7 +234,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     try {
       const supabase = await getSupabase();
       
-      const { data, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -344,14 +249,6 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 
       if (error) {
         return { error };
-      }
-
-      if (data.session) {
-        try {
-          await ensureAuthenticatedUserProfile(data.session, fetchProfile);
-        } catch (provisioningError) {
-          console.error('Error provisioning user profile', provisioningError);
-        }
       }
 
       return { error: null };
@@ -386,6 +283,9 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   };
 
   const signOut = async () => {
+    signingOutRef.current = true;
+    hydrationEpochRef.current += 1;
+    desiredSessionRef.current = null;
     // Clear before waiting on the identity provider so a slow or failed
     // sign-out cannot leave any legacy untagged private response readable.
     authUserIdRef.current = null;
@@ -397,6 +297,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     setSession(null);
     setProfile(null);
     setBackendIsAdmin(false);
+    setIsLoading(false);
     try {
       const supabase = await getSupabase();
       await supabase.auth.signOut();
@@ -404,34 +305,25 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       console.error('Sign out error:', err);
     } finally {
       // Catch any request that completed while provider sign-out was pending.
+      hydrationEpochRef.current += 1;
+      desiredSessionRef.current = null;
+      authUserIdRef.current = null;
+      signingOutRef.current = false;
       forceSessionReset(signedOutPrincipal);
       setUser(null);
       setSession(null);
       setProfile(null);
       setBackendIsAdmin(false);
+      setIsLoading(false);
     }
   };
 
   const currentRole = profile?.primary_role ?? null;
   const effectiveRole = isGuestMode ? guestRole : currentRole;
   
-  // Check admin status - use backend's authoritative flag as primary source
-  const isAdminUser = useMemo(() => {
-    // Backend's isAdmin flag is the source of truth (set from OIDC/Replit Auth)
-    if (backendIsAdmin) {
-      return true;
-    }
-    // Fallback checks for Supabase Auth users
-    const userEmail = user?.email?.toLowerCase();
-    if (userEmail && ADMIN_EMAILS.includes(userEmail)) {
-      return true;
-    }
-    if (effectiveRole && isAdminRole(effectiveRole)) {
-      return true;
-    }
-    return false;
-  }, [backendIsAdmin, user?.email, effectiveRole]);
-  
+  // Canonical membership is the sole source of staff authority.
+  const isAdminUser = !isGuestMode && backendIsAdmin;
+
   const hasPermission = useCallback((permission: MarketplacePermission): boolean => {
     if (!effectiveRole) return false;
     return hasMarketplacePermission(effectiveRole as MarketplaceRole, permission);

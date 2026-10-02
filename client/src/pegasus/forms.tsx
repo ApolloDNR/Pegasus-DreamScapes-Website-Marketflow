@@ -2,8 +2,7 @@ import React, { useEffect, useId, useRef, useState } from 'react';
 import { useLocation } from 'wouter';
 import { ArrowRight, Check, ChevronDown, Mail, Phone, MapPin, ConciergeBell, AlertCircle, Loader2, Bookmark, BookmarkCheck } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
-import { readLeadReceipt } from '@/lib/lead-receipt';
+import { useIntakeRequest } from '@/lib/intake-idempotency';
 import type { Nav, FormCfg, PeggyHandoff } from './theme';
 import { usd0, SectionHead, ContourLines, BrandMark, IMG } from './primitives';
 import { addStrategy, type StrategyPreview } from './savedStore';
@@ -159,10 +158,11 @@ export function LeadForm({
   const startedAt = useRef(Date.now());
   const inFlightRef = useRef(false);
   const [hpCompany, setHpCompany] = useState('');
+  const sendIntake = useIntakeRequest(`pegasus-lane:${cfg.intent}`, "/api/leads");
   const createLead = useMutation({
     mutationFn: async (payload: Record<string, unknown>) => {
-      const res = await apiRequest('POST', '/api/leads', payload);
-      return readLeadReceipt(res);
+      const res = await sendIntake(payload);
+      return res;
     },
   });
   const [form, setForm] = useState({

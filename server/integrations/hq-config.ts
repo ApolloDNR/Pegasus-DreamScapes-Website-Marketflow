@@ -41,3 +41,18 @@ export function hasRequiredHqEndpointConfiguration(
     getConfiguredHqEndpoint(environment) !== null
   );
 }
+
+/** The authenticated website bridge has its own endpoint, never the legacy one. */
+export function getConfiguredWebsiteHqEndpoint(
+  environment: HqEnvironment = process.env,
+): string | null {
+  const raw = environment.PEGASUS_HQ_WEBSITE_INQUIRY_URL?.trim();
+  if (!raw) return null;
+  try {
+    const endpoint = new URL(raw);
+    if (endpoint.protocol !== 'https:' || endpoint.username || endpoint.password || endpoint.hash) return null;
+    return endpoint.toString();
+  } catch {
+    return null;
+  }
+}

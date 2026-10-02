@@ -10,6 +10,9 @@ import {
   type AuditActionType,
   type InsertAdminAuditLog,
 } from "@shared/schema";
+import { getVerifiedWebsiteAuthSubject, isWebsiteIdentityUuid } from "./website/identity";
+import { requireWebsiteAuditOrganization } from "./website/audit-scope";
+import type {} from "./website/staff-guard";
 
 type AuditRequest = Request & {
   user?: {
@@ -38,6 +41,7 @@ type AuditActor = {
 };
 
 type AuditListOptions = {
+  orgId: string;
   limit: number;
   offset: number;
   actionType?: string;
@@ -47,14 +51,13 @@ type AuditListOptions = {
 
 type AuditFilterOptions = Pick<
   AuditListOptions,
-  "actionType" | "actionTypes" | "adminUserId"
+  "orgId" | "actionType" | "actionTypes" | "adminUserId"
 >;
 
 type AdminAuditRouteDependencies = {
-  getAuthUserId(request: Request): string | null;
   getAuditLogs(options: AuditListOptions): Promise<AdminAuditLog[]>;
   getAuditLogCount(options: AuditFilterOptions): Promise<number>;
-  getAuditLogById(id: number): Promise<AdminAuditLog | undefined>;
+  getAuditLogById(id: number, orgId: string): Promise<AdminAuditLog | undefined>;
   logError(message: string, error: unknown): void;
 };
 
@@ -222,17 +225,27 @@ export function registerAdminAuditRoutes(
     requireStaff: RequestHandler;
   },
 ): void {
-  const requireConsistentPrincipal: RequestHandler = (request, response, next) => {
-    if (!resolveVerifiedAuditActor(request, dependencies.getAuthUserId)) {
+  const requireVerifiedStaffScope: RequestHandler = (request, response, next) => {
+    if (!isWebsiteIdentityUuid(getVerifiedWebsiteAuthSubject(request))) {
       return response.status(401).json({ message: "Unauthorized" });
+    }
+    const staff = request.websiteStaff;
+    if (!staff || !isWebsiteIdentityUuid(staff.accountId) || !isWebsiteIdentityUuid(staff.orgId) ||
+      (staff.role !== "owner" && staff.role !== "admin")) {
+      return response.status(403).json({ message: "Forbidden: Staff access required" });
+    }
+    try {
+      requireWebsiteAuditOrganization(staff.orgId);
+    } catch {
+      return response.status(503).json({ message: "Audit log service unavailable" });
     }
     return next();
   };
 
   const protection = [
     middleware.authenticate,
-    requireConsistentPrincipal,
     middleware.requireStaff,
+    requireVerifiedStaffScope,
   ];
 
   app.get("/api/audit-logs", ...protection, async (request, response) => {
@@ -259,6 +272,7 @@ export function registerAdminAuditRoutes(
         return response.status(400).json({ message: "Invalid admin user ID" });
       }
       const filters = {
+        orgId: request.websiteStaff!.orgId,
         ...(actionType
           ? { actionType }
           : { actionTypes: REVIEW_AUDIT_ACTION_TYPES }),
@@ -284,7 +298,7 @@ export function registerAdminAuditRoutes(
       return response.status(400).json({ message: "Invalid audit log ID" });
     }
     try {
-      const log = await dependencies.getAuditLogById(id);
+      const log = await dependencies.getAuditLogById(id, request.websiteStaff!.orgId);
       return log
         ? response.json(log)
         : response.status(404).json({ message: "Audit log not found" });

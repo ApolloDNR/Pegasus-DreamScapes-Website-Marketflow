@@ -23,6 +23,7 @@ class NoopIntersectionObserver {
 }
 
 beforeEach(() => {
+  sessionStorage.clear();
   globalThis.IntersectionObserver = NoopIntersectionObserver as unknown as typeof IntersectionObserver;
   apiRequestMock.mockImplementation(() => new Promise(() => undefined));
 });
@@ -118,6 +119,7 @@ describe("Vendor Network consent contract", () => {
         consentCcpaAcknowledged: true,
         leadData: expect.objectContaining({ referenceAuthorization: true }),
       }),
+      { "Idempotency-Key": expect.stringMatching(/^[0-9a-f-]{36}$/) },
     );
   });
 });

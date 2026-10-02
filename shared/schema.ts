@@ -1,3 +1,5 @@
+import { opportunities, leads, hqOutbox, peggyConversations, peggyMessages, adminAuditLog } from "./website-schema";
+export { opportunities, leads, hqOutbox, peggyConversations, peggyMessages, adminAuditLog } from "./website-schema";
 import { pgTable, text, serial, timestamp, varchar, integer, boolean, jsonb, index, uniqueIndex, real } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -1704,81 +1706,10 @@ export const LEAD_STAGES = [
 export type LeadStage = typeof LEAD_STAGES[number];
 
 // Unified Leads - single table for all lead types
-export const leads = pgTable("leads", {
-  id: serial("id").primaryKey(),
-  
-  // === CORE LEAD INFO ===
-  leadType: varchar("lead_type", { length: 50 }).notNull(), // seller, investor, buyer, contact, dreamscaper, wholesaler
-  source: varchar("source", { length: 50 }).notNull(), // where lead came from
-  stage: varchar("stage", { length: 50 }).notNull().default("new"),
-  
-  // === CONTACT INFO ===
-  firstName: varchar("first_name", { length: 255 }).notNull(),
-  lastName: varchar("last_name", { length: 255 }),
-  email: varchar("email", { length: 255 }).notNull(),
-  phone: varchar("phone", { length: 50 }),
-  company: varchar("company", { length: 255 }),
-  
-  // === LOCATION ===
-  address: text("address"),
-  city: varchar("city", { length: 100 }),
-  state: varchar("state", { length: 50 }),
-  zipCode: varchar("zip_code", { length: 20 }),
-  
-  // === TYPE-SPECIFIC FIELDS (JSON) ===
-  // Seller fields: propertyType, condition, timeline, motivation
-  // Investor fields: capitalRange, investmentPreference, experienceLevel, accredited
-  // Buyer fields: buyerType, budgetRange, propertyTypes, fundingStatus
-  // Contact fields: subject, message
-  // Dreamscaper fields: bio, experience, portfolio, strategy
-  leadData: jsonb("lead_data"), // Flexible storage for type-specific fields
-  
-  // === DEAL REFERENCE ===
-  relatedDealType: varchar("related_deal_type", { length: 50 }), // wholesale_deal, capital_project, retail_listing
-  relatedDealId: integer("related_deal_id"),
-  
-  // === SCORING & PRIORITY ===
-  priority: varchar("priority", { length: 20 }).default("medium"), // low, medium, high, urgent
-  score: integer("score"), // 0-100 lead quality score
-  motivationLevel: integer("motivation_level"), // 1-10 for sellers
-  
-  // === ASSIGNMENT ===
-  assignedTo: varchar("assigned_to", { length: 255 }), // Staff user ID
-  assignedAt: timestamp("assigned_at"),
-  
-  // === TRACKING ===
-  lastContactAt: timestamp("last_contact_at"),
-  nextFollowUpAt: timestamp("next_follow_up_at"),
-  contactAttempts: integer("contact_attempts").default(0),
-  
-  // === CONVERSION ===
-  convertedToUserId: varchar("converted_to_user_id", { length: 255 }), // If converted to registered user
-  convertedToDealId: integer("converted_to_deal_id"),
-  conversionDate: timestamp("conversion_date"),
-  
-  // === NOTES ===
-  notes: text("notes"),
-  internalNotes: text("internal_notes"), // Staff only
-  
-  // === UTM/ATTRIBUTION ===
-  utmSource: varchar("utm_source", { length: 100 }),
-  utmMedium: varchar("utm_medium", { length: 100 }),
-  utmCampaign: varchar("utm_campaign", { length: 100 }),
-  referredBy: varchar("referred_by", { length: 255 }), // User ID if referral
-  
-  // === HQ FORWARDING (Task #153) ===
-  // ID returned by Pegasus HQ after successful forwarding via
-  // /api/public/intake. Empty until HQ accepts the payload. After HQ
-  // ratification, this is the canonical cross-system reference.
-  hqSubmissionId: varchar("hq_submission_id", { length: 64 }),
-  hqForwardedAt: timestamp("hq_forwarded_at"),
 
-  // === TIMESTAMPS ===
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
-
-export const insertLeadSchema = createInsertSchema(leads).omit({ 
+export const insertLeadSchema = createInsertSchema(leads).omit({
+  orgId: true,
+  authSubject: true,
   id: true, 
   createdAt: true, 
   updatedAt: true,
@@ -1800,27 +1731,6 @@ export type Lead = typeof leads.$inferSelect;
 // the row is marked forwarded and the originating row gets the
 // hq_submission_id back. This is the "we never silently lose a lead even
 // if HQ is down" guarantee.
-export const hqOutbox = pgTable("hq_outbox", {
-  id: serial("id").primaryKey(),
-  // Stable client-generated id (UUID v4). Same key replayed = no-op on HQ.
-  idempotencyKey: varchar("idempotency_key", { length: 64 }).notNull().unique(),
-  // What surface this came from: lead | peggy | vendor | buybox | cta_batch
-  surface: varchar("surface", { length: 32 }).notNull(),
-  // Local row id this payload was generated from (for back-reference)
-  sourceId: integer("source_id"),
-  // The exact JSON body POSTed to HQ /api/public/intake
-  payload: jsonb("payload").notNull(),
-  // pending | forwarding | forwarded | failed
-  status: varchar("status", { length: 16 }).notNull().default("pending"),
-  attempts: integer("attempts").notNull().default(0),
-  lastAttemptAt: timestamp("last_attempt_at"),
-  lastError: text("last_error"),
-  // HQ-returned identifier on success
-  hqSubmissionId: varchar("hq_submission_id", { length: 64 }),
-  forwardedAt: timestamp("forwarded_at"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
 
 export const insertHqOutboxSchema = createInsertSchema(hqOutbox).omit({
   id: true,
@@ -1865,72 +1775,6 @@ export type CtaEvent = typeof ctaEvents.$inferSelect;
 // ============================================
 
 // Peggy Chat Conversations
-export const peggyConversations = pgTable("peggy_conversations", {
-  id: serial("id").primaryKey(),
-  userId: varchar("user_id", { length: 255 }), // null for anonymous users
-  sessionId: varchar("session_id", { length: 255 }).notNull(), // Browser session for anonymous
-  
-  // === CONTEXT ===
-  // What page/context the conversation started in
-  contextType: varchar("context_type", { length: 50 }), // calculator, deal, page, general
-  contextPage: varchar("context_page", { length: 255 }), // URL path
-  contextDealType: varchar("context_deal_type", { length: 50 }),
-  contextDealId: integer("context_deal_id"),
-  contextCalculator: varchar("context_calculator", { length: 50 }), // arv, roi, brrrr, cashflow, mao
-  
-  // === METADATA ===
-  title: varchar("title", { length: 255 }), // Auto-generated or user-set title
-  messageCount: integer("message_count").default(0),
-  lastMessageAt: timestamp("last_message_at"),
-  
-  // === STATUS ===
-  isActive: boolean("is_active").default(true),
-  isPinned: boolean("is_pinned").default(false),
-
-  // === CHANNEL (Task #152 — Peggy ASAP phone) ===
-  // web | phone. Voice conversations share schema with chat for daily-report parity.
-  channel: varchar("channel", { length: 16 }).default("web").notNull(),
-  // E.164 caller ID for phone channel
-  callerNumber: varchar("caller_number", { length: 32 }),
-  // Vendor-side call identifier (Vapi callId, etc.) for cross-referencing recordings
-  callSid: varchar("call_sid", { length: 128 }),
-  // Recording consent state: pending | granted | declined | revoked
-  recordingConsent: varchar("recording_consent", { length: 16 }),
-  // Set when caller says "stop recording" mid-call (CA Penal Code §632)
-  recordingStoppedAt: timestamp("recording_stopped_at"),
-  // Total call duration in seconds (phone only)
-  durationSec: integer("duration_sec"),
-
-  // === HQ FORWARDING (Task #153) ===
-  hqSubmissionId: varchar("hq_submission_id", { length: 64 }),
-  hqForwardedAt: timestamp("hq_forwarded_at"),
-
-  // === INTAKE (Task #151 — Peggy ASAP chat) ===
-  // Structured intake captured progressively during the conversation
-  intake: jsonb("intake"),
-  // Peggy's read of where this conversation should go:
-  // submit_property | strategy_lab | strategy_review | capital_intake |
-  // vendor_intake | deal_blueprint | human_required
-  disposition: varchar("disposition", { length: 40 }),
-  routedTo: varchar("routed_to", { length: 80 }),
-  contactName: varchar("contact_name", { length: 255 }),
-  contactEmail: varchar("contact_email", { length: 255 }),
-  contactPhone: varchar("contact_phone", { length: 50 }),
-  // One-line summary of the conversation for Apollo's inbound report
-  summary: text("summary"),
-  // Set true the moment any §1695 or Fair Housing trigger fires;
-  // when true we email Apollo immediately.
-  humanRequired: boolean("human_required").default(false),
-  // Why human_required was set (audit trail)
-  humanRequiredReason: varchar("human_required_reason", { length: 80 }),
-  // Whether the daily report has already notified on this conversation
-  reportedAt: timestamp("reported_at"),
-  endedAt: timestamp("ended_at"),
-
-  // === TIMESTAMPS ===
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
 
 export const insertPeggyConversationSchema = createInsertSchema(peggyConversations).omit({ 
   id: true, 
@@ -1945,28 +1789,6 @@ export type InsertPeggyConversation = z.infer<typeof insertPeggyConversationSche
 export type PeggyConversation = typeof peggyConversations.$inferSelect;
 
 // Peggy Chat Messages
-export const peggyMessages = pgTable("peggy_messages", {
-  id: serial("id").primaryKey(),
-  conversationId: integer("conversation_id").notNull(),
-  
-  // === MESSAGE ===
-  role: varchar("role", { length: 20 }).notNull(), // user, assistant, system
-  content: text("content").notNull(),
-  
-  // === CONTEXT AT TIME OF MESSAGE ===
-  contextSnapshot: jsonb("context_snapshot"), // Snapshot of context when message sent
-  
-  // === AI METADATA ===
-  model: varchar("model", { length: 100 }), // gpt-4, gpt-3.5-turbo, etc.
-  tokensUsed: integer("tokens_used"),
-  
-  // === FEEDBACK ===
-  feedback: varchar("feedback", { length: 20 }), // helpful, not_helpful
-  feedbackNotes: text("feedback_notes"),
-  
-  // === TIMESTAMPS ===
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
 
 export const insertPeggyMessageSchema = createInsertSchema(peggyMessages).omit({ 
   id: true, 
@@ -2415,31 +2237,6 @@ export const AUDIT_ACTION_TYPES = [
 
 export type AuditActionType = typeof AUDIT_ACTION_TYPES[number];
 
-export const adminAuditLog = pgTable("admin_audit_log", {
-  id: serial("id").primaryKey(),
-  
-  // === ACTOR INFO ===
-  adminUserId: varchar("admin_user_id", { length: 255 }).notNull(),
-  adminEmail: varchar("admin_email", { length: 255 }),
-  adminName: varchar("admin_name", { length: 255 }),
-  
-  // === ACTION DETAILS ===
-  actionType: varchar("action_type", { length: 100 }).notNull(),
-  resourceType: varchar("resource_type", { length: 100 }), // user, deal, project, badge, setting
-  resourceId: varchar("resource_id", { length: 255 }), // ID of affected resource
-  
-  // === CHANGE DETAILS ===
-  description: text("description").notNull(),
-  previousValue: text("previous_value"), // JSON stringified
-  newValue: text("new_value"), // JSON stringified
-  
-  // === METADATA ===
-  ipAddress: varchar("ip_address", { length: 45 }),
-  userAgent: text("user_agent"),
-  
-  // === TIMESTAMP ===
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
 
 export const insertAdminAuditLogSchema = createInsertSchema(adminAuditLog).omit({ 
   id: true, 
@@ -3286,61 +3083,9 @@ export const OPPORTUNITY_DEPARTMENTS = [
 ] as const;
 export type OpportunityDepartment = (typeof OPPORTUNITY_DEPARTMENTS)[number];
 
-export const opportunities = pgTable("opportunities", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-
-  // intake provenance
-  sourcePage: varchar("source_page", { length: 120 }),
-  leadSource: varchar("lead_source", { length: 120 }),
-  visitorType: varchar("visitor_type", { length: 40 }).notNull(),
-
-  // contact
-  contactName: varchar("contact_name", { length: 255 }).notNull(),
-  email: varchar("email", { length: 255 }).notNull(),
-  phone: varchar("phone", { length: 50 }),
-  preferredContactMethod: varchar("preferred_contact_method", { length: 40 }),
-  bestTimeToContact: varchar("best_time_to_contact", { length: 120 }),
-
-  // property
-  propertyAddress: text("property_address"),
-  city: varchar("city", { length: 100 }),
-  state: varchar("state", { length: 50 }),
-  zipCode: varchar("zip_code", { length: 20 }),
-  propertyType: varchar("property_type", { length: 60 }),
-  occupancyStatus: varchar("occupancy_status", { length: 60 }),
-  condition: varchar("condition", { length: 60 }),
-
-  // situation + intent
-  situation: varchar("situation", { length: 80 }),
-  goal: varchar("goal", { length: 80 }),
-  urgency: varchar("urgency", { length: 60 }),
-  estimatedValue: real("estimated_value"),
-  estimatedDebt: real("estimated_debt"),
-  notes: text("notes"),
-
-  // routing (PRD §11.4)
-  recommendedLane: varchar("recommended_lane", { length: 120 }),
-  assignedDepartment: varchar("assigned_department", { length: 60 }),
-  status: varchar("status", { length: 40 }).notNull().default("New"),
-
-  // compliance + attribution
-  consentAccepted: boolean("consent_accepted").notNull().default(false),
-  consentCopyVersion: varchar("consent_copy_version", { length: 80 }),
-  consentCapturedAt: timestamp("consent_captured_at"),
-  utmSource: varchar("utm_source", { length: 100 }),
-  utmMedium: varchar("utm_medium", { length: 100 }),
-  utmCampaign: varchar("utm_campaign", { length: 100 }),
-  referrer: text("referrer"),
-}, (table) => [
-  index("IDX_opportunities_status").on(table.status),
-  index("IDX_opportunities_visitor_type").on(table.visitorType),
-  index("IDX_opportunities_created_at").on(table.createdAt),
-]);
 
 export const insertOpportunitySchema = createInsertSchema(opportunities)
-  .omit({ id: true, createdAt: true, updatedAt: true, status: true,
+  .omit({ orgId: true, authSubject: true, id: true, createdAt: true, updatedAt: true, status: true,
           recommendedLane: true, assignedDepartment: true,
           consentCopyVersion: true, consentCapturedAt: true })
   .extend({

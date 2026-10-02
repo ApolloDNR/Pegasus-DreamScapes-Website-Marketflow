@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import { readOpportunityReceipt } from "@/lib/lead-receipt";
+import { useIntakeRequest } from "@/lib/intake-idempotency";
 import { trackEvent } from "@/lib/analytics";
 import { useSEO } from "@/hooks/use-seo";
 import { normalizeOwnerSituation } from "@/pegasus/owner-context";
@@ -339,10 +338,11 @@ export default function SubmitPropertyPage() {
     : undefined;
 
   const submitInFlight = useRef(false);
+  const sendIntake = useIntakeRequest("opportunity", "/api/opportunities");
   const submit = useMutation({
     mutationFn: async () => {
       const mapped = VISITOR_VALUE_MAP[form.visitorType];
-      const res = await apiRequest("POST", "/api/opportunities", {
+      const res = await sendIntake({
         hp_company: hp,
         ts_elapsed_ms: Date.now() - startedAt.current,
         sourcePage: "/bring-an-opportunity",
@@ -381,7 +381,7 @@ export default function SubmitPropertyPage() {
         ].filter(Boolean).join(" — ") || undefined,
         consentAccepted: form.consentAccepted,
       });
-      return readOpportunityReceipt(res);
+      return res;
     },
     onSettled: () => { submitInFlight.current = false; },
     onSuccess: (data: { id: string }) => {

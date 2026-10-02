@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { useIntakeRequest } from "@/lib/intake-idempotency";
 import { Sparkles, X, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,9 +21,10 @@ export function PeggyPublicNote() {
   const [hp, setHp] = useState("");
   const { toast } = useToast();
 
+  const sendIntake = useIntakeRequest("peggy-note", "/api/leads");
   const submit = useMutation({
     mutationFn: async () => {
-      return apiRequest("POST", "/api/leads", {
+      return sendIntake({
         leadType: "peggy_notify",
         source: "peggy_public_dock",
         contactName: name,

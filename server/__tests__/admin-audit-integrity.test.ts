@@ -5,6 +5,7 @@ import {
   describe,
   expect,
   it,
+  vi,
 } from "vitest";
 import express, {
   type Express,
@@ -18,6 +19,7 @@ import path from "node:path";
 import { normalizeMarketflowWholesaleSubmission } from "@shared/marketflow-wholesale-submission";
 
 type AuditRow = {
+  orgId: string;
   id: number;
   adminUserId: string;
   adminEmail: string | null;
@@ -88,6 +90,9 @@ function requireAuditModule() {
 }
 
 const auditRows: AuditRow[] = [];
+const websiteOrg = "a7400000-0000-4000-8000-000000000001";
+const websiteSubject = "a7400000-0000-4000-8000-000000000002";
+const websiteAccount = "a7400000-0000-4000-8000-000000000003";
 const deals = new Map<string, ReviewRecord>();
 const projects = new Map<string, ReviewRecord>();
 let server: Server | undefined;
@@ -109,7 +114,13 @@ const authenticate: RequestHandler = (request, response, next) => {
 
   const nonstaff = mode === "nonstaff";
   const email = nonstaff ? "member@example.com" : "admin@example.com";
-  if (mode === "supabase") {
+  if (mode === "website" || nonstaff) {
+    request.supabaseUser = {
+      id: nonstaff ? "a7400000-0000-4000-8000-000000000004" : websiteSubject,
+      email,
+      claims: { sub: websiteSubject, email },
+    };
+  } else if (mode === "supabase") {
     (request as any).supabaseUser = {
       id: "supabase-admin",
       email,
@@ -151,6 +162,16 @@ const requireStaff: RequestHandler = (request, response, next) => {
     : response.status(403).json({ message: "Forbidden" });
 };
 
+// Membership resolution itself is exercised against real shared tables in
+// website/__tests__/audit-access.integration.test.ts. This focused writer suite
+// supplies its verified output while keeping legacy mutation auth independent.
+const requireAuditStaff: RequestHandler = (request, response, next) => {
+  if (!request.supabaseUser) return response.status(401).json({ message: "Unauthorized" });
+  if (request.supabaseUser.id !== websiteSubject) return response.status(403).json({ message: "Forbidden" });
+  request.websiteStaff = { accountId: websiteAccount, orgId: websiteOrg, role: "owner" };
+  return next();
+};
+
 beforeAll(async () => {
   if (
     typeof createWriter !== "function" ||
@@ -161,6 +182,7 @@ beforeAll(async () => {
     return;
   }
   const api = requireAuditModule();
+  vi.stubEnv("WEBSITE_ORG_ID", websiteOrg);
   const app: Express = express();
   app.use(express.json());
 
@@ -168,6 +190,7 @@ beforeAll(async () => {
     if (failAuditWrites) throw new Error("audit database unavailable");
     const row: AuditRow = {
       ...entry,
+      orgId: websiteOrg,
       id: auditRows.length + 1,
       createdAt: new Date("2026-08-30T15:00:00.000Z"),
     };
@@ -179,11 +202,11 @@ beforeAll(async () => {
   api.registerAuditRoutes(
     app,
     {
-      getAuthUserId,
       getAuditLogs: async (options: any) =>
         auditRows
           .filter(
             (row) =>
+              row.orgId === options.orgId &&
               (!options.actionType || row.actionType === options.actionType) &&
               (!options.actionTypes ||
                 options.actionTypes.includes(row.actionType)) &&
@@ -194,16 +217,17 @@ beforeAll(async () => {
       getAuditLogCount: async (options: any) =>
         auditRows.filter(
           (row) =>
+            row.orgId === options.orgId &&
             (!options.actionType || row.actionType === options.actionType) &&
             (!options.actionTypes ||
               options.actionTypes.includes(row.actionType)) &&
             (!options.adminUserId || row.adminUserId === options.adminUserId),
         ).length,
-      getAuditLogById: async (id: number) =>
-        auditRows.find((row) => row.id === id),
+      getAuditLogById: async (id: number, orgId: string) =>
+        auditRows.find((row) => row.id === id && row.orgId === orgId),
       logError: () => undefined,
     },
-    { authenticate, requireStaff },
+    { authenticate, requireStaff: requireAuditStaff },
   );
 
   reviewModule.registerWholesaleReviewRoutes(
@@ -262,6 +286,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
+  vi.unstubAllEnvs();
   if (!server) return;
   await new Promise<void>((resolve, reject) => {
     server!.close((error) => (error ? reject(error) : resolve()));
@@ -296,9 +321,10 @@ beforeEach(() => {
 });
 
 describe("admin audit integrity", () => {
-  it("serves protected reads to both verified staff auth modes and fails closed", async () => {
+  it("serves protected reads only to verified website staff and fails closed", async () => {
     requireAuditModule();
     auditRows.push({
+      orgId: websiteOrg,
       id: 1,
       adminUserId: "seed-admin",
       adminEmail: "admin@example.com",
@@ -314,6 +340,7 @@ describe("admin audit integrity", () => {
       createdAt: new Date("2026-08-30T15:00:00.000Z"),
     });
     auditRows.push({
+      orgId: websiteOrg,
       id: 2,
       adminUserId: "legacy-admin",
       adminEmail: "admin@example.com",
@@ -329,7 +356,7 @@ describe("admin audit integrity", () => {
       createdAt: new Date("2026-08-30T14:00:00.000Z"),
     });
 
-    for (const mode of ["oidc", "supabase"]) {
+    for (const mode of ["website"]) {
       const response = await fetch(`${baseUrl}/api/audit-logs`, {
         headers: { "x-test-auth": mode },
       });
@@ -339,6 +366,7 @@ describe("admin audit integrity", () => {
     }
 
     expect((await fetch(`${baseUrl}/api/audit-logs`)).status).toBe(401);
+    expect((await fetch(`${baseUrl}/api/audit-logs`, { headers: { "x-test-auth": "oidc" } })).status).toBe(401);
     expect(
       (
         await fetch(`${baseUrl}/api/audit-logs`, {
@@ -352,7 +380,7 @@ describe("admin audit integrity", () => {
           headers: { "x-test-auth": "conflict" },
         })
       ).status,
-    ).toBe(401);
+    ).toBe(403);
   });
 
   it("records one server-owned, privacy-bounded event for each successful decision", async () => {
@@ -391,7 +419,7 @@ describe("admin audit integrity", () => {
     expect(projectResponse.status).toBe(200);
 
     const response = await fetch(`${baseUrl}/api/audit-logs`, {
-      headers: { "x-test-auth": "oidc" },
+      headers: { "x-test-auth": "website" },
     });
     const body = (await response.json()) as { logs: AuditRow[]; total: number };
     expect(body.total).toBe(2);

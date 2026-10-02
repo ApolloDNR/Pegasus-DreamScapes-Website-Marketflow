@@ -1,6 +1,7 @@
 import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -83,16 +84,24 @@ function submitRepresentationRequest() {
   fireEvent.submit(submit.closest("form")!);
 }
 
+const settlePendingRequests: Array<() => void> = [];
+
 beforeEach(() => {
+  sessionStorage.clear();
   setReducedMotion(false);
   Object.defineProperty(HTMLElement.prototype, "scrollIntoView", {
     configurable: true,
     value: vi.fn(),
   });
-  apiRequestMock.mockImplementation(() => new Promise(() => undefined));
+  apiRequestMock.mockImplementation(() => new Promise<Response>((_resolve, reject) => {
+    settlePendingRequests.push(() => reject(new Error("Test request settled")));
+  }));
 });
 
-afterEach(() => {
+afterEach(async () => {
+  await act(async () => {
+    settlePendingRequests.splice(0).forEach((settle) => settle());
+  });
   cleanup();
   apiRequestMock.mockReset();
   trackEventMock.mockReset();

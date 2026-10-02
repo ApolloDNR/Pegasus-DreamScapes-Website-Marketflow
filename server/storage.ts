@@ -131,6 +131,21 @@ import {
   type MarketflowOfferResponseConflict,
 } from "./marketflow-financial-integrity";
 import { parseMarketflowOfferPayload } from "./marketflow-offer-payload";
+import { PeggyUnavailableError } from "./peggy-ai";
+import { isWebsiteIdentityUuid } from "./website/identity";
+import { requireWebsiteAuditOrganization } from "./website/audit-scope";
+
+function requirePeggyOrganization(): string {
+  const orgId = process.env.WEBSITE_ORG_ID?.trim();
+  if (!isWebsiteIdentityUuid(orgId)) throw new PeggyUnavailableError();
+  return orgId;
+}
+
+// Keep the existing signed-token and response contract while never treating
+// legacy user_id values as website conversation ownership.
+function peggyAccessRecord(conversation: PeggyConversation): PeggyConversation {
+  return { ...conversation, userId: conversation.authSubject };
+}
 
 export type CreateCurrentMarketflowOfferFailure =
   | "invalid_participants"
@@ -447,9 +462,9 @@ export interface IStorage {
 
   // Admin Audit Log
   createAuditLog(entry: InsertAdminAuditLog): Promise<AdminAuditLog>;
-  getAuditLogs(options?: { limit?: number; offset?: number; actionType?: string; actionTypes?: readonly string[]; adminUserId?: string }): Promise<AdminAuditLog[]>;
-  getAuditLogById(id: number): Promise<AdminAuditLog | undefined>;
-  getAuditLogCount(options?: { actionType?: string; actionTypes?: readonly string[]; adminUserId?: string }): Promise<number>;
+  getAuditLogs(options?: { orgId?: string; limit?: number; offset?: number; actionType?: string; actionTypes?: readonly string[]; adminUserId?: string }): Promise<AdminAuditLog[]>;
+  getAuditLogById(id: number, orgId?: string): Promise<AdminAuditLog | undefined>;
+  getAuditLogCount(options?: { orgId?: string; actionType?: string; actionTypes?: readonly string[]; adminUserId?: string }): Promise<number>;
 
   // Deal Negotiations
   createDealNegotiation(negotiation: InsertDealNegotiation): Promise<DealNegotiation>;
@@ -2249,12 +2264,13 @@ export class DatabaseStorage implements IStorage {
 
   // Admin Audit Log
   async createAuditLog(entry: InsertAdminAuditLog): Promise<AdminAuditLog> {
-    const [created] = await db.insert(adminAuditLog).values(entry).returning();
+    const [created] = await db.insert(adminAuditLog)
+      .values({ ...entry, orgId: requireWebsiteAuditOrganization() }).returning();
     return created;
   }
 
-  async getAuditLogs(options?: { limit?: number; offset?: number; actionType?: string; actionTypes?: readonly string[]; adminUserId?: string }): Promise<AdminAuditLog[]> {
-    const conditions = [];
+  async getAuditLogs(options?: { orgId?: string; limit?: number; offset?: number; actionType?: string; actionTypes?: readonly string[]; adminUserId?: string }): Promise<AdminAuditLog[]> {
+    const conditions = [eq(adminAuditLog.orgId, requireWebsiteAuditOrganization(options?.orgId))];
     if (options?.actionType) {
       conditions.push(eq(adminAuditLog.actionType, options.actionType));
     } else if (options?.actionTypes?.length) {
@@ -2264,24 +2280,22 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(adminAuditLog.adminUserId, options.adminUserId));
     }
     
-    let query = db.select().from(adminAuditLog);
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions)) as typeof query;
-    }
-    
-    return query
+    return db.select().from(adminAuditLog).where(and(...conditions))
       .orderBy(desc(adminAuditLog.createdAt), desc(adminAuditLog.id))
       .limit(options?.limit || 100)
       .offset(options?.offset || 0);
   }
 
-  async getAuditLogById(id: number): Promise<AdminAuditLog | undefined> {
-    const [log] = await db.select().from(adminAuditLog).where(eq(adminAuditLog.id, id));
+  async getAuditLogById(id: number, orgId?: string): Promise<AdminAuditLog | undefined> {
+    const [log] = await db.select().from(adminAuditLog).where(and(
+      eq(adminAuditLog.orgId, requireWebsiteAuditOrganization(orgId)),
+      eq(adminAuditLog.id, id),
+    ));
     return log;
   }
 
-  async getAuditLogCount(options?: { actionType?: string; actionTypes?: readonly string[]; adminUserId?: string }): Promise<number> {
-    const conditions = [];
+  async getAuditLogCount(options?: { orgId?: string; actionType?: string; actionTypes?: readonly string[]; adminUserId?: string }): Promise<number> {
+    const conditions = [eq(adminAuditLog.orgId, requireWebsiteAuditOrganization(options?.orgId))];
     if (options?.actionType) {
       conditions.push(eq(adminAuditLog.actionType, options.actionType));
     } else if (options?.actionTypes?.length) {
@@ -2291,12 +2305,8 @@ export class DatabaseStorage implements IStorage {
       conditions.push(eq(adminAuditLog.adminUserId, options.adminUserId));
     }
     
-    let query = db.select({ count: sql<number>`count(*)` }).from(adminAuditLog);
-    if (conditions.length > 0) {
-      query = query.where(and(...conditions)) as typeof query;
-    }
-    
-    const [result] = await query;
+    const [result] = await db.select({ count: sql<number>`count(*)` })
+      .from(adminAuditLog).where(and(...conditions));
     return Number(result.count);
   }
 
@@ -2553,35 +2563,52 @@ export class DatabaseStorage implements IStorage {
   // ============================================
   
   async createPeggyConversation(conversation: InsertPeggyConversation): Promise<PeggyConversation> {
-    const [created] = await db.insert(peggyConversations).values(conversation).returning();
-    return created;
+    const orgId = requirePeggyOrganization();
+    // userId is the existing server-only input for a verified Supabase subject.
+    // Neither a caller-selected organization nor legacy ownership is stored.
+    const [created] = await db.insert(peggyConversations).values({
+      ...conversation,
+      orgId,
+      authSubject: conversation.userId ?? null,
+      userId: null,
+    }).returning();
+    return peggyAccessRecord(created);
   }
 
   async getPeggyConversations(userId?: string, sessionId?: string): Promise<PeggyConversation[]> {
+    const orgId = requirePeggyOrganization();
     if (userId) {
-      return db.select().from(peggyConversations)
-        .where(eq(peggyConversations.userId, userId))
+      const rows = await db.select().from(peggyConversations)
+        .where(and(eq(peggyConversations.orgId, orgId), eq(peggyConversations.authSubject, userId)))
         .orderBy(desc(peggyConversations.updatedAt));
+      return rows.map(peggyAccessRecord);
     }
     if (sessionId) {
-      return db.select().from(peggyConversations)
-        .where(eq(peggyConversations.sessionId, sessionId))
+      const rows = await db.select().from(peggyConversations)
+        .where(and(eq(peggyConversations.orgId, orgId), eq(peggyConversations.sessionId, sessionId)))
         .orderBy(desc(peggyConversations.updatedAt));
+      return rows.map(peggyAccessRecord);
     }
     return [];
   }
 
   async getPeggyConversation(id: number): Promise<PeggyConversation | undefined> {
-    const [conversation] = await db.select().from(peggyConversations).where(eq(peggyConversations.id, id));
-    return conversation;
+    const orgId = requirePeggyOrganization();
+    const [conversation] = await db.select().from(peggyConversations)
+      .where(and(eq(peggyConversations.orgId, orgId), eq(peggyConversations.id, id)));
+    return conversation && peggyAccessRecord(conversation);
   }
 
   async updatePeggyConversation(id: number, data: Partial<InsertPeggyConversation>): Promise<PeggyConversation | undefined> {
+    const orgId = requirePeggyOrganization();
+    if (["orgId", "authSubject", "userId", "sessionId", "id"].some((key) => Object.prototype.hasOwnProperty.call(data, key))) {
+      throw new Error("Peggy conversation ownership and correlation are immutable");
+    }
     const [updated] = await db.update(peggyConversations)
       .set({ ...data, updatedAt: new Date() })
-      .where(eq(peggyConversations.id, id))
+      .where(and(eq(peggyConversations.orgId, orgId), eq(peggyConversations.id, id)))
       .returning();
-    return updated;
+    return updated && peggyAccessRecord(updated);
   }
 
   // ============================================
@@ -2589,54 +2616,65 @@ export class DatabaseStorage implements IStorage {
   // ============================================
   
   async createPeggyMessage(message: InsertPeggyMessage): Promise<PeggyMessage> {
-    const [created] = await db.insert(peggyMessages).values(message).returning();
-    
-    // Update conversation message count and last message time
-    await db.update(peggyConversations)
-      .set({ 
-        messageCount: sql`${peggyConversations.messageCount} + 1`,
-        lastMessageAt: new Date(),
-        updatedAt: new Date()
-      })
-      .where(eq(peggyConversations.id, message.conversationId));
-    
-    return created;
+    const orgId = requirePeggyOrganization();
+    return db.transaction(async (tx) => {
+      // Lock only this organization's parent and keep its count atomic with
+      // the message. A foreign conversation must never receive a new turn.
+      const [conversation] = await tx.update(peggyConversations)
+        .set({
+          messageCount: sql`coalesce(${peggyConversations.messageCount}, 0) + 1`,
+          lastMessageAt: new Date(),
+          updatedAt: new Date(),
+        })
+        .where(and(eq(peggyConversations.orgId, orgId), eq(peggyConversations.id, message.conversationId)))
+        .returning({ id: peggyConversations.id });
+      if (!conversation) throw new Error("Peggy conversation not found");
+      const [created] = await tx.insert(peggyMessages).values({ ...message, orgId }).returning();
+      return created;
+    });
   }
 
   async getPeggyMessages(conversationId: number): Promise<PeggyMessage[]> {
+    const orgId = requirePeggyOrganization();
     return db.select().from(peggyMessages)
-      .where(eq(peggyMessages.conversationId, conversationId))
-      .orderBy(asc(peggyMessages.createdAt));
+      .where(and(eq(peggyMessages.orgId, orgId), eq(peggyMessages.conversationId, conversationId)))
+      .orderBy(asc(peggyMessages.createdAt), asc(peggyMessages.id));
   }
 
   async updatePeggyMessageFeedback(id: number, feedback: string, feedbackNotes?: string): Promise<PeggyMessage | undefined> {
+    const orgId = requirePeggyOrganization();
     const [updated] = await db.update(peggyMessages)
       .set({ feedback, feedbackNotes })
-      .where(eq(peggyMessages.id, id))
+      .where(and(eq(peggyMessages.orgId, orgId), eq(peggyMessages.id, id)))
       .returning();
     return updated;
   }
 
   // Task #151 — admin + daily-report helpers
   async getPeggyConversationsSince(sinceMs: number): Promise<PeggyConversation[]> {
+    const orgId = requirePeggyOrganization();
     const since = new Date(sinceMs);
-    return db.select().from(peggyConversations)
-      .where(sql`${peggyConversations.updatedAt} >= ${since}`)
+    const rows = await db.select().from(peggyConversations)
+      .where(and(eq(peggyConversations.orgId, orgId), gte(peggyConversations.updatedAt, since)))
       .orderBy(desc(peggyConversations.updatedAt));
+    return rows.map(peggyAccessRecord);
   }
 
   async getPeggyConversationsForReport(sinceMs: number): Promise<PeggyConversation[]> {
+    const orgId = requirePeggyOrganization();
     const since = new Date(sinceMs);
-    return db.select().from(peggyConversations)
-      .where(sql`${peggyConversations.updatedAt} >= ${since} AND ${peggyConversations.reportedAt} IS NULL`)
+    const rows = await db.select().from(peggyConversations)
+      .where(and(eq(peggyConversations.orgId, orgId), gte(peggyConversations.updatedAt, since), isNull(peggyConversations.reportedAt)))
       .orderBy(desc(peggyConversations.updatedAt));
+    return rows.map(peggyAccessRecord);
   }
 
   async markPeggyConversationsReported(ids: number[]): Promise<void> {
     if (ids.length === 0) return;
+    const orgId = requirePeggyOrganization();
     await db.update(peggyConversations)
       .set({ reportedAt: new Date() })
-      .where(sql`${peggyConversations.id} = ANY(${ids})`);
+      .where(and(eq(peggyConversations.orgId, orgId), inArray(peggyConversations.id, ids)));
   }
 
   // ============================================

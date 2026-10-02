@@ -1,5 +1,7 @@
 # Render Deploy Runbook — Pegasus DreamScapes
 
+> October 2 owner correction: Supabase was intended for both the website and operating system. Live migration metadata matches merged HQ main, while the current website ORM expects a different schema/transport. The separate-Neon assumptions below are historical and must not trigger creation of a replacement database. Review the proposed [shared-Supabase integration design](../superpowers/specs/2026-10-02-website-supabase-hq-integration-design.md) and the reconciled schema before implementation or activation. No live migration is approved by this note.
+
 Last updated: 2026-09-14. Pairs with `render.yaml` at the repo root.
 
 This gets pegasusdreamscapes.com live on Render with the database on Neon

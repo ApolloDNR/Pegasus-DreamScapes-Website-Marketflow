@@ -102,13 +102,21 @@ function consentAndSubmitMarketflowAccess() {
   fireEvent.click(screen.getByTestId("button-access-submit"));
 }
 
+const settlePendingRequests: Array<() => void> = [];
+
 beforeEach(() => {
-  // Keep successful mutations pending: each assertion can inspect the request
-  // without transitioning either form into its post-submit success screen.
-  apiRequestMock.mockImplementation(() => new Promise(() => undefined));
+  sessionStorage.clear();
+  // Keep requests pending while assertions inspect them, then settle this
+  // test's requests so the remount-safe shared flight cannot leak into another.
+  apiRequestMock.mockImplementation(() => new Promise<Response>((_resolve, reject) => {
+    settlePendingRequests.push(() => reject(new Error("Test request settled")));
+  }));
 });
 
-afterEach(() => {
+afterEach(async () => {
+  await act(async () => {
+    settlePendingRequests.splice(0).forEach((settle) => settle());
+  });
   cleanup();
   apiRequestMock.mockReset();
   toastMock.mockReset();
@@ -181,6 +189,33 @@ describe("Pegasus LeadForm explicit contact consent", () => {
     expect(
       container.querySelector<HTMLInputElement>('input[name="hp_company"]'),
     ).toHaveValue("");
+  });
+
+  it("requires an explicit new inquiry before sending edited details after an ambiguous failure", async () => {
+    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
+    apiRequestMock.mockRejectedValueOnce(new Error("response lost"));
+    renderWithQueryClient(<LeadForm cfg={CONTACT_FORM} />);
+    fillPegasusLeadForm();
+    fireEvent.click(screen.getByRole("checkbox"));
+    const submit = () => fireEvent.submit(screen.getByRole("button", { name: /send property context/i }).closest("form")!);
+    submit();
+    await screen.findByRole("alert");
+    const originalKey = apiRequestMock.mock.calls[0][3]["Idempotency-Key"];
+
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Grace Hopper" } });
+    submit();
+    await waitFor(() => expect(confirm).toHaveBeenCalledTimes(1));
+    await screen.findByRole("alert");
+    expect(apiRequestMock).toHaveBeenCalledTimes(1);
+    expect(screen.getByLabelText("Name")).toHaveValue("Grace Hopper");
+
+    confirm.mockReturnValue(true);
+    apiRequestMock.mockResolvedValueOnce(new Response(JSON.stringify({ id: 102, stage: "new" }), { status: 201 }));
+    submit();
+    await screen.findByRole("heading", { name: "Property details received." });
+    expect(apiRequestMock).toHaveBeenCalledTimes(2);
+    expect(apiRequestMock.mock.calls[1][2]).toEqual(expect.objectContaining({ firstName: "Grace", lastName: "Hopper" }));
+    expect(apiRequestMock.mock.calls[1][3]["Idempotency-Key"]).not.toBe(originalKey);
   });
 
   it("routes buyer context as a buyer inquiry without treating the target area as an address", async () => {
@@ -438,7 +473,7 @@ describe("MarketFlow access explicit contact consent", () => {
     expect(pending).toBeDisabled();
     expect(pending).toHaveAttribute("aria-busy", "true");
     fireEvent.click(pending);
-    expect(apiRequestMock).toHaveBeenCalledTimes(1);
+    await waitFor(() => expect(apiRequestMock).toHaveBeenCalledTimes(1));
   });
 
   it("renders an inline API failure and succeeds on explicit retry", async () => {
@@ -459,6 +494,7 @@ describe("MarketFlow access explicit contact consent", () => {
 
     expect(await screen.findByTestId("success-view-marketflow_access")).toBeInTheDocument();
     expect(apiRequestMock).toHaveBeenCalledTimes(2);
+    expect(apiRequestMock.mock.calls[1][3]["Idempotency-Key"]).toBe(apiRequestMock.mock.calls[0][3]["Idempotency-Key"]);
   });
 
   it("renders a receipt without promising review, approval, invitation, or response", async () => {

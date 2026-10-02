@@ -25,12 +25,25 @@ declare module "http" {
 
 export type ApplicationRuntime = "persistent" | "serverless";
 
+interface WorkerStartupContext {
+  runtime: ApplicationRuntime;
+  environment: DeploymentEnvironment;
+}
+
 export interface ApplicationDependencies {
   registerRoutes: (httpServer: Server, app: Express) => Promise<unknown>;
   seedPersistentData: (
     environment: DeploymentEnvironment,
   ) => Promise<void>;
-  startHqRecoveryWorker: (httpServer: Server) => Promise<void>;
+  // Retain the injection boundary; its default only consumes website-contract jobs.
+  startHqRecoveryWorker: (
+    httpServer: Server,
+    context: WorkerStartupContext,
+  ) => Promise<void>;
+  startNotificationWorker: (
+    httpServer: Server,
+    context: WorkerStartupContext,
+  ) => Promise<void>;
   startPeggyReportScheduler: () => Promise<void>;
   setupStatic: (app: Express, runtime: ApplicationRuntime) => Promise<void>;
   setupVite: (httpServer: Server, app: Express) => Promise<void>;
@@ -83,10 +96,50 @@ const defaultDependencies: ApplicationDependencies = {
     if (environment.NODE_ENV !== "production") await seedDealflowData();
   },
 
-  async startHqRecoveryWorker(httpServer) {
-    const hqClient = await import("./integrations/hq-client");
-    hqClient.startHqPendingRecoveryWorker();
-    httpServer.once("close", hqClient.stopHqPendingRecoveryWorker);
+  async startHqRecoveryWorker(httpServer, { runtime, environment }) {
+    const { shouldStartWebsiteHqWorker, startWebsiteHqWorker } = await import(
+      "./website/delivery"
+    );
+    if (
+      !environment.DATABASE_URL?.trim()
+      || !shouldStartWebsiteHqWorker(runtime, environment)
+    ) return;
+    const { db } = await import("./db");
+    const worker = startWebsiteHqWorker({ db, runtime, environment });
+    if (worker.enabled) {
+      httpServer.once("close", async () => {
+        try {
+          await worker.stop();
+        } catch {
+          console.error("[website-hq] worker shutdown failed");
+        }
+      });
+    }
+  },
+
+  async startNotificationWorker(httpServer, { runtime, environment }) {
+    const {
+      shouldStartNotificationWorker,
+      createSendGridNotificationSender,
+      startNotificationWorker,
+    } = await import("./website/notifications");
+    if (
+      !environment.DATABASE_URL?.trim()
+      || !shouldStartNotificationWorker(runtime, environment)
+    ) return;
+    const sender = createSendGridNotificationSender(environment);
+    if (sender.isConfigured?.() === false) return;
+    const { db } = await import("./db");
+    const worker = startNotificationWorker(db, { runtime, environment, sender });
+    if (worker.enabled) {
+      httpServer.once("close", async () => {
+        try {
+          await worker.stop();
+        } catch {
+          console.error("[website notifications] worker shutdown failed");
+        }
+      });
+    }
   },
 
   async startPeggyReportScheduler() {
@@ -175,26 +228,30 @@ export async function createApplication(
   app.use(createApiRequestLogger((message) => log(message)));
   registerDeploymentRoutes(app, policy);
 
-  // Preview startup must not seed data, recover queued HQ deliveries, or
-  // schedule outbound reports unless each task is explicitly enabled. These
-  // flags do not change direct request handling or non-preview behavior.
-  const isPreview = policy.appEnvironment === "preview";
-  if (
-    runtime === "persistent" &&
-    (!isPreview || environment.PEGASUS_PREVIEW_ENABLE_SEEDING === "true")
-  ) {
+  // Every background side effect requires its own global opt-in. Preview adds
+  // a second permission; a production NODE_ENV alone never enables legacy
+  // seeding/reports or replays an incompatible legacy HQ outbox.
+  const isPreview = policy.appEnvironment === "preview"
+    || environment.VERCEL_ENV?.trim().toLowerCase() === "preview";
+  const enabled = (globalFlag: string, previewFlag: string) =>
+    runtime === "persistent"
+    && environment[globalFlag] === "true"
+    && (!isPreview || environment[previewFlag] === "true");
+  if (enabled("PEGASUS_ENABLE_SEEDING", "PEGASUS_PREVIEW_ENABLE_SEEDING")) {
     await dependencies.seedPersistentData(environment);
   }
 
   await dependencies.registerRoutes(httpServer, app);
 
-  if (runtime === "persistent") {
-    if (!isPreview || environment.PEGASUS_PREVIEW_ENABLE_HQ_RECOVERY === "true") {
-      await dependencies.startHqRecoveryWorker(httpServer);
-    }
-    if (!isPreview || environment.PEGASUS_PREVIEW_ENABLE_PEGGY_REPORTS === "true") {
-      await dependencies.startPeggyReportScheduler();
-    }
+  const workerContext = { runtime, environment };
+  if (enabled("PEGASUS_ENABLE_HQ_DELIVERY_WORKER", "PEGASUS_PREVIEW_ENABLE_HQ_RECOVERY")) {
+    await dependencies.startHqRecoveryWorker(httpServer, workerContext);
+  }
+  if (enabled("PEGASUS_ENABLE_NOTIFICATION_WORKER", "PEGASUS_PREVIEW_ENABLE_NOTIFICATIONS")) {
+    await dependencies.startNotificationWorker(httpServer, workerContext);
+  }
+  if (enabled("PEGASUS_ENABLE_PEGGY_REPORTS", "PEGASUS_PREVIEW_ENABLE_PEGGY_REPORTS")) {
+    await dependencies.startPeggyReportScheduler();
   }
 
   app.use(
