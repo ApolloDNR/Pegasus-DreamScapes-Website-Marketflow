@@ -1,5 +1,11 @@
 import { randomUUID } from "crypto";
 import { storage } from "../storage";
+import {
+  getConfiguredHqEndpoint,
+  type HqEnvironment,
+} from "./hq-config";
+
+export { hasRequiredHqEndpointConfiguration } from "./hq-config";
 
 // =========================================================================
 // Task #153 — Pegasus HQ forwarding client.
@@ -9,8 +15,6 @@ import { storage } from "../storage";
 // which called for HMAC; replit.md explicitly says "No HMAC in v1"):
 //
 //   - Endpoint:  PEGASUS_HQ_PUBLIC_INTAKE_URL
-//                (default: https://pegasus-hq-operating-system.vercel.app
-//                          /api/public/intake)
 //   - Health:    derived from the endpoint host + /api/health
 //   - Auth:      none in v1 (intake is public; idempotency key + payload
 //                shape are the contract)
@@ -39,20 +43,17 @@ import { storage } from "../storage";
 // and-forget from the request path.
 // =========================================================================
 
-const DEFAULT_ENDPOINT =
-  "https://pegasus-hq-operating-system.vercel.app/api/public/intake";
-
-function endpointUrl(): string {
-  return process.env.PEGASUS_HQ_PUBLIC_INTAKE_URL || DEFAULT_ENDPOINT;
+function endpointUrl(
+  environment: HqEnvironment = process.env,
+): string | null {
+  return getConfiguredHqEndpoint(environment);
 }
 
-function healthUrl(): string {
-  try {
-    const u = new URL(endpointUrl());
-    return `${u.protocol}//${u.host}/api/health`;
-  } catch {
-    return DEFAULT_ENDPOINT.replace("/api/public/intake", "/api/health");
-  }
+function healthUrl(): string | null {
+  const endpoint = endpointUrl();
+  if (!endpoint) return null;
+  const url = new URL(endpoint);
+  return `${url.protocol}//${url.host}/api/health`;
 }
 
 // Surface tags identify which website capture produced the payload.
@@ -80,9 +81,65 @@ export interface HqPayload {
 }
 
 export interface HqResponse {
+  // Normalized receipt identifier. Legacy receivers return hq_submission_id;
+  // the documented public intake receiver returns the traceable Seed reference.
   hq_submission_id?: string;
   received_at?: string;
   next_step?: string;
+}
+
+function receiptIdentifier(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const identifier = value.trim();
+  // Match the existing outbox/source identifier column capacity. A receipt
+  // that cannot be retained must never make the outbox look delivered.
+  if (!identifier || identifier.length > 64 || /[\u0000-\u001f\u007f]/.test(identifier)) {
+    return null;
+  }
+  return identifier;
+}
+
+function parseHqReceipt(value: unknown, endpoint: string): HqResponse | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
+  const body = value as Record<string, unknown>;
+  if (body.ok !== undefined && body.ok !== true) return null;
+
+  const legacyIdentifier = receiptIdentifier(body.hq_submission_id);
+  if (legacyIdentifier) {
+    return {
+      hq_submission_id: legacyIdentifier,
+      ...(typeof body.received_at === "string" ? { received_at: body.received_at } : {}),
+      ...(typeof body.next_step === "string" ? { next_step: body.next_step } : {}),
+    };
+  }
+
+  // Public intake contract, verified against HQ commit 027095b73fa76867d673b1d2cc5ce3509b073d2b:
+  // { ok: true, reference, statusUrl, message }. The status URL contains a
+  // capability token. Validate its shape without following, storing, or
+  // returning that capability through the website's admin retry endpoint.
+  const reference = receiptIdentifier(body.reference);
+  if (
+    body.ok !== true ||
+    !reference ||
+    typeof body.message !== "string" ||
+    !body.message.trim() ||
+    typeof body.statusUrl !== "string"
+  ) {
+    return null;
+  }
+  try {
+    const statusUrl = new URL(body.statusUrl);
+    if (
+      statusUrl.origin !== new URL(endpoint).origin ||
+      statusUrl.username || statusUrl.password || statusUrl.search || statusUrl.hash ||
+      !/^\/status\/[^/]+$/.test(statusUrl.pathname)
+    ) {
+      return null;
+    }
+  } catch {
+    return null;
+  }
+  return { hq_submission_id: reference };
 }
 
 const LEAD_TYPE_TO_REASON: Record<string, string> = {
@@ -95,6 +152,8 @@ const LEAD_TYPE_TO_REASON: Record<string, string> = {
   peggy_notify: "peggy_inbound",
   investor: "capital_inquiry",
   buyer: "buyer_inquiry",
+  wholesaler: "wholesale_opportunity",
+  referral: "referral_partner",
   contact: "general_inquiry",
   marketflow_access: "marketflow_access_request",
 };
@@ -109,24 +168,37 @@ export function outreachReasonForLeadType(leadType: string): string {
 // forwarding when HQ returns 200 (no redeploy needed, per replit.md).
 // =========================================================================
 
-let healthCache: { ok: boolean; checkedAt: number } | null = null;
+let healthCache: {
+  endpoint: string | null;
+  ok: boolean;
+  checkedAt: number;
+} | null = null;
 const HEALTH_TTL_MS = 60_000;
 
 async function checkHealth(): Promise<boolean> {
   const now = Date.now();
-  if (healthCache && now - healthCache.checkedAt < HEALTH_TTL_MS) {
+  const endpoint = healthUrl();
+  if (
+    healthCache &&
+    healthCache.endpoint === endpoint &&
+    now - healthCache.checkedAt < HEALTH_TTL_MS
+  ) {
     return healthCache.ok;
+  }
+  if (!endpoint) {
+    healthCache = { endpoint, ok: false, checkedAt: now };
+    return false;
   }
   try {
     const ctrl = new AbortController();
     const t = setTimeout(() => ctrl.abort(), 3000);
-    const res = await fetch(healthUrl(), { method: "GET", signal: ctrl.signal });
+    const res = await fetch(endpoint, { method: "GET", signal: ctrl.signal });
     clearTimeout(t);
     const ok = res.status >= 200 && res.status < 300;
-    healthCache = { ok, checkedAt: now };
+    healthCache = { endpoint, ok, checkedAt: now };
     return ok;
   } catch {
-    healthCache = { ok: false, checkedAt: now };
+    healthCache = { endpoint, ok: false, checkedAt: now };
     return false;
   }
 }
@@ -209,6 +281,16 @@ async function attemptForward(outboxId: number, payload: HqPayload): Promise<voi
 }
 
 async function drainOutboxRow(outboxId: number, payload: HqPayload): Promise<HqResponse | null> {
+  const endpoint = endpointUrl();
+  if (!endpoint) {
+    await storage.updateHqOutbox(outboxId, {
+      status: "pending",
+      lastAttemptAt: new Date(),
+      lastError: "HQ endpoint not configured — queued for later",
+    });
+    return null;
+  }
+
   await storage.updateHqOutbox(outboxId, { status: "forwarding" });
   let lastError = "";
 
@@ -218,7 +300,7 @@ async function drainOutboxRow(outboxId: number, payload: HqPayload): Promise<HqR
     try {
       const ctrl = new AbortController();
       const t = setTimeout(() => ctrl.abort(), 10_000);
-      const res = await fetch(endpointUrl(), {
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -229,21 +311,24 @@ async function drainOutboxRow(outboxId: number, payload: HqPayload): Promise<HqR
       const totalAttempts = attempt + 1;
 
       if (res.status >= 200 && res.status < 300) {
-        const body: HqResponse = await res.json().catch(() => ({}));
-        await storage.updateHqOutbox(outboxId, {
-          attempts: totalAttempts,
-          lastAttemptAt: new Date(),
-          status: "forwarded",
-          hqSubmissionId: body.hq_submission_id,
-          forwardedAt: new Date(),
-          lastError: null as any,
-        });
-        // Back-reference the originating row when we know the surface.
-        await backReference(outboxId, body.hq_submission_id);
-        return body;
-      }
-
-      if (res.status >= 400 && res.status < 500) {
+        const body = parseHqReceipt(await res.json().catch(() => null), endpoint);
+        if (body) {
+          await storage.updateHqOutbox(outboxId, {
+            attempts: totalAttempts,
+            lastAttemptAt: new Date(),
+            status: "forwarded",
+            hqSubmissionId: body.hq_submission_id,
+            forwardedAt: new Date(),
+            lastError: null as any,
+          });
+          // Back-reference only a receipt we can trace in HQ.
+          await backReference(outboxId, body.hq_submission_id);
+          return body;
+        }
+        // An HTTP success is not delivery evidence. Preserve the payload and
+        // idempotency key for bounded retries; never save the untrusted body.
+        lastError = `HQ ${res.status}: missing a valid HQ submission receipt`;
+      } else if (res.status >= 400 && res.status < 500) {
         const text = await res.text().catch(() => "");
         lastError = `HQ ${res.status}: ${text.slice(0, 500)}`;
         await storage.updateHqOutbox(outboxId, {
@@ -253,9 +338,9 @@ async function drainOutboxRow(outboxId: number, payload: HqPayload): Promise<HqR
           lastError,
         });
         return null;
+      } else {
+        lastError = `HQ ${res.status}`;
       }
-
-      lastError = `HQ ${res.status}`;
     } catch (err: any) {
       lastError = `network: ${err?.message || String(err)}`;
     }
@@ -305,12 +390,28 @@ export async function retryOutboxRow(outboxId: number): Promise<HqResponse | nul
 }
 
 // =========================================================================
-// Drain pending: pulls everything in `pending` and tries each. Intended
-// to be called from a scheduler or admin "Drain all" button.
+// Drain recoverable rows: stale `forwarding` leases are reclaimed before
+// ordinary pending work. A process can die after marking a row forwarding;
+// without the lease cutoff that payload would be stranded permanently.
 // =========================================================================
 
+const FORWARDING_LEASE_MS = 5 * 60_000;
+
 export async function drainPending(limit = 25): Promise<{ tried: number; ok: number; stillPending: number }> {
-  const rows = await storage.getHqOutboxList({ status: "pending", limit });
+  const normalizedLimit = Math.max(1, Math.floor(limit));
+  const staleForwarding = await storage.getHqOutboxList({
+    status: "forwarding",
+    updatedBefore: new Date(Date.now() - FORWARDING_LEASE_MS),
+    limit: normalizedLimit,
+  });
+  const pendingSlots = normalizedLimit - staleForwarding.length;
+  const pending = pendingSlots > 0
+    ? await storage.getHqOutboxList({
+        status: "pending",
+        limit: pendingSlots,
+      })
+    : [];
+  const rows = [...staleForwarding, ...pending];
   let ok = 0;
   let stillPending = 0;
   for (const row of rows) {
@@ -319,4 +420,100 @@ export async function drainPending(limit = 25): Promise<{ tried: number; ok: num
     else stillPending++;
   }
   return { tried: rows.length, ok, stillPending };
+}
+
+const MAX_RECOVERY_BATCH_SIZE = 25;
+const MIN_RECOVERY_INTERVAL_MS = 30_000;
+const DEFAULT_RECOVERY_INTERVAL_MS = 60_000;
+
+type DrainResult = Awaited<ReturnType<typeof drainPending>>;
+type RecoveryTimer = ReturnType<typeof setInterval>;
+
+export interface HqPendingRecoveryOptions {
+  batchSize?: number;
+  isHealthy?: () => Promise<boolean>;
+  drain?: (limit: number) => Promise<DrainResult>;
+  onError?: (error: unknown) => void;
+}
+
+export interface HqPendingRecoveryWorkerOptions
+  extends HqPendingRecoveryOptions {
+  intervalMs?: number;
+  runImmediately?: boolean;
+  setIntervalFn?: (
+    callback: () => void,
+    delay: number,
+  ) => RecoveryTimer;
+  clearIntervalFn?: (timer: RecoveryTimer) => void;
+}
+
+let pendingRecoveryInFlight = false;
+let pendingRecoveryTimer: RecoveryTimer | null = null;
+let pendingRecoveryClearInterval: (timer: RecoveryTimer) => void =
+  clearInterval;
+
+function boundedBatchSize(requested = MAX_RECOVERY_BATCH_SIZE): number {
+  const normalized = Number.isFinite(requested)
+    ? Math.floor(requested)
+    : MAX_RECOVERY_BATCH_SIZE;
+  return Math.max(1, Math.min(MAX_RECOVERY_BATCH_SIZE, normalized));
+}
+
+export async function runHqPendingRecoveryOnce(
+  options: HqPendingRecoveryOptions = {},
+): Promise<boolean> {
+  if (pendingRecoveryInFlight) return false;
+  pendingRecoveryInFlight = true;
+
+  try {
+    const healthy = await (options.isHealthy ?? isHqHealthy)();
+    if (!healthy) return false;
+
+    await (options.drain ?? drainPending)(
+      boundedBatchSize(options.batchSize),
+    );
+    return true;
+  } catch (error) {
+    (options.onError ??
+      ((caught) =>
+        console.error("[hq-client] pending recovery failed:", caught)))(
+      error,
+    );
+    return false;
+  } finally {
+    pendingRecoveryInFlight = false;
+  }
+}
+
+export function startHqPendingRecoveryWorker(
+  options: HqPendingRecoveryWorkerOptions = {},
+): void {
+  if (pendingRecoveryTimer) return;
+
+  const requestedInterval =
+    options.intervalMs ?? DEFAULT_RECOVERY_INTERVAL_MS;
+  const intervalMs = Math.max(
+    MIN_RECOVERY_INTERVAL_MS,
+    Number.isFinite(requestedInterval)
+      ? Math.floor(requestedInterval)
+      : DEFAULT_RECOVERY_INTERVAL_MS,
+  );
+  const run = () => {
+    void runHqPendingRecoveryOnce(options);
+  };
+
+  if (options.runImmediately !== false) run();
+
+  const setIntervalFn = options.setIntervalFn ?? setInterval;
+  pendingRecoveryClearInterval =
+    options.clearIntervalFn ?? clearInterval;
+  pendingRecoveryTimer = setIntervalFn(run, intervalMs);
+  pendingRecoveryTimer.unref?.();
+}
+
+export function stopHqPendingRecoveryWorker(): void {
+  if (!pendingRecoveryTimer) return;
+  pendingRecoveryClearInterval(pendingRecoveryTimer);
+  pendingRecoveryTimer = null;
+  pendingRecoveryClearInterval = clearInterval;
 }

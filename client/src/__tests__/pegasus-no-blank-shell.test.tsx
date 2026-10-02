@@ -1,4 +1,6 @@
 import React from "react";
+import { existsSync, readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, it, expect, afterEach } from "vitest";
 import { render, cleanup, waitFor } from "@testing-library/react";
 import { Router } from "wouter";
@@ -8,6 +10,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Landing } from "@/pegasus/Landing";
 import { ThemeProvider } from "@/components/theme-provider";
 import { PEGASUS_URLS, routeForUrl } from "@/pegasus/routes";
+
+const landingSource = readFileSync(
+  resolve(import.meta.dirname, "../pegasus/Landing.tsx"),
+  "utf8",
+);
 
 // Blank-shell net (Task #211).
 //
@@ -83,6 +90,46 @@ function renderShell(routePath: string) {
 afterEach(() => cleanup());
 
 describe("Every PEGASUS_URLS route renders real content, never a blank shell (Task #211)", () => {
+  it("loads category pages from a focused lazy module", () => {
+    const categoryStart = landingSource.indexOf("const CategoryPage =");
+    const nextLazyStart = landingSource.indexOf(
+      "const InvestmentsPage =",
+      categoryStart,
+    );
+
+    expect(categoryStart).toBeGreaterThan(-1);
+    expect(nextLazyStart).toBeGreaterThan(categoryStart);
+
+    const categoryBoundary = landingSource.slice(categoryStart, nextLazyStart);
+    expect(categoryBoundary).toContain("import('./category-page')");
+    expect(categoryBoundary).not.toContain("loadPages()");
+  });
+
+  it("loads the capital page from a focused lazy module", () => {
+    const capitalStart = landingSource.indexOf("const CapitalPage =");
+    const nextLazyStart = landingSource.indexOf(
+      "const OurWorkPage =",
+      capitalStart,
+    );
+
+    expect(capitalStart).toBeGreaterThan(-1);
+    expect(nextLazyStart).toBeGreaterThan(capitalStart);
+
+    const capitalBoundary = landingSource.slice(capitalStart, nextLazyStart);
+    expect(capitalBoundary).toContain("import('./capital-page')");
+    expect(capitalBoundary).not.toContain("loadPages()");
+
+    const capitalModulePath = resolve(
+      import.meta.dirname,
+      "../pegasus/capital-page.tsx",
+    );
+    expect(existsSync(capitalModulePath)).toBe(true);
+    const capitalModuleSource = readFileSync(capitalModulePath, "utf8");
+    expect(capitalModuleSource).not.toMatch(
+      /(?:from\s+|import\(\s*)["']\.\/pages["']/,
+    );
+  });
+
   // Non-vacuous guard: if PEGASUS_URLS ever empties out (or stops being
   // derived from the route map), this whole suite would silently pass with no
   // cases. Pin a sane floor so the net keeps covering the real surface.
@@ -99,12 +146,15 @@ describe("Every PEGASUS_URLS route renders real content, never a blank shell (Ta
 
       // Non-home Pegasus pages are route-level lazy chunks. Wait through the
       // shared PageLoader fallback before asserting the substantive page body.
-      await waitFor(() => {
-        expect(
-          main!.querySelector("h1, h2"),
-          `${url} (route '${routeForUrl(url)}') never resolved past PageLoader`,
-        ).toBeTruthy();
-      });
+      await waitFor(
+        () => {
+          expect(
+            main!.querySelector("h1, h2"),
+            `${url} (route '${routeForUrl(url)}') never resolved past PageLoader`,
+          ).toBeTruthy();
+        },
+        { timeout: 5000 },
+      );
 
       // A blank shell renders <main> with no element children. A real page
       // mounts a substantial subtree.

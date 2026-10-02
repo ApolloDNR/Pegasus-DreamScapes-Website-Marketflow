@@ -80,7 +80,7 @@ function scoreFlip(c: LaneCtx): LaneFitResult {
     supporting.push(`All-in (purchase + rehab) is ${fmtPct(arvAllInPct * 100, 1)} of ARV — within the 75% sweet spot.`);
   } else if (arvAllInPct > 0.85) {
     score -= 25;
-    sensitive.push(`All-in is ${fmtPct(arvAllInPct * 100, 1)} of ARV — margin is too thin for unexpected rehab overruns.`);
+    sensitive.push(`All-in is ${fmtPct(arvAllInPct * 100, 1)} of visitor-entered ARV, which narrows modeled headroom for scope changes.`);
   }
 
   // Net profit estimate (after 6% closing).
@@ -88,9 +88,9 @@ function scoreFlip(c: LaneCtx): LaneFitResult {
   const netProfit = c.arv - c.effectivePrice - c.rehab - closing;
   if (netProfit < 25000 && c.arv > 0) {
     score -= 10;
-    sensitive.push(`Projected gross profit of ${fmtDollars(netProfit)} leaves no room for holding-cost surprises.`);
+    sensitive.push(`Modeled gross spread of ${fmtDollars(netProfit)} leaves limited room within the current holding-cost assumptions.`);
   } else if (netProfit >= 50000) {
-    supporting.push(`Projected gross profit of ${fmtDollars(netProfit)} clears typical flip thresholds.`);
+    supporting.push(`Modeled gross spread of ${fmtDollars(netProfit)} exceeds this tool's $50,000 comparison point.`);
   }
 
   if (c.property.condition === "gut") {
@@ -106,10 +106,10 @@ function scoreFlip(c: LaneCtx): LaneFitResult {
     verdictLabel: LANE_VERDICT_LABELS[verdict],
     headline: safeCopy(
       verdict === "strong"
-        ? `Solid flip math. Net ${fmtDollars(netProfit)} at base case.`
+        ? `Entered assumptions produce ${fmtDollars(netProfit)} of modeled gross spread at base case.`
         : verdict === "not_recommended"
-          ? `Margin too thin to flip. ${fmtPct(arvAllInPct * 100, 0)} all-in of ARV.`
-          : `Flip is workable but tight. Watch rehab overruns.`,
+          ? `Entered assumptions leave limited modeled flip headroom at ${fmtPct(arvAllInPct * 100, 0)} all-in of ARV.`
+          : `The modeled flip path is sensitive to scope and holding-cost assumptions.`,
     ),
     confidence: {
       score: Math.max(0, Math.min(100, score)),
@@ -118,7 +118,7 @@ function scoreFlip(c: LaneCtx): LaneFitResult {
       missingInputs: missing,
     },
     economics: {
-      primaryMetric: "Projected net profit",
+      primaryMetric: "Modeled gross spread",
       primaryValue: fmtDollars(netProfit),
       metrics: [
         { label: "All-in % of ARV", value: fmtPct(arvAllInPct * 100, 1) },
@@ -147,21 +147,21 @@ function scoreWholetail(c: LaneCtx): LaneFitResult {
 
   if (lightRehab) {
     score += 25;
-    supporting.push(`Light rehab budget (${fmtDollars(c.rehab)}) suits a clean-and-list resale.`);
+    supporting.push(`Light visitor-entered scope (${fmtDollars(c.rehab)}) aligns with the model's wholetail comparison.`);
   } else if (c.rehab > 50000) {
     score -= 20;
-    sensitive.push(`Rehab budget of ${fmtDollars(c.rehab)} is too heavy for a wholetail; consider a full flip.`);
+    sensitive.push(`Rehab budget of ${fmtDollars(c.rehab)} exceeds this model's wholetail range.`);
   }
   if (sellable) {
     score += 20;
     supporting.push(`Retail value sits ${fmtDollars(c.arv - c.effectivePrice)} over asking.`);
   } else if (c.arv > 0) {
     score -= 15;
-    sensitive.push("Retail spread is below 10% — list price will not move retail.");
+    sensitive.push("Visitor-entered retail spread is below the model's 10% comparison point.");
   }
   if (c.property.condition === "turnkey" || c.property.condition === "light") {
     score += 10;
-    supporting.push("Turnkey / light condition allows a fast cosmetic refresh.");
+    supporting.push("Visitor-reported turnkey or light condition reduces the modeled scope assumption.");
   }
 
   const netProfit = c.arv - c.effectivePrice - c.rehab - c.arv * 0.07;
@@ -173,8 +173,8 @@ function scoreWholetail(c: LaneCtx): LaneFitResult {
     verdictLabel: LANE_VERDICT_LABELS[verdict],
     headline: safeCopy(
       verdict === "strong"
-        ? `Clean cosmetic refresh, list retail. Net ${fmtDollars(netProfit)}.`
-        : `Wholetail spread is thin; verify retail comps.`,
+        ? `Entered assumptions produce ${fmtDollars(netProfit)} of modeled wholetail spread.`
+        : `Modeled wholetail spread is sensitive; independently verify retail comps and scope.`,
     ),
     confidence: {
       score: Math.max(0, Math.min(100, score)),
@@ -216,21 +216,21 @@ function scoreBrrrr(c: LaneCtx): LaneFitResult {
 
   if (arvAllInPct <= 0.75) {
     score += 25;
-    supporting.push(`All-in is ${fmtPct(arvAllInPct * 100, 1)} of ARV — full BRRRR refi clears.`);
+    supporting.push(`All-in is ${fmtPct(arvAllInPct * 100, 1)} of visitor-entered ARV, within the model's 75% refinance assumption.`);
   } else if (arvAllInPct <= 0.85) {
     score += 5;
-    supporting.push(`All-in is ${fmtPct(arvAllInPct * 100, 1)} of ARV — partial BRRRR; expect cash left in.`);
+    supporting.push(`All-in is ${fmtPct(arvAllInPct * 100, 1)} of visitor-entered ARV; the 75% modeled refinance leaves cash in the scenario.`);
   } else if (c.arv > 0) {
     score -= 25;
-    sensitive.push(`All-in is ${fmtPct(arvAllInPct * 100, 1)} of ARV — refi will not clear principal.`);
+    sensitive.push(`All-in is ${fmtPct(arvAllInPct * 100, 1)} of visitor-entered ARV; the model's 75% refinance assumption does not cover the entered basis and scope.`);
   }
 
   if (c.base.dscr >= 1.25) {
     score += 15;
-    supporting.push(`Base DSCR of ${c.base.dscr.toFixed(2)} clears the typical 1.20-1.25 lender floor.`);
+    supporting.push(`Base modeled DSCR of ${c.base.dscr.toFixed(2)} exceeds the tool's illustrative 1.20-1.25 comparison range; actual lender criteria vary.`);
   } else if (c.base.dscr > 0 && c.base.dscr < 1.0) {
     score -= 25;
-    sensitive.push(`Base DSCR of ${c.base.dscr.toFixed(2)} fails refi qualification.`);
+    sensitive.push(`Base modeled DSCR of ${c.base.dscr.toFixed(2)} is below 1.00; this tool cannot determine refinance eligibility.`);
   }
 
   if (c.base.annualCashFlow > 0) {
@@ -249,10 +249,10 @@ function scoreBrrrr(c: LaneCtx): LaneFitResult {
     verdictLabel: LANE_VERDICT_LABELS[verdict],
     headline: safeCopy(
       verdict === "strong"
-        ? `Strong BRRRR. ${fmtDollars(cashLeft)} left in after refi.`
+        ? `At the entered assumptions, the modeled 75% refinance leaves ${fmtDollars(cashLeft)} in the scenario.`
         : verdict === "not_recommended"
-          ? "BRRRR fails — refi will not clear and DSCR misses lender floor."
-          : `BRRRR works with ${fmtDollars(cashLeft)} left in. Watch DSCR.`,
+          ? "The entered BRRRR assumptions do not satisfy the model's refinance and DSCR comparisons."
+          : `The modeled BRRRR path leaves ${fmtDollars(cashLeft)} in and remains sensitive to lender-specific DSCR criteria.`,
     ),
     confidence: {
       score: Math.max(0, Math.min(100, score)),
@@ -291,21 +291,21 @@ function scoreRentalHold(c: LaneCtx): LaneFitResult {
 
   if (c.base.capRatePct >= 6) {
     score += 20;
-    supporting.push(`Base cap rate of ${fmtPct(c.base.capRatePct, 2)} clears solid cash-flow territory.`);
+    supporting.push(`Base modeled cap rate of ${fmtPct(c.base.capRatePct, 2)} exceeds the tool's 6% comparison point.`);
   } else if (c.base.capRatePct < 4) {
     score -= 15;
     sensitive.push(`Base cap rate of ${fmtPct(c.base.capRatePct, 2)} suggests appreciation play, not cash flow.`);
   }
   if (c.base.cashOnCashPct >= 8) {
     score += 15;
-    supporting.push(`Cash-on-cash of ${fmtPct(c.base.cashOnCashPct, 1)} clears the 8% threshold.`);
+    supporting.push(`Modeled cash-on-cash of ${fmtPct(c.base.cashOnCashPct, 1)} exceeds the tool's 8% comparison point.`);
   } else if (c.base.cashOnCashPct < 4 && c.base.cashOnCashPct > 0) {
     score -= 10;
-    sensitive.push(`Cash-on-cash of ${fmtPct(c.base.cashOnCashPct, 1)} underperforms passive index alternatives.`);
+    sensitive.push(`Modeled cash-on-cash of ${fmtPct(c.base.cashOnCashPct, 1)} is below the tool's 4% sensitivity point.`);
   }
   if (c.worst.annualCashFlow >= 0) {
     score += 10;
-    supporting.push("Survives worst case — cash flow stays non-negative under stress.");
+    supporting.push("Modeled cash flow stays non-negative in the tool's downside scenario.");
   } else if (c.worst.annualCashFlow < 0) {
     score -= 15;
     sensitive.push(`Worst case loses ${fmtDollars(-c.worst.annualCashFlow)} per year.`);
@@ -323,10 +323,10 @@ function scoreRentalHold(c: LaneCtx): LaneFitResult {
     verdictLabel: LANE_VERDICT_LABELS[verdict],
     headline: safeCopy(
       verdict === "strong"
-        ? `Quality long-term hold. ${fmtMonthly(c.base.annualCashFlow / 12)} cash flow.`
+        ? `Entered assumptions produce ${fmtMonthly(c.base.annualCashFlow / 12)} of modeled monthly cash flow.`
         : verdict === "not_recommended"
-          ? "Rental hold loses money at base case. Path requires structural change."
-          : `Rental hold works on appreciation, not yield.`,
+          ? "The rental-hold model is negative at base case under the entered assumptions."
+          : `The rental-hold model depends more on appreciation assumptions than current yield.`,
     ),
     confidence: {
       score: Math.max(0, Math.min(100, score)),
@@ -366,19 +366,19 @@ function scoreAduDevelopment(c: LaneCtx): LaneFitResult {
 
   if (c.property.zoningAllowsAdu) {
     score += 25;
-    supporting.push("Zoning allows an ADU — additional unit increases income or resale.");
+    supporting.push("The visitor marked ADU zoning as allowed; the model treats that unverified input as potential additional-unit capacity.");
   }
   if (c.property.developmentPotential) {
     score += 20;
-    supporting.push("Lot supports further development (split, multi-unit, or addition).");
+    supporting.push("The visitor marked development potential; the model treats that unverified input as a possible split, multi-unit, or addition scenario.");
   }
   if ((c.property.lotSqft ?? 0) >= 6000) {
     score += 5;
-    supporting.push(`Lot is ${(c.property.lotSqft ?? 0).toLocaleString()} sqft — room to build.`);
+    supporting.push(`Visitor-entered lot size is ${(c.property.lotSqft ?? 0).toLocaleString()} sqft; buildable area still requires independent verification.`);
   }
   if (!c.property.zoningAllowsAdu && !c.property.developmentPotential) {
     score -= 10;
-    sensitive.push("No development upside flagged. Standard exit lanes only.");
+    sensitive.push("No visitor-entered development signal is present, so the model compares other educational paths.");
   }
 
   const verdict = pickVerdict(score, missing);
@@ -389,10 +389,10 @@ function scoreAduDevelopment(c: LaneCtx): LaneFitResult {
     verdictLabel: LANE_VERDICT_LABELS[verdict],
     headline: safeCopy(
       verdict === "strong"
-        ? "Clear ADU or development upside. Path adds a second income stream."
+        ? "Entered zoning and lot assumptions create a higher modeled ADU or development fit."
         : verdict === "needs_more_data"
           ? "Confirm zoning and lot size to evaluate ADU or development upside."
-          : "No meaningful ADU or development upside detected.",
+          : "The entered assumptions do not establish meaningful ADU or development potential.",
     ),
     confidence: {
       score: Math.max(0, Math.min(100, score)),
@@ -401,8 +401,8 @@ function scoreAduDevelopment(c: LaneCtx): LaneFitResult {
       missingInputs: missing,
     },
     economics: {
-      primaryMetric: "Development upside",
-      primaryValue: c.property.zoningAllowsAdu ? "ADU eligible" : "Verify zoning",
+      primaryMetric: "Modeled development signal",
+      primaryValue: c.property.zoningAllowsAdu ? "Visitor marked eligible" : "Verify zoning",
       metrics: [
         { label: "Lot sqft", value: (c.property.lotSqft ?? 0).toLocaleString() },
         { label: "ADU zoning", value: c.property.zoningAllowsAdu ? "Yes" : "Unknown" },
@@ -432,21 +432,21 @@ function scoreWholesale(c: LaneCtx): LaneFitResult {
 
   if (fee >= 10000) {
     score += 25;
-    supporting.push(`Spread leaves ${fmtDollars(fee)} for an assignment fee.`);
+    supporting.push(`The model shows ${fmtDollars(fee)} of assignment-fee headroom before transaction-specific costs and legal constraints.`);
   } else if (fee > 0) {
     score += 5;
-    supporting.push(`Spread is thin (${fmtDollars(fee)}) but workable for a low-fee assignment.`);
+    supporting.push(`The model shows ${fmtDollars(fee)} of assignment-fee headroom before transaction-specific costs and legal constraints.`);
   } else if (c.arv > 0) {
     score -= 25;
-    sensitive.push("Asking price exceeds buyer MAO — no assignment spread.");
+    sensitive.push("Asking price exceeds the model's 70% rule MAO, leaving no modeled assignment-fee headroom.");
   }
   if ((c.property.timelineDaysToClose ?? 30) <= 21) {
     score += 10;
-    supporting.push("Tight close window favors a wholesale assignment to a cash buyer.");
+    sensitive.push("A tight close window increases execution risk; the model does not provide a buyer or financing path.");
   }
   if (c.property.titleClouded) {
     score -= 20;
-    sensitive.push("Title concerns make assignment harder — buyers will pause.");
+    sensitive.push("Visitor-reported title concerns may affect assignability and require independent legal and title review.");
   }
 
   const verdict = pickVerdict(score, missing);
@@ -457,10 +457,10 @@ function scoreWholesale(c: LaneCtx): LaneFitResult {
     verdictLabel: LANE_VERDICT_LABELS[verdict],
     headline: safeCopy(
       verdict === "strong"
-        ? `Clean assignment opportunity. ${fmtDollars(fee)} spread for the wholesaler.`
+        ? `Entered assumptions show ${fmtDollars(fee)} of modeled assignment-fee headroom before transaction-specific costs.`
         : verdict === "not_recommended"
-          ? "No assignment spread at asking price."
-          : `Wholesale possible at a reduced fee.`,
+          ? "No modeled assignment-fee headroom remains at the entered asking price."
+          : `Modeled assignment-fee headroom is limited and does not establish assignability, a buyer, or a closing.`,
     ),
     confidence: {
       score: Math.max(0, Math.min(100, score)),
@@ -469,7 +469,7 @@ function scoreWholesale(c: LaneCtx): LaneFitResult {
       missingInputs: missing,
     },
     economics: {
-      primaryMetric: "Assignment fee at 70% MAO",
+      primaryMetric: "Modeled fee headroom at 70% MAO",
       primaryValue: fmtDollars(fee),
       metrics: [
         { label: "Buyer MAO", value: fmtDollars(mao) },
@@ -490,14 +490,14 @@ function scoreJv(c: LaneCtx): LaneFitResult {
   const missing: string[] = [];
   let score = 35;
 
-  // JV makes sense when the deal is sound but the user lacks capital.
+  // Compare a JV concept when the modeled scenario requires uncommitted capital.
   if (c.property.financingCommitted === false) {
     score += 20;
-    supporting.push("User does not have committed financing — JV brings the capital.");
+    supporting.push("The visitor marked financing uncommitted, so the model includes a possible JV concept for comparison.");
   }
   if (c.totalCashIn > 75000) {
     score += 15;
-    supporting.push(`Total cash-in of ${fmtDollars(c.totalCashIn)} is large enough to interest a partner.`);
+    supporting.push(`Modeled cash need is ${fmtDollars(c.totalCashIn)}; actual partner interest, terms, and suitability are unknown.`);
   }
   // Underlying deal must be sound — borrow score from BRRRR or Flip.
   const flip = scoreFlip(c).confidence.score;
@@ -505,10 +505,10 @@ function scoreJv(c: LaneCtx): LaneFitResult {
   const underlyingScore = Math.max(flip, brrrr);
   if (underlyingScore >= 65) {
     score += 20;
-    supporting.push("Underlying flip or BRRRR economics are strong enough to share equity.");
+    supporting.push("Underlying flip or BRRRR scores exceed the model's 65-point comparison threshold.");
   } else if (underlyingScore < 40) {
     score -= 25;
-    sensitive.push("Underlying economics are too weak to support a 50/50 JV.");
+    sensitive.push("Underlying model scores are below 40 and do not support the tool's JV comparison.");
   }
 
   const verdict = pickVerdict(score, missing);
@@ -519,8 +519,8 @@ function scoreJv(c: LaneCtx): LaneFitResult {
     verdictLabel: LANE_VERDICT_LABELS[verdict],
     headline: safeCopy(
       verdict === "strong"
-        ? "JV-able. Bring the deal, partner brings capital, split the upside."
-        : "JV is structurally possible but needs stronger fundamentals to attract a capital partner.",
+        ? "The entered assumptions create a higher modeled fit for exploring a separately negotiated JV concept."
+        : "The entered assumptions create a limited modeled JV fit. No partner, split, funding, or terms are offered.",
     ),
     confidence: {
       score: Math.max(0, Math.min(100, score)),
@@ -529,10 +529,10 @@ function scoreJv(c: LaneCtx): LaneFitResult {
       missingInputs: missing,
     },
     economics: {
-      primaryMetric: "Indicative split",
-      primaryValue: "50 / 50",
+      primaryMetric: "Modeled cash need",
+      primaryValue: fmtDollars(c.totalCashIn),
       metrics: [
-        { label: "Total cash-in", value: fmtDollars(c.totalCashIn) },
+        { label: "Terms", value: "Not modeled or offered" },
         { label: "Underlying lane score", value: underlyingScore.toFixed(0) },
       ],
     },
@@ -555,18 +555,18 @@ function scoreListingReferral(c: LaneCtx): LaneFitResult {
   const retailUpside = c.arv - investorMao;
   if (retailUpside > 30000 && c.arv > 0) {
     score += 25;
-    supporting.push(`Retail listing leaves ${fmtDollars(retailUpside)} more on the table than an investor sale.`);
+    supporting.push(`Visitor-entered ARV is ${fmtDollars(retailUpside)} above the model's 70% rule MAO; this is not a net-proceeds comparison.`);
   }
   if (c.property.condition === "turnkey" || c.property.condition === "light") {
     score += 15;
-    supporting.push("Property is presentable — qualifies for a clean MLS listing.");
+    supporting.push("Visitor-reported condition may warrant a separate licensed listing discussion.");
   } else if (c.property.condition === "gut" || c.property.condition === "heavy") {
     score -= 20;
-    sensitive.push("Heavy condition limits retail buyer pool; investor sale may net more.");
+    sensitive.push("Visitor-reported heavy condition may affect retail interest; actual pricing and net proceeds require licensed analysis.");
   }
   if (c.property.timelineDaysToClose && c.property.timelineDaysToClose <= 21) {
     score -= 15;
-    sensitive.push("Tight close window cuts off the retail listing path.");
+    sensitive.push("The entered close window may conflict with a retail listing timeline.");
   }
 
   const verdict = pickVerdict(score, missing);
@@ -577,8 +577,8 @@ function scoreListingReferral(c: LaneCtx): LaneFitResult {
     verdictLabel: LANE_VERDICT_LABELS[verdict],
     headline: safeCopy(
       verdict === "strong"
-        ? `Refer to a trusted listing agent. Retail nets ${fmtDollars(retailUpside)} more than investor sale.`
-        : "Listing referral possible but condition and timeline favor an investor exit.",
+        ? "The model flags a possible licensed listing path; representation, pricing, and net proceeds require a separate evaluation."
+        : "A licensed listing path remains an educational comparison, not a referral or representation promise.",
     ),
     confidence: {
       score: Math.max(0, Math.min(100, score)),
@@ -587,7 +587,7 @@ function scoreListingReferral(c: LaneCtx): LaneFitResult {
       missingInputs: missing,
     },
     economics: {
-      primaryMetric: "Retail upside vs investor sale",
+      primaryMetric: "ARV-to-70%-rule gap",
       primaryValue: fmtDollars(retailUpside),
       metrics: [
         { label: "Estimated retail (ARV)", value: fmtDollars(c.arv) },
@@ -632,12 +632,12 @@ function scoreGroundUp(c: LaneCtx): LaneFitResult {
   }
   if (!c.property.zoningAllowsAdu && !c.property.developmentPotential) {
     score -= 10;
-    sensitive.push("No development or density signal — ground-up unlikely to clear entitlement risk.");
+    sensitive.push("No visitor-entered development or density signal; entitlement feasibility remains unknown.");
   }
-  // Doctrine: Phase-1 (today) does not chase large-scale ground-up plays
-  // unless lot + zoning are exceptional. Cap the verdict honestly.
+  // Keep this path educational: public inputs cannot establish entitlement,
+  // provider availability, funding, or a Pegasus project role.
   sensitive.push(
-    "Ground-up is a Phase-2+ pathway. Pegasus is a real estate development company, but current scope leads with ADU, flip, and BRRRR. Ground-up routes to a capital partner conversation.",
+    "Ground-up is an educational model only. It does not establish entitlement, provider availability, funding, or a Pegasus project role.",
   );
 
   const verdict = pickVerdict(score, missing);
@@ -648,10 +648,10 @@ function scoreGroundUp(c: LaneCtx): LaneFitResult {
     verdictLabel: LANE_VERDICT_LABELS[verdict],
     headline: safeCopy(
       verdict === "strong"
-        ? "Lot and zoning support a ground-up build — capital partner conversation."
+        ? "Entered lot and zoning assumptions create a higher modeled ground-up fit; independent feasibility work is still required."
         : verdict === "needs_more_data"
           ? "Confirm lot size and zoning to evaluate ground-up viability."
-          : "Ground-up is a Phase-2+ path. Lot or zoning signal is not strong enough today.",
+          : "Entered lot or zoning signals do not establish ground-up feasibility.",
     ),
     confidence: {
       score: Math.max(0, Math.min(100, score)),
@@ -661,7 +661,7 @@ function scoreGroundUp(c: LaneCtx): LaneFitResult {
     },
     economics: {
       primaryMetric: "Ground-up readiness",
-      primaryValue: bigLot && c.property.developmentPotential ? "Worth a conversation" : "Phase-2+",
+      primaryValue: bigLot && c.property.developmentPotential ? "Higher modeled fit" : "More evidence needed",
       metrics: [
         { label: "Lot sqft", value: (c.property.lotSqft ?? 0).toLocaleString() },
         { label: "Development potential", value: c.property.developmentPotential ? "Yes" : "Unknown" },

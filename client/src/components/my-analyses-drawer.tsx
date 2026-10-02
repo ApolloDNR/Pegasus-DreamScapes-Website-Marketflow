@@ -8,7 +8,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescri
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, authenticatedRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { FolderOpen, Share2, Trash2, Check, Copy, Loader2, Search, Pencil, X, Sparkles, FileDown, Send } from "lucide-react";
@@ -106,9 +106,8 @@ export function MyAnalysesDrawer({ trigger, onLoad, onSelectCalculator }: MyAnal
   const handleDownloadPdf = async (a: SavedAnalysis) => {
     try {
       setPdfPendingId(a.id);
-      const res = await fetch(`/api/pdf/calculator`, {
+      const res = await authenticatedRequest(`/api/pdf/calculator`, {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: a.id }),
       });

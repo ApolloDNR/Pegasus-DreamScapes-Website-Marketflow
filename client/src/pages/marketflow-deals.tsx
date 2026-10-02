@@ -1,19 +1,27 @@
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  useCallback,
+  useMemo,
+  type ReactNode,
+} from "react";
 import { Link, useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { useSEO } from "@/hooks/use-seo";
+import { canAccessReviewedMarketflowInventory } from "@shared/marketflow-inventory-access";
 import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
 import { useSupabaseMarketplace } from "@/hooks/use-supabase-marketplace";
 import { useDealAction } from "@/contexts/deal-action-context";
 import { useToast } from "@/hooks/use-toast";
+import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Progress } from "@/components/ui/progress";
 import {
   Select,
   SelectContent,
@@ -23,23 +31,12 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ScrollReveal, StaggerChildren, StaggerItem, HoverLift } from "@/components/animations";
-import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo, useSpring } from "framer-motion";
+import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import type { CapitalProject } from "@shared/schema";
-import { DealProgressTracker, ActivityTimeline } from "@/components/deal-progress-tracker";
-import { DealNotes, NotesIndicator } from "@/components/deal-notes";
-import { useCompareDeals, DealComparisonButton, CompareCheckbox, ComparisonModal } from "@/components/deal-comparison";
-import { BulkActionsBar, useBulkSelection, BulkSelectCheckbox } from "@/components/bulk-actions";
-import { ExportDialog, QuickExportButton } from "@/components/deal-export";
-import { DealMapView } from "@/components/deal-map-view";
-import { KeyboardShortcutsDialog, KeyboardShortcutHint } from "@/components/keyboard-shortcuts-dialog";
-import { useSavedSearches, SaveSearchDialog, SavedSearchesList } from "@/components/saved-searches";
-import { useWatchlistFolders, AddToFolderDialog, FolderSidebar } from "@/components/watchlist-folders";
-import { DueDiligenceProgress } from "@/components/due-diligence-checklist";
-import { TimelineProgress } from "@/components/deal-timeline";
-import { CommunicationSummary } from "@/components/communication-log";
-import { DocumentCount } from "@/components/document-attachments";
-import { QuickCalcButton, InlineROIBadge } from "@/components/quick-calculator";
-import { ActivityFeedWidget, useActivityFeed } from "@/components/activity-feed";
+import {
+  formatMarketflowMoney,
+  readWholesaleFinancials,
+} from "@/components/marketflow-financial-truth";
 import { SearchAutocomplete } from "@/components/search-autocomplete";
 import { BetaBanner } from "@/components/beta-banner";
 import { OpenOfferStudioButton } from "@/components/open-offer-studio-button";
@@ -54,7 +51,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
-  Search,
   Filter,
   MapPin,
   DollarSign,
@@ -96,14 +92,6 @@ import {
   TrendingDown,
   CircleDollarSign,
   Columns,
-  Map,
-  Download,
-  Keyboard,
-  FolderPlus,
-  CheckSquare,
-  ClipboardList,
-  Folder,
-  FolderOpen,
   LockKeyhole,
   Plus,
   RefreshCw
@@ -130,6 +118,7 @@ interface WholesaleDeal {
   matchScore?: number;
   negotiationAllowed?: boolean;
   jvAllowed?: boolean;
+  canRequestJv?: boolean;
   latitude?: number;
   longitude?: number;
 }
@@ -155,14 +144,30 @@ interface Listing {
   isFeatured?: boolean;
 }
 
+const MARKETFLOW_INVENTORY_STATUS = "No reviewed live inventory is published.";
+
 export default function MarketflowDeals() {
   useSEO({
     title: "MarketFlow Deals",
     description: "Private MarketFlow dealflow surface.",
     noIndex: true,
   });
-  const { isAuthenticated, isGuestMode, guestRole, exitGuestMode } = useSupabaseAuth();
-  const shouldShowOperatorChrome = isAuthenticated && !isGuestMode;
+  const {
+    isAuthenticated,
+    isGuestMode,
+    guestRole,
+    exitGuestMode,
+    profile,
+    userRole,
+    isAdmin,
+  } = useSupabaseAuth();
+  const shouldShowOperatorChrome = canAccessReviewedMarketflowInventory({
+    isAuthenticated,
+    isGuestMode,
+    isPegasusBadged: profile?.is_pegasus_badged,
+    isStaff: isAdmin,
+    roles: [profile?.primary_role, userRole],
+  });
 
   if (!shouldShowOperatorChrome) {
     return (
@@ -200,28 +205,29 @@ function MarketflowPrivateBetaHold({
           <div className="mx-auto mb-6 flex h-14 w-14 items-center justify-center rounded-sm border border-primary/30 bg-primary/10">
             <LockKeyhole className="h-6 w-6 text-primary" />
           </div>
-          <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.28em] text-primary">
+          <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.28em] text-[#8a5122] dark:text-primary">
             MarketFlow private beta
           </p>
           <h1 className="mb-5 font-serif text-3xl font-semibold leading-tight tracking-tight sm:text-4xl">
-            Reviewed opportunities are not shown as sample inventory.
+            {MARKETFLOW_INVENTORY_STATUS}
           </h1>
           <p className="mx-auto mb-8 max-w-xl text-base leading-relaxed text-muted-foreground">
-            MarketFlow is a private routing layer. Request access, submit a deal,
-            or sign in after approval to view live opportunities backed by real review data.
+            MarketFlow remains a controlled private pilot. You may request access or submit
+            an opportunity, but neither path promises approval, review, inventory, matching,
+            a transaction, or a response. Reviewed opportunities are not shown as sample inventory.
           </p>
           <div className="flex flex-col justify-center gap-3 sm:flex-row">
             <Link href="/marketflow/access">
               <Button
                 size="lg"
-                className="min-h-[48px] w-full gap-2 rounded-sm px-7 text-xs font-semibold uppercase tracking-[0.16em] sm:w-auto"
+                className="min-h-[48px] w-full gap-2 rounded-sm bg-[#8a5122] px-7 text-xs font-semibold uppercase tracking-[0.16em] text-white hover:bg-[#75451d] dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90 sm:w-auto"
                 data-testid="button-marketflow-request-access"
               >
                 Request Access
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
-            <Link href="/marketflow/submit">
+            <Link href="/bring-an-opportunity?intent=deal-jv">
               <Button
                 size="lg"
                 variant="outline"
@@ -304,86 +310,7 @@ function DealsPage() {
     saveFilters({ dealCategory, viewMode, propertyType, sortBy });
   }, [dealCategory, viewMode, propertyType, sortBy, saveFilters]);
   
-  // Comparison mode state
-  const { 
-    selectedDeals: compareDeals, 
-    toggleDeal: toggleCompare, 
-    isSelected: isCompareSelected, 
-    clearSelection: clearCompare, 
-    canAddMore: canAddMoreCompare,
-    showComparison,
-    setShowComparison
-  } = useCompareDeals(3);
-  
-  // Feature dialog states
-  const [showKeyboardShortcuts, setShowKeyboardShortcuts] = useState(false);
-  const [showExportDialog, setShowExportDialog] = useState(false);
-  const [showSaveSearchDialog, setShowSaveSearchDialog] = useState(false);
-  const [showMapView, setShowMapView] = useState(false);
-  const [showActivityFeed, setShowActivityFeed] = useState(false);
-  const [showSavedSearches, setShowSavedSearches] = useState(false);
-  const [showFolderSidebar, setShowFolderSidebar] = useState(false);
-  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
-  const [addToFolderDeal, setAddToFolderDeal] = useState<WholesaleDeal | null>(null);
-  
-  // Feature hooks
-  const savedSearches = useSavedSearches();
-  const watchlistFolders = useWatchlistFolders();
-  
-  // Keyboard shortcuts handler - memoized to prevent stale closures
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    // Ignore if typing in an input
-    if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
-      return;
-    }
-    
-    // ? key for help
-    if (e.key === '?' && e.shiftKey) {
-      e.preventDefault();
-      setShowKeyboardShortcuts(true);
-    }
-    // m for map view
-    if (e.key === 'm' && !e.metaKey && !e.ctrlKey) {
-      e.preventDefault();
-      setShowMapView(prev => !prev);
-    }
-    // e for export
-    if (e.key === 'e' && !e.metaKey && !e.ctrlKey) {
-      e.preventDefault();
-      setShowExportDialog(true);
-    }
-    // s for save search
-    if (e.key === 's' && !e.metaKey && !e.ctrlKey) {
-      e.preventDefault();
-      setShowSaveSearchDialog(true);
-    }
-    // v for toggle view mode
-    if (e.key === 'v' && !e.metaKey && !e.ctrlKey) {
-      e.preventDefault();
-      setViewMode(prev => prev === 'grid' ? 'swipe' : 'grid');
-    }
-    // / for focus search (SearchAutocomplete uses input-search testid)
-    if (e.key === '/') {
-      e.preventDefault();
-      const searchContainer = document.querySelector('[data-testid="search-autocomplete"]');
-      const searchInput = searchContainer?.querySelector('input') as HTMLInputElement;
-      searchInput?.focus();
-    }
-    // Escape to close modals
-    if (e.key === 'Escape') {
-      setShowKeyboardShortcuts(false);
-      setShowExportDialog(false);
-      setShowSaveSearchDialog(false);
-      setShowMapView(false);
-    }
-  }, []);
-  
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleKeyDown]);
-  
-  const { isAuthenticated, isWholesaler, isDreamscaper, isInvestor, isAdmin, isGuestMode, guestRole, exitGuestMode } = useSupabaseAuth();
+  const { isAuthenticated, isDreamscaper, isInvestor, isAdmin, isGuestMode, guestRole, exitGuestMode } = useSupabaseAuth();
   const { toast } = useToast();
   const { isItemSaved, toggleSaveItem, isSaving } = useSupabaseMarketplace();
   const { openDealAction } = useDealAction();
@@ -391,17 +318,32 @@ function DealsPage() {
 
   const shouldFetchLiveData = isAuthenticated && !isGuestMode;
 
-  const { data: deals, isLoading: dealsLoading } = useQuery<WholesaleDeal[]>({
+  const {
+    data: deals,
+    isLoading: dealsLoading,
+    isError: dealsError,
+    refetch: refetchDeals,
+  } = useQuery<WholesaleDeal[]>({
     queryKey: ['/api/wholesale-deals'],
     enabled: shouldFetchLiveData,
   });
 
-  const { data: capitalProjects, isLoading: projectsLoading } = useQuery<CapitalProject[]>({
+  const {
+    data: capitalProjects,
+    isLoading: projectsLoading,
+    isError: projectsError,
+    refetch: refetchProjects,
+  } = useQuery<CapitalProject[]>({
     queryKey: ['/api/capital-projects'],
     enabled: shouldFetchLiveData,
   });
 
-  const { data: listings, isLoading: listingsLoading } = useQuery<Listing[]>({
+  const {
+    data: listings,
+    isLoading: listingsLoading,
+    isError: listingsError,
+    refetch: refetchListings,
+  } = useQuery<Listing[]>({
     queryKey: ['/api/listings'],
     enabled: shouldFetchLiveData,
   });
@@ -456,16 +398,6 @@ function DealsPage() {
     return matches;
   }) || [];
 
-  // Bulk selection for batch operations (must be after filteredDeals is defined)
-  const {
-    selectedIds: bulkSelectedIds,
-    toggleItem: toggleBulkSelect,
-    selectAll: selectAllBulk,
-    clearSelection: clearBulkSelection,
-    isSelected: isBulkSelected,
-    selectedCount: bulkSelectedCount
-  } = useBulkSelection(filteredDeals);
-
   if (!shouldFetchLiveData) {
     return (
       <MarketflowPrivateBetaHold
@@ -480,10 +412,19 @@ function DealsPage() {
     <div className="space-y-6">
       {/* Beta Banner */}
       <BetaBanner section="marketflow" showFeatureLists={false} dismissible={true} />
-      
-      {/* Progress Tracker - shows pipeline status for authenticated users */}
-      <DealProgressTracker />
 
+      <Card className="border-primary/25 bg-primary/5" data-testid="marketflow-inventory-publication-status">
+        <CardContent className="p-5 sm:p-6">
+          <p className="font-serif text-xl font-semibold tracking-tight">
+            {MARKETFLOW_INVENTORY_STATUS}
+          </p>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            This controlled workspace is prepared for future reviewed records. Access does not
+            promise inventory, matching, an introduction, or a transaction.
+          </p>
+        </CardContent>
+      </Card>
+      
       <ScrollReveal>
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 mb-6">
           <div>
@@ -493,10 +434,10 @@ function DealsPage() {
             </h1>
             <p className="text-muted-foreground">
               {dealCategory === "wholesale" 
-                ? "Browse wholesale assignments. Find contracts to assign or JV partner on."
+                ? "Future reviewed wholesale records may appear here; none are published now."
                 : dealCategory === "capital"
-                  ? "Browse capital raise opportunities. Invest in operator projects."
-                  : "Browse ready-to-move-in properties. Request info or schedule showings."}
+                  ? "Future private project records may appear here. Capital context is relationship information only."
+                  : "Future reviewed listing records may appear here; none are published now."}
             </p>
           </div>
           
@@ -536,7 +477,7 @@ function DealsPage() {
             </TabsTrigger>
             <TabsTrigger value="capital" className="gap-1 sm:gap-2 text-xs sm:text-sm" data-testid="tab-capital">
               <TrendingUp className="w-4 h-4 shrink-0" />
-              <span className="hidden sm:inline truncate">Capital Raises</span>
+              <span className="hidden sm:inline truncate">Project Records</span>
               <span className="sm:hidden truncate">Capital</span>
             </TabsTrigger>
             <TabsTrigger value="listings" className="gap-1 sm:gap-2 text-xs sm:text-sm" data-testid="tab-listings">
@@ -555,7 +496,7 @@ function DealsPage() {
                 <Eye className="w-5 h-5 text-amber-600" />
                 <div>
                   <h3 className="font-medium">Private beta preview: {guestRole?.replace(/_/g, ' ')}</h3>
-                  <p className="text-sm text-muted-foreground">Approved members can view reviewed opportunities and take action when real inventory is available.</p>
+                  <p className="text-sm text-muted-foreground">{MARKETFLOW_INVENTORY_STATUS} Future reviewed records remain subject to authorization and availability.</p>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -598,465 +539,226 @@ function DealsPage() {
             </SelectContent>
           </Select>
           
-          <div className="hidden md:flex items-center gap-1 border-l pl-4">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant={showMapView ? "default" : "ghost"} 
-                  size="icon"
-                  onClick={() => setShowMapView(!showMapView)}
-                  data-testid="button-toggle-map"
-                >
-                  <Map className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Toggle Map View <KeyboardShortcutHint shortcut="M" /></p>
-              </TooltipContent>
-            </Tooltip>
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={() => setShowExportDialog(true)}
-                  data-testid="button-export"
-                >
-                  <Download className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Export Deals <KeyboardShortcutHint shortcut="E" /></p>
-              </TooltipContent>
-            </Tooltip>
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={() => setShowSaveSearchDialog(true)}
-                  data-testid="button-save-search"
-                >
-                  <Bookmark className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Save Search <KeyboardShortcutHint shortcut="S" /></p>
-              </TooltipContent>
-            </Tooltip>
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={() => setShowKeyboardShortcuts(true)}
-                  data-testid="button-keyboard-shortcuts"
-                >
-                  <Keyboard className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Keyboard Shortcuts <KeyboardShortcutHint shortcut="?" /></p>
-              </TooltipContent>
-            </Tooltip>
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant={showSavedSearches ? "default" : "ghost"} 
-                  size="icon"
-                  onClick={() => setShowSavedSearches(!showSavedSearches)}
-                  data-testid="button-toggle-saved-searches"
-                >
-                  <Search className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Saved Searches</p>
-              </TooltipContent>
-            </Tooltip>
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant={showActivityFeed ? "default" : "ghost"} 
-                  size="icon"
-                  onClick={() => setShowActivityFeed(!showActivityFeed)}
-                  data-testid="button-toggle-activity"
-                >
-                  <Clock className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Activity Feed</p>
-              </TooltipContent>
-            </Tooltip>
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant={showFolderSidebar ? "default" : "ghost"} 
-                  size="icon"
-                  onClick={() => setShowFolderSidebar(!showFolderSidebar)}
-                  data-testid="button-toggle-folders"
-                >
-                  <FolderOpen className="w-4 h-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Watchlist Folders</p>
-              </TooltipContent>
-            </Tooltip>
-          </div>
-        </div>
-      )}
-      
-      {/* Saved Searches Panel */}
-      {showSavedSearches && dealCategory === "wholesale" && (
-        <Card className="mb-6">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Search className="w-5 h-5 text-primary" />
-              Saved Searches
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <SavedSearchesList
-              searches={savedSearches.savedSearches}
-              onApply={(search) => {
-                if (search.filters.propertyType) setPropertyType(search.filters.propertyType);
-                if (search.filters.query) setSearchQuery(search.filters.query);
-                if (search.filters.sortBy) setSortBy(search.filters.sortBy);
-                savedSearches.markUsed(search.id);
-                toast({
-                  title: "Search loaded",
-                  description: `Applied filters from "${search.name}"`,
-                });
-              }}
-              onDelete={(id) => {
-                savedSearches.deleteSearch(id);
-                toast({
-                  title: "Search deleted",
-                  description: "Saved search has been removed.",
-                });
-              }}
-              onToggleAlerts={(id) => savedSearches.toggleAlerts(id)}
-            />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Activity Feed Panel */}
-      {showActivityFeed && (
-        <Card className="mb-6">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <Clock className="w-5 h-5 text-primary" />
-              Recent Activity
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="p-4">
-            <ActivityFeedWidget />
-            <div className="text-center text-muted-foreground text-sm py-4">
-              <Clock className="w-6 h-6 mx-auto mb-2 opacity-50" />
-              <p>No recent activity to display</p>
-              <p className="text-xs">Your deal interactions will appear here</p>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Watchlist Folders Panel */}
-      {showFolderSidebar && dealCategory === "wholesale" && (
-        <Card className="mb-6">
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              <FolderOpen className="w-5 h-5 text-primary" />
-              Watchlist Folders
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <FolderSidebar
-              folders={watchlistFolders.folders}
-              selectedFolderId={selectedFolderId}
-              onSelectFolder={(folderId) => {
-                setSelectedFolderId(folderId);
-                if (folderId) {
-                  toast({
-                    title: "Folder selected",
-                    description: "Showing deals from this folder",
-                  });
-                }
-              }}
-              onCreateFolder={() => {
-                watchlistFolders.createFolder("New Folder", "#3B82F6");
-                toast({
-                  title: "Folder created",
-                  description: "New watchlist folder added",
-                });
-              }}
-              onDeleteFolder={(id) => {
-                watchlistFolders.deleteFolder(id);
-                if (selectedFolderId === id) setSelectedFolderId(null);
-                toast({
-                  title: "Folder deleted",
-                  description: "Watchlist folder removed",
-                });
-              }}
-              onEditFolder={(folder) => {
-                toast({
-                  title: "Edit folder",
-                  description: `Editing "${folder.name}"`,
-                });
-              }}
-            />
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Map View - Google Maps integration */}
-      {showMapView && dealCategory === "wholesale" && (
-        <div className="mb-6">
-          <DealMapView
-            deals={filteredDeals.map(deal => ({
-              id: deal.id,
-              lat: deal.latitude || 0,
-              lng: deal.longitude || 0,
-              address: deal.propertyAddress || deal.address || '',
-              city: deal.city,
-              state: deal.state,
-              askingPrice: deal.askingPrice,
-              arv: deal.arv,
-              propertyType: deal.propertyType,
-              status: deal.status,
-              matchScore: deal.matchScore
-            }))}
-            onDealSelect={(dealId) => openDealAction(dealId, "wholesale_accept")}
-            selectedDealId={undefined}
-            isLoading={dealsLoading}
-          />
         </div>
       )}
 
       {dealCategory === "wholesale" && (
-        viewMode === "grid" ? (
-          <GridView 
-            deals={filteredDeals}
-            isLoading={dealsLoading}
-            onSave={handleSaveDeal}
-            onAction={handleDealAction}
-            onAcceptTerms={(deal) => {
-              openDealAction(deal.id, "wholesale_accept");
-            }}
-            onCounterTerms={(deal) => {
-              openDealAction(deal.id, "wholesale_counter");
-            }}
-            isItemSaved={(id) => isItemSaved('wholesale_deal', id)}
-            isSaving={isSaving}
-            showInvest={isDreamscaper || isInvestor || isAdmin}
-            showJVRequest={isWholesaler || isAdmin}
-            isCompareSelected={isCompareSelected}
-            toggleCompare={toggleCompare}
-            canAddMoreCompare={canAddMoreCompare}
-          />
-        ) : (
-          <SwipeView 
-            deals={filteredDeals}
-            onSave={handleSaveDeal}
-            onAction={handleDealAction}
-            onAcceptTerms={(deal) => {
-              openDealAction(deal.id, "wholesale_accept");
-            }}
-            onCounterTerms={(deal) => {
-              openDealAction(deal.id, "wholesale_counter");
-            }}
-            isItemSaved={(id) => isItemSaved('wholesale_deal', id)}
-            showInvest={isDreamscaper || isInvestor || isAdmin}
-            showJVRequest={isWholesaler || isAdmin}
-          />
-        )
+        <InventoryBoundary
+          lane="wholesale"
+          mode={viewMode}
+          isLoading={dealsLoading}
+          isError={dealsError}
+          isEmpty={filteredDeals.length === 0}
+          onRetry={() => void refetchDeals()}
+        >
+          {viewMode === "grid" ? (
+            <GridView
+              deals={filteredDeals}
+              isLoading={false}
+              onSave={handleSaveDeal}
+              onAction={handleDealAction}
+              onAcceptTerms={(deal) => {
+                openDealAction(deal.id, "wholesale_accept");
+              }}
+              onCounterTerms={(deal) => {
+                openDealAction(deal.id, "wholesale_counter");
+              }}
+              isItemSaved={(id) => isItemSaved('wholesale_deal', id)}
+              isSaving={isSaving}
+              showInvest={isDreamscaper || isInvestor || isAdmin}
+            />
+          ) : (
+            <SwipeView
+              deals={filteredDeals}
+              onSave={handleSaveDeal}
+              onAcceptTerms={(deal) => {
+                openDealAction(deal.id, "wholesale_accept");
+              }}
+              onCounterTerms={(deal) => {
+                openDealAction(deal.id, "wholesale_counter");
+              }}
+            />
+          )}
+        </InventoryBoundary>
       )}
       
       {dealCategory === "capital" && (
-        viewMode === "grid" ? (
-          <CapitalRaiseGridView 
-            projects={capitalProjects || []}
-            isLoading={projectsLoading}
-            onSelectProject={(project) => {
-              setLocation(`/marketflow/capital/${project.id}`);
-            }}
-            onAcceptTerms={(project) => {
-              openDealAction(project.id, "capital_accept");
-            }}
-            onCounterTerms={(project) => {
-              openDealAction(project.id, "capital_counter");
-            }}
-            isItemSaved={(id) => isItemSaved('capital_project', String(id))}
-            onSave={(id) => toggleSaveItem('capital_project', String(id))}
-          />
-        ) : (
-          <CapitalRaiseSwipeView 
-            projects={capitalProjects || []}
-            onSave={(id) => toggleSaveItem('capital_project', String(id))}
-            onAcceptTerms={(project) => {
-              openDealAction(project.id, "capital_accept");
-            }}
-            onCounterTerms={(project) => {
-              openDealAction(project.id, "capital_counter");
-            }}
-            isItemSaved={(id) => isItemSaved('capital_project', String(id))}
-          />
-        )
+        <InventoryBoundary
+          lane="capital"
+          mode={viewMode}
+          isLoading={projectsLoading}
+          isError={projectsError}
+          isEmpty={(capitalProjects || []).length === 0}
+          onRetry={() => void refetchProjects()}
+        >
+          {viewMode === "grid" ? (
+            <CapitalRaiseGridView
+              projects={capitalProjects || []}
+              isLoading={false}
+              onSelectProject={(project) => {
+                setLocation(`/marketflow/capital/${project.id}`);
+              }}
+              isItemSaved={(id) => isItemSaved('capital_project', String(id))}
+              onSave={(id) => toggleSaveItem('capital_project', String(id))}
+            />
+          ) : (
+            <CapitalRaiseSwipeView
+              projects={capitalProjects || []}
+              onSave={(id) => toggleSaveItem('capital_project', String(id))}
+            />
+          )}
+        </InventoryBoundary>
       )}
       
       {dealCategory === "listings" && (
-        <ListingsGridView 
-          listings={listings || []}
+        <InventoryBoundary
+          lane="listings"
+          mode="grid"
           isLoading={listingsLoading}
-          onViewListing={(listing) => setLocation(`/marketflow/listings/${listing.id}`)}
-          onRequestInfo={(listing) => {
-            openDealAction(listing.id, "listing_request_info");
-          }}
-          onScheduleShowing={(listing) => {
-            openDealAction(listing.id, "listing_schedule_tour");
-          }}
-          isItemSaved={(id) => isItemSaved('listing', String(id))}
-          onSave={(id) => toggleSaveItem('listing', String(id))}
-        />
-      )}
-      
-      {/* Comparison floating button and modal */}
-      {dealCategory === "wholesale" && viewMode === "grid" && (
-        <>
-          <DealComparisonButton
-            selectedDeals={compareDeals}
-            onToggle={() => {}}
-            onClear={clearCompare}
-            onCompare={() => setShowComparison(true)}
-          />
-          <ComparisonModal
-            deals={compareDeals}
-            open={showComparison}
-            onClose={() => setShowComparison(false)}
-            onAction={(dealId, action) => {
-              const deal = compareDeals.find(d => d.id === dealId);
-              if (deal) {
-                if (action === "accept") {
-                  openDealAction(deal.id, "wholesale_accept");
-                } else {
-                  openDealAction(deal.id, "wholesale_counter");
-                }
-              }
-              setShowComparison(false);
+          isError={listingsError}
+          isEmpty={(listings || []).length === 0}
+          onRetry={() => void refetchListings()}
+        >
+          <ListingsGridView
+            listings={listings || []}
+            isLoading={false}
+            onViewListing={(listing) => setLocation(`/marketflow/listings/${listing.id}`)}
+            onRequestInfo={(listing) => {
+              openDealAction(listing.id, "listing_request_info");
             }}
+            onScheduleShowing={(listing) => {
+              openDealAction(listing.id, "listing_schedule_tour");
+            }}
+            isItemSaved={(id) => isItemSaved('listing', String(id))}
+            onSave={(id) => toggleSaveItem('listing', String(id))}
           />
-        </>
+        </InventoryBoundary>
       )}
       
-      {/* Bulk Actions Bar - appears when items are selected */}
-      <BulkActionsBar
-        selectedCount={bulkSelectedCount}
-        totalCount={filteredDeals.length}
-        onSelectAll={selectAllBulk}
-        onClearSelection={clearBulkSelection}
-        onBulkSave={() => {
-          bulkSelectedIds.forEach(id => handleSaveDeal(id));
-          toast({
-            title: "Deals saved",
-            description: `${bulkSelectedCount} deals saved to your watchlist.`,
-          });
-          clearBulkSelection();
-        }}
-        onBulkCompare={() => {
-          const selectedDeals = filteredDeals.filter(d => bulkSelectedIds.has(d.id));
-          selectedDeals.slice(0, 3).forEach(d => toggleCompare(d));
-          setShowComparison(true);
-          clearBulkSelection();
-        }}
-        onBulkExport={(format) => {
-          setShowExportDialog(true);
-          clearBulkSelection();
-        }}
-        onAddToFolder={() => {
-          const firstSelected = filteredDeals.find(d => bulkSelectedIds.has(d.id));
-          if (firstSelected) {
-            setAddToFolderDeal(firstSelected);
-          }
-        }}
-        compareDisabled={bulkSelectedCount > 3}
-      />
-
-      {/* Feature Dialogs */}
-      <KeyboardShortcutsDialog 
-        open={showKeyboardShortcuts} 
-        onClose={() => setShowKeyboardShortcuts(false)} 
-      />
-      
-      <ExportDialog 
-        open={showExportDialog} 
-        onClose={() => setShowExportDialog(false)} 
-        deals={filteredDeals.map(d => ({
-          id: d.id,
-          address: d.propertyAddress || d.address || '',
-          city: d.city || '',
-          state: d.state || '',
-          askingPrice: d.askingPrice || d.contractPrice || 0,
-          arv: d.arv || 0,
-          repairEstimate: d.repairEstimate || d.estimatedRepairs || 0,
-          propertyType: d.propertyType || '',
-          status: d.status || 'active',
-          matchScore: d.matchScore,
-        }))}
-        selectedCount={compareDeals.length}
-      />
-      
-      <SaveSearchDialog 
-        open={showSaveSearchDialog} 
-        onClose={() => setShowSaveSearchDialog(false)}
-        onSave={(name: string) => {
-          savedSearches.saveSearch(name, {
-            propertyType,
-            sortBy,
-            query: searchQuery,
-          });
-          toast({
-            title: "Search saved",
-            description: `"${name}" has been saved to your searches.`,
-          });
-          setShowSaveSearchDialog(false);
-        }}
-        currentFilters={{
-          propertyType,
-          sortBy,
-          query: searchQuery,
-        }}
-      />
-      
-      <AddToFolderDialog
-        open={!!addToFolderDeal}
-        onClose={() => setAddToFolderDeal(null)}
-        dealId={addToFolderDeal?.id || ''}
-        dealAddress={addToFolderDeal?.propertyAddress || addToFolderDeal?.address || ''}
-        folders={watchlistFolders.folders}
-        onAddToFolder={(folderId: string) => {
-          if (addToFolderDeal) {
-            watchlistFolders.addDealToFolder(folderId, addToFolderDeal.id);
-            toast({
-              title: "Added to folder",
-              description: "Deal added to your watchlist folder.",
-            });
-          }
-          setAddToFolderDeal(null);
-        }}
-        onCreateFolder={() => {
-          watchlistFolders.createFolder("New Folder", "#3B82F6");
-        }}
-      />
     </div>
   );
+}
+
+type InventoryLane = "wholesale" | "capital" | "listings";
+type InventoryMode = "grid" | "swipe";
+
+function InventoryBoundary({
+  lane,
+  mode,
+  isLoading,
+  isError,
+  isEmpty,
+  onRetry,
+  children,
+}: {
+  lane: InventoryLane;
+  mode: InventoryMode;
+  isLoading: boolean;
+  isError: boolean;
+  isEmpty: boolean;
+  onRetry: () => void;
+  children: ReactNode;
+}) {
+  const stateId = `${lane}-${mode}`;
+  const laneCopy = {
+    wholesale: {
+      noun: "wholesale opportunities",
+      emptyTitle: MARKETFLOW_INVENTORY_STATUS,
+    },
+    capital: {
+      noun: "capital opportunities",
+      emptyTitle: MARKETFLOW_INVENTORY_STATUS,
+    },
+    listings: {
+      noun: "property listings",
+      emptyTitle: MARKETFLOW_INVENTORY_STATUS,
+    },
+  }[lane];
+
+  if (isLoading) {
+    return (
+      <Card
+        className="border-border/70 bg-card/70 p-8 sm:p-12"
+        data-testid={`state-${stateId}-loading`}
+        aria-live="polite"
+        aria-busy="true"
+      >
+        <div className="mx-auto flex max-w-xl flex-col items-center text-center">
+          <RefreshCw className="mb-5 h-7 w-7 motion-safe:animate-spin text-primary" aria-hidden="true" />
+          <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-primary">
+            MarketFlow review desk
+          </p>
+          <h2 className="mt-3 font-serif text-2xl font-semibold tracking-tight">
+            Checking the {laneCopy.noun} workspace
+          </h2>
+          <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
+            {MARKETFLOW_INVENTORY_STATUS} The workspace is checking for a future status update.
+          </p>
+        </div>
+      </Card>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Card
+        className="border-destructive/35 bg-destructive/5 p-8 sm:p-12"
+        data-testid={`state-${stateId}-error`}
+        role="alert"
+      >
+        <div className="mx-auto flex max-w-xl flex-col items-center text-center">
+          <AlertCircle className="mb-5 h-8 w-8 text-destructive" aria-hidden="true" />
+          <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-destructive">
+            Inventory unavailable
+          </p>
+          <h2 className="mt-3 font-serif text-2xl font-semibold tracking-tight">
+            We could not load the reviewed {laneCopy.noun}.
+          </h2>
+          <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
+            Your access remains intact. Retry this lane; if it continues, the team can inspect the request.
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-6 gap-2"
+            onClick={onRetry}
+            data-testid={`button-retry-${stateId}`}
+          >
+            <RefreshCw className="h-4 w-4" aria-hidden="true" />
+            Retry {lane === "listings" ? "listings" : lane}
+          </Button>
+        </div>
+      </Card>
+    );
+  }
+
+  if (isEmpty) {
+    return (
+      <Card
+        className="border-dashed border-border/80 bg-card/60 p-8 text-center sm:p-12"
+        data-testid={`state-${stateId}-empty`}
+      >
+        <div className="mx-auto max-w-xl">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-primary">
+            Publication status
+          </p>
+          <h2 className="mt-3 font-serif text-2xl font-semibold tracking-tight sm:text-3xl">
+            {laneCopy.emptyTitle}
+          </h2>
+          <p className="mx-auto mt-4 max-w-md text-sm leading-relaxed text-muted-foreground">
+            MarketFlow stays empty until a real opportunity clears review and is authorized for publication. A submission does not promise that outcome.
+          </p>
+          <Link href="/bring-an-opportunity?intent=deal-jv">
+            <Button variant="outline" className="mt-6">
+              Submit an opportunity
+            </Button>
+          </Link>
+        </div>
+      </Card>
+    );
+  }
+
+  return <>{children}</>;
 }
 
 interface GridViewProps {
@@ -1069,13 +771,12 @@ interface GridViewProps {
   isItemSaved: (id: string) => boolean;
   isSaving: boolean;
   showInvest: boolean;
-  showJVRequest: boolean;
   isCompareSelected?: (dealId: string) => boolean;
   toggleCompare?: (deal: WholesaleDeal) => void;
   canAddMoreCompare?: boolean;
 }
 
-function GridView({ deals, isLoading, onSave, onAction, onAcceptTerms, onCounterTerms, isItemSaved, isSaving, showInvest, showJVRequest, isCompareSelected, toggleCompare, canAddMoreCompare }: GridViewProps) {
+function GridView({ deals, isLoading, onSave, onAction, onAcceptTerms, onCounterTerms, isItemSaved, isSaving, showInvest, isCompareSelected, toggleCompare, canAddMoreCompare }: GridViewProps) {
   const [, setLocation] = useLocation();
   
   if (isLoading) {
@@ -1128,10 +829,10 @@ function GridView({ deals, isLoading, onSave, onAction, onAcceptTerms, onCounter
           MarketFlow · Reviewed lane
         </p>
         <h3 className="font-serif text-3xl sm:text-4xl font-semibold mb-5 leading-tight tracking-tight">
-          First reviewed deals coming soon.
+          {MARKETFLOW_INVENTORY_STATUS}
         </h3>
         <p className="text-base text-muted-foreground mb-8 max-w-md mx-auto leading-relaxed">
-          MarketFlow only lists opportunities that have passed Pegasus HQ review. The first reviewed set is being prepared now.
+          The controlled workspace is prepared for future records that clear review and publication authorization. No timing is promised.
         </p>
         <div className="flex justify-center">
           <Link href="/marketflow">
@@ -1163,7 +864,6 @@ function GridView({ deals, isLoading, onSave, onAction, onAcceptTerms, onCounter
               isSaved={isItemSaved(deal.id)}
               isSaving={isSaving}
               showInvest={showInvest}
-              showJVRequest={showJVRequest}
               isCompareSelected={isCompareSelected?.(deal.id)}
               onToggleCompare={() => toggleCompare?.(deal)}
               canAddMoreCompare={canAddMoreCompare}
@@ -1178,24 +878,24 @@ function GridView({ deals, isLoading, onSave, onAction, onAcceptTerms, onCounter
 interface SwipeViewProps {
   deals: WholesaleDeal[];
   onSave: (dealId: string) => void;
-  onAction: (deal: WholesaleDeal, actionType: "jv_request" | "invest") => void;
   onAcceptTerms: (deal: WholesaleDeal) => void;
   onCounterTerms: (deal: WholesaleDeal) => void;
-  isItemSaved: (id: string) => boolean;
-  showInvest: boolean;
-  showJVRequest: boolean;
 }
 
-function SwipeView({ deals, onSave, onAction, onAcceptTerms, onCounterTerms, isItemSaved, showInvest, showJVRequest }: SwipeViewProps) {
+function SwipeView({ deals, onSave, onAcceptTerms, onCounterTerms }: SwipeViewProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [exitDirection, setExitDirection] = useState<"left" | "right" | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [dragIntent, setDragIntent] = useState<"like" | "pass" | null>(null);
+  const [isAdvancing, setIsAdvancing] = useState(false);
+  const isAdvancingRef = useRef(false);
+  const advanceTimerRef = useRef<number | null>(null);
+  const unlockTimerRef = useRef<number | null>(null);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const reduceMotion = usePrefersReducedMotion();
   
   const x = useMotionValue(0);
-  const springX = useSpring(x, { stiffness: 400, damping: 30 });
   const rotate = useTransform(x, [-200, 0, 200], [-15, 0, 15]);
   const likeOpacity = useTransform(x, [0, 80, 150], [0, 0.5, 1]);
   const passOpacity = useTransform(x, [-150, -80, 0], [1, 0.5, 0]);
@@ -1208,9 +908,32 @@ function SwipeView({ deals, onSave, onAction, onAcceptTerms, onCounterTerms, isI
   ]);
   
   const currentDeal = deals[currentIndex];
+  const currentFinancials = currentDeal
+    ? readWholesaleFinancials(currentDeal)
+    : null;
   const hasMore = currentIndex < deals.length - 1;
 
+  useEffect(() => () => {
+    if (advanceTimerRef.current !== null) {
+      window.clearTimeout(advanceTimerRef.current);
+    }
+    if (unlockTimerRef.current !== null) {
+      window.clearTimeout(unlockTimerRef.current);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!reduceMotion) return;
+    x.stop?.();
+    x.set(0);
+    setIsDragging(false);
+    setDragIntent(null);
+  }, [reduceMotion, x]);
+
   const handleSwipe = (direction: "left" | "right") => {
+    if (isAdvancingRef.current || !currentDeal) return;
+    isAdvancingRef.current = true;
+    setIsAdvancing(true);
     setExitDirection(direction);
     setDragIntent(null);
     
@@ -1229,7 +952,13 @@ function SwipeView({ deals, onSave, onAction, onAcceptTerms, onCounterTerms, isI
       });
     }
     
-    setTimeout(() => {
+    const releaseAdvanceLock = () => {
+      unlockTimerRef.current = null;
+      isAdvancingRef.current = false;
+      setIsAdvancing(false);
+    };
+
+    const advance = () => {
       if (hasMore) {
         setCurrentIndex(prev => prev + 1);
       } else {
@@ -1237,7 +966,15 @@ function SwipeView({ deals, onSave, onAction, onAcceptTerms, onCounterTerms, isI
       }
       setExitDirection(null);
       x.set(0);
-    }, 250);
+      advanceTimerRef.current = null;
+      if (reduceMotion) {
+        unlockTimerRef.current = window.setTimeout(releaseAdvanceLock, 250);
+      } else {
+        releaseAdvanceLock();
+      }
+    };
+
+    advanceTimerRef.current = window.setTimeout(advance, reduceMotion ? 0 : 250);
   };
 
   const handleDrag = (event: any, info: PanInfo) => {
@@ -1265,7 +1002,7 @@ function SwipeView({ deals, onSave, onAction, onAcceptTerms, onCounterTerms, isI
   };
 
   const handleUndo = () => {
-    if (currentIndex > 0) {
+    if (!isAdvancingRef.current && currentIndex > 0) {
       setCurrentIndex(prev => prev - 1);
     }
   };
@@ -1280,10 +1017,10 @@ function SwipeView({ deals, onSave, onAction, onAcceptTerms, onCounterTerms, isI
           MarketFlow · Reviewed lane
         </p>
         <h3 className="font-serif text-3xl sm:text-4xl font-semibold mb-5 leading-tight tracking-tight">
-          First reviewed deals coming soon.
+          {MARKETFLOW_INVENTORY_STATUS}
         </h3>
         <p className="text-base text-muted-foreground mb-8 max-w-md mx-auto leading-relaxed">
-          MarketFlow only lists opportunities that have passed Pegasus HQ review. The first reviewed set is being prepared now.
+          The controlled workspace is prepared for future records that clear review and publication authorization. No timing is promised.
         </p>
       </Card>
     );
@@ -1335,7 +1072,7 @@ function SwipeView({ deals, onSave, onAction, onAcceptTerms, onCounterTerms, isI
           {currentIndex + 1} / {deals.length}
         </Badge>
         <p className="text-sm text-muted-foreground mt-2">
-          Swipe right to save, left to pass
+          {reduceMotion ? "Use the controls to save or pass" : "Swipe right to save, left to pass"}
         </p>
       </div>
 
@@ -1355,28 +1092,32 @@ function SwipeView({ deals, onSave, onAction, onAcceptTerms, onCounterTerms, isI
         <AnimatePresence mode="wait">
           <motion.div
             key={currentDeal.id}
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            dragElastic={0.15}
-            onDragStart={() => setIsDragging(true)}
-            onDrag={handleDrag}
-            onDragEnd={handleDragEnd}
-            style={{ x, rotate, scale, boxShadow: borderGlow }}
-            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-            animate={{ 
+            drag={reduceMotion ? false : "x"}
+            dragConstraints={reduceMotion ? undefined : { left: 0, right: 0 }}
+            dragElastic={reduceMotion ? undefined : 0.15}
+            onDragStart={reduceMotion ? undefined : () => setIsDragging(true)}
+            onDrag={reduceMotion ? undefined : handleDrag}
+            onDragEnd={reduceMotion ? undefined : handleDragEnd}
+            style={reduceMotion ? undefined : { x, rotate, scale, boxShadow: borderGlow }}
+            initial={reduceMotion ? false : { scale: 0.9, opacity: 0, y: 20 }}
+            animate={reduceMotion ? { scale: 1, opacity: 1, y: 0, x: 0 } : {
               scale: exitDirection ? 0.95 : 1, 
               opacity: exitDirection ? 0 : 1,
               y: 0,
               x: exitDirection === "left" ? -400 : exitDirection === "right" ? 400 : 0
             }}
-            exit={{ 
+            exit={reduceMotion ? { x: 0, opacity: 1, scale: 1, y: 0 } : {
               x: exitDirection === "left" ? -400 : 400,
               opacity: 0,
               scale: 0.9,
-              transition: { duration: 0.25, ease: "easeOut" }
+              transition: { duration: 0 }
             }}
-            transition={{ type: "spring", stiffness: 350, damping: 25, mass: 0.8 }}
-            className="absolute inset-0 cursor-grab active:cursor-grabbing rounded-md"
+            transition={reduceMotion
+              ? { duration: 0 }
+              : exitDirection
+                ? { duration: 0.25, ease: "easeOut" }
+                : { type: "spring", stiffness: 350, damping: 25, mass: 0.8 }}
+            className={`absolute inset-0 rounded-md ${isAdvancing ? "pointer-events-none" : ""} ${reduceMotion ? "cursor-default" : "cursor-grab active:cursor-grabbing"}`}
           >
             <SwipeCard 
               deal={currentDeal}
@@ -1385,6 +1126,7 @@ function SwipeView({ deals, onSave, onAction, onAcceptTerms, onCounterTerms, isI
               onView={() => setLocation(`/marketflow/deals/${currentDeal.id}`)}
               onAcceptTerms={() => onAcceptTerms(currentDeal)}
               onCounterTerms={() => onCounterTerms(currentDeal)}
+              isAdvancing={isAdvancing}
               isDragging={isDragging}
               dragIntent={dragIntent}
             />
@@ -1394,53 +1136,68 @@ function SwipeView({ deals, onSave, onAction, onAcceptTerms, onCounterTerms, isI
 
       <div className="flex items-center justify-center gap-3 mt-6">
         <Button 
+          aria-label="Undo"
           size="lg" 
           variant="outline" 
           className="rounded-full h-12 w-12"
           onClick={handleUndo}
-          disabled={currentIndex === 0}
+          disabled={currentIndex === 0 || isAdvancing}
           data-testid="button-undo"
         >
           <RotateCcw className="w-4 h-4" />
         </Button>
         <Button 
+          aria-label="Pass"
           size="lg" 
           variant="outline" 
           className="rounded-full h-14 w-14 border-red-300 hover:bg-red-50 hover:border-red-400"
           onClick={() => handleSwipe("left")}
+          disabled={isAdvancing}
           data-testid="button-pass"
         >
           <X className="w-5 h-5 text-red-500" />
         </Button>
         <Button 
+          aria-label="Save"
           size="lg" 
           className="rounded-full h-14 w-14 bg-green-500 hover:bg-green-600"
           onClick={() => handleSwipe("right")}
+          disabled={isAdvancing}
           data-testid="button-save-swipe"
         >
           <Heart className="w-5 h-5" />
         </Button>
-        <Button 
-          size="lg" 
-          className="rounded-full h-12 w-12"
-          onClick={() => onAcceptTerms(currentDeal)}
-          data-testid="button-accept"
-        >
-          <CheckCircle2 className="w-5 h-5" />
-        </Button>
-        <Button 
-          size="lg" 
-          variant="secondary"
-          className="rounded-full h-12 w-12"
-          onClick={() => onCounterTerms(currentDeal)}
-          data-testid="button-counter"
-        >
-          <MessageSquare className="w-4 h-4" />
-        </Button>
+        {currentFinancials?.hasRequiredInputs && (
+          <>
+            <Button
+              aria-label="Accept terms"
+              size="lg"
+              className="rounded-full h-12 w-12"
+              onClick={() => onAcceptTerms(currentDeal)}
+              disabled={isAdvancing}
+              data-testid="button-accept"
+            >
+              <CheckCircle2 className="w-5 h-5" />
+            </Button>
+            <Button
+              aria-label="Counter offer"
+              size="lg"
+              variant="secondary"
+              className="rounded-full h-12 w-12"
+              onClick={() => onCounterTerms(currentDeal)}
+              disabled={isAdvancing}
+              data-testid="button-counter"
+            >
+              <MessageSquare className="w-4 h-4" />
+            </Button>
+          </>
+        )}
       </div>
 
       <p className="text-center text-xs text-muted-foreground mt-4">
-        Undo • Pass • Save • Accept Terms • Counter Offer
+        {currentFinancials?.hasRequiredInputs
+          ? "Undo • Pass • Save • Accept Terms • Counter Offer"
+          : "Undo • Pass • Save"}
       </p>
     </div>
   );
@@ -1453,18 +1210,15 @@ interface SwipeCardProps {
   onView: () => void;
   onAcceptTerms: () => void;
   onCounterTerms: () => void;
+  isAdvancing: boolean;
   isDragging?: boolean;
   dragIntent?: "like" | "pass" | null;
 }
 
-function SwipeCard({ deal, likeOpacity, passOpacity, onView, onAcceptTerms, onCounterTerms, isDragging, dragIntent }: SwipeCardProps) {
+function SwipeCard({ deal, likeOpacity, passOpacity, onView, onAcceptTerms, onCounterTerms, isAdvancing, isDragging, dragIntent }: SwipeCardProps) {
   const address = deal.propertyAddress || deal.address || 'Property Address';
   const cityState = [deal.city, deal.state].filter(Boolean).join(', ');
-  const askPrice = deal.askingPrice || deal.contractPrice || 0;
-  const arv = deal.arv || 0;
-  const repairs = deal.repairEstimate || deal.estimatedRepairs || 0;
-  const profit = arv - askPrice - repairs;
-  const roi = askPrice > 0 ? ((profit / askPrice) * 100).toFixed(1) : '0';
+  const financials = readWholesaleFinancials(deal);
   const matchScore = typeof deal.matchScore === "number" ? deal.matchScore : null;
 
   const cardBorderClass = dragIntent === "like" 
@@ -1530,54 +1284,63 @@ function SwipeCard({ deal, likeOpacity, passOpacity, onView, onAcceptTerms, onCo
         <div className="grid grid-cols-2 gap-3">
           <div className="bg-muted/50 rounded-lg p-3 text-center">
             <p className="text-xs text-muted-foreground">Ask Price</p>
-            <p className="font-bold text-lg">${askPrice.toLocaleString()}</p>
+            <p className="font-bold text-lg">{formatMarketflowMoney(financials.price)}</p>
           </div>
           <div className="bg-muted/50 rounded-lg p-3 text-center">
             <p className="text-xs text-muted-foreground">ARV</p>
-            <p className="font-bold text-lg">${arv.toLocaleString()}</p>
+            <p className="font-bold text-lg">{formatMarketflowMoney(financials.arv)}</p>
           </div>
         </div>
 
         <div className="grid grid-cols-3 gap-2 text-center">
           <div>
             <p className="text-xs text-muted-foreground">Repairs</p>
-            <p className="font-semibold text-sm">${repairs.toLocaleString()}</p>
+            <p className="font-semibold text-sm">{formatMarketflowMoney(financials.repairs)}</p>
           </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Profit</p>
-            <p className={`font-semibold text-sm ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              ${profit.toLocaleString()}
-            </p>
-          </div>
-          <div>
-            <p className="text-xs text-muted-foreground">ROI</p>
-            <p className="font-semibold text-sm">{roi}%</p>
-          </div>
+          {financials.hasRequiredInputs && financials.profit !== null && financials.roi !== null && (
+            <>
+              <div>
+                <p className="text-xs text-muted-foreground">Est. Profit</p>
+                <p className={`font-semibold text-sm ${financials.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                  {formatMarketflowMoney(financials.profit)}
+                </p>
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Est. ROI</p>
+                <p className="font-semibold text-sm">{financials.roi.toFixed(1)}%</p>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" className="flex-1" onClick={onView} data-testid="button-view-deal">
+          <Button variant="outline" className="flex-1" onClick={onView} disabled={isAdvancing} data-testid="button-view-deal">
             <Eye className="w-4 h-4 mr-2" />
             View Deal
           </Button>
         </div>
-        <div className="flex gap-2">
-          <Button className="flex-1" onClick={onAcceptTerms} data-testid="button-accept-deal-swipe">
-            <CheckCircle2 className="w-4 h-4 mr-2" />
-            Accept Terms
-          </Button>
-          <Button variant="secondary" className="flex-1" onClick={onCounterTerms} data-testid="button-counter-deal-swipe">
-            <MessageSquare className="w-4 h-4 mr-2" />
-            Counter Offer
-          </Button>
-        </div>
-        <OpenOfferStudioButton
-          dealId={deal.id}
-          lane="WHOLESALE"
-          variant="outline"
-          className="w-full"
-          stopPropagation
-        />
+        {financials.hasRequiredInputs && (
+          <>
+            <div className="flex gap-2">
+              <Button className="flex-1" onClick={onAcceptTerms} disabled={isAdvancing} data-testid="button-accept-deal-swipe">
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                Accept Terms
+              </Button>
+              <Button variant="secondary" className="flex-1" onClick={onCounterTerms} disabled={isAdvancing} data-testid="button-counter-deal-swipe">
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Counter Offer
+              </Button>
+            </div>
+            <OpenOfferStudioButton
+              dealId={deal.id}
+              lane="WHOLESALE"
+              variant="outline"
+              className="w-full"
+              stopPropagation
+              disabled={isAdvancing}
+            />
+          </>
+        )}
       </CardContent>
     </Card>
   );
@@ -1593,13 +1356,12 @@ interface DealCardProps {
   isSaved: boolean;
   isSaving: boolean;
   showInvest: boolean;
-  showJVRequest: boolean;
   isCompareSelected?: boolean;
   onToggleCompare?: () => void;
   canAddMoreCompare?: boolean;
 }
 
-function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerms, isSaved, isSaving, showInvest, showJVRequest, isCompareSelected, onToggleCompare, canAddMoreCompare }: DealCardProps) {
+function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerms, isSaved, isSaving, showInvest, isCompareSelected, onToggleCompare, canAddMoreCompare }: DealCardProps) {
   const { toast } = useToast();
   const [showCalculator, setShowCalculator] = useState(false);
   const [customOffer, setCustomOffer] = useState("");
@@ -1607,19 +1369,24 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
   
   const address = deal.propertyAddress || deal.address || 'Property Address';
   const cityState = [deal.city, deal.state].filter(Boolean).join(', ');
-  const askPrice = deal.askingPrice || deal.contractPrice || 0;
-  const arv = deal.arv || 0;
-  const repairs = deal.repairEstimate || deal.estimatedRepairs || 0;
-  const profit = arv - askPrice - repairs;
+  const financials = readWholesaleFinancials(deal);
   const matchScore = typeof deal.matchScore === "number" ? deal.matchScore : null;
-  const roi = askPrice > 0 ? ((profit / askPrice) * 100).toFixed(1) : "0";
 
   // Calculator values
-  const calcOffer = customOffer ? parseFloat(customOffer) : askPrice;
-  const calcRepairs = customRepairs ? parseFloat(customRepairs) : repairs;
-  const calcProfit = arv - calcOffer - calcRepairs;
-  const calcROI = calcOffer > 0 ? ((calcProfit / calcOffer) * 100).toFixed(1) : "0";
-  const cashOnCash = calcOffer > 0 ? ((calcProfit / (calcOffer * 0.25)) * 100).toFixed(1) : "0"; // 25% down
+  const calcOffer = customOffer ? parseFloat(customOffer) : financials.price;
+  const calcRepairs = customRepairs ? parseFloat(customRepairs) : financials.repairs;
+  const hasCalculatorInputs =
+    financials.arv !== null &&
+    calcOffer !== null &&
+    Number.isFinite(calcOffer) &&
+    calcOffer > 0 &&
+    calcRepairs !== null &&
+    Number.isFinite(calcRepairs) &&
+    calcRepairs >= 0;
+  const calcProfit = hasCalculatorInputs
+    ? financials.arv! - calcOffer! - calcRepairs!
+    : null;
+  const calcROI = calcProfit !== null ? (calcProfit / calcOffer!) * 100 : null;
 
   const handleShare = async (type: "copy" | "email") => {
     const dealUrl = `${window.location.origin}/marketflow/deals/${deal.id}`;
@@ -1628,7 +1395,8 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
       toast({ title: "Link copied!", description: "Deal link copied to clipboard" });
     } else {
       const subject = encodeURIComponent(`Check out this deal: ${address}`);
-      const body = encodeURIComponent(`I found this reviewed opportunity:\n\n${address}\n${cityState}\nAsking: $${askPrice.toLocaleString()}\nARV: $${arv.toLocaleString()}\nProfit: $${profit.toLocaleString()}\n\nView details: ${dealUrl}`);
+      if (!financials.hasRequiredInputs || financials.profit === null) return;
+      const body = encodeURIComponent(`I found this reviewed opportunity:\n\n${address}\n${cityState}\nAsking: ${formatMarketflowMoney(financials.price)}\nARV: ${formatMarketflowMoney(financials.arv)}\nEstimated profit: ${formatMarketflowMoney(financials.profit)}\n\nView details: ${dealUrl}`);
       window.open(`mailto:?subject=${subject}&body=${body}`);
     }
   };
@@ -1647,16 +1415,18 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
             <TooltipContent><p>{isSaved ? "Saved" : "Save Deal"}</p></TooltipContent>
           </Tooltip>
           
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={(e) => { e.stopPropagation(); setShowCalculator(!showCalculator); }} data-testid={`quick-calc-${deal.id}`} aria-label="Deal calculator">
-                <Calculator className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent><p>Deal Calculator</p></TooltipContent>
-          </Tooltip>
+          {financials.hasRequiredInputs && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={(e) => { e.stopPropagation(); setShowCalculator(!showCalculator); }} data-testid={`quick-calc-${deal.id}`} aria-label="Deal calculator">
+                  <Calculator className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent><p>Deal Calculator</p></TooltipContent>
+            </Tooltip>
+          )}
           
-          <Popover>
+          {financials.hasRequiredInputs && <Popover>
             <PopoverTrigger asChild>
               <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={(e) => e.stopPropagation()} data-testid={`quick-share-${deal.id}`} aria-label="Share deal">
                 <Share2 className="w-4 h-4" />
@@ -1674,7 +1444,7 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
                 </Button>
               </div>
             </PopoverContent>
-          </Popover>
+          </Popover>}
           
           {onToggleCompare && (
             <Tooltip>
@@ -1697,7 +1467,7 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
             </Tooltip>
           )}
           
-          {showJVRequest && deal.jvAllowed && (
+          {financials.hasRequiredInputs && deal.canRequestJv === true && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={(e) => { e.stopPropagation(); onAction("jv_request"); }} data-testid={`quick-jv-${deal.id}`} aria-label="JV request">
@@ -1708,14 +1478,14 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
             </Tooltip>
           )}
           
-          <Tooltip>
+          {financials.hasRequiredInputs && <Tooltip>
             <TooltipTrigger asChild>
               <Button size="icon" variant="default" className="h-8 w-8 rounded-full" onClick={(e) => { e.stopPropagation(); onAcceptTerms(); }} data-testid={`quick-accept-${deal.id}`} aria-label="Quick offer">
                 <Zap className="w-4 h-4" />
               </Button>
             </TooltipTrigger>
             <TooltipContent><p>Quick Offer</p></TooltipContent>
-          </Tooltip>
+          </Tooltip>}
         </div>
       </div>
 
@@ -1746,7 +1516,7 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
               Negotiable
             </Badge>
           )}
-          {deal.jvAllowed && (
+          {deal.canRequestJv === true && (
             <Badge variant="secondary" className="text-[10px] gap-1">
               <Handshake className="w-2.5 h-2.5" />
               JV Open
@@ -1799,7 +1569,7 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
 
         {/* Inline Calculator Widget */}
         <AnimatePresence>
-          {showCalculator && (
+          {showCalculator && financials.hasRequiredInputs && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
@@ -1821,7 +1591,7 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
                     <label className="text-[10px] text-muted-foreground">Your Offer</label>
                     <Input 
                       type="number" 
-                      placeholder={askPrice.toString()} 
+                      placeholder={financials.price?.toString()}
                       value={customOffer}
                       onChange={(e) => setCustomOffer(e.target.value)}
                       className="h-7 text-xs"
@@ -1832,7 +1602,7 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
                     <label className="text-[10px] text-muted-foreground">Est. Repairs</label>
                     <Input 
                       type="number" 
-                      placeholder={repairs.toString()} 
+                      placeholder={financials.repairs?.toString()}
                       value={customRepairs}
                       onChange={(e) => setCustomRepairs(e.target.value)}
                       className="h-7 text-xs"
@@ -1843,17 +1613,17 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
                 <div className="grid grid-cols-3 gap-1 text-center">
                   <div className="bg-background rounded p-1.5">
                     <p className="text-[9px] text-muted-foreground">Profit</p>
-                    <p className={`font-bold text-xs ${calcProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                      ${(calcProfit / 1000).toFixed(0)}K
+                    <p className={`font-bold text-xs ${calcProfit !== null && calcProfit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {formatMarketflowMoney(calcProfit, { compact: true })}
                     </p>
                   </div>
                   <div className="bg-background rounded p-1.5">
                     <p className="text-[9px] text-muted-foreground">ROI</p>
-                    <p className="font-bold text-xs">{calcROI}%</p>
+                    <p className="font-bold text-xs">{calcROI !== null ? `${calcROI.toFixed(1)}%` : "Not provided"}</p>
                   </div>
                   <div className="bg-background rounded p-1.5">
-                    <p className="text-[9px] text-muted-foreground">CoC (25%)</p>
-                    <p className="font-bold text-xs text-primary">{cashOnCash}%</p>
+                    <p className="text-[9px] text-muted-foreground">Inputs</p>
+                    <p className="font-bold text-xs text-primary">Directional</p>
                   </div>
                 </div>
               </div>
@@ -1864,34 +1634,37 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
         <div className="grid grid-cols-3 gap-2 mb-3 text-center">
           <div className="bg-muted/50 rounded p-2">
             <p className="text-[10px] text-muted-foreground">Ask</p>
-            <p className="font-bold text-sm">${(askPrice / 1000).toFixed(0)}K</p>
+            <p className="font-bold text-sm" data-testid={`text-deal-ask-${deal.id}`}>{formatMarketflowMoney(financials.price, { compact: true })}</p>
           </div>
           <div className="bg-muted/50 rounded p-2">
             <p className="text-[10px] text-muted-foreground">ARV</p>
-            <p className="font-bold text-sm">${(arv / 1000).toFixed(0)}K</p>
+            <p className="font-bold text-sm" data-testid={`text-deal-arv-${deal.id}`}>{formatMarketflowMoney(financials.arv, { compact: true })}</p>
           </div>
           <div className="bg-muted/50 rounded p-2">
-            <p className="text-[10px] text-muted-foreground">Profit</p>
-            <p className={`font-bold text-sm ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              ${(profit / 1000).toFixed(0)}K
-            </p>
+            <p className="text-[10px] text-muted-foreground">Repairs</p>
+            <p className="font-bold text-sm" data-testid={`text-deal-repairs-${deal.id}`}>{formatMarketflowMoney(financials.repairs, { compact: true })}</p>
           </div>
         </div>
 
-        {/* Workflow Indicators Row */}
-        <div className="flex items-center justify-between gap-2 mb-3 py-2 px-1 bg-muted/30 rounded text-xs">
-          <DueDiligenceProgress dealId={deal.id} />
-          <DocumentCount dealId={deal.id} />
-          <CommunicationSummary dealId={deal.id} />
-          <InlineROIBadge deal={{
-            contractPrice: deal.contractPrice,
-            askingPrice: deal.askingPrice,
-            arv: deal.arv,
-            repairEstimate: deal.repairEstimate,
-            estimatedRepairs: deal.estimatedRepairs,
-            assignmentFee: deal.assignmentFee
-          }} />
-        </div>
+        {financials.hasRequiredInputs && financials.profit !== null && financials.roi !== null ? (
+          <div className="grid grid-cols-2 gap-2 mb-3 rounded bg-muted/30 px-2 py-2 text-center text-xs">
+            <div data-testid={`text-deal-profit-${deal.id}`}>
+              <span className="text-muted-foreground">Est. profit </span>
+              <span className="font-semibold">{formatMarketflowMoney(financials.profit, { compact: true })}</span>
+            </div>
+            <div data-testid={`text-deal-roi-${deal.id}`}>
+              <span className="text-muted-foreground">Est. ROI </span>
+              <span className="font-semibold">{financials.roi.toFixed(1)}%</span>
+            </div>
+          </div>
+        ) : (
+          <p
+            className="mb-3 rounded border border-dashed px-3 py-2 text-xs leading-relaxed text-muted-foreground"
+            data-testid={`state-deal-financials-${deal.id}`}
+          >
+            Price, ARV, and repairs must be provided before calculations, sharing, or financial actions are available.
+          </p>
+        )}
 
         <div className="flex gap-2 mb-2">
           <Button variant="outline" className="flex-1" onClick={onView} data-testid={`button-view-deal-${deal.id}`}>
@@ -1899,25 +1672,29 @@ function DealCard({ deal, onSave, onAction, onView, onAcceptTerms, onCounterTerm
             View Deal
           </Button>
         </div>
-        <div className="flex gap-2">
-          <Button className="flex-1" onClick={onAcceptTerms} data-testid={`button-accept-terms-${deal.id}`}>
-            <CheckCircle2 className="w-4 h-4 mr-2" />
-            Accept Terms
-          </Button>
-          <Button variant="secondary" className="flex-1" onClick={onCounterTerms} data-testid={`button-counter-terms-${deal.id}`}>
-            <MessageSquare className="w-4 h-4 mr-2" />
-            Counter Offer
-          </Button>
-        </div>
-        <div className="mt-2">
-          <OpenOfferStudioButton
-            dealId={deal.id}
-            lane="WHOLESALE"
-            variant="outline"
-            className="w-full"
-            stopPropagation
-          />
-        </div>
+        {financials.hasRequiredInputs && (
+          <>
+            <div className="flex gap-2">
+              <Button className="flex-1" onClick={onAcceptTerms} data-testid={`button-accept-terms-${deal.id}`}>
+                <CheckCircle2 className="w-4 h-4 mr-2" />
+                Accept Terms
+              </Button>
+              <Button variant="secondary" className="flex-1" onClick={onCounterTerms} data-testid={`button-counter-terms-${deal.id}`}>
+                <MessageSquare className="w-4 h-4 mr-2" />
+                Counter Offer
+              </Button>
+            </div>
+            <div className="mt-2">
+              <OpenOfferStudioButton
+                dealId={deal.id}
+                lane="WHOLESALE"
+                variant="outline"
+                className="w-full"
+                stopPropagation
+              />
+            </div>
+          </>
+        )}
       </CardContent>
     </Card>
   );
@@ -1975,8 +1752,6 @@ interface CapitalRaiseGridViewProps {
   projects: CapitalProject[];
   isLoading: boolean;
   onSelectProject: (project: CapitalProject) => void;
-  onAcceptTerms: (project: CapitalProject) => void;
-  onCounterTerms: (project: CapitalProject) => void;
   isItemSaved: (id: number) => boolean;
   onSave: (id: number) => void;
 }
@@ -1985,8 +1760,6 @@ function CapitalRaiseGridView({
   projects, 
   isLoading, 
   onSelectProject, 
-  onAcceptTerms, 
-  onCounterTerms,
   isItemSaved,
   onSave
 }: CapitalRaiseGridViewProps) {
@@ -2011,9 +1784,9 @@ function CapitalRaiseGridView({
     return (
       <Card className="p-12 text-center">
         <TrendingUp className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-        <h3 className="text-lg font-semibold mb-2">No Capital Raises Available</h3>
+        <h3 className="text-lg font-semibold mb-2">No private project records available</h3>
         <p className="text-muted-foreground">
-          Check back later for new investment opportunities.
+          New source-supplied project context will appear here when it is available.
         </p>
       </Card>
     );
@@ -2027,8 +1800,6 @@ function CapitalRaiseGridView({
             <CapitalRaiseCard
               project={project}
               onView={() => onSelectProject(project)}
-              onAcceptTerms={() => onAcceptTerms(project)}
-              onCounterTerms={() => onCounterTerms(project)}
               isSaved={isItemSaved(project.id)}
               onSave={() => onSave(project.id)}
             />
@@ -2042,24 +1813,11 @@ function CapitalRaiseGridView({
 interface CapitalRaiseCardProps {
   project: CapitalProject;
   onView: () => void;
-  onAcceptTerms: () => void;
-  onCounterTerms: () => void;
   isSaved: boolean;
   onSave: () => void;
 }
 
-function CapitalRaiseCard({ project, onView, onAcceptTerms, onCounterTerms, isSaved, onSave }: CapitalRaiseCardProps) {
-  const fundingGoal = project.fundingGoal || 0;
-  const amountRaised = project.amountRaised || 0;
-  const progressPercent = fundingGoal > 0 ? Math.min((amountRaised / fundingGoal) * 100, 100) : 0;
-  const isFunded = project.status === "FUNDED" || progressPercent >= 100;
-
-  const formatCurrency = (amount: number) => {
-    if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
-    if (amount >= 1000) return `$${(amount / 1000).toFixed(0)}K`;
-    return `$${amount.toLocaleString()}`;
-  };
-
+function CapitalRaiseCard({ project, onView, isSaved, onSave }: CapitalRaiseCardProps) {
   const getStrategyLabel = (strategy: string | null | undefined) => {
     const labels: Record<string, string> = {
       "fix-flip": "Fix & Flip",
@@ -2068,16 +1826,7 @@ function CapitalRaiseCard({ project, onView, onAcceptTerms, onCounterTerms, isSa
       "development": "Development",
       "new-construction": "New Construction",
     };
-    return labels[strategy || ""] || strategy || "Investment";
-  };
-
-  const getStructureLabel = (structure: string | null | undefined) => {
-    const labels: Record<string, string> = {
-      "EQUITY": "Equity",
-      "DEBT": "Debt",
-      "HYBRID": "Hybrid",
-    };
-    return labels[structure || ""] || structure || "Equity";
+    return labels[strategy || ""] || strategy || "Project";
   };
 
   return (
@@ -2096,11 +1845,8 @@ function CapitalRaiseCard({ project, onView, onAcceptTerms, onCounterTerms, isSa
         )}
         
         <div className="absolute top-2 left-2 flex gap-1 flex-wrap">
-          <Badge className={isFunded ? "bg-green-600 text-white" : "bg-amber-500 text-white"}>
-            {isFunded ? "Funded" : project.status?.replace(/_/g, ' ') || "Open"}
-          </Badge>
-          <Badge variant="outline" className="bg-background/80">
-            {getStructureLabel(project.structure)}
+          <Badge variant="outline" className="bg-background/90 text-foreground">
+            Private project record
           </Badge>
         </div>
 
@@ -2135,51 +1881,10 @@ function CapitalRaiseCard({ project, onView, onAcceptTerms, onCounterTerms, isSa
           </p>
         </div>
 
-        <div className="mb-4">
-          <div className="flex items-center justify-between text-sm mb-2">
-            <span className="text-muted-foreground">Funding Progress</span>
-            <span className="font-semibold">{progressPercent.toFixed(0)}%</span>
-          </div>
-          <Progress value={progressPercent} className="h-2" />
-          <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
-            <span>{formatCurrency(amountRaised)} raised</span>
-            <span>of {formatCurrency(fundingGoal)}</span>
-          </div>
-        </div>
-
-        <div className="p-3 bg-muted/50 rounded-lg mb-3">
-          <p className="text-[10px] text-muted-foreground mb-1 font-medium">Operator Terms</p>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            {project.structure === "DEBT" ? (
-              <>
-                <div>
-                  <span className="text-muted-foreground">Interest: </span>
-                  <span className="font-medium">{project.askingInterestRate || "Negotiable"}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Duration: </span>
-                  <span className="font-medium">{project.askingLoanDuration || "Negotiable"}</span>
-                </div>
-              </>
-            ) : (
-              <>
-                <div>
-                  <span className="text-muted-foreground">Return: </span>
-                  <span className="font-medium">{project.projectedReturn || "Negotiable"}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Split: </span>
-                  <span className="font-medium">{project.askingProfitSplit || "Negotiable"}</span>
-                </div>
-              </>
-            )}
-          </div>
-          {project.minInvestment && (
-            <div className="mt-2 pt-2 border-t border-muted text-xs">
-              <span className="text-muted-foreground">Minimum Capital: </span>
-              <span className="font-medium">{formatCurrency(project.minInvestment)}</span>
-            </div>
-          )}
+        <div className="mb-3 rounded-lg border bg-muted/40 p-3 text-xs leading-relaxed text-muted-foreground">
+          <span className="font-medium text-foreground">Relationship information only.</span>{" "}
+          This source-supplied record is not an offering and does not accept funds, offers,
+          allocations, or commitments.
         </div>
 
         <div className="flex gap-2">
@@ -2188,29 +1893,6 @@ function CapitalRaiseCard({ project, onView, onAcceptTerms, onCounterTerms, isSa
             View Details
           </Button>
         </div>
-        {!isFunded && (
-          <>
-            <div className="flex gap-2 mt-2">
-              <Button className="flex-1" onClick={onAcceptTerms} data-testid={`button-accept-terms-${project.id}`}>
-                <DollarSign className="w-4 h-4 mr-2" />
-                Commit Capital
-              </Button>
-              <Button variant="secondary" className="flex-1" onClick={onCounterTerms} data-testid={`button-counter-terms-${project.id}`}>
-                <Handshake className="w-4 h-4 mr-2" />
-                Negotiate
-              </Button>
-            </div>
-            <div className="mt-2">
-              <OpenOfferStudioButton
-                dealId={project.id}
-                lane="CAPITAL"
-                variant="outline"
-                className="w-full"
-                stopPropagation
-              />
-            </div>
-          </>
-        )}
       </CardContent>
     </Card>
   );
@@ -2219,16 +1901,18 @@ function CapitalRaiseCard({ project, onView, onAcceptTerms, onCounterTerms, isSa
 interface CapitalRaiseSwipeViewProps {
   projects: CapitalProject[];
   onSave: (id: number) => void;
-  onAcceptTerms: (project: CapitalProject) => void;
-  onCounterTerms: (project: CapitalProject) => void;
-  isItemSaved: (id: number) => boolean;
 }
 
-function CapitalRaiseSwipeView({ projects, onSave, onAcceptTerms, onCounterTerms, isItemSaved }: CapitalRaiseSwipeViewProps) {
+function CapitalRaiseSwipeView({ projects, onSave }: CapitalRaiseSwipeViewProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [exitDirection, setExitDirection] = useState<"left" | "right" | null>(null);
+  const [isAdvancing, setIsAdvancing] = useState(false);
+  const isAdvancingRef = useRef(false);
+  const advanceTimerRef = useRef<number | null>(null);
+  const unlockTimerRef = useRef<number | null>(null);
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const reduceMotion = usePrefersReducedMotion();
   
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 0, 200], [-15, 0, 15]);
@@ -2238,7 +1922,25 @@ function CapitalRaiseSwipeView({ projects, onSave, onAcceptTerms, onCounterTerms
   const currentProject = projects[currentIndex];
   const hasMore = currentIndex < projects.length - 1;
 
+  useEffect(() => () => {
+    if (advanceTimerRef.current !== null) {
+      window.clearTimeout(advanceTimerRef.current);
+    }
+    if (unlockTimerRef.current !== null) {
+      window.clearTimeout(unlockTimerRef.current);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!reduceMotion) return;
+    x.stop?.();
+    x.set(0);
+  }, [reduceMotion, x]);
+
   const handleSwipe = (direction: "left" | "right") => {
+    if (isAdvancingRef.current || !currentProject) return;
+    isAdvancingRef.current = true;
+    setIsAdvancing(true);
     setExitDirection(direction);
     
     if (direction === "right" && currentProject) {
@@ -2249,12 +1951,29 @@ function CapitalRaiseSwipeView({ projects, onSave, onAcceptTerms, onCounterTerms
       });
     }
     
-    setTimeout(() => {
+    const releaseAdvanceLock = () => {
+      unlockTimerRef.current = null;
+      isAdvancingRef.current = false;
+      setIsAdvancing(false);
+    };
+
+    const advance = () => {
       if (hasMore) {
         setCurrentIndex(prev => prev + 1);
+      } else {
+        setCurrentIndex(projects.length);
       }
       setExitDirection(null);
-    }, 300);
+      x.set(0);
+      advanceTimerRef.current = null;
+      if (reduceMotion) {
+        unlockTimerRef.current = window.setTimeout(releaseAdvanceLock, 300);
+      } else {
+        releaseAdvanceLock();
+      }
+    };
+
+    advanceTimerRef.current = window.setTimeout(advance, reduceMotion ? 0 : 300);
   };
 
   const handleDragEnd = (event: any, info: PanInfo) => {
@@ -2267,7 +1986,7 @@ function CapitalRaiseSwipeView({ projects, onSave, onAcceptTerms, onCounterTerms
   };
 
   const handleUndo = () => {
-    if (currentIndex > 0) {
+    if (!isAdvancingRef.current && currentIndex > 0) {
       setCurrentIndex(prev => prev - 1);
     }
   };
@@ -2276,9 +1995,9 @@ function CapitalRaiseSwipeView({ projects, onSave, onAcceptTerms, onCounterTerms
     return (
       <Card className="p-12 text-center max-w-lg mx-auto">
         <TrendingUp className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-        <h3 className="text-lg font-semibold mb-2">No Capital Raises to Swipe</h3>
+        <h3 className="text-lg font-semibold mb-2">No private project records available</h3>
         <p className="text-muted-foreground">
-          Check back later for new investment opportunities.
+          New source-supplied project context will appear here when it is available.
         </p>
       </Card>
     );
@@ -2290,16 +2009,12 @@ function CapitalRaiseSwipeView({ projects, onSave, onAcceptTerms, onCounterTerms
         <Sparkles className="w-12 h-12 mx-auto text-primary mb-4" />
         <h3 className="text-lg font-semibold mb-2">You've Seen All Projects!</h3>
         <p className="text-muted-foreground mb-6">
-          You've reviewed all available capital raises. Saved sets remain inside the controlled pilot.
+          You've reviewed all available private project records.
         </p>
-        <div className="flex gap-3 justify-center">
+        <div className="flex justify-center">
           <Button variant="outline" onClick={() => setCurrentIndex(0)} data-testid="button-capital-start-over">
             <RotateCcw className="w-4 h-4 mr-2" />
             Start Over
-          </Button>
-          <Button type="button" disabled data-testid="button-capital-view-saved-pilot">
-            <Bookmark className="w-4 h-4 mr-2" />
-            Saved workspace · pilot
           </Button>
         </div>
       </Card>
@@ -2313,39 +2028,42 @@ function CapitalRaiseSwipeView({ projects, onSave, onAcceptTerms, onCounterTerms
           {currentIndex + 1} / {projects.length}
         </Badge>
         <p className="text-sm text-muted-foreground mt-2">
-          Swipe right to save, left to pass
+          {reduceMotion ? "Use the controls to save or pass" : "Swipe right to save, left to pass"}
         </p>
       </div>
 
-      <div className="relative h-[560px]">
+      <div className="relative h-[440px]">
         <AnimatePresence mode="wait">
           <motion.div
             key={currentProject.id}
-            drag="x"
-            dragConstraints={{ left: 0, right: 0 }}
-            onDragEnd={handleDragEnd}
-            style={{ x, rotate }}
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ 
+            drag={reduceMotion ? false : "x"}
+            dragConstraints={reduceMotion ? undefined : { left: 0, right: 0 }}
+            onDragEnd={reduceMotion ? undefined : handleDragEnd}
+            style={reduceMotion ? undefined : { x, rotate }}
+            initial={reduceMotion ? false : { scale: 0.95, opacity: 0 }}
+            animate={reduceMotion ? { scale: 1, opacity: 1, x: 0 } : {
               scale: 1, 
               opacity: 1,
               x: exitDirection === "left" ? -300 : exitDirection === "right" ? 300 : 0
             }}
-            exit={{ 
+            exit={reduceMotion ? { scale: 1, opacity: 1, x: 0 } : {
               x: exitDirection === "left" ? -300 : 300,
               opacity: 0,
-              transition: { duration: 0.2 }
+              transition: { duration: 0 }
             }}
-            transition={{ type: "spring", stiffness: 300, damping: 20 }}
-            className="absolute inset-0 cursor-grab active:cursor-grabbing"
+            transition={reduceMotion
+              ? { duration: 0 }
+              : exitDirection
+                ? { duration: 0.3, ease: "easeOut" }
+                : { type: "spring", stiffness: 300, damping: 20 }}
+            className={`absolute inset-0 ${isAdvancing ? "pointer-events-none" : ""} ${reduceMotion ? "cursor-default" : "cursor-grab active:cursor-grabbing"}`}
           >
             <CapitalSwipeCard 
               project={currentProject}
               likeOpacity={likeOpacity}
               passOpacity={passOpacity}
               onView={() => setLocation(`/marketflow/capital/${currentProject.id}`)}
-              onAcceptTerms={() => onAcceptTerms(currentProject)}
-              onCounterTerms={() => onCounterTerms(currentProject)}
+              isAdvancing={isAdvancing}
             />
           </motion.div>
         </AnimatePresence>
@@ -2353,53 +2071,41 @@ function CapitalRaiseSwipeView({ projects, onSave, onAcceptTerms, onCounterTerms
 
       <div className="flex items-center justify-center gap-3 mt-6">
         <Button 
+          aria-label="Undo"
           size="lg" 
           variant="outline" 
           className="rounded-full h-12 w-12"
           onClick={handleUndo}
-          disabled={currentIndex === 0}
+          disabled={currentIndex === 0 || isAdvancing}
           data-testid="button-capital-undo"
         >
           <RotateCcw className="w-4 h-4" />
         </Button>
         <Button 
+          aria-label="Pass"
           size="lg" 
           variant="outline" 
           className="rounded-full h-14 w-14 border-red-300 hover:bg-red-50 hover:border-red-400"
           onClick={() => handleSwipe("left")}
+          disabled={isAdvancing}
           data-testid="button-capital-pass"
         >
           <X className="w-5 h-5 text-red-500" />
         </Button>
         <Button 
+          aria-label="Save"
           size="lg" 
           className="rounded-full h-14 w-14 bg-green-500 hover:bg-green-600"
           onClick={() => handleSwipe("right")}
+          disabled={isAdvancing}
           data-testid="button-capital-save-swipe"
         >
           <Heart className="w-5 h-5" />
         </Button>
-        <Button 
-          size="lg" 
-          className="rounded-full h-12 w-12"
-          onClick={() => onAcceptTerms(currentProject)}
-          data-testid="button-capital-accept"
-        >
-          <DollarSign className="w-5 h-5" />
-        </Button>
-        <Button 
-          size="lg" 
-          variant="secondary"
-          className="rounded-full h-12 w-12"
-          onClick={() => onCounterTerms(currentProject)}
-          data-testid="button-capital-counter"
-        >
-          <Handshake className="w-4 h-4" />
-        </Button>
       </div>
 
       <p className="text-center text-xs text-muted-foreground mt-4">
-        Undo • Pass • Save • Invest • Negotiate
+        Undo • Pass • Save
       </p>
     </div>
   );
@@ -2410,22 +2116,10 @@ interface CapitalSwipeCardProps {
   likeOpacity: any;
   passOpacity: any;
   onView: () => void;
-  onAcceptTerms: () => void;
-  onCounterTerms: () => void;
+  isAdvancing: boolean;
 }
 
-function CapitalSwipeCard({ project, likeOpacity, passOpacity, onView, onAcceptTerms, onCounterTerms }: CapitalSwipeCardProps) {
-  const fundingGoal = project.fundingGoal || 0;
-  const amountRaised = project.amountRaised || 0;
-  const progressPercent = fundingGoal > 0 ? Math.min((amountRaised / fundingGoal) * 100, 100) : 0;
-  const isFunded = project.status === "FUNDED" || progressPercent >= 100;
-
-  const formatCurrency = (amount: number) => {
-    if (amount >= 1000000) return `$${(amount / 1000000).toFixed(1)}M`;
-    if (amount >= 1000) return `$${(amount / 1000).toFixed(0)}K`;
-    return `$${amount.toLocaleString()}`;
-  };
-
+function CapitalSwipeCard({ project, likeOpacity, passOpacity, onView, isAdvancing }: CapitalSwipeCardProps) {
   const getStrategyLabel = (strategy: string | null | undefined) => {
     const labels: Record<string, string> = {
       "fix-flip": "Fix & Flip",
@@ -2434,16 +2128,7 @@ function CapitalSwipeCard({ project, likeOpacity, passOpacity, onView, onAcceptT
       "development": "Development",
       "new-construction": "New Construction",
     };
-    return labels[strategy || ""] || strategy || "Investment";
-  };
-
-  const getStructureLabel = (structure: string | null | undefined) => {
-    const labels: Record<string, string> = {
-      "EQUITY": "Equity",
-      "DEBT": "Debt",
-      "HYBRID": "Hybrid",
-    };
-    return labels[structure || ""] || structure || "Equity";
+    return labels[strategy || ""] || strategy || "Project";
   };
 
   return (
@@ -2475,11 +2160,8 @@ function CapitalSwipeCard({ project, likeOpacity, passOpacity, onView, onAcceptT
         </motion.div>
 
         <div className="absolute bottom-2 left-2 flex gap-1">
-          <Badge className={isFunded ? "bg-green-600 text-white" : "bg-amber-500 text-white"}>
-            {isFunded ? "Funded" : project.status?.replace(/_/g, ' ') || "Open"}
-          </Badge>
-          <Badge variant="outline" className="bg-background/80">
-            {getStructureLabel(project.structure)}
+          <Badge variant="outline" className="bg-background/90 text-foreground">
+            Private project record
           </Badge>
         </div>
       </div>
@@ -2498,82 +2180,17 @@ function CapitalSwipeCard({ project, likeOpacity, passOpacity, onView, onAcceptT
           </p>
         </div>
 
-        <div>
-          <div className="flex items-center justify-between text-sm mb-2">
-            <span className="text-muted-foreground">Funding Progress</span>
-            <span className="font-semibold">{progressPercent.toFixed(0)}%</span>
-          </div>
-          <Progress value={progressPercent} className="h-2" />
-          <div className="flex items-center justify-between text-xs text-muted-foreground mt-1">
-            <span>{formatCurrency(amountRaised)} raised</span>
-            <span>of {formatCurrency(fundingGoal)}</span>
-          </div>
-        </div>
-
-        <div className="p-3 bg-muted/50 rounded-lg">
-          <p className="text-[10px] text-muted-foreground mb-1 font-medium">Operator Terms</p>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            {project.structure === "DEBT" ? (
-              <>
-                <div>
-                  <span className="text-muted-foreground">Interest: </span>
-                  <span className="font-medium">{project.askingInterestRate || "Negotiable"}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Duration: </span>
-                  <span className="font-medium">{project.askingLoanDuration || "Negotiable"}</span>
-                </div>
-              </>
-            ) : (
-              <>
-                <div>
-                  <span className="text-muted-foreground">Return: </span>
-                  <span className="font-medium">{project.projectedReturn || "Negotiable"}</span>
-                </div>
-                <div>
-                  <span className="text-muted-foreground">Split: </span>
-                  <span className="font-medium">{project.askingProfitSplit || "Negotiable"}</span>
-                </div>
-              </>
-            )}
-          </div>
-          {project.minInvestment && (
-            <div className="mt-2 pt-2 border-t border-muted text-xs">
-              <span className="text-muted-foreground">Minimum Capital: </span>
-              <span className="font-medium">{formatCurrency(project.minInvestment)}</span>
-            </div>
-          )}
+        <div className="rounded-lg border bg-muted/40 p-3 text-xs leading-relaxed text-muted-foreground">
+          <span className="font-medium text-foreground">Relationship information only.</span>{" "}
+          This record is not an offering and does not accept funds, offers, allocations, or commitments.
         </div>
 
         <div className="flex gap-2">
-          <Button variant="outline" className="flex-1" onClick={onView} data-testid="button-view-capital-swipe">
+          <Button variant="outline" className="flex-1" onClick={onView} disabled={isAdvancing} data-testid="button-view-capital-swipe">
             <Eye className="w-4 h-4 mr-2" />
             View Details
           </Button>
         </div>
-        {!isFunded && (
-          <>
-            <div className="flex gap-2 mt-2">
-              <Button className="flex-1" onClick={onAcceptTerms} data-testid="button-accept-capital-swipe">
-                <DollarSign className="w-4 h-4 mr-2" />
-                Commit Capital
-              </Button>
-              <Button variant="secondary" className="flex-1" onClick={onCounterTerms} data-testid="button-counter-capital-swipe">
-                <Handshake className="w-4 h-4 mr-2" />
-                Negotiate
-              </Button>
-            </div>
-            <div className="mt-2">
-              <OpenOfferStudioButton
-                dealId={project.id}
-                lane="CAPITAL"
-                variant="outline"
-                className="w-full"
-                stopPropagation
-              />
-            </div>
-          </>
-        )}
       </CardContent>
     </Card>
   );
@@ -2668,7 +2285,7 @@ function ListingCard({ listing, onView, onRequestInfo, onScheduleShowing, isSave
     if (type === "on_market") {
       return <Badge className="bg-green-600 text-white text-[10px]">On Market</Badge>;
     }
-    return <Badge variant="secondary" className="text-[10px]">Off Market</Badge>;
+    return <Badge variant="secondary" className="text-[10px]">Direct submission</Badge>;
   };
 
   const getConditionBadge = (condition: string | undefined) => {

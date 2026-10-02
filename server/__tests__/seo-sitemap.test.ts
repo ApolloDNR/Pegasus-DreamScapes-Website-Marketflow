@@ -50,6 +50,14 @@ describe("isCrawlablePublicPath", () => {
     expect(sitemapPaths.has("/bring-an-opportunity")).toBe(true);
   });
 
+  it("advertises Contact as the sole canonical chooser and omits the Connect alias", () => {
+    const sitemapPaths = new Set(sitemapEntries().map((entry) => entry.path));
+
+    expect(SEO_ROUTES["/connect"]).toBeUndefined();
+    expect(sitemapPaths.has("/connect")).toBe(false);
+    expect(sitemapPaths.has("/contact")).toBe(true);
+  });
+
   it("excludes the remaining demoted bare route from the sitemap (it 302-redirects)", () => {
     const sitemapPaths = new Set(sitemapEntries().map((e) => e.path));
     // Website Spec v4 restored /marketflow to the live public surface, so it is
@@ -72,14 +80,36 @@ describe("isCrawlablePublicPath", () => {
       "/dashboard",
       "/login",
       "/signup",
+      "/forgot-password",
+      "/reset-password",
       "/offer-studio",
       "/profile/123",
       "/snapshot/abc",
+      "/saved",
       "/marketflow/admin",
       "/marketflow/dashboard",
       "/marketflow/messages",
     ]) {
       expect(isCrawlablePublicPath(p)).toBe(false);
+    }
+  });
+
+  it("keeps the personal saved workspace out of search and the sitemap", async () => {
+    const { SEO_ROUTES } = await import("../../shared/seo-routes");
+    const sitemapPaths = new Set(sitemapEntries().map((entry) => entry.path));
+
+    expect(SEO_ROUTES["/saved"]?.noIndex).toBe(true);
+    expect(sitemapPaths.has("/saved")).toBe(false);
+    expect(ROBOTS_DISALLOW).toContain("/saved");
+  });
+
+  it("keeps password-recovery routes out of search and the sitemap", () => {
+    const sitemapPaths = new Set(sitemapEntries().map((entry) => entry.path));
+
+    for (const route of ["/forgot-password", "/reset-password"]) {
+      expect(isCrawlablePublicPath(route)).toBe(false);
+      expect(sitemapPaths.has(route)).toBe(false);
+      expect(ROBOTS_DISALLOW).toContain(route);
     }
   });
 });

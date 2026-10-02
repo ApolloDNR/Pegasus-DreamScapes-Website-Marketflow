@@ -263,7 +263,7 @@ export default function Peggy() {
                   <ArrowRight className="ml-3 w-4 h-4" />
                 </Button>
               </Link>
-              <Link href="/connect">
+              <Link href="/contact">
                 <Button
                   size="lg"
                   variant="outline"

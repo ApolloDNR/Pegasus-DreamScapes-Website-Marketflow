@@ -1,7 +1,6 @@
-import { Link } from "wouter";
-import { Button } from "@/components/ui/button";
 import { useSEO } from "@/hooks/use-seo";
-import { ArrowRight, ShieldCheck, MessageSquare, Lock, Mail, Phone } from "lucide-react";
+import { CAPITAL_RELATIONSHIP_FORM, LeadForm } from "@/pegasus/forms";
+import { ShieldCheck, MessageSquare, Lock, Mail, Phone } from "lucide-react";
 
 // Empire Doctrine v1.0.1 — /capital is footer-only (NOT in primary nav).
 // Reg D 506(b)-safe language: capital relationships are private, by
@@ -28,12 +27,13 @@ export default function CapitalPage() {
             Capital is a relationship, not a product.
           </h1>
           <p className="font-serif text-xl text-white/85 italic leading-snug max-w-2xl mb-6">
-            We do not sell securities. We do not run a fund. We have private conversations with
-            individuals we already know, under written agreement, deal by deal.
+            Pegasus handles potential relationships privately and individually, beginning with
+            an existing relationship or a personal introduction.
           </p>
           <p className="text-base text-white/70 max-w-2xl leading-relaxed">
-            This page is informational only. Nothing here is an offer, recommendation, or
-            solicitation. There is no public investment product.
+            This page provides relationship context only. Nothing here is an offer,
+            recommendation, solicitation, or commitment, and no submission creates access or
+            eligibility.
           </p>
         </div>
       </section>
@@ -43,17 +43,17 @@ export default function CapitalPage() {
           <Block
             icon={<MessageSquare className="w-5 h-5" />}
             title="Conversations, not pitches."
-            body="A capital conversation begins after a personal introduction. We discuss the deal, the structure, the timing, the risk, and the roles in detail before any document is drafted."
+            body="A conversation begins with an existing relationship or a personal introduction. Project details, roles, risks, and possible next steps are discussed only if that relationship progresses."
           />
           <Block
             icon={<ShieldCheck className="w-5 h-5" />}
-            title="Written agreement on every deal."
-            body="If both sides decide to move forward, the structure is documented in a written agreement reviewed by counsel before any capital moves. No handshake deals, no boilerplate forms."
+            title="Separate diligence and documents."
+            body="Any later opportunity would require its own diligence, eligibility checks, and written terms. A conversation or form submission is not an agreement or a commitment by either side."
           />
           <Block
             icon={<Lock className="w-5 h-5" />}
             title="Private, individual, and on the record."
-            body="Pegasus does not advertise capital opportunities. Every relationship is private and individual. Nothing on this site is an offer of guaranteed returns or principal protected investment products."
+            body="Pegasus does not publish project terms through this page. Each introduction is handled individually, and any later discussion remains conditional on fit, capacity, and the required documentation."
           />
         </div>
       </section>
@@ -80,24 +80,32 @@ export default function CapitalPage() {
         </div>
       </section>
 
-      <section className="py-20 bg-[hsl(var(--stone))] border-y border-border">
-        <div className="max-w-3xl mx-auto px-6 lg:px-12 text-center">
-          <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em] text-foreground mb-5">
-            Already in conversation with Apollo?
-          </h2>
-          <p className="text-base text-muted-foreground leading-relaxed mb-8">
-            Reach Apollo directly. There is no general inquiry form for capital. That is by design.
-          </p>
-          <Link href="/contact">
-            <Button
-              size="lg"
-              className="bg-primary hover:bg-primary/90 text-primary-foreground text-[12px] uppercase tracking-[0.18em] font-semibold px-8 h-12 rounded-sm"
-              data-testid="button-capital-contact"
-            >
-              Contact Apollo
-              <ArrowRight className="ml-3 w-4 h-4" />
-            </Button>
-          </Link>
+      <section
+        id="capital-introduction"
+        className="scroll-mt-24 py-20 bg-[hsl(var(--stone))] border-y border-border"
+      >
+        <div className="max-w-5xl mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-10 lg:gap-16 items-start">
+          <div className="lg:col-span-5">
+            <p className="text-[10px] uppercase tracking-[0.28em] text-primary font-supporting font-semibold mb-4">
+              Existing relationship or personal introduction
+            </p>
+            <h2 className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em] text-foreground mb-5">
+              Continue the relationship privately.
+            </h2>
+            <p className="text-base text-muted-foreground leading-relaxed">
+              This is not a general application. Use it only to identify who connected you and
+              provide the relationship context Apollo needs to recognize the introduction.
+            </p>
+            <p className="mt-5 text-sm text-muted-foreground leading-relaxed">
+              Do not include account details, tax identifiers, or other sensitive financial
+              information.
+            </p>
+          </div>
+          <div className="lg:col-span-7">
+            <div className="lead-card p-6 sm:p-8 lg:p-10">
+              <LeadForm cfg={CAPITAL_RELATIONSHIP_FORM} />
+            </div>
+          </div>
         </div>
       </section>
     </div>

@@ -9,16 +9,15 @@ export const IMG = (name: string) => `${import.meta.env.BASE_URL}images/${name}`
    Brand mark - the official Pegasus Dreamscapes emblem (navy winged
    Pegasus over the house roof), used as a transparent PNG so the real
    logo shows consistently across every public surface. On dark
-   backgrounds (onDark) a soft glow keeps the navy elements legible
-   over the hero photo without recoloring the logo.
+   backgrounds (onDark) a small paper ground keeps the navy elements
+   legible without recoloring the original logo.
 ---------------------------------------------------------------- */
 export function BrandMark({ boxClassName = 'w-11 h-11', onDark = false, className = '' }:
   { boxClassName?: string; onDark?: boolean; className?: string }) {
   return (
-    <span className={`inline-flex items-center justify-center shrink-0 ${boxClassName} ${className}`}>
+    <span className={`pg-brand-mark inline-flex items-center justify-center shrink-0 ${boxClassName} ${className}`} data-on-dark={onDark || undefined}>
       <img src={brandEmblem} alt="Pegasus Dreamscapes"
-        className="w-full h-full object-contain"
-        style={onDark ? { filter: 'drop-shadow(0 1px 6px rgba(0,0,0,0.55))' } : undefined} />
+        className="w-full h-full object-contain" />
     </span>
   );
 }
@@ -87,7 +86,7 @@ export function SectionHead({ eyebrow, title, copy, dark = false, center = false
     return (
       <div className="text-center max-w-3xl mx-auto mb-14 lg:mb-16 reveal">
         <div className={`pg-label mb-5 ${dark ? 'text-[var(--accent-bright)]' : 'text-[var(--accent-ink)]'}`}>{eyebrow}</div>
-        <h2 className="font-serif-display text-5xl md:text-7xl leading-[1.0] tracking-normal mx-auto [text-wrap:balance]"
+        <h2 className="pg-section-heading font-serif-display text-5xl md:text-7xl leading-[1.0] tracking-normal mx-auto [text-wrap:balance]"
           style={{ color: dark ? 'var(--cream)' : 'var(--text)' }}>{title}</h2>
         {copy && <p className={`max-w-xl mx-auto leading-relaxed mt-6 ${dark ? 'text-[rgba(239,231,218,0.7)]' : 'text-[var(--muted)]'}`}>{copy}</p>}
       </div>
@@ -97,7 +96,7 @@ export function SectionHead({ eyebrow, title, copy, dark = false, center = false
     <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8 mb-14 lg:mb-16 reveal">
       <div>
         <div className={`pg-label mb-5 ${dark ? 'text-[var(--accent-bright)]' : 'text-[var(--accent-ink)]'}`}>{eyebrow}</div>
-        <h2 className="font-serif-display text-5xl md:text-7xl leading-[1.0] tracking-normal max-w-2xl [text-wrap:balance]"
+        <h2 className="pg-section-heading font-serif-display text-5xl md:text-7xl leading-[1.0] tracking-normal max-w-2xl [text-wrap:balance]"
           style={{ color: dark ? 'var(--cream)' : 'var(--text)' }}>{title}</h2>
       </div>
       {copy && <p className={`max-w-sm leading-relaxed ${dark ? 'text-[rgba(239,231,218,0.7)]' : 'text-[var(--muted)]'}`}>{copy}</p>}

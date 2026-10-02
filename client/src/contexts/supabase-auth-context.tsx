@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
+import { Fragment, createContext, useContext, useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import type { User, Session } from '@supabase/supabase-js';
 import {
   ensureAuthenticatedUserProfile,
@@ -6,7 +6,11 @@ import {
   type UserRole,
   type UserProfile,
 } from '@/lib/supabase';
-import { queryClient } from '@/lib/queryClient';
+import {
+  authenticatedRequest,
+  clearSessionQueries,
+  transitionSessionPrincipal,
+} from '@/lib/queryClient';
 import { 
   isAdminRole, 
   isWholesalerRole, 
@@ -51,6 +55,16 @@ interface SupabaseAuthContextType {
 
 const SupabaseAuthContext = createContext<SupabaseAuthContextType | undefined>(undefined);
 
+export function AuthSessionBoundary({
+  epoch,
+  children,
+}: {
+  epoch: number;
+  children: React.ReactNode;
+}) {
+  return <Fragment key={epoch}>{children}</Fragment>;
+}
+
 export function SupabaseAuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -72,10 +86,58 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       return null;
     }
   });
+  const [sessionEpoch, setSessionEpoch] = useState(0);
+  const authUserIdRef = useRef<string | null>(null);
+  const guestModeRef = useRef(isGuestMode);
+  const guestRoleRef = useRef(guestRole);
+  const cachePrincipalRef = useRef(
+    isGuestMode
+      ? `guest:${guestRole ?? "unknown"}:anonymous`
+      : "anonymous",
+  );
 
-  const fetchProfile = useCallback(async (userId: string) => {
+  const transitionUserCache = useCallback((nextUserId: string | null) => {
+    const nextUserPrincipal = nextUserId
+      ? `user:${nextUserId}`
+      : "anonymous";
+    const nextPrincipal = guestModeRef.current
+      ? `guest:${guestRoleRef.current ?? "unknown"}:${nextUserPrincipal}`
+      : nextUserPrincipal;
+    const didChange = cachePrincipalRef.current !== nextPrincipal;
+    authUserIdRef.current = nextUserId;
+    cachePrincipalRef.current = transitionSessionPrincipal(
+      cachePrincipalRef.current,
+      nextPrincipal,
+    );
+    if (didChange) {
+      // QueryClient.clear() removes cached Query objects, but mounted observers
+      // retain their current result. Remount consumers before the new identity
+      // is committed so stale private data cannot remain visible.
+      setSessionEpoch((epoch) => epoch + 1);
+    }
+    return didChange;
+  }, []);
+
+  const forceSessionReset = useCallback((nextPrincipal: string) => {
+    clearSessionQueries();
+    cachePrincipalRef.current = nextPrincipal;
+    setSessionEpoch((epoch) => epoch + 1);
+  }, []);
+
+  const fetchProfile = useCallback(async (
+    userId: string,
+    accessToken?: string,
+  ) => {
     try {
-      const response = await fetch(`/api/supabase/profile/${userId}`);
+      const token = accessToken?.trim();
+      const response = await authenticatedRequest(
+        `/api/supabase/profile/${userId}`,
+        {
+          headers: token
+            ? { Authorization: `Bearer ${token}` }
+            : undefined,
+        },
+      );
       if (!response.ok) {
         return null;
       }
@@ -125,6 +187,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
             
             // Also create a synthetic user object with email for admin detection
             if (mounted) {
+              transitionUserCache(replitUser.id);
               const syntheticUser = {
                 id: replitUser.id,
                 email: replitUser.email,
@@ -149,6 +212,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         
         if (mounted) {
           if (currentSession?.user) {
+            transitionUserCache(currentSession.user.id);
             const profileData = await ensureAuthenticatedUserProfile(
               currentSession,
               fetchProfile,
@@ -160,11 +224,13 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
               setProfile(profileData);
             } else {
               await supabase.auth.signOut();
+              transitionUserCache(null);
               setSession(null);
               setUser(null);
               setProfile(null);
             }
           } else {
+            transitionUserCache(null);
             setSession(null);
             setUser(null);
             setProfile(null);
@@ -177,11 +243,27 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
           async (event, newSession) => {
             if (mounted) {
               if (newSession?.user) {
+                const identityChanged =
+                  authUserIdRef.current !== newSession.user.id;
+                if (identityChanged) {
+                  setSession(null);
+                  setUser(null);
+                  setProfile(null);
+                  setBackendIsAdmin(false);
+                }
+                transitionUserCache(newSession.user.id);
                 const profileData = await ensureAuthenticatedUserProfile(
                   newSession,
                   fetchProfile,
                 );
                 if (profileData) {
+                  if (identityChanged) {
+                    // The neutral remount above prevents stale display while
+                    // provisioning. Clear once more immediately before the new
+                    // identity mounts so any uncancellable legacy request that
+                    // settled in the interim cannot seed the next session.
+                    forceSessionReset(cachePrincipalRef.current);
+                  }
                   setSession(newSession);
                   setUser(newSession.user);
                   setProfile(profileData);
@@ -203,11 +285,13 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
                     // localStorage / fetch unavailable — non-fatal.
                   }
                 } else {
+                  transitionUserCache(null);
                   setSession(null);
                   setUser(null);
                   setProfile(null);
                 }
               } else {
+                transitionUserCache(null);
                 setSession(null);
                 setUser(null);
                 setProfile(null);
@@ -234,7 +318,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     return () => {
       mounted = false;
     };
-  }, [fetchProfile]);
+  }, [fetchProfile, forceSessionReset, transitionUserCache]);
 
   const signUp = async (
     email: string, 
@@ -251,6 +335,8 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
         options: {
           data: {
             primary_role: role,
+            declared_role_interest: role,
+            account_scope: "general_preview",
             display_name: displayName
           }
         }
@@ -300,15 +386,29 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   };
 
   const signOut = async () => {
+    // Clear before waiting on the identity provider so a slow or failed
+    // sign-out cannot leave any legacy untagged private response readable.
+    authUserIdRef.current = null;
+    const signedOutPrincipal = guestModeRef.current
+      ? `guest:${guestRoleRef.current ?? "unknown"}:anonymous`
+      : "anonymous";
+    forceSessionReset(signedOutPrincipal);
+    setUser(null);
+    setSession(null);
+    setProfile(null);
+    setBackendIsAdmin(false);
     try {
       const supabase = await getSupabase();
       await supabase.auth.signOut();
-      queryClient.removeQueries({ queryKey: ['authenticated'] });
+    } catch (err) {
+      console.error('Sign out error:', err);
+    } finally {
+      // Catch any request that completed while provider sign-out was pending.
+      forceSessionReset(signedOutPrincipal);
       setUser(null);
       setSession(null);
       setProfile(null);
-    } catch (err) {
-      console.error('Sign out error:', err);
+      setBackendIsAdmin(false);
     }
   };
 
@@ -322,7 +422,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       return true;
     }
     // Fallback checks for Supabase Auth users
-    const userEmail = user?.email?.toLowerCase() || profile?.display_name?.toLowerCase();
+    const userEmail = user?.email?.toLowerCase();
     if (userEmail && ADMIN_EMAILS.includes(userEmail)) {
       return true;
     }
@@ -330,7 +430,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
       return true;
     }
     return false;
-  }, [backendIsAdmin, user?.email, profile?.display_name, effectiveRole]);
+  }, [backendIsAdmin, user?.email, effectiveRole]);
   
   const hasPermission = useCallback((permission: MarketplacePermission): boolean => {
     if (!effectiveRole) return false;
@@ -338,6 +438,9 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
   }, [effectiveRole]);
 
   const enterGuestMode = useCallback((role: UserRole) => {
+    guestModeRef.current = true;
+    guestRoleRef.current = role;
+    transitionUserCache(authUserIdRef.current);
     setIsGuestMode(true);
     setGuestRole(role);
     try {
@@ -346,9 +449,12 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     } catch {
       // localStorage not available
     }
-  }, []);
+  }, [transitionUserCache]);
 
   const exitGuestMode = useCallback(() => {
+    guestModeRef.current = false;
+    guestRoleRef.current = null;
+    transitionUserCache(authUserIdRef.current);
     setIsGuestMode(false);
     setGuestRole(null);
     try {
@@ -357,7 +463,7 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
     } catch {
       // localStorage not available
     }
-  }, []);
+  }, [transitionUserCache]);
 
   const value: SupabaseAuthContextType = {
     user,
@@ -385,7 +491,9 @@ export function SupabaseAuthProvider({ children }: { children: React.ReactNode }
 
   return (
     <SupabaseAuthContext.Provider value={value}>
-      {children}
+      <AuthSessionBoundary epoch={sessionEpoch}>
+        {children}
+      </AuthSessionBoundary>
     </SupabaseAuthContext.Provider>
   );
 }

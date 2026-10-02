@@ -4,7 +4,7 @@ import {
   QUERY_PRESERVING_INTAKE_PATHS,
 } from "@shared/redirects";
 
-describe("legacy intake query preservation", () => {
+describe("legacy query preservation", () => {
   it("keeps Blueprint, address, and referral context on the canonical target", () => {
     expect(
       appendRedirectSearch(
@@ -32,12 +32,33 @@ describe("legacy intake query preservation", () => {
     );
   });
 
-  it("covers every retired intake alias that must preserve context", () => {
+  it("covers every retired alias that must preserve context", () => {
     expect([...QUERY_PRESERVING_INTAKE_PATHS].sort()).toEqual([
+      "/calculators",
+      "/connect",
+      "/investments",
       "/submit",
       "/submit-deal",
       "/submit-property",
       "/wholesale",
     ]);
+  });
+
+  it("keeps the canonical calculator tool authoritative while preserving its tab", () => {
+    expect(
+      appendRedirectSearch(
+        "/strategy-lab?tool=calculators",
+        "?tool=legacy&tab=roi",
+      ),
+    ).toBe("/strategy-lab?tool=calculators&tab=roi");
+  });
+
+  it("preserves attribution when the public investments solicitation retires to Capital", () => {
+    expect(
+      appendRedirectSearch(
+        "/capital",
+        "?utm_source=printed-card&relationship=development",
+      ),
+    ).toBe("/capital?utm_source=printed-card&relationship=development");
   });
 });

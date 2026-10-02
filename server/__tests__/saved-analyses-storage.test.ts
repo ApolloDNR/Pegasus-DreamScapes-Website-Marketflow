@@ -132,14 +132,86 @@ describe("storage.updateSavedAnalysis (production token-mint behavior)", () => {
     expect(setArg.sharedAt).toBeInstanceOf(Date);
   });
 
-  it("does NOT mint when isShared is set to false", async () => {
-    const row = { id: 4, userId: "u", isShared: true, shareToken: "T" };
-    updateQueue.push([row]);
+  it("invalidates the public token and timestamp when sharing is revoked", async () => {
+    const row = {
+      id: 4,
+      userId: "u",
+      isShared: true,
+      shareToken: "OLD_TOKEN",
+      sharedAt: new Date("2026-08-20T12:00:00.000Z"),
+    };
+    updateQueue.push([{ ...row, isShared: false, shareToken: null, sharedAt: null }]);
     await storage.updateSavedAnalysis(4, { isShared: false } as any);
     const setArg = setSpy.mock.calls.at(-1)?.[0];
-    expect(setArg.shareToken).toBeUndefined();
-    expect(setArg.sharedAt).toBeUndefined();
+    expect(setArg.shareToken).toBeNull();
+    expect(setArg.sharedAt).toBeNull();
     expect(setArg.isShared).toBe(false);
+  });
+
+  it("mints a different saved-analysis token after a revoke", async () => {
+    const shared = {
+      id: 5,
+      userId: "u",
+      isShared: true,
+      shareToken: "OLD_TOKEN",
+      sharedAt: new Date("2026-08-20T12:00:00.000Z"),
+    };
+    const revoked = { ...shared, isShared: false, shareToken: null, sharedAt: null };
+    updateQueue.push([revoked]);
+    await storage.updateSavedAnalysis(5, { isShared: false } as any);
+
+    selectQueue.push([revoked]);
+    selectQueue.push([]);
+    updateQueue.push([{ ...revoked, isShared: true }]);
+    await storage.updateSavedAnalysis(5, { isShared: true });
+
+    const setArg = setSpy.mock.calls.at(-1)?.[0];
+    expect(typeof setArg.shareToken).toBe("string");
+    expect(setArg.shareToken).not.toBe("OLD_TOKEN");
+    expect(setArg.sharedAt).toBeInstanceOf(Date);
+  });
+});
+
+describe("storage.updatePropertyAnalysis (share revocation behavior)", () => {
+  it("clears the public token and timestamp when the owner revokes sharing", async () => {
+    const row = {
+      id: 101,
+      userId: "u",
+      isShared: true,
+      shareToken: "PROPERTY_OLD_TOKEN",
+      sharedAt: new Date("2026-08-20T12:00:00.000Z"),
+    };
+    updateQueue.push([{ ...row, isShared: false, shareToken: null, sharedAt: null }]);
+
+    await storage.updatePropertyAnalysis(101, { isShared: false } as any);
+
+    const setArg = setSpy.mock.calls.at(-1)?.[0];
+    expect(setArg.isShared).toBe(false);
+    expect(setArg.shareToken).toBeNull();
+    expect(setArg.sharedAt).toBeNull();
+  });
+
+  it("mints a different property-analysis token after a revoke", async () => {
+    const shared = {
+      id: 102,
+      userId: "u",
+      isShared: true,
+      shareToken: "PROPERTY_OLD_TOKEN",
+      sharedAt: new Date("2026-08-20T12:00:00.000Z"),
+    };
+    const revoked = { ...shared, isShared: false, shareToken: null, sharedAt: null };
+    updateQueue.push([revoked]);
+    await storage.updatePropertyAnalysis(102, { isShared: false } as any);
+
+    selectQueue.push([revoked]);
+    selectQueue.push([]);
+    updateQueue.push([{ ...revoked, isShared: true }]);
+    await storage.updatePropertyAnalysis(102, { isShared: true } as any);
+
+    const setArg = setSpy.mock.calls.at(-1)?.[0];
+    expect(typeof setArg.shareToken).toBe("string");
+    expect(setArg.shareToken).not.toBe("PROPERTY_OLD_TOKEN");
+    expect(setArg.sharedAt).toBeInstanceOf(Date);
   });
 });
 

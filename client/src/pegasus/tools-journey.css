@@ -1,0 +1,48 @@
+.tools-opening { display:grid; grid-template-columns:1.3fr 1fr; gap:80px; align-items:center; margin-bottom:56px; }
+.tools-opening > div { border-top:1px solid var(--experience-copper); padding-top:20px; }
+.tools-opening > div > p { color:var(--experience-muted); max-width:42ch; font-size:18px; line-height:1.7; }
+.tools-opening .journey-invite { margin-top:20px; }
+.tools-finder { display:grid; grid-template-columns:minmax(240px,.7fr) minmax(0,1.5fr); gap:44px; margin-top:36px; padding:30px 0; border-block:1px solid var(--experience-rule); }
+.tools-task-list { display:flex; flex-direction:column; gap:0; }
+.tools-task-list button { display:flex; align-items:center; gap:18px; min-height:92px; padding:18px 16px; border-top:1px solid var(--experience-rule); border-left:3px solid transparent; text-align:left; color:var(--experience-text); transition:background-color 160ms; }
+.tools-task-list button:last-child { border-bottom:1px solid var(--experience-rule); }
+.tools-task-list button > span { color:var(--experience-muted); font:400 13px/1.4 var(--pg-font-ui); }
+.tools-task-list button strong { flex:1; font:400 23px/1.25 var(--pg-font-display); }
+.tools-task-list button > svg { flex:none; color:var(--experience-copper); }
+.tools-task-list button[aria-pressed='true'] { background:var(--experience-limestone); border-left-color:var(--experience-copper); }
+.tools-task-list button:hover { color:var(--experience-copper); }
+.tools-task-detail { padding:4px 0 0 40px; border-left:1px solid var(--experience-rule); min-width:0; scroll-margin-top:164px; }
+.tools-task-detail:focus-visible { outline:2px solid var(--experience-copper); outline-offset:8px; }
+.tools-journey .tools-task-detail h2 { font-size:clamp(28px,2.7vw,38px); text-wrap:initial; }
+.tools-task-detail p:not(.experience-notice):not(.tools-destination-name) { margin:18px 0 22px; color:var(--experience-muted); font-size:16px; }
+.tools-task-detail .tools-destination-name { margin:0 0 16px; color:var(--experience-copper); font:500 14px/1.5 var(--pg-font-ui); }
+.tools-task-detail > .experience-notice { margin-top:24px; }
+.tools-task-detail .experience-link { margin-top:12px; }
+.tools-lab-layout { display:grid; grid-template-columns:minmax(0,1fr) 190px; align-items:center; gap:24px; }
+.tools-lab-layout .property-sketch { width:100%; height:auto; color:var(--experience-text); }
+.tools-lab-layout .property-sketch .is-emphasized,.tools-lab-layout .property-sketch-marker { stroke:var(--experience-copper); }
+.tools-lab-layout .property-sketch-ground { fill:var(--experience-limestone); }
+.tools-calculators { display:grid; grid-template-columns:1fr 1fr; gap:0 28px; }
+.tools-calculators a { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:13px 0; min-height:70px; border-top:1px solid var(--experience-rule); color:inherit; }
+.tools-calculators a strong { font:500 14px/1.5 var(--pg-font-ui); }
+.tools-calculators a small { display:block; color:var(--experience-muted); font:400 12px/1.5 var(--pg-font-ui); margin-top:2px; }
+.tools-calculators a svg { flex:none; color:var(--experience-copper); }
+.tools-calculators a:hover strong { color:var(--experience-copper); }
+.tools-review { display:grid; grid-template-columns:1fr 1fr; gap:64px; margin-top:40px; }
+.tools-journey .tools-review h2,.tools-review h3 { font-size:30px; line-height:1.25; margin:0 0 20px; }
+.tools-review > div:last-child { border-left:1px solid var(--experience-rule); padding-left:48px; }
+.tools-review > div > p { color:var(--experience-muted); margin:16px 0; }
+.tools-network { margin-top:40px; }
+@media (max-width:1199px) { .tools-lab-layout { grid-template-columns:1fr; } .tools-lab-layout .property-sketch { display:none; } }
+@media (max-width:767px) {
+  .tools-opening { grid-template-columns:1fr; gap:28px; margin-bottom:28px; }
+  .tools-opening > div > p { font-size:16px; }
+  .tools-finder { grid-template-columns:1fr; gap:28px; margin-top:28px; padding:20px 0 28px; }
+  .tools-task-list button { min-height:64px; padding:12px; gap:12px; }
+  .tools-task-list button strong { font-size:21px; }
+  .tools-task-detail { padding:0; border:0; }
+  .tools-calculators { grid-template-columns:1fr; }
+  .tools-review { grid-template-columns:1fr; gap:32px; }
+  .tools-review > div:last-child { padding:28px 0 0; border-left:0; border-top:1px solid var(--experience-rule); }
+}
+@media (prefers-reduced-motion:reduce) { .tools-task-list button { transition:none; } }

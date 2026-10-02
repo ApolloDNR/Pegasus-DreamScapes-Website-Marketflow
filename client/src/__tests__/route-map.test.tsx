@@ -1,6 +1,11 @@
 import { describe, it, expect } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
+import {
+  LEGACY_SPA_EXACT_REDIRECTS,
+  LEGACY_SPA_PREFIX_REDIRECTS,
+} from "@shared/redirects";
+import { PEGASUS_URLS } from "@/pegasus/routes";
 
 // Website Brief v1.0 §1 / route-map enforcement. This test inspects the
 // route maps directly (App.tsx legacyRedirects + server/routes.ts LEGACY
@@ -47,7 +52,7 @@ function extractStringList(src: string, anchor: string): string[] {
 }
 
 describe("Route map (Website Brief v1.0 §1)", () => {
-  const appSrc = read("client/src/App.tsx");
+  const appSrc = read("client/src/LegacyApp.tsx");
   const serverSrc = read("server/routes.ts");
   // Public pages now render the saved prototype, mounted in App.tsx via
   // PEGASUS_URLS.map(...) rather than literal <Route path="..."> tags.
@@ -60,8 +65,20 @@ describe("Route map (Website Brief v1.0 §1)", () => {
     pegasusRoutesSrc.includes(`'${route}'`) ||
     pegasusRoutesSrc.includes(`"${route}"`);
 
-  const clientRedirects = extractTuples(appSrc, "const legacyRedirects");
-  const serverRedirects = extractTuples(serverSrc, "const LEGACY_REDIRECTS");
+  const specializedClientRedirects = extractTuples(appSrc, "const legacyRedirects");
+  const clientRedirects: Array<[string, string]> = [
+    ...LEGACY_SPA_EXACT_REDIRECTS.map(
+      ([from, to]) => [from, to] as [string, string],
+    ),
+    ...LEGACY_SPA_PREFIX_REDIRECTS.map(
+      ([prefix, to]) => [`${prefix}/*`, to] as [string, string],
+    ),
+    ...specializedClientRedirects,
+  ];
+  const serverRedirects: Array<[string, string]> =
+    LEGACY_SPA_EXACT_REDIRECTS.map(
+      ([from, to]) => [from, to] as [string, string],
+    );
   const goneRoutes = extractStringList(serverSrc, "const GONE_ROUTES");
 
   // Empire Doctrine v1.0.1 canonical public routes. Adding to this list
@@ -76,8 +93,6 @@ describe("Route map (Website Brief v1.0 §1)", () => {
     "/marketflow",
     "/marketflow/access",
     "/capital",
-    "/connect",
-    "/library",
     "/vendor-network",
     "/contact",
     "/disclosures",
@@ -108,6 +123,8 @@ describe("Route map (Website Brief v1.0 §1)", () => {
   // Retired routes that MUST exit via either a 301 redirect or a 410 Gone.
   // Public Website v1 (issue #22): /submit-property is canonical again.
   const RETIRED_ROUTES = [
+    "/connect",
+    "/investments",
     "/submit",
     "/sell",
     "/submit-deal",
@@ -124,6 +141,9 @@ describe("Route map (Website Brief v1.0 §1)", () => {
     "/capital-raising",
     "/education",
     "/calculators",
+    "/library",
+    "/strategy-library",
+    "/strategy-lab/library",
   ];
 
   it("registers every canonical public route in App.tsx", () => {
@@ -132,6 +152,15 @@ describe("Route map (Website Brief v1.0 §1)", () => {
         isRegistered(route),
         `Canonical route ${route} is neither a literal App.tsx Route nor a Pegasus URL`,
       ).toBe(true);
+    }
+  });
+
+  it("mounts Pegasus-shell public routes only through PEGASUS_URLS", () => {
+    for (const route of PEGASUS_URLS) {
+      expect(
+        appSrc.includes(`path="${route}"`),
+        `${route} is already mounted by PEGASUS_URLS and must not have an unreachable literal Route`,
+      ).toBe(false);
     }
   });
 
@@ -157,13 +186,15 @@ describe("Route map (Website Brief v1.0 §1)", () => {
     // submission-funnel collapse so direct HTTP and in-app navigation
     // land on the same URL.
     const FUNNEL_FROMS = [
+      "/connect",
+      "/calculators",
+      "/investments",
       "/sell",
       "/submit",
       "/submit-deal",
       "/submit-property",
       "/wholesale",
       "/services",
-      "/resources",
       "/invest",
       "/partner",
     ];

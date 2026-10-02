@@ -1,5 +1,12 @@
 # ELEVATION PLAN — Handoff to Codex
 
+> **Superseded hero guidance (2026-08-06).** The July 28 arrival photograph at
+> commit `fb4497b` was later confirmed to be visual drift, not the approved
+> homepage. The controlling source is now `docs/design/final-design-lock.md`,
+> section “Homepage arrival lock.” Do not restore the heavy-column/bridge
+> composition, its mobile derivative, or the rule that hero photography stays
+> dark in light mode.
+
 Owner: Paolo "Apollo" Duran. Prepared by Claude Code after a full-site audit
 (homepage, Strategy Lab, MarketFlow, About, mobile + desktop, dark theme),
 2026-07-28, at commit `fb4497b` on `claude/masterpiece-hero-v51`.

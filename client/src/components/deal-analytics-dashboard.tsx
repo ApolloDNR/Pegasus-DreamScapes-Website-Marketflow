@@ -22,6 +22,7 @@ import {
   ArrowUpRight,
   ArrowDownRight
 } from "lucide-react";
+import { PrivateDataError } from "@/components/private-data-state";
 
 interface DashboardStats {
   totalDealsViewed: number;
@@ -52,46 +53,63 @@ interface MarketInsight {
   description: string;
 }
 
+function isDashboardStatsPayload(value: unknown): value is DashboardStats {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const candidate = value as Partial<DashboardStats>;
+  return [
+    candidate.totalDealsViewed,
+    candidate.dealsSaved,
+    candidate.offersSubmitted,
+    candidate.dealsWon,
+    candidate.totalInvested,
+    candidate.totalReturns,
+    candidate.avgROI,
+    candidate.activeNegotiations,
+    candidate.pendingOffers,
+    candidate.monthlyGrowth,
+  ].every((item) => typeof item === "number" && Number.isFinite(item));
+}
+
 export function DealAnalyticsDashboard({ userId }: { userId?: string }) {
-  const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
+  const {
+    data: stats,
+    isLoading: statsLoading,
+    isError: statsError,
+    isFetching: statsFetching,
+    refetch: refetchStats,
+  } = useQuery<DashboardStats>({
     queryKey: ["/api/analytics/dashboard", userId],
     enabled: !!userId,
     staleTime: 1000 * 60 * 5,
   });
 
-  const { data: activity } = useQuery<DealActivity[]>({
+  const {
+    data: activity,
+    isLoading: activityLoading,
+    isError: activityError,
+    isFetching: activityFetching,
+    refetch: refetchActivity,
+  } = useQuery<DealActivity[]>({
     queryKey: ["/api/analytics/activity", userId],
     enabled: !!userId,
   });
 
-  const { data: insights } = useQuery<MarketInsight[]>({
+  const {
+    data: insights,
+    isLoading: insightsLoading,
+    isError: insightsError,
+    isFetching: insightsFetching,
+    refetch: refetchInsights,
+  } = useQuery<MarketInsight[]>({
     queryKey: ["/api/analytics/market-insights"],
+    enabled: !!userId,
     staleTime: 1000 * 60 * 15,
   });
 
-  const displayStats: DashboardStats = stats || {
-    totalDealsViewed: 0,
-    dealsSaved: 0,
-    offersSubmitted: 0,
-    dealsWon: 0,
-    totalInvested: 0,
-    totalReturns: 0,
-    avgROI: 0,
-    activeNegotiations: 0,
-    pendingOffers: 0,
-    monthlyGrowth: 0,
-  };
-
-  const displayActivity: DealActivity[] = activity || [];
-  const displayInsights: MarketInsight[] = insights || [];
-  const hasPerformanceHistory =
-    displayStats.totalInvested > 0 ||
-    displayStats.totalReturns > 0 ||
-    displayStats.offersSubmitted > 0 ||
-    displayStats.activeNegotiations > 0;
-  const winRate = displayStats.offersSubmitted > 0
-    ? `${Math.round((displayStats.dealsWon / displayStats.offersSubmitted) * 100)}% win rate`
-    : "No offer history yet";
+  const activityUnavailable = activityError || (!activityLoading && !Array.isArray(activity));
+  const insightsUnavailable = insightsError || (!insightsLoading && !Array.isArray(insights));
+  const displayActivity: DealActivity[] = Array.isArray(activity) ? activity : [];
+  const displayInsights: MarketInsight[] = Array.isArray(insights) ? insights : [];
 
   if (!userId) {
     return (
@@ -108,6 +126,72 @@ export function DealAnalyticsDashboard({ userId }: { userId?: string }) {
 
   if (statsLoading) {
     return <DashboardSkeleton />;
+  }
+
+  if (statsError || !isDashboardStatsPayload(stats)) {
+    return (
+      <PrivateDataError
+        title="Deal analytics unavailable"
+        description="Pegasus could not verify your activity totals. No zero metrics or empty-history claim is shown from this failed response."
+        onRetry={() => void refetchStats()}
+        isRetrying={statsFetching}
+        testId="state-deal-analytics-error"
+      />
+    );
+  }
+
+  const displayStats = stats;
+  const hasPerformanceHistory =
+    displayStats.totalDealsViewed > 0 ||
+    displayStats.dealsSaved > 0 ||
+    displayStats.totalInvested > 0 ||
+    displayStats.totalReturns > 0 ||
+    displayStats.offersSubmitted > 0 ||
+    displayStats.dealsWon > 0 ||
+    displayStats.activeNegotiations > 0 ||
+    displayStats.pendingOffers > 0;
+  const winRate = displayStats.offersSubmitted > 0
+    ? `${Math.round((displayStats.dealsWon / displayStats.offersSubmitted) * 100)}% win rate`
+    : "No offer history yet";
+
+  if (!hasPerformanceHistory) {
+    return (
+      <div className="space-y-4">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-primary" />
+              Verified activity analytics
+            </CardTitle>
+            <CardDescription>MarketFlow does not infer performance from placeholder values.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <EmptyAnalyticsState
+              title="No verified analytics events are available yet."
+              description="Personal performance metrics will appear only after the live workflow records and validates member views, saves, offers, negotiations, and outcomes."
+            />
+          </CardContent>
+        </Card>
+        {activityUnavailable && (
+          <PrivateDataError
+            title="Recent activity unavailable"
+            description="The activity request failed; this is not an empty-history result."
+            onRetry={() => void refetchActivity()}
+            isRetrying={activityFetching}
+            testId="state-deal-activity-error"
+          />
+        )}
+        {insightsUnavailable && (
+          <PrivateDataError
+            title="Market insights unavailable"
+            description="The source request failed, so no market conclusion is shown."
+            onRetry={() => void refetchInsights()}
+            isRetrying={insightsFetching}
+            testId="state-market-insights-error"
+          />
+        )}
+      </div>
+    );
   }
 
   return (
@@ -227,7 +311,17 @@ export function DealAnalyticsDashboard({ userId }: { userId?: string }) {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {displayActivity.length > 0 ? (
+            {activityLoading ? (
+              <p className="py-6 text-center text-sm text-muted-foreground" role="status">Loading verified activity…</p>
+            ) : activityUnavailable ? (
+              <PrivateDataError
+                title="Recent activity unavailable"
+                description="The activity request failed; this is not an empty-history result."
+                onRetry={() => void refetchActivity()}
+                isRetrying={activityFetching}
+                testId="state-deal-activity-error"
+              />
+            ) : displayActivity.length > 0 ? (
               <div className="space-y-3">
                 {displayActivity.slice(0, 5).map((item) => (
                   <ActivityItem key={item.id} activity={item} />
@@ -255,7 +349,21 @@ export function DealAnalyticsDashboard({ userId }: { userId?: string }) {
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {displayInsights.length > 0 ? (
+            {insightsLoading ? (
+              <div className="md:col-span-2 lg:col-span-4 py-6 text-center text-sm text-muted-foreground" role="status">
+                Loading reviewed market insights…
+              </div>
+            ) : insightsUnavailable ? (
+              <div className="md:col-span-2 lg:col-span-4">
+                <PrivateDataError
+                  title="Market insights unavailable"
+                  description="The source request failed, so no market conclusion is shown."
+                  onRetry={() => void refetchInsights()}
+                  isRetrying={insightsFetching}
+                  testId="state-market-insights-error"
+                />
+              </div>
+            ) : displayInsights.length > 0 ? (
               displayInsights.map((insight, index) => (
                 <InsightCard key={index} insight={insight} />
               ))

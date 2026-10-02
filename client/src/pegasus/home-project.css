@@ -1,0 +1,164 @@
+/* Nelson's photographs remain original, uncropped project evidence. */
+.home-project {
+  --project-paper: #f5efe4;
+  --project-muted: #c0c8ca;
+  --project-copper: #dda778;
+  --project-rule: #52626b;
+  background: #0b1d29;
+  color: var(--project-paper);
+}
+
+.home-project-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.12fr);
+  align-items: center;
+  gap: clamp(32px, 5vw, 88px);
+  margin-bottom: 40px;
+}
+
+.experience-home .home-project-heading h2 {
+  color: var(--project-paper);
+  font-size: clamp(34px, 4.1vw, 60px);
+  line-height: 1.12;
+  text-wrap: balance;
+}
+
+.home-project-heading > p {
+  max-width: 48ch;
+  border-left: 1px solid var(--project-copper);
+  padding-left: clamp(24px, 3vw, 48px);
+  font-size: 17px;
+  line-height: 1.8;
+  color: var(--project-paper);
+}
+
+.home-project-photographs {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2.8fr);
+  align-items: end;
+  gap: clamp(20px, 2.3vw, 36px);
+}
+
+.home-project-photographs figure {
+  min-width: 0;
+  margin: 0;
+}
+
+.home-project-photographs img {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* No tint, crop, aligned slider, or generated replacement of evidence. */
+}
+
+.home-project-photographs figcaption {
+  margin-top: 12px;
+  color: var(--project-muted);
+  font: 400 13px/1.6 var(--pg-font-ui);
+}
+
+.home-project-notes {
+  display: grid;
+  grid-template-columns: minmax(0, 1.8fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 28px;
+  padding-block: 32px;
+}
+
+.home-project-note-controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+
+.home-project-note-controls button {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  min-height: 54px;
+  padding: 12px 2px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--project-muted);
+  font: 400 15px/1.5 var(--pg-font-ui);
+  text-align: left;
+  cursor: pointer;
+  transition: color 160ms ease, border-color 160ms ease;
+}
+
+.home-project-note-controls button:hover,
+.home-project-note-controls button[aria-pressed='true'] {
+  color: var(--project-paper);
+  border-bottom-color: var(--project-copper);
+}
+
+.home-project-note-controls button:focus-visible {
+  outline: 2px solid var(--project-paper);
+  outline-offset: 4px;
+}
+
+.home-project-note-number {
+  flex: none;
+  color: var(--project-copper);
+  font: 400 13px/1.5 var(--pg-font-ui);
+  font-variant-numeric: tabular-nums;
+}
+
+.home-project .home-project-note {
+  min-height: 5.1em;
+  display: flex;
+  align-items: center;
+  padding-left: 28px;
+  border-left: 1px solid var(--project-rule);
+  color: var(--project-paper);
+  font: 400 14px/1.7 var(--pg-font-ui);
+}
+
+.home-project .home-project-onward {
+  align-items: center;
+  padding-top: 26px;
+  border-top-color: var(--project-rule);
+}
+
+.home-project .home-project-onward > p {
+  max-width: 64ch;
+  color: var(--project-muted);
+  font-size: 14px;
+}
+
+.home-project .home-project-onward > .experience-link {
+  color: var(--project-copper);
+}
+
+.home-project .home-project-onward > .experience-link:hover {
+  color: var(--project-paper);
+}
+
+@media (max-width: 900px) {
+  .home-project-heading { gap: 32px; }
+  .home-project-heading > p { font-size: 15px; line-height: 1.7; padding-left: 24px; }
+  .home-project-photographs { grid-template-columns: minmax(0, 1fr) minmax(0, 2.4fr); }
+  .home-project-notes { grid-template-columns: 1fr; gap: 16px; padding-block: 24px; }
+  .home-project-note-controls { gap: 16px; }
+  .home-project .home-project-note { min-height: 3.4em; padding-left: 20px; }
+}
+
+@media (max-width: 600px) {
+  .home-project-heading { grid-template-columns: 1fr; gap: 24px; margin-bottom: 28px; }
+  .home-project-heading > p { max-width: none; font-size: 15px; }
+  .home-project-photographs { grid-template-columns: 1fr; gap: 24px; }
+  .home-project-before { width: 64%; }
+  .home-project-photographs figcaption { margin-top: 8px; font-size: 12px; }
+  .home-project-note-controls { gap: 10px; }
+  .home-project-note-controls button { flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 6px; font-size: 13px; padding-block: 8px 12px; }
+  .home-project-note-number { font-size: 12px; }
+  .home-project .home-project-note { min-height: 5.1em; padding-left: 16px; font-size: 14px; }
+  .home-project .home-project-onward { gap: 14px; padding-top: 22px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-project-note-controls button { transition: none; }
+}

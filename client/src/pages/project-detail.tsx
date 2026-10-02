@@ -19,6 +19,13 @@ import { useQuery } from "@tanstack/react-query";
 import { useSEO } from "@/hooks/use-seo";
 import { ScrollReveal, StaggerChildren, StaggerItem } from "@/components/animations";
 import type { Project } from "@shared/schema";
+import {
+  NELSON_COST_DISCLOSURE,
+  NELSON_EXECUTION_DISCLOSURE,
+  NELSON_FACTS,
+  NELSON_PUBLIC_DESCRIPTION,
+  NELSON_PUBLIC_HIGHLIGHTS,
+} from "@shared/nelson-facts";
 
 type StoryBlock = { kicker: string; heading: string; body: string };
 
@@ -26,28 +33,28 @@ const CASE_STUDY_NARRATIVE: Record<string, StoryBlock[]> = {
   "nelson-dr": [
     {
       kicker: "Strategy",
-      heading: "Why this property, why this path.",
-      body: "A complex East Bay single-family situation with real condition issues, real permit exposure, and real upside. The structural read was clear: take it down, run a disciplined value-add renovation, exit retail. The deal was selected for its forced-appreciation potential, not its convenience.",
+      heading: "The documented value-add path.",
+      body: "The available record supports a residential acquisition, an improvement budget, and a later sale. It does not establish every decision, diligence step, or service provider behind the project.",
     },
     {
       kicker: "Structure",
-      heading: "How the deal was put together.",
-      body: "Direct acquisition with private capital coordination. Clean title, scoped contingencies, and a defined renovation budget agreed before closing. Every dollar in the project had a documented purpose and a documented source.",
+      heading: "What the public numbers show.",
+      body: "Approximate figures are $600K acquired, $105K improvements, $705K basis before other costs, and $840K sold. The resulting $135K gross spread is not net profit or return.",
     },
     {
       kicker: "Execution",
-      heading: "Permit planning, scope control, communication discipline.",
-      body: "The renovation ran through real-world friction: permit coordination with the City of Richmond, scope adjustments mid-project, and the daily communication cadence that keeps a build on track. This project is where Pegasus learned that permit planning is the project, scope creep is the enemy, and disciplined contractor communication is non-negotiable.",
+      heading: "Roles remain bounded by the record.",
+      body: NELSON_EXECUTION_DISCLOSURE,
     },
     {
       kicker: "Result",
       heading: "Renovated, sold, documented.",
-      body: "The home was fully renovated, brought to retail-ready condition, and sold in September 2025. Public-safe economics: acquisition near $600k, renovation investment of $100k, sale near $840k. Project economics: documented internally for partner conversations.",
+      body: "The available materials show a finished residential property and a sale around $840K in September 2025. The photographs and approximate figures illustrate this project only.",
     },
     {
       kicker: "Lesson",
-      heading: "Why Nelson became the foundation.",
-      body: "Nelson is the project that inspired Pegasus HQ. Every system we run now (strategy reviews, structured intake, permit-aware underwriting, the no-lead-dies doctrine) traces back to a lesson learned here. It is the reason Pegasus is built the way it is built.",
+      heading: "Why Nelson is published.",
+      body: "Nelson is the one case study currently ready for public review. It is presented with fixed figures, actual project images, and explicit limits rather than as proof of volume or future results.",
     },
   ],
 };
@@ -84,13 +91,51 @@ const formatCurrency = (value: number | null | undefined) => {
   }).format(value);
 };
 
+function toPublicNelsonProject(project?: Project): Project {
+  return {
+    id: project?.id ?? 0,
+    createdAt: project?.createdAt ?? new Date(0),
+    slug: NELSON_FACTS.slug,
+    name: `${NELSON_FACTS.name} · ${NELSON_FACTS.areaLabel}`,
+    address: NELSON_FACTS.address,
+    city: NELSON_FACTS.city,
+    state: NELSON_FACTS.state,
+    strategy: "fix-flip",
+    status: "completed",
+    purchasePrice: NELSON_FACTS.acquired,
+    rehabCost: NELSON_FACTS.improvementBudget,
+    arv: null,
+    salePrice: NELSON_FACTS.salePrice,
+    profit: null,
+    roi: null,
+    holdTime: null,
+    bedrooms: null,
+    bathrooms: null,
+    sqft: null,
+    yearBuilt: null,
+    description: NELSON_PUBLIC_DESCRIPTION,
+    beforeImages: [
+      "/images/nelson/nelson-before-exterior-front-1280.jpg",
+      "/images/nelson/nelson-before-kitchen-1280.jpg",
+    ],
+    afterImages: [
+      "/images/nelson/nelson-hero-1280.jpg",
+      "/images/nelson/nelson-kitchen-1280.jpg",
+    ],
+    highlights: [...NELSON_PUBLIC_HIGHLIGHTS],
+  };
+}
+
 export default function ProjectDetail() {
   const { slug } = useParams<{ slug: string }>();
 
-  const { data: project, isLoading, error } = useQuery<Project>({
+  const { data: rawProject, isLoading } = useQuery<Project>({
     queryKey: ["/api/projects", slug],
-    enabled: !!slug,
+    enabled: slug === NELSON_FACTS.slug,
   });
+  const project = slug === NELSON_FACTS.slug
+    ? toPublicNelsonProject(rawProject)
+    : undefined;
 
   useSEO({
     title: project ? `${project.name} · Projects` : "Project",
@@ -99,7 +144,7 @@ export default function ProjectDetail() {
   });
 
   if (isLoading) return <ProjectSkeleton />;
-  if (error || !project) return <NotFound />;
+  if (!project) return <NotFound />;
 
   return (
     <div className="min-h-screen">
@@ -115,7 +160,7 @@ export default function ProjectDetail() {
 function ProjectJsonLd({ project }: { project: Project }) {
   const data: Record<string, unknown> = {
     "@context": "https://schema.org",
-    "@type": "RealEstateListing",
+    "@type": "CreativeWork",
     name: project.name,
     description: project.description || `${project.name} case study from Pegasus DreamScapes Corp.`,
     url: `https://pegasusdreamscapes.com/projects/${project.slug}`,
@@ -127,7 +172,7 @@ function ProjectJsonLd({ project }: { project: Project }) {
       addressCountry: "US",
     },
     image: project.afterImages?.[0],
-    provider: {
+    publisher: {
       "@type": "Organization",
       name: "Pegasus DreamScapes Corp.",
       url: "https://pegasusdreamscapes.com",
@@ -395,9 +440,9 @@ function BodySection({ project }: { project: Project }) {
               <ScrollReveal>
                 <div className="flex items-center gap-4 mb-6">
                   <div className="h-px w-12 bg-gradient-to-r from-primary to-transparent" />
-                  <p className="text-xs uppercase tracking-[0.28em] text-primary font-semibold font-supporting">Scope of Work</p>
+                  <p className="text-xs uppercase tracking-[0.28em] text-primary font-semibold font-supporting">Published record</p>
                 </div>
-                <h2 className="font-serif text-3xl font-semibold mb-7 tracking-tight">What we did.</h2>
+                <h2 className="font-serif text-3xl font-semibold mb-7 tracking-tight">Documented figures.</h2>
                 <StaggerChildren className="grid grid-cols-1 sm:grid-cols-2 gap-3" staggerDelay={0.05}>
                   {project.highlights.map((highlight, i) => (
                     <StaggerItem key={i}>
@@ -456,7 +501,7 @@ function BodySection({ project }: { project: Project }) {
                     </div>
                     <div className="px-7 py-4 bg-muted/40 border-t border-border/40">
                       <p className="text-[10px] text-muted-foreground italic leading-relaxed" data-testid="text-economics-note">
-                        Project economics: documented internally. Public figures are shown as approximate ranges; full capital stack, contingency budgets, and exit assumptions are reserved for partner conversations.
+                        {NELSON_COST_DISCLOSURE}
                       </p>
                     </div>
                   </div>
@@ -472,7 +517,7 @@ function BodySection({ project }: { project: Project }) {
                     Submit a property, or open a private partner conversation about the next project.
                   </p>
                   <div className="flex flex-col gap-3">
-                    <Link href="/submit">
+                    <Link href="/bring-an-opportunity">
                       <Button className="w-full bg-cream text-charcoal hover:bg-cream/95 text-xs uppercase tracking-[0.18em] font-semibold py-6" data-testid="button-project-sell">
                         Submit a Property
                         <ArrowRight className="ml-2 w-3.5 h-3.5" />
@@ -496,8 +541,8 @@ function BodySection({ project }: { project: Project }) {
 
 function RoutingSection() {
   const lanes = [
-    { icon: Building, kicker: "More Projects", title: "See the full record", desc: "Browse other documented case studies.", href: "/projects", cta: "Open The Record" },
-    { icon: Briefcase, kicker: "MarketFlow", title: "Live deal flow", desc: "Vetted, off-market opportunities for our private network.", href: "/marketflow", cta: "Enter MarketFlow" },
+    { icon: Building, kicker: "Published Work", title: "See the public record", desc: "Return to the currently published case-study index.", href: "/projects", cta: "Open The Record" },
+    { icon: Briefcase, kicker: "MarketFlow", title: "Controlled pilot", desc: "Learn about the private pilot; access and inventory are not promised.", href: "/marketflow", cta: "View MarketFlow" },
   ];
 
   return (

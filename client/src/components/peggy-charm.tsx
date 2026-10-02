@@ -23,23 +23,23 @@ interface PeggyCharmProps {
 
 const TIPS = {
   negotiation: [
-    { icon: TrendingUp, text: "Counter-offers within 5% of asking price have 3x higher acceptance rates" },
-    { icon: Shield, text: "Always include earnest money to show serious intent" },
-    { icon: Lightbulb, text: "Shorter inspection periods can sweeten your offer" },
-    { icon: MessageCircle, text: "A personal note explaining your vision helps build rapport" },
-    { icon: TrendingUp, text: "Cash offers close 40% faster than financed deals" },
-    { icon: Shield, text: "Lock in your offer price but stay flexible on timeline" },
+    { icon: TrendingUp, text: "Compare price, timing, contingencies, and access as one complete proposal." },
+    { icon: Shield, text: "Earnest-money terms should match the written agreement and your actual capacity." },
+    { icon: Lightbulb, text: "Use an inspection period you can realistically complete; shorter is not always safer." },
+    { icon: MessageCircle, text: "Keep messages factual and record any material term in the written offer." },
+    { icon: TrendingUp, text: "Funding method can affect timing, but no closing timeline is guaranteed." },
+    { icon: Shield, text: "Confirm authority, title, access, and documents before relying on submitted terms." },
   ],
   deal: [
-    { icon: TrendingUp, text: "This property type typically sees 15-20% ROI in fix-and-flip" },
-    { icon: Lightbulb, text: "Check comparable sales in the last 90 days for accurate ARV" },
-    { icon: Shield, text: "Factor in 10% contingency for unexpected repair costs" },
-    { icon: MessageCircle, text: "Properties under 30 days on market get more competitive offers" },
+    { icon: TrendingUp, text: "Treat every return or resale figure as an unverified projection until diligence supports it." },
+    { icon: Lightbulb, text: "Check relevant, recent comparable sales and document why each comparison fits." },
+    { icon: Shield, text: "Build a project-specific contingency instead of relying on a universal percentage." },
+    { icon: MessageCircle, text: "Market time alone does not establish demand, value, or execution certainty." },
   ],
   general: [
     { icon: Sparkles, text: "I'm Peggy. How can I help with the deal today?" },
-    { icon: TrendingUp, text: "Browse deals with Match Score to find your best opportunities" },
-    { icon: Lightbulb, text: "Save deals to your watchlist to track price changes" },
+    { icon: TrendingUp, text: "Review the recorded facts and missing diligence before deciding whether a deal fits." },
+    { icon: Lightbulb, text: "Saved records are organizational tools, not recommendations or approval signals." },
   ],
 };
 

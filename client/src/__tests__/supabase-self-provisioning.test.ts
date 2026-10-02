@@ -16,7 +16,7 @@ type EnsureAuthenticatedUserProfile = (
       user_metadata: Record<string, unknown>;
     };
   },
-  fetchProfile: (userId: string) => Promise<unknown>,
+  fetchProfile: (userId: string, accessToken?: string) => Promise<unknown>,
 ) => Promise<unknown>;
 
 function requireProvisioner(): ProvisionAuthenticatedUserProfile {
@@ -135,8 +135,16 @@ describe("provisionAuthenticatedUserProfile", () => {
     );
 
     expect(result).toEqual(profile);
-    expect(fetchProfile).toHaveBeenNthCalledWith(1, "user-123");
-    expect(fetchProfile).toHaveBeenNthCalledWith(2, "user-123");
+    expect(fetchProfile).toHaveBeenNthCalledWith(
+      1,
+      "user-123",
+      "signed-user-token",
+    );
+    expect(fetchProfile).toHaveBeenNthCalledWith(
+      2,
+      "user-123",
+      "signed-user-token",
+    );
     expect(fetchMock).toHaveBeenCalledWith(
       "/api/supabase/provision-user",
       expect.objectContaining({
@@ -165,6 +173,10 @@ describe("provisionAuthenticatedUserProfile", () => {
 
     expect(result).toBeNull();
     expect(fetchProfile).toHaveBeenCalledOnce();
+    expect(fetchProfile).toHaveBeenCalledWith(
+      "user-123",
+      "signed-user-token",
+    );
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

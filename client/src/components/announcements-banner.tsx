@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { X, Megaphone, Pin, ChevronRight, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { Announcement } from "@shared/schema";
+import { useSupabaseAuth } from "@/contexts/supabase-auth-context";
+import { apiRequest, AUTHENTICATED_QUERY_META } from "@/lib/queryClient";
 
 interface AnnouncementsBannerProps {
   className?: string;
@@ -12,14 +14,33 @@ interface AnnouncementsBannerProps {
 }
 
 export function AnnouncementsBanner({ className = "", audience }: AnnouncementsBannerProps) {
-  const [dismissedIds, setDismissedIds] = useState<number[]>(() => {
-    const saved = localStorage.getItem("dismissedAnnouncements");
-    return saved ? JSON.parse(saved) : [];
-  });
+  const { user } = useSupabaseAuth();
+  const subjectId = user?.id ?? null;
+  const storageKey = subjectId ? `dismissedAnnouncements:${subjectId}` : null;
+  const readDismissed = (key: string | null): number[] => {
+    if (!key) return [];
+    try {
+      const parsed = JSON.parse(localStorage.getItem(key) ?? "[]");
+      return Array.isArray(parsed)
+        ? parsed.filter((value): value is number => Number.isSafeInteger(value))
+        : [];
+    } catch {
+      return [];
+    }
+  };
+  const [dismissedIds, setDismissedIds] = useState<number[]>(() => readDismissed(storageKey));
   const [expanded, setExpanded] = useState(false);
 
-  const { data: announcements = [] } = useQuery<Announcement[]>({
-    queryKey: ["/api/announcements"],
+  useEffect(() => {
+    setDismissedIds(readDismissed(storageKey));
+    setExpanded(false);
+  }, [storageKey]);
+
+  const { data: announcements = [], isError } = useQuery<Announcement[]>({
+    queryKey: ["/api/announcements", subjectId],
+    queryFn: async () => (await apiRequest("GET", "/api/announcements")).json(),
+    enabled: Boolean(subjectId),
+    meta: AUTHENTICATED_QUERY_META,
   });
 
   const visibleAnnouncements = announcements.filter((a) => {
@@ -34,8 +55,21 @@ export function AnnouncementsBanner({ className = "", audience }: AnnouncementsB
   const handleDismiss = (id: number) => {
     const newDismissed = [...dismissedIds, id];
     setDismissedIds(newDismissed);
-    localStorage.setItem("dismissedAnnouncements", JSON.stringify(newDismissed));
+    if (storageKey) localStorage.setItem(storageKey, JSON.stringify(newDismissed));
   };
+
+  if (!subjectId) return null;
+
+  if (isError) {
+    return (
+      <Card className={className} role="status">
+        <div className="p-4">
+          <p className="text-sm font-medium">Announcements unavailable</p>
+          <p className="mt-1 text-xs text-muted-foreground">Private announcements could not be loaded.</p>
+        </div>
+      </Card>
+    );
+  }
 
   if (visibleAnnouncements.length === 0) {
     return null;

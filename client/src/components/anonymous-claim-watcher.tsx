@@ -13,7 +13,7 @@ import { useEffect, useRef } from "react";
 import { useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { queryClient } from "@/lib/queryClient";
+import { authenticatedRequest, queryClient } from "@/lib/queryClient";
 
 const SESSION_KEY = "pegasus.lab.sessionId";
 const CLAIMED_FLAG = "pegasus.lab.claimedFor";
@@ -40,7 +40,7 @@ export function AnonymousClaimWatcher() {
     if (alreadyClaimedFor === String(user.id)) return;
 
     inFlightRef.current = true;
-    fetch("/api/property-analyses/claim", {
+    authenticatedRequest("/api/property-analyses/claim", {
       method: "POST",
       credentials: "include",
       headers: { "Content-Type": "application/json" },

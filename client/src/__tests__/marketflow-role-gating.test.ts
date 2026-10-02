@@ -54,6 +54,10 @@ describe("MarketFlow role gating (8-tier MARKETPLACE_ROLES)", () => {
     for (const r of external) expect(isPegasusRole(r)).toBe(false);
   });
 
+  it("does not crash when a staff-only role reaches the marketplace context", () => {
+    expect(isPegasusRole("project_manager" as MarketplaceRole)).toBe(false);
+  });
+
   it("groups roles correctly via the category helpers", () => {
     expect(isAdminRole("admin")).toBe(true);
     expect(isAdminRole("wholesaler")).toBe(false);

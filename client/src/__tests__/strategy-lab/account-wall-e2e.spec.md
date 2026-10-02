@@ -7,7 +7,8 @@ skill (`runTest`) from the Replit agent. The Vitest specs cover the hook
 contract (`account-wall.test.tsx`) and the page integration in jsdom
 (`account-wall-integration.test.tsx`); this spec covers the real browser
 — Radix portals, the 600ms debounce on the actual event loop, real
-localStorage + cookie + fingerprint persistence, and toast rendering.
+sessionStorage counting, legacy persistence cleanup, a random local claim
+ID, and toast rendering.
 
 ## How to run
 
@@ -41,16 +42,19 @@ on every keystroke). Explicit gated actions (Save / Share / Export PDF)
 must fire a "Sign in to continue" toast WITHOUT re-popping the modal
 after dismissal (Task #101 contract).
 
-Run counts are persisted in localStorage AND in a cookie AND in a
-fingerprint-keyed localStorage slot, so a fresh browser context is
-essential — DO NOT reuse an existing context.
+Run counts are scoped to sessionStorage. The helper also removes retired
+run-count localStorage, cookie, and fingerprint-keyed localStorage artifacts,
+while retaining a randomly generated localStorage claim ID so an anonymous
+analysis can be attached after sign-in. Use a fresh browser context so the
+session count and local claim state start clean — DO NOT reuse an existing
+context.
 
 Engine inputs are debounced 600ms before each run is counted, so wait
 ~1 second between distinct scenario edits.
 
 Steps:
-1. [New Context] Create a fresh browser context (so cookies and
-   localStorage are empty).
+1. [New Context] Create a fresh browser context (so sessionStorage,
+   localStorage, and cookies start empty).
 2. [Browser] Navigate to /strategy-lab.
 3. [Verify] The page loads with the Quick Read form visible
    ([data-testid="quick-form"]) and the runs-remaining indicator shows
@@ -134,9 +138,13 @@ Pass criteria:
 ```
 - Page: client/src/pages/strategy-lab.tsx (Quick Read mode is default).
 - Free run limit constant: client/src/lib/strategy-lab-session.ts →
-  FREE_RUN_LIMIT = 3. Runs are persisted in localStorage (key
-  "pegasus.lab.runCount"), a same-name cookie, and a fingerprint-keyed
-  localStorage slot. A fresh browser context resets all three.
+  FREE_RUN_LIMIT = 3. Runs are stored only for the browsing session in
+  sessionStorage (key "pegasus.lab.runCount"). The helper deletes retired
+  same-name localStorage/cookie values and fingerprint-keyed localStorage
+  artifacts. A fresh browser context resets the session count.
+- Anonymous claim continuity uses a randomly generated local claim ID in
+  localStorage (key "pegasus.lab.sessionId"); it is not derived from browser
+  characteristics and no fallback cookie is written.
 - Run-limit useEffect lives at strategy-lab.tsx ~line 864. Inputs
   change → 600ms debounced timer → either bumpLabRunCount or
   openAccountWall("keep running new properties").

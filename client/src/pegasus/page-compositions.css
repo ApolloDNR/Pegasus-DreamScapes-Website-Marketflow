@@ -1,0 +1,73 @@
+/* Explicit page families: narrative chapters, landscape scenes, portraits, reading. */
+.experience-page .ep-opening { padding-block:172px 80px; }
+.ep-opening-chapter .ep-opening-copy { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); gap:80px; align-items:start; }
+.experience-page .ep-opening-chapter h1 { font-size:clamp(48px,5.15vw,76px); max-width:17ch; line-height:1.1; }
+.ep-opening-chapter .ep-intro { margin-top:8px; }
+.ep-opening-chapter .ep-opening-body { padding-top:12px; border-top:1px solid var(--experience-copper); }
+.ep-opening-body .journey-invite { padding-top:22px; margin-top:24px; border-top:1px solid var(--experience-rule); }
+.ep-opening-body .journey-invite.is-compact .journey-avatar { width:36px; height:36px; }
+.ep-opening-body .journey-invite .peggy-mark { width:26px; height:26px; }
+.ep-opening-body .journey-invite button { font-size:13px; }
+.experience-page .ep-opening-landscape { position:relative; isolation:isolate; min-height:760px; padding-block:188px 120px; background:#0b1d29; color:#fcfaf6; --experience-text:#fcfaf6; --experience-muted:#d8dedd; --experience-copper:#e7b18a; --experience-rule:#667078; }
+.ep-opening-landscape::before { content:''; position:absolute; inset:0; z-index:-1; background:linear-gradient(90deg,rgba(5,20,31,.96),rgba(5,20,31,.82) 40%,rgba(5,20,31,.25) 72%,rgba(5,20,31,.08)),linear-gradient(0deg,rgba(5,20,31,.5),transparent 50%); }
+.experience-page .ep-opening-landscape .ep-opening-grid { display:block; }
+.ep-opening-landscape .ep-opening-copy { max-width:660px; }
+.experience-page .ep-opening-landscape h1 { font-size:clamp(48px,5vw,72px); max-width:16ch; }
+.ep-opening-landscape .ep-intro { max-width:49ch; }
+.ep-opening-landscape .experience-button { background:#8e5030; color:#fcfaf6; border-color:#8e5030; }
+.ep-opening-landscape .experience-button:hover { background:#713e25; border-color:#b7774e; }
+.ep-opening-landscape .ep-opening-body .journey-invite { border:0; padding-top:0; }
+.experience-page .ep-opening-landscape .ep-scene-caption { position:absolute; inset-inline:0; bottom:28px; max-width:1280px; margin:0 auto; color:#e7e6df; font-size:12px; }
+.experience-page .ep-opening-portrait { padding-block:140px 64px; }
+.experience-page .ep-opening-portrait .ep-opening-grid { grid-template-columns:1.1fr 1fr; gap:88px; }
+.experience-page .ep-opening-portrait h1 { font-size:clamp(52px,5vw,76px); line-height:1.08; max-width:12ch; }
+.ep-opening-portrait .ep-opening-copy { padding-top:30px; border-top:1px solid var(--experience-copper); }
+.ep-opening-portrait .ep-opening-image.ep-portrait { max-width:520px; }
+.ep-opening-portrait .ep-opening-image img { max-height:650px; }
+.experience-page .ep-opening-reading { padding-block:152px 48px; }
+.ep-opening-reading .ep-opening-body { max-width:66ch; }
+.experience-page .ep-section { padding-block:96px; }
+.experience-page .ep-section-title { margin-bottom:40px; }
+.experience-page .ep-section-title h2 { font-size:clamp(36px,3.8vw,54px); }
+.experience-page .ep-evidence { background:var(--experience-limestone); }
+.experience-page .ep-evidence .ep-split { grid-template-columns:1.25fr 1fr; gap:72px; }
+.experience-page .ep-evidence h2 { font-size:clamp(34px,3.4vw,48px); }
+.experience-page .ep-choice-answer { border-inline:0; border-bottom:0; padding:36px; }
+.experience-page .ep-choice-answer .experience-button { text-align:center; }
+.experience-page .ep-closing { padding-block:88px; }
+.experience-page .ep-closing h2 { font-size:clamp(38px,4.4vw,64px); max-width:16ch; }
+.experience-page .ep-stage-rail { margin-block:36px 44px; }
+.experience-page .ep-stage-rail button { transition:background-color 160ms; }
+.experience-page .ep-stage-rail button:hover { background:var(--experience-limestone); }
+@media(max-width:1099px) {
+  .experience-page .ep-opening { padding-block:140px 64px; }
+  .ep-opening-chapter .ep-opening-copy { gap:40px; }
+  .experience-page .ep-opening-chapter h1 { font-size:clamp(44px,5.5vw,60px); }
+  .experience-page .ep-opening-landscape { min-height:700px; padding-block:160px 104px; }
+  .experience-page .ep-opening-portrait .ep-opening-grid { gap:40px; }
+  .experience-page .ep-opening-portrait h1 { font-size:clamp(44px,5.4vw,60px); }
+  .experience-page .ep-section { padding-block:72px; }
+  .experience-page .ep-evidence .ep-split { gap:40px; }
+}
+@media(max-width:767px) {
+  .experience-page .ep-opening { padding-block:124px 48px; }
+  .ep-opening-chapter .ep-opening-copy { grid-template-columns:1fr; gap:28px; }
+  .experience-page .ep-opening-chapter h1 { font-size:42px; max-width:16ch; }
+  .ep-opening-chapter .ep-opening-body { padding-top:16px; }
+  .ep-opening-chapter .ep-intro { margin-top:0; }
+  .experience-page .ep-opening-landscape { min-height:740px; padding-block:152px 104px; }
+  .experience-page .ep-opening-landscape h1 { font-size:44px; max-width:14ch; }
+  .ep-opening-landscape::before { background:linear-gradient(90deg,rgba(5,20,31,.93),rgba(5,20,31,.68)),linear-gradient(0deg,rgba(5,20,31,.5),transparent 40%); }
+  .experience-page .ep-opening-landscape .ep-scene-caption { font-size:11px; bottom:24px; }
+  .experience-page .ep-opening-portrait .ep-opening-grid { grid-template-columns:1fr; gap:36px; }
+  .experience-page .ep-opening-portrait h1 { font-size:48px; max-width:14ch; }
+  .ep-opening-portrait .ep-opening-copy { padding-top:24px; }
+  .ep-opening-portrait .ep-opening-image.ep-portrait { max-width:400px; }
+  .experience-page .ep-section { padding-block:56px; }
+  .experience-page .ep-section-title { margin-bottom:28px; }
+  .experience-page .ep-evidence .ep-split { grid-template-columns:1fr; gap:32px; }
+  .experience-page .ep-choice-answer { padding:28px 24px; }
+  .experience-page .ep-closing { padding-block:64px; }
+  .experience-page .ep-closing h2 { font-size:40px; }
+}
+@media(prefers-reduced-motion:reduce) { .experience-page .ep-stage-rail button { transition:none; } }

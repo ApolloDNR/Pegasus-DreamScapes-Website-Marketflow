@@ -8,6 +8,14 @@ const SELF_PROVISIONABLE_ROLES = new Set([
   "buyer_investment",
 ]);
 
+const SELF_PROVISIONING_FIELDS = new Set(["userId", "role", "displayName"]);
+
+function includesUnsupportedProvisioningField(body: unknown): boolean {
+  if (!body || typeof body !== "object" || Array.isArray(body)) return false;
+
+  return Object.keys(body).some((key) => !SELF_PROVISIONING_FIELDS.has(key));
+}
+
 type UserRoleRecord = {
   role: string;
 };
@@ -47,6 +55,12 @@ export function registerUserProvisioningRoute(
       const currentUserId = authenticatedUserId(req);
       if (!currentUserId) {
         return res.status(401).json({ message: "Unauthorized" });
+      }
+
+      if (includesUnsupportedProvisioningField(req.body)) {
+        return res.status(400).json({
+          message: "Approval and access fields cannot be self-provisioned",
+        });
       }
 
       const userId =

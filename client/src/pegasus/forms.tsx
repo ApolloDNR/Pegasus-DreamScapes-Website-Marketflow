@@ -1,13 +1,18 @@
-import React, { useId, useRef, useState } from 'react';
+import React, { useEffect, useId, useRef, useState } from 'react';
 import { useLocation } from 'wouter';
 import { ArrowRight, Check, ChevronDown, Mail, Phone, MapPin, ConciergeBell, AlertCircle, Loader2, Bookmark, BookmarkCheck } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
+import { readLeadReceipt } from '@/lib/lead-receipt';
 import type { Nav, FormCfg, PeggyHandoff } from './theme';
 import { usd0, SectionHead, ContourLines, BrandMark, IMG } from './primitives';
 import { addStrategy, type StrategyPreview } from './savedStore';
 import { tierRangeFor, NOT_A_VALUATION_DISCLOSURE } from '@/lib/strategy-tier-ranges';
 import { trackEvent } from '@/lib/analytics';
+import {
+  classifyPegasusLead,
+  pegasusLeadSuccessCopy,
+} from '@shared/lead-routing';
 
 // Public Website v1 (issue #22) PRD §13 conversion events. Each lane form
 // fires its named PRD event on successful submission, keyed by the form's
@@ -28,7 +33,7 @@ function SaveStrategyButton({ snapshot, title }: { snapshot: StrategyPreview; ti
   return (
     <button type="button" disabled={saved}
       onClick={() => { addStrategy(title, snapshot); setSaved(true); }}
-      className="btn-line-light px-7 py-4 pg-label !text-[10px] inline-flex items-center gap-2.5 disabled:opacity-60">
+      className="btn-line-light px-7 py-4 pg-label !text-[15px] !tracking-normal !normal-case inline-flex items-center gap-2.5 disabled:opacity-60">
       {saved ? (
         <><BookmarkCheck className="w-3.5 h-3.5" strokeWidth={1.8} /> Saved to your workspace</>
       ) : (
@@ -53,10 +58,10 @@ const ROLE_OPTIONS = [
 export const CONTACT_FORM: FormCfg = {
   role: 'I have a property (Seller)',
   intent: 'property-review',
-  heading: <>Start a <span className="italic text-[var(--accent)]">Property Review.</span></>,
-  lead: 'Inherited, distressed, or simply complicated? Send it over. We read every submission and return a clear, written path forward within 48 hours.',
-  submit: 'Request My Review',
-  third: { label: 'Property address or area', placeholder: 'Street, city, or neighborhood' },
+  heading: <>Share a <span className="italic text-[var(--accent)]">property situation.</span></>,
+  lead: 'Inherited, distressed, or simply complicated? Record the situation for possible consideration. Submission does not guarantee review, response, routing, an offer, or a timeline.',
+  submit: 'Send property context',
+  third: { label: 'Property address or area', placeholder: 'Street, city, or neighborhood', kind: 'context' },
   messageLabel: 'The situation',
   messagePlaceholder: 'Tell us what is going on. The more context, the better.',
 };
@@ -65,9 +70,9 @@ export const DEVELOPMENT_FORM: FormCfg = {
   role: 'I have a property (Seller)',
   intent: 'development',
   heading: <>Start a <span className="italic text-[var(--accent-bright)]">build conversation.</span></>,
-  lead: 'A lot, a tired property, an ADU idea, or a ground-up vision? Tell us the scope. We underwrite before we build, and we will tell you straight whether it pencils.',
+  lead: 'A lot, a tired property, an ADU idea, or a ground-up vision? Share the known scope and constraints. Submission does not promise a feasibility opinion, project role, response, budget, or schedule.',
   submit: 'Send the build scope',
-  third: { label: 'Property or lot address', placeholder: 'Street, city, or neighborhood' },
+  third: { label: 'Property or lot address', placeholder: 'Street address', kind: 'property-address' },
   messageLabel: 'The build scope',
   messagePlaceholder: 'What you want to build and where: lot details, condition, and any constraints you know about.',
 };
@@ -75,10 +80,10 @@ export const DEVELOPMENT_FORM: FormCfg = {
 export const STRATEGYLAB_FORM: FormCfg = {
   role: 'I have a property (Seller)',
   intent: 'strategy-snapshot',
-  heading: <>Get a <span className="italic text-[var(--accent-bright)]">Property Read.</span></>,
-  lead: 'Run the numbers above for an Instant Strategy Preview, then send the situation for a written Property Read: a short, candid read returned within 48 hours.',
-  submit: 'Request a Property Read',
-  third: { label: 'Property address or area', placeholder: 'Street, city, or neighborhood' },
+  heading: <>Carry an <span className="italic text-[var(--accent-bright)]">automated brief.</span></>,
+  lead: 'Run the model above, then choose whether to carry the visitor-entered brief into intake. Submission does not guarantee human review, response, routing, an offer, or a timeline.',
+  submit: 'Carry to opportunity intake',
+  third: { label: 'Property address or area', placeholder: 'Street, city, or neighborhood', kind: 'context' },
   messageLabel: 'The situation',
   messagePlaceholder: 'Acquisition price, scope of work, and what you are weighing. The more context, the better.',
 };
@@ -91,9 +96,9 @@ export const APOLLO_FORM: FormCfg = {
   ],
   intent: 'representation',
   heading: <>Work with <span className="italic text-[var(--accent)]">Apollo.</span></>,
-  lead: 'Tell us whether you are looking to sell or buy. Apollo represents clients as a licensed agent through Keller Williams Realty East Bay, and will follow up to discuss representation. Submitting this is not a listing or buyer agreement.',
+  lead: 'Tell us whether you are looking to sell or buy. This records a request for a conditional representation conversation. Any representation requires fit, conflict checks, and a separate signed agreement; submitting this is not a listing or buyer agreement.',
   submit: 'Request representation',
-  third: { label: 'Property address or target area', placeholder: 'Street, city, or neighborhood' },
+  third: { label: 'Property address or target area', placeholder: 'Street, city, or neighborhood', kind: 'context' },
   messageLabel: 'What you are looking to do',
   messagePlaceholder: 'Selling a home, buying in a certain area, timeline, and anything else we should know.',
 };
@@ -104,24 +109,60 @@ export const INVESTMENTS_FORM: FormCfg = {
   heading: <>Explore an <span className="italic text-[var(--accent-bright)]">investment.</span></>,
   lead: 'Tell us how you think about deploying capital, or send a property you want underwritten. We bring specific projects on defined terms: never a pooled fund, never a promised return.',
   submit: 'Start the Conversation',
-  third: { label: 'Capital range or property', placeholder: 'Optional' },
+  third: { label: 'Capital range or property context', placeholder: 'Optional', kind: 'context' },
   messageLabel: 'What you are exploring',
   messagePlaceholder: 'Project types, risk tolerance, timeline, or a specific deal...',
+};
+
+export const CAPITAL_RELATIONSHIP_FORM: FormCfg = {
+  role: 'Introduced relationship',
+  intent: 'capital-introduction',
+  heading: <>Continue a <span className="italic text-[var(--accent)]">private introduction.</span></>,
+  lead: 'Use this form only if Apollo already knows you or someone personally introduced you. Share who connected you and enough context to continue that relationship. Submitting does not create access, eligibility, or an agreement.',
+  submit: 'Send relationship context',
+  third: {
+    label: 'Who introduced you?',
+    placeholder: 'Name and relationship',
+    kind: 'context',
+  },
+  thirdRequired: true,
+  messageLabel: 'Relationship context',
+  messagePlaceholder: 'How you know Apollo or Pegasus and what prompted you to reach out.',
+  messageRequired: true,
 };
 
 /* ----------------------------------------------------------------
    Lead form
 ---------------------------------------------------------------- */
-export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null, strategy = null }:
-  { cfg: FormCfg; showRole?: boolean; onNavy?: boolean; handoff?: PeggyHandoff | null; strategy?: StrategyPreview | null }) {
+export function LeadForm({
+  cfg,
+  showRole = false,
+  onNavy = false,
+  handoff = null,
+  strategy = null,
+  preferredRole,
+  onRoleChange,
+  roleFieldRef,
+}: {
+  cfg: FormCfg;
+  showRole?: boolean;
+  onNavy?: boolean;
+  handoff?: PeggyHandoff | null;
+  strategy?: StrategyPreview | null;
+  preferredRole?: string;
+  onRoleChange?: (role: string) => void;
+  roleFieldRef?: React.RefObject<HTMLSelectElement>;
+}) {
   const uid = useId();
   const [submitted, setSubmitted] = useState(false);
+  const successRef = useRef<HTMLDivElement>(null);
   const startedAt = useRef(Date.now());
+  const inFlightRef = useRef(false);
   const [hpCompany, setHpCompany] = useState('');
   const createLead = useMutation({
     mutationFn: async (payload: Record<string, unknown>) => {
       const res = await apiRequest('POST', '/api/leads', payload);
-      return res.json();
+      return readLeadReceipt(res);
     },
   });
   const [form, setForm] = useState({
@@ -133,8 +174,16 @@ export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null
     message: handoff?.message ?? '',
     consentContact: false,
   });
-  const onField = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
-    setForm((f) => ({ ...f, [k]: e.target.value }));
+  const role = preferredRole ?? form.role;
+  const onField = (k: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const value = e.target.value;
+    setForm((f) => ({ ...f, [k]: value }));
+    if (k === 'role') onRoleChange?.(value);
+  };
+
+  useEffect(() => {
+    if (submitted) successRef.current?.focus({ preventScroll: true });
+  }, [submitted]);
 
   // The Peggy transcript travels with the captured lead so the human reading
   // the submission has the full conversation as context.
@@ -142,11 +191,13 @@ export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null
   const source = strategy ? 'strategy-lab' : transcript.length > 0 ? 'peggy' : 'form';
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.consentContact) return;
+    if (!form.consentContact || inFlightRef.current) return;
+    inFlightRef.current = true;
     const fullName = form.name.trim();
     const [firstName, ...rest] = fullName.split(/\s+/);
     const lastName = rest.join(' ');
     const elapsed = Date.now() - startedAt.current;
+    const lane = classifyPegasusLead({ intent: cfg.intent, role });
     createLead.mutate(
       {
         leadType: 'submit',
@@ -160,9 +211,11 @@ export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null
         hp_company: hpCompany,
         ts_elapsed_ms: elapsed,
         leadData: {
-          lane: form.role,
+          lane,
+          role,
           intent: cfg.intent,
-          area: form.third.trim() || undefined,
+          context: form.third.trim() || undefined,
+          contextKind: cfg.third?.kind ?? 'context',
           message: form.message.trim() || undefined,
           consentContact: form.consentContact,
           hp_company: hpCompany,
@@ -172,6 +225,7 @@ export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null
         },
       },
       {
+        onSettled: () => { inFlightRef.current = false; },
         onSuccess: () => {
           trackEvent(PRD_EVENT_BY_INTENT[cfg.intent] ?? 'lead_submitted', { intent: cfg.intent });
           setSubmitted(true);
@@ -181,20 +235,30 @@ export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null
   };
 
   if (submitted) {
+    const success = pegasusLeadSuccessCopy(
+      classifyPegasusLead({ intent: cfg.intent, role }),
+    );
     return (
-      <div className="py-16 text-center">
+      <div
+        ref={successRef}
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        tabIndex={-1}
+        className="py-16 text-center"
+      >
         <div className="relative w-20 h-20 mx-auto mb-7 flex items-center justify-center rounded-full bg-[var(--cream)] ring-1 ring-[var(--line)]">
           <BrandMark boxClassName="w-11 h-11" />
           <span className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-[var(--accent)] text-white flex items-center justify-center ring-2 ring-[var(--bg)]"><Check className="w-4 h-4" /></span>
         </div>
-        <h3 className="font-serif-display text-3xl text-[var(--text)] mb-3">Received. Thank you.</h3>
-        <p className="text-[var(--muted)] max-w-sm mx-auto leading-relaxed">Pegasus reads your submission and returns a plain-language path forward. We respond within 48 hours.</p>
+        <h3 className="font-serif-display text-3xl text-[var(--text)] mb-3">{success.heading}</h3>
+        <p className="text-[var(--muted)] max-w-sm mx-auto leading-relaxed">{success.body}</p>
       </div>
     );
   }
 
   return (
-    <form onSubmit={onSubmit} className="grid sm:grid-cols-2 gap-x-8 gap-y-7">
+    <form onSubmit={onSubmit} className="ep-lead-form grid sm:grid-cols-2 gap-x-8 gap-y-7">
       <input
         type="text"
         name="hp_company"
@@ -227,7 +291,7 @@ export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null
         <div className="sm:col-span-1">
           <label htmlFor={`${uid}-role`} className="pg-field-label block mb-2">I am a…</label>
           <div className="relative">
-            <select id={`${uid}-role`} className="pg-field pr-8" value={form.role} onChange={onField('role')}>
+            <select ref={roleFieldRef} id={`${uid}-role`} className="pg-field pr-8" value={role} onChange={onField('role')}>
               {(cfg.roleOptions ?? ROLE_OPTIONS).map((o) => <option key={o}>{o}</option>)}
             </select>
             <ChevronDown className="w-4 h-4 absolute right-1 top-3.5 text-[var(--muted)] pointer-events-none" />
@@ -236,26 +300,26 @@ export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null
       ) : cfg.third ? (
         <div className="sm:col-span-1">
           <label htmlFor={`${uid}-third`} className="pg-field-label block mb-2">{cfg.third.label}</label>
-          <input id={`${uid}-third`} className="pg-field" value={form.third} onChange={onField('third')} placeholder={cfg.third.placeholder} />
+          <input id={`${uid}-third`} className="pg-field" required={cfg.thirdRequired} value={form.third} onChange={onField('third')} placeholder={cfg.third.placeholder} />
         </div>
       ) : null}
       {showRole && cfg.third && (
         <div className="sm:col-span-2">
           <label htmlFor={`${uid}-third`} className="pg-field-label block mb-2">{cfg.third.label}</label>
-          <input id={`${uid}-third`} className="pg-field" value={form.third} onChange={onField('third')} placeholder={cfg.third.placeholder} />
+          <input id={`${uid}-third`} className="pg-field" required={cfg.thirdRequired} value={form.third} onChange={onField('third')} placeholder={cfg.third.placeholder} />
         </div>
       )}
       <div className="sm:col-span-2">
         <label htmlFor={`${uid}-message`} className="pg-field-label block mb-2">{cfg.messageLabel}</label>
-        <textarea id={`${uid}-message`} className="pg-field resize-none" rows={3} value={form.message} onChange={onField('message')} placeholder={cfg.messagePlaceholder} />
+        <textarea id={`${uid}-message`} className="pg-field resize-none" rows={3} required={cfg.messageRequired} value={form.message} onChange={onField('message')} placeholder={cfg.messagePlaceholder} />
       </div>
       {createLead.isError && (
-        <div className={`sm:col-span-2 flex items-start gap-3 rounded-[4px] px-4 py-3 text-[0.82rem] leading-relaxed ${onNavy ? 'bg-[rgba(220,80,60,0.16)] text-[var(--cream)]' : 'bg-[rgba(154,58,42,0.08)] text-[#9a3a2a]'}`}>
+        <div role="alert" aria-live="assertive" aria-atomic="true" className="pg-form-error sm:col-span-2 flex items-start gap-3 rounded-[4px] px-4 py-3 text-[0.82rem] leading-relaxed">
           <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" strokeWidth={1.8} />
           <span>Something went wrong sending your submission. Please try again, or email apollo@pegasusdreamscapes.com directly.</span>
         </div>
       )}
-      <label className={`sm:col-span-2 flex items-start gap-3 text-[0.78rem] leading-relaxed cursor-pointer ${onNavy ? 'text-[var(--cream)]/75' : 'text-[var(--muted)]'}`}>
+      <label className={`sm:col-span-2 flex items-start gap-3 text-[0.78rem] leading-relaxed cursor-pointer ${onNavy ? 'text-[var(--cream)]/75' : 'text-[var(--text-2)]'}`}>
         <input
           type="checkbox"
           checked={form.consentContact}
@@ -266,17 +330,19 @@ export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null
         <span>
           I agree Pegasus Dreamscapes may contact me by email or phone about this submission.
           Pegasus uses this information to evaluate and route the request and may share it with
-          service providers or qualified professionals involved in that review. See the{' '}
+          service providers that operate the site. Pegasus will provide separate notice and ask
+          permission before sharing it with an independent professional unless disclosure is
+          legally required. See the{' '}
           <a className="underline underline-offset-2" href="/privacy">Privacy Policy</a> for
           retention, rights, and deletion requests. Submitting does not create an agency
           relationship, offer, or agreement.
         </span>
       </label>
       <div className="sm:col-span-2 mt-2">
-        <button type="submit" disabled={createLead.isPending}
-          className={`${onNavy ? 'btn-solid-light' : 'btn-primary'} w-full sm:w-auto px-10 py-4 pg-label !text-[10px] inline-flex items-center justify-center gap-3 group disabled:opacity-60 disabled:cursor-not-allowed`}>
+        <button type="submit" disabled={createLead.isPending} aria-busy={createLead.isPending}
+          className={`${onNavy ? 'btn-solid-light' : 'btn-primary'} w-full sm:w-auto px-10 py-4 pg-label !text-[15px] !tracking-normal !normal-case inline-flex items-center justify-center gap-3 group disabled:opacity-60 disabled:cursor-not-allowed`}>
           {createLead.isPending ? (
-            <>Sending… <Loader2 className="w-3.5 h-3.5 animate-spin" /></>
+            <>Sending your request… <Loader2 aria-hidden="true" className="w-3.5 h-3.5 animate-spin" /></>
           ) : (
             <>{cfg.submit} <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" /></>
           )}
@@ -286,31 +352,67 @@ export function LeadForm({ cfg, showRole = false, onNavy = false, handoff = null
   );
 }
 
-export function LeadSection({ cfg, eyebrow, showRole = false, tone = 'page', handoff = null, strategy = null }:
-  { cfg: FormCfg; eyebrow: string; showRole?: boolean; tone?: 'page' | 'navy'; handoff?: PeggyHandoff | null; strategy?: StrategyPreview | null }) {
+export function LeadSection({
+  cfg,
+  eyebrow,
+  showRole = false,
+  tone = 'page',
+  handoff = null,
+  strategy = null,
+  preferredRole,
+  onRoleChange,
+  roleFieldRef,
+  showDecorativeContour = true,
+  headingLevel,
+}: {
+  cfg: FormCfg;
+  eyebrow: string;
+  showRole?: boolean;
+  tone?: 'page' | 'navy';
+  handoff?: PeggyHandoff | null;
+  strategy?: StrategyPreview | null;
+  preferredRole?: string;
+  onRoleChange?: (role: string) => void;
+  roleFieldRef?: React.RefObject<HTMLSelectElement>;
+  showDecorativeContour?: boolean;
+  headingLevel?: 1 | 2;
+}) {
   const navy = tone === 'navy';
-  const ic = navy ? 'text-[var(--accent-bright)]' : 'text-[var(--accent)]';
+  const ic = navy ? 'text-[var(--accent-bright)]' : 'text-[var(--accent-ink)]';
+  const Heading = headingLevel === 2 || navy ? 'h2' : 'h1';
   return (
-    <section className={`relative overflow-hidden ${navy ? 'py-24 lg:py-28 bg-[var(--navy)] text-[var(--cream)]' : 'pt-28 lg:pt-40 pb-24 lg:pb-28'}`}>
-      {navy && <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[70%] text-[var(--accent-2)] opacity-[0.1] float-slow" />}
+    <section className={`ep-lead-section relative overflow-hidden ${navy ? 'py-24 lg:py-28 bg-[var(--navy)] text-[var(--cream)]' : 'pt-28 lg:pt-40 pb-24 lg:pb-28'}`}>
+      {navy && showDecorativeContour && <ContourLines className="absolute inset-x-0 bottom-0 w-full h-[70%] text-[var(--accent-2)] opacity-[0.1] float-slow" />}
       <div className="relative max-w-[1320px] mx-auto px-6 lg:px-12 grid lg:grid-cols-12 gap-12 lg:gap-20 items-start">
         <div className="lg:col-span-5 reveal">
           <div className={`pg-label mb-5 ${ic}`}>{eyebrow}</div>
-          <h2 className="font-serif-display font-light text-4xl sm:text-5xl md:text-6xl leading-[1.04] sm:leading-[1.0] tracking-normal mb-7"
-            style={{ color: navy ? 'var(--cream)' : 'var(--text)' }}>{cfg.heading}</h2>
+          <Heading className={`font-serif-display font-light text-4xl sm:text-5xl md:text-6xl leading-[1.04] sm:leading-[1.0] tracking-normal mb-7 ${navy ? 'pg-lead-heading--navy' : ''}`}
+            style={{
+              color: navy ? 'var(--cream)' : 'var(--text)',
+              ['--accent' as string]: navy ? 'var(--accent-bright)' : 'var(--accent-ink)',
+            }}>{cfg.heading}</Heading>
           <p className={`leading-relaxed mb-10 max-w-md ${navy ? 'text-[var(--cream)]/75' : 'text-[var(--muted)]'}`}>{cfg.lead}</p>
-          <div className={`space-y-5 pg-label !text-[11px] !tracking-[0.16em] ${navy ? 'text-[var(--cream)]/80' : 'text-[var(--text-2)]'}`}>
+          <div className={`space-y-5 pg-label !text-[14px] !tracking-normal !normal-case ${navy ? 'text-[var(--cream)]/80' : 'text-[var(--text-2)]'}`}>
             <a href="mailto:apollo@pegasusdreamscapes.com" className="link-underline flex items-center gap-3"><Mail className={`w-4 h-4 ${ic}`} /> apollo@pegasusdreamscapes.com</a>
             <a href="tel:9257448525" className="link-underline flex items-center gap-3"><Phone className={`w-4 h-4 ${ic}`} /> 925-744-8525</a>
             <div className="flex items-center gap-3"><MapPin className={`w-4 h-4 ${ic}`} /> East Bay · California</div>
           </div>
           <p className={`mt-7 text-[0.82rem] !tracking-normal normal-case ${navy ? 'text-[var(--cream)]/55' : 'text-[var(--muted)]'}`}>
-            We read every submission and respond within 48 hours.
+            Submission may be considered for fit; review, follow-up, and timing are not guaranteed.
           </p>
         </div>
         <div className="lg:col-span-7 reveal delay-100">
           <div className="lead-card p-6 sm:p-8 lg:p-11">
-            <LeadForm cfg={cfg} showRole={showRole} onNavy={navy} handoff={handoff} strategy={strategy} />
+            <LeadForm
+              cfg={cfg}
+              showRole={showRole}
+              onNavy={false}
+              handoff={handoff}
+              strategy={strategy}
+              preferredRole={preferredRole}
+              onRoleChange={onRoleChange}
+              roleFieldRef={roleFieldRef}
+            />
           </div>
         </div>
       </div>
@@ -480,10 +582,10 @@ export function StrategyCommandBoard({
             Directional only. Not an offer, appraisal, legal advice, tax advice, financial advice, lending commitment, or investment recommendation.
           </p>
           <div className="strategy-command-actions">
-            <button type="button" onClick={jumpToConsole} className="btn-solid-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px] group">
+            <button type="button" onClick={jumpToConsole} className="btn-solid-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[15px] !tracking-normal !normal-case group">
               Enter the Cockpit <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
             </button>
-            <button type="button" onClick={() => go('submit')} className="btn-line-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[10px] group">
+            <button type="button" onClick={() => go('submit')} className="btn-line-light inline-flex items-center gap-3 px-7 py-4 pg-label !text-[15px] !tracking-normal !normal-case group">
               Send to Pegasus <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
             </button>
           </div>
@@ -813,7 +915,7 @@ export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }
                   data-testid="input-console-address" />
               </div>
               <button type="button" onClick={autofill}
-                className="btn-line px-6 py-3.5 pg-label !text-[10px] whitespace-nowrap" data-testid="button-console-autofill">
+                className="btn-line px-6 py-3.5 pg-label !text-[15px] !tracking-normal !normal-case whitespace-nowrap" data-testid="button-console-autofill">
                 Use an example property
               </button>
             </div>
@@ -896,12 +998,12 @@ export function StrategyConsole({ go, model }: { go: Nav; model: StrategyModel }
                   )}
                 </div>
                 <button type="button" onClick={() => go(lane.route)}
-                  className="btn-primary w-full justify-center px-7 py-4 pg-label !text-[10px] inline-flex items-center gap-2.5 group mb-3"
+                  className="btn-primary w-full justify-center px-7 py-4 pg-label !text-[15px] !tracking-normal !normal-case inline-flex items-center gap-2.5 group mb-3"
                   data-testid="button-console-lane">
                   {lane.label} <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" strokeWidth={1.8} />
                 </button>
                 <button type="button" onClick={() => go('submit')}
-                  className="btn-line-light w-full justify-center px-7 py-3.5 pg-label !text-[10px] inline-flex items-center gap-2.5"
+                  className="btn-line-light w-full justify-center px-7 py-3.5 pg-label !text-[15px] !tracking-normal !normal-case inline-flex items-center gap-2.5"
                   data-testid="button-console-review">
                   Submit for a Property Read
                 </button>
@@ -1023,8 +1125,8 @@ export function StrategyCalculator({ go, model }: { go: Nav; model: StrategyMode
                   <p className="text-[var(--cream)]/70 text-[0.92rem] leading-relaxed mb-7">{read.note}</p>
                   <div className="flex flex-col sm:flex-row flex-wrap gap-3">
                     <button type="button" onClick={() => go('submit')}
-                      className="btn-solid-light px-8 py-4 pg-label !text-[10px] inline-flex items-center gap-3 group">
-                      Submit for a Property Read <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                      className="btn-solid-light px-8 py-4 pg-label !text-[15px] !tracking-normal !normal-case inline-flex items-center gap-3 group">
+                      Carry to opportunity intake <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
                     </button>
                     <SaveStrategyButton snapshot={model.snapshot}
                       title={`${tier.strategy} - ${tier.range}`} />
@@ -1037,10 +1139,10 @@ export function StrategyCalculator({ go, model }: { go: Nav; model: StrategyMode
         <div className="mt-10 max-w-2xl rounded-[3px] border border-[var(--line)] bg-[var(--bg-2)] p-6" data-testid="text-strategy-disclaimer">
           <div className="pg-label !text-[8px] !tracking-[0.18em] text-[var(--accent)] mb-3">Disclaimer</div>
           <p className="text-[0.85rem] leading-relaxed text-[var(--text-2)]">
-            Strategy Lab outputs are preliminary and directional. They are not legal, tax, lending, accounting, appraisal, engineering, securities, or construction advice. All outputs are subject to a written Pegasus read, market conditions, property condition, title, occupancy, and written agreements.
+            Strategy Lab outputs come from visitor-entered, unverified assumptions and an automated model. They are preliminary and directional, not legal, tax, lending, accounting, appraisal, engineering, securities, construction, or investment advice. Carrying a brief into intake does not guarantee review, response, routing, an offer, or a timeline.
           </p>
           <p className="mt-3 text-[0.78rem] leading-relaxed text-[var(--muted)]">
-            Carry is modeled as a flat annual rate on basis; it simplifies financing structure, draw timing, and contingencies, and excludes transfer taxes. Every real read is handled by Pegasus in writing.
+            Carry is modeled as a flat annual rate on basis; it simplifies financing structure, draw timing, and contingencies, and excludes transfer taxes. Independently verify every material input before acting.
           </p>
         </div>
       </div>
@@ -1065,14 +1167,14 @@ export function StrategyTierStrip() {
       cta: 'You are using it above', action: null as null | (() => void), emphasis: false,
     },
     {
-      key: 'snapshot', name: 'Property Read', price: 'Included / Written Read',
-      desc: 'Send the situation and Acquisitions returns a short, candid written read within 48 hours.',
-      cta: 'Request a Property Read', action: () => goSubmit(), emphasis: true,
+      key: 'snapshot', name: 'Opportunity Intake', price: 'Optional submission',
+      desc: 'Carry the visitor-entered model into intake for possible consideration. No review, response, routing, offer, or timeline is promised.',
+      cta: 'Carry to intake', action: () => goSubmit(), emphasis: true,
     },
     {
-      key: 'blueprint', name: 'Deal Blueprint', price: 'By Review',
-      desc: 'A full tactical plan: underwriting, scope, exit options, and a sequenced path. Scoped after a Property Read, not bought off the shelf.',
-      cta: 'Request Blueprint Read', action: () => goSubmit('blueprint'), emphasis: false,
+      key: 'blueprint', name: 'Deal Blueprint request', price: 'Separately scoped if offered',
+      desc: 'Request possible separately scoped property work. Public intake does not promise acceptance, pricing, turnaround, or delivery.',
+      cta: 'Share a Blueprint request', action: () => goSubmit('blueprint'), emphasis: false,
     },
   ];
   return (
@@ -1080,7 +1182,7 @@ export function StrategyTierStrip() {
       <div className="max-w-[1320px] mx-auto px-6 lg:px-12">
         <SectionHead eyebrow="Strategy Lab - Planning depth"
           title={<>Go as far as the deal deserves.</>}
-          copy="The cockpit starts with a directional read, then escalates only when the property earns more attention: written Property Read first, Blueprint Read only when the deal needs a full plan." />
+          copy="Start with the visitor-controlled model. If useful, carry the unverified brief into intake or request possible separately scoped work without assuming acceptance or delivery." />
         <div className="grid md:grid-cols-3 gap-5" data-testid="strategy-tier-strip">
           {tiers.map((t) => (
             <div key={t.key}
@@ -1092,11 +1194,11 @@ export function StrategyTierStrip() {
               {t.action ? (
                 <button type="button" onClick={t.action}
                   data-testid={`button-tier-${t.key}`}
-                  className={`${t.emphasis ? 'btn-primary' : 'btn-line'} w-full justify-center px-6 py-3.5 pg-label !text-[10px] inline-flex items-center gap-2.5 group`}>
+                  className={`${t.emphasis ? 'btn-primary' : 'btn-line'} w-full justify-center px-6 py-3.5 pg-label !text-[15px] !tracking-normal !normal-case inline-flex items-center gap-2.5 group`}>
                   {t.cta} <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" strokeWidth={1.8} />
                 </button>
               ) : (
-                <div className="w-full text-center px-6 py-3.5 pg-label !text-[10px] text-[var(--muted)] border border-dashed border-[var(--line)] rounded-[3px]">
+                <div className="w-full text-center px-6 py-3.5 pg-label !text-[15px] !tracking-normal !normal-case text-[var(--muted)] border border-dashed border-[var(--line)] rounded-[3px]">
                   {t.cta}
                 </div>
               )}

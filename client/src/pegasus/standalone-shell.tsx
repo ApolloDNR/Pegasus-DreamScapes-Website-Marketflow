@@ -1,9 +1,12 @@
 import React, { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { useLocation } from 'wouter';
 import './_group.css';
+import './public-reading.css';
+import './utility-pages.css';
 import type { Nav, Route, PeggyHandoff } from './theme';
 import { NavBar } from './nav';
 import { Footer } from './footer';
+import { JourneyContinuation } from './journey';
 import { Peggy } from './peggy';
 import { routeForUrl, urlFor } from './routes';
 import { useTheme } from '@/components/theme-provider';
@@ -45,7 +48,6 @@ export function PegasusStandaloneShell({
   const go = useCallback<Nav>(
     (r) => {
       setLocation(urlFor(r));
-      window.scrollTo({ top: 0, behavior: 'auto' });
     },
     [setLocation],
   );
@@ -62,7 +64,6 @@ export function PegasusStandaloneShell({
   const toSubmit = useCallback(
     (intent?: string) => {
       setLocation(intent ? `/bring-an-opportunity?intent=${intent}` : '/bring-an-opportunity');
-      window.scrollTo({ top: 0, behavior: 'auto' });
     },
     [setLocation],
   );
@@ -86,7 +87,7 @@ export function PegasusStandaloneShell({
   const dataTheme = theme === 'dark' ? 'dark' : undefined;
 
   return (
-    <>
+    <div className="peggy-workspace">
       <div className="pg-root" data-theme={dataTheme}>
         <NavBar
           go={go}
@@ -98,9 +99,10 @@ export function PegasusStandaloneShell({
         />
       </div>
 
-      {children}
+      <div className="public-reading-surface" data-theme={dataTheme} data-peggy-page>{children}</div>
 
       <div className="pg-root" data-theme={dataTheme}>
+        <JourneyContinuation path={location} />
         <Footer go={go} />
         <Peggy
           open={peggyOpen}
@@ -110,9 +112,10 @@ export function PegasusStandaloneShell({
           go={go}
           toSubmit={toSubmit}
           initialRole={peggyRole}
+          pagePath={location}
         />
       </div>
-    </>
+    </div>
   );
 }
 

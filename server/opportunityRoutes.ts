@@ -23,10 +23,10 @@ import {
 // ============================================================
 
 const CONFIRMATION_BODY =
-  "Thank you for submitting your property, deal, or request to Pegasus Dreamscapes. " +
-  "We received your information and will review it to determine the appropriate lane. " +
-  "If there is a fit or if we need more information, we will follow up with the next step.\n\n" +
-  "No agency relationship, offer, or agreement is created by submitting this form.";
+  "Pegasus Dreamscapes recorded your submission for possible consideration. " +
+  "If Pegasus elects to engage, it will contact you. " +
+  "This receipt does not promise review, routing, a response, an offer, representation, referral, service, or a transaction. " +
+  "No agency or other relationship or agreement is created by submitting this form.";
 
 export const OPPORTUNITY_CONTACT_CONSENT_VERSION =
   "bring-opportunity-contact-v1";
@@ -71,11 +71,15 @@ function sourceChannelForOpportunity(opportunity: InsertOpportunity): string {
 
 export function registerOpportunityRoutes(
   app: Express,
-  guards: { isAuthenticated: RequestHandler; requireStaffRole: RequestHandler },
+  guards: {
+    isAuthenticated: RequestHandler;
+    requireStaffRole: RequestHandler;
+    publicIntakeRateLimit: RequestHandler;
+  },
 ) {
   // Public intake. Mirrors the /api/leads server-truth anti-spam doctrine:
   // honeypot must be empty and the form must have been open >= 3s.
-  app.post("/api/opportunities", async (req, res) => {
+  app.post("/api/opportunities", guards.publicIntakeRateLimit, async (req, res) => {
     try {
       const hp = req.body?.hp_company ?? "";
       if (typeof hp === "string" && hp.trim().length > 0) {

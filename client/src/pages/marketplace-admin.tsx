@@ -10,7 +10,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Link } from "wouter";
 import React, { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -23,8 +22,6 @@ import {
   Clock,
   TrendingUp,
   ShieldCheck,
-  ArrowRight,
-  Settings,
   XCircle,
   Home,
   DollarSign,
@@ -51,6 +48,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import { useUpload } from "@/hooks/use-upload";
+import { REVIEW_AUDIT_ACTION_TYPES } from "@shared/schema";
 
 interface AdminStats {
   totalSellerLeads: number;
@@ -87,19 +85,16 @@ interface Lead {
   createdAt: string;
 }
 
+type ReviewAuditActionType = (typeof REVIEW_AUDIT_ACTION_TYPES)[number];
+
 interface AuditLogEntry {
   id: number;
-  adminUserId: string;
   adminEmail: string | null;
   adminName: string | null;
-  actionType: string;
+  actionType: ReviewAuditActionType;
   resourceType: string | null;
   resourceId: string | null;
   description: string;
-  previousValue: string | null;
-  newValue: string | null;
-  ipAddress: string | null;
-  userAgent: string | null;
   createdAt: string;
 }
 
@@ -110,6 +105,100 @@ interface AuditLogsResponse {
   offset: number;
 }
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  value !== null && typeof value === "object" && !Array.isArray(value);
+
+const isNullableString = (value: unknown): value is string | null =>
+  value === null || typeof value === "string";
+
+const isNonNegativeInteger = (value: unknown): value is number =>
+  typeof value === "number" && Number.isInteger(value) && value >= 0;
+
+function isAuditLogEntry(value: unknown): value is AuditLogEntry {
+  if (!isRecord(value)) return false;
+
+  return (
+    isNonNegativeInteger(value.id) &&
+    value.id > 0 &&
+    isNullableString(value.adminEmail) &&
+    isNullableString(value.adminName) &&
+    typeof value.actionType === "string" &&
+    REVIEW_AUDIT_ACTION_TYPES.includes(
+      value.actionType as ReviewAuditActionType,
+    ) &&
+    isNullableString(value.resourceType) &&
+    isNullableString(value.resourceId) &&
+    typeof value.description === "string" &&
+    value.description.trim().length > 0 &&
+    typeof value.createdAt === "string" &&
+    Number.isFinite(Date.parse(value.createdAt))
+  );
+}
+
+function isAuditLogsResponse(value: unknown): value is AuditLogsResponse {
+  if (!isRecord(value) || !Array.isArray(value.logs)) return false;
+  if (
+    !isNonNegativeInteger(value.total) ||
+    !isNonNegativeInteger(value.limit) ||
+    value.limit === 0 ||
+    !isNonNegativeInteger(value.offset)
+  ) {
+    return false;
+  }
+
+  return (
+    value.logs.length <= value.limit &&
+    value.logs.length <= value.total &&
+    value.logs.every(isAuditLogEntry)
+  );
+}
+
+async function readAuditRecorded(response: Response): Promise<boolean | null> {
+  try {
+    const body: unknown = await response.json();
+    return isRecord(body) && typeof body.auditRecorded === "boolean"
+      ? body.auditRecorded
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function AdminDataUnavailable({
+  scope,
+  onRetry,
+  isRetrying = false,
+}: {
+  scope: string;
+  onRetry?: () => void;
+  isRetrying?: boolean;
+}) {
+  return (
+    <div className="rounded-lg border border-dashed p-5 text-center" role="status">
+      <AlertCircle className="mx-auto mb-3 h-7 w-7 text-amber-600" aria-hidden="true" />
+      <p className="font-medium">Admin data unavailable</p>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {scope} could not be loaded. Refresh or try again later; no zero or empty state is being inferred.
+      </p>
+      {onRetry ? (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="mt-4"
+          onClick={onRetry}
+          disabled={isRetrying}
+        >
+          {isRetrying ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : null}
+          {isRetrying ? "Retrying…" : `Retry ${scope.toLowerCase()}`}
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
 export default function MarketplaceAdminPage() {
   const { toast } = useToast();
   const [reviewDialogOpen, setReviewDialogOpen] = useState(false);
@@ -117,47 +206,70 @@ export default function MarketplaceAdminPage() {
   const [rejectionReason, setRejectionReason] = useState("");
   const [auditLogFilter, setAuditLogFilter] = useState<string>("all");
 
-  const { data: stats, isLoading: statsLoading } = useQuery<AdminStats>({
-    queryKey: ["/api/marketflow/admin/stats"],
+  const { data: stats, isLoading: statsLoading, isError: statsError } = useQuery<AdminStats>({
+    queryKey: ["/api/marketplace/admin/stats"],
   });
 
-  const { data: pendingItems = [], isLoading: pendingLoading } = useQuery<PendingItem[]>({
-    queryKey: ["/api/marketflow/admin/pending"],
+  const { data: pendingItems = [], isLoading: pendingLoading, isError: pendingError } = useQuery<PendingItem[]>({
+    queryKey: ["/api/marketplace/admin/pending"],
   });
 
-  const { data: users = [], isLoading: usersLoading } = useQuery<AdminUser[]>({
-    queryKey: ["/api/marketflow/admin/users"],
+  const { data: users = [], isLoading: usersLoading, isError: usersError } = useQuery<AdminUser[]>({
+    queryKey: ["/api/marketplace/admin/users"],
   });
 
-  const { data: leads = [], isLoading: leadsLoading } = useQuery<Lead[]>({
-    queryKey: ["/api/marketflow/admin/leads"],
+  const { data: leads = [], isLoading: leadsLoading, isError: leadsError } = useQuery<Lead[]>({
+    queryKey: ["/api/marketplace/admin/leads"],
   });
 
   const auditLogQueryKey = auditLogFilter === "all" 
     ? "/api/audit-logs?limit=50" 
     : `/api/audit-logs?limit=50&actionType=${auditLogFilter}`;
   
-  const { data: auditLogsData, isLoading: auditLogsLoading } = useQuery<AuditLogsResponse>({
+  const {
+    data: auditLogsResponse,
+    isLoading: auditLogsLoading,
+    isError: auditLogsError,
+    isFetching: auditLogsFetching,
+    refetch: refetchAuditLogs,
+  } = useQuery<unknown>({
     queryKey: [auditLogQueryKey],
   });
+  const auditLogsData = isAuditLogsResponse(auditLogsResponse)
+    ? auditLogsResponse
+    : null;
 
   const approveMutation = useMutation({
     mutationFn: async ({ itemType, itemId, approved }: { itemType: string; itemId: number; approved: boolean }) => {
       const endpoint = itemType === "wholesale_deal" 
-        ? `/api/marketflow/admin/deals/${itemId}/status`
-        : `/api/marketflow/admin/projects/${itemId}/status`;
-      return apiRequest("PATCH", endpoint, {
-        status: approved ? "listed" : "rejected",
+        ? `/api/marketplace/admin/deals/${itemId}/status`
+        : `/api/marketplace/admin/projects/${itemId}/status`;
+      const response = await apiRequest("PATCH", endpoint, {
+        status: approved
+          ? itemType === "wholesale_deal"
+            ? "listed"
+            : "approved"
+          : "rejected",
         rejectionReason: approved ? undefined : rejectionReason,
       });
+      return { auditRecorded: await readAuditRecorded(response) };
     },
-    onSuccess: (_, variables) => {
+    onSuccess: (result, variables) => {
       toast({
         title: variables.approved ? "Approved" : "Rejected",
         description: `Item has been ${variables.approved ? "approved and listed" : "rejected"}.`,
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/marketflow/admin/pending"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/marketflow/admin/stats"] });
+      if (result.auditRecorded === false) {
+        toast({
+          title: "Status changed; audit event not recorded",
+          description:
+            "The review decision was saved, but the server did not confirm its audit event. Treat the audit history as incomplete until verified.",
+          variant: "destructive",
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: ["/api/marketplace/admin/pending"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/marketplace/admin/stats"] });
+      queryClient.invalidateQueries({ queryKey: [auditLogQueryKey] });
       setReviewDialogOpen(false);
       setSelectedItem(null);
       setRejectionReason("");
@@ -170,14 +282,6 @@ export default function MarketplaceAdminPage() {
       });
     },
   });
-
-  const displayStats: AdminStats = stats ?? {
-    totalSellerLeads: 0,
-    pendingSellerLeads: 0,
-    totalInvestorLeads: 0,
-    activeWholesaleDeals: 0,
-    activeCapitalProjects: 0,
-  };
 
   const handleReview = (item: PendingItem) => {
     setSelectedItem(item);
@@ -222,14 +326,6 @@ export default function MarketplaceAdminPage() {
                 Manage users, deals, and platform operations
               </p>
             </div>
-            <div className="flex items-center gap-2">
-              <Link href="/marketflow/admin/settings">
-                <Button variant="outline" data-testid="button-settings">
-                  <Settings className="h-4 w-4 mr-2" />
-                  Settings
-                </Button>
-              </Link>
-            </div>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
@@ -241,9 +337,11 @@ export default function MarketplaceAdminPage() {
               <CardContent>
                 {statsLoading ? (
                   <Skeleton className="h-8 w-16" />
+                ) : statsError || !stats ? (
+                  <span className="text-sm text-muted-foreground">Unavailable</span>
                 ) : (
                   <div className="text-2xl font-bold" data-testid="stat-seller-leads">
-                    {displayStats.totalSellerLeads}
+                    {stats.totalSellerLeads}
                   </div>
                 )}
               </CardContent>
@@ -255,8 +353,10 @@ export default function MarketplaceAdminPage() {
                 <Clock className="h-4 w-4 text-amber-500" />
               </CardHeader>
               <CardContent>
-                {statsLoading ? (
+                {pendingLoading ? (
                   <Skeleton className="h-8 w-16" />
+                ) : pendingError ? (
+                  <span className="text-sm text-muted-foreground">Unavailable</span>
                 ) : (
                   <div className="text-2xl font-bold text-amber-600" data-testid="stat-pending">
                     {pendingItems.length}
@@ -273,9 +373,11 @@ export default function MarketplaceAdminPage() {
               <CardContent>
                 {statsLoading ? (
                   <Skeleton className="h-8 w-16" />
+                ) : statsError || !stats ? (
+                  <span className="text-sm text-muted-foreground">Unavailable</span>
                 ) : (
                   <div className="text-2xl font-bold" data-testid="stat-investor-leads">
-                    {displayStats.totalInvestorLeads}
+                    {stats.totalInvestorLeads}
                   </div>
                 )}
               </CardContent>
@@ -289,9 +391,11 @@ export default function MarketplaceAdminPage() {
               <CardContent>
                 {statsLoading ? (
                   <Skeleton className="h-8 w-16" />
+                ) : statsError || !stats ? (
+                  <span className="text-sm text-muted-foreground">Unavailable</span>
                 ) : (
                   <div className="text-2xl font-bold" data-testid="stat-wholesale-deals">
-                    {displayStats.activeWholesaleDeals}
+                    {stats.activeWholesaleDeals}
                   </div>
                 )}
               </CardContent>
@@ -305,9 +409,11 @@ export default function MarketplaceAdminPage() {
               <CardContent>
                 {statsLoading ? (
                   <Skeleton className="h-8 w-16" />
+                ) : statsError || !stats ? (
+                  <span className="text-sm text-muted-foreground">Unavailable</span>
                 ) : (
                   <div className="text-2xl font-bold" data-testid="stat-capital-projects">
-                    {displayStats.activeCapitalProjects}
+                    {stats.activeCapitalProjects}
                   </div>
                 )}
               </CardContent>
@@ -352,6 +458,8 @@ export default function MarketplaceAdminPage() {
                         <Skeleton key={i} className="h-16 w-full" />
                       ))}
                     </div>
+                  ) : pendingError ? (
+                    <AdminDataUnavailable scope="Pending submissions" />
                   ) : pendingItems.length === 0 ? (
                     <div className="text-center py-8">
                       <CheckCircle2 className="h-12 w-12 text-green-500 mx-auto mb-4" />
@@ -412,6 +520,8 @@ export default function MarketplaceAdminPage() {
                         <Skeleton key={i} className="h-16 w-full" />
                       ))}
                     </div>
+                  ) : usersError ? (
+                    <AdminDataUnavailable scope="User records" />
                   ) : users.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       No users found
@@ -460,6 +570,9 @@ export default function MarketplaceAdminPage() {
                   <CardDescription>Manage wholesale deals and capital projects</CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {statsError || pendingError || !stats ? (
+                    <AdminDataUnavailable scope="Deal overview" />
+                  ) : (
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="p-4 rounded-lg border">
                       <div className="flex items-center gap-2 mb-3">
@@ -469,7 +582,7 @@ export default function MarketplaceAdminPage() {
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Active</span>
-                          <span className="font-medium">{displayStats.activeWholesaleDeals}</span>
+                          <span className="font-medium">{stats.activeWholesaleDeals}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Pending Review</span>
@@ -487,7 +600,7 @@ export default function MarketplaceAdminPage() {
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Active</span>
-                          <span className="font-medium">{displayStats.activeCapitalProjects}</span>
+                          <span className="font-medium">{stats.activeCapitalProjects}</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Pending Review</span>
@@ -498,6 +611,7 @@ export default function MarketplaceAdminPage() {
                       </div>
                     </div>
                   </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -515,6 +629,8 @@ export default function MarketplaceAdminPage() {
                         <Skeleton key={i} className="h-16 w-full" />
                       ))}
                     </div>
+                  ) : leadsError ? (
+                    <AdminDataUnavailable scope="Lead records" />
                   ) : leads.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">
                       No leads found
@@ -546,18 +662,11 @@ export default function MarketplaceAdminPage() {
                             <Badge variant={lead.status === "new" ? "default" : "secondary"} className="capitalize">
                               {lead.status}
                             </Badge>
-                            <Button size="sm" variant="outline">Contact</Button>
                           </div>
                         </div>
                       ))}
                     </div>
                   )}
-                  <Link href="/marketflow/admin/leads">
-                    <Button variant="ghost" className="w-full mt-4" data-testid="link-manage-leads">
-                      View All Leads
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </Button>
-                  </Link>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -569,41 +678,52 @@ export default function MarketplaceAdminPage() {
                     <div>
                       <CardTitle className="flex items-center gap-2">
                         <History className="h-5 w-5" />
-                        Admin Activity Log
+                        Review Audit Log
                       </CardTitle>
-                      <CardDescription>Track all administrative actions on the platform</CardDescription>
+                      <CardDescription>
+                        Server-recorded wholesale and capital review events only.
+                      </CardDescription>
                     </div>
                     <Select value={auditLogFilter} onValueChange={setAuditLogFilter}>
                       <SelectTrigger className="w-[180px]" data-testid="select-audit-filter">
                         <SelectValue placeholder="Filter by action" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Actions</SelectItem>
-                        <SelectItem value="user_created">User Created</SelectItem>
-                        <SelectItem value="user_updated">User Updated</SelectItem>
-                        <SelectItem value="role_assigned">Role Assigned</SelectItem>
+                        <SelectItem value="all">All Review Events</SelectItem>
                         <SelectItem value="deal_approved">Deal Approved</SelectItem>
                         <SelectItem value="deal_rejected">Deal Rejected</SelectItem>
+                        <SelectItem value="deal_review_started">Deal Review Started</SelectItem>
                         <SelectItem value="project_approved">Project Approved</SelectItem>
-                        <SelectItem value="badge_awarded">Badge Awarded</SelectItem>
-                        <SelectItem value="setting_changed">Setting Changed</SelectItem>
+                        <SelectItem value="project_rejected">Project Rejected</SelectItem>
+                        <SelectItem value="project_review_started">Project Review Started</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </CardHeader>
                 <CardContent>
                   {auditLogsLoading ? (
-                    <div className="space-y-3">
+                    <div className="space-y-3" role="status" aria-live="polite">
+                      <p className="text-sm text-muted-foreground">
+                        Loading server-recorded review events…
+                      </p>
                       {[1, 2, 3, 4, 5].map((i) => (
                         <Skeleton key={i} className="h-16 w-full" />
                       ))}
                     </div>
-                  ) : !auditLogsData?.logs?.length ? (
+                  ) : auditLogsError || !auditLogsData ? (
+                    <AdminDataUnavailable
+                      scope="Audit log"
+                      onRetry={() => {
+                        void refetchAuditLogs();
+                      }}
+                      isRetrying={auditLogsFetching}
+                    />
+                  ) : auditLogsData.logs.length === 0 ? (
                     <div className="text-center py-8">
                       <History className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="font-medium mb-2">No Activity Yet</h3>
+                      <h3 className="font-medium mb-2">No recorded review events</h3>
                       <p className="text-sm text-muted-foreground">
-                        Admin actions will appear here once they occur.
+                        The server returned a verified empty review history for this filter.
                       </p>
                     </div>
                   ) : (
@@ -620,7 +740,7 @@ export default function MarketplaceAdminPage() {
                             </div>
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <p className="font-medium">{log.adminName || log.adminEmail || "Admin"}</p>
+                                <p className="font-medium">{log.adminName || log.adminEmail || "Staff reviewer"}</p>
                                 <Badge variant="outline" className="text-xs">
                                   {log.actionType.replace(/_/g, " ")}
                                 </Badge>
@@ -640,9 +760,9 @@ export default function MarketplaceAdminPage() {
                       </div>
                     </ScrollArea>
                   )}
-                  {auditLogsData && auditLogsData.total > 50 && (
+                  {auditLogsData && auditLogsData.total > auditLogsData.logs.length && (
                     <p className="text-center text-sm text-muted-foreground mt-4">
-                      Showing 50 of {auditLogsData.total} entries
+                      Showing {auditLogsData.logs.length} of {auditLogsData.total} recorded review events
                     </p>
                   )}
                 </CardContent>
@@ -780,15 +900,15 @@ function HomepageContentManager() {
   const [heroCta, setHeroCta] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
-  const { data: wholesaleDeals = [] } = useQuery<WholesaleDealSummary[]>({
+  const { data: wholesaleDeals = [], isError: wholesaleDealsError } = useQuery<WholesaleDealSummary[]>({
     queryKey: ["/api/wholesale-deals"],
   });
 
-  const { data: featuredDeals = [], isLoading: featuredLoading } = useQuery<FeaturedDeal[]>({
+  const { data: featuredDeals = [], isLoading: featuredLoading, isError: featuredDealsError } = useQuery<FeaturedDeal[]>({
     queryKey: ["/api/admin/featured-deals"],
   });
 
-  const { data: storedContent = [] } = useQuery<StoredHomepageContent[]>({
+  const { data: storedContent = [], isError: storedContentError } = useQuery<StoredHomepageContent[]>({
     queryKey: ["/api/admin/homepage-content"],
   });
 
@@ -868,11 +988,16 @@ function HomepageContentManager() {
 
   const activeDeals = wholesaleDeals.filter(d => d.status === "approved" || d.status === "listed" || d.status === "active");
   const featuredDealIds = new Set(featuredDeals.map(f => `${f.dealType}-${f.dealId}`));
+  const homepageContentError = wholesaleDealsError || featuredDealsError || storedContentError;
 
   const formatCurrency = (amount: number | null) => {
     if (!amount) return "N/A";
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amount);
   };
+
+  if (homepageContentError) {
+    return <AdminDataUnavailable scope="Homepage content and featured-deal records" />;
+  }
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
@@ -1067,7 +1192,7 @@ function FAQManager() {
   const [editQuestion, setEditQuestion] = useState("");
   const [editAnswer, setEditAnswer] = useState("");
 
-  const { data: faqs = [], isLoading } = useQuery<FAQItem[]>({
+  const { data: faqs = [], isLoading, isError: faqsError } = useQuery<FAQItem[]>({
     queryKey: ["/api/faqs"],
   });
 
@@ -1118,6 +1243,10 @@ function FAQManager() {
     setEditQuestion(faq.question);
     setEditAnswer(faq.answer);
   };
+
+  if (faqsError) {
+    return <AdminDataUnavailable scope="FAQ records" />;
+  }
 
   return (
     <Card>
@@ -1244,7 +1373,7 @@ function TestimonialsManager() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState({ quote: "", authorName: "", authorRole: "", authorLocation: "", rating: 5 });
 
-  const { data: testimonials = [], isLoading } = useQuery<TestimonialItem[]>({
+  const { data: testimonials = [], isLoading, isError: testimonialsError } = useQuery<TestimonialItem[]>({
     queryKey: ["/api/testimonials"],
   });
 
@@ -1300,6 +1429,10 @@ function TestimonialsManager() {
       rating: t.rating || 5,
     });
   };
+
+  if (testimonialsError) {
+    return <AdminDataUnavailable scope="Testimonial records" />;
+  }
 
   return (
     <Card>
@@ -1471,7 +1604,7 @@ function TeamManager() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [formData, setFormData] = useState({ name: "", role: "", bio: "", email: "", linkedinUrl: "" });
 
-  const { data: members = [], isLoading } = useQuery<TeamMemberItem[]>({
+  const { data: members = [], isLoading, isError: teamError } = useQuery<TeamMemberItem[]>({
     queryKey: ["/api/team"],
   });
 
@@ -1527,6 +1660,10 @@ function TeamManager() {
       linkedinUrl: m.linkedinUrl || "",
     });
   };
+
+  if (teamError) {
+    return <AdminDataUnavailable scope="Team records" />;
+  }
 
   return (
     <Card>
@@ -1694,7 +1831,7 @@ function MediaLibrary() {
   const [copiedId, setCopiedId] = useState<number | null>(null);
   const { getUploadParameters } = useUpload();
 
-  const { data: mediaFiles = [], isLoading, refetch } = useQuery<MediaItem[]>({
+  const { data: mediaFiles = [], isLoading, isError: mediaError, refetch } = useQuery<MediaItem[]>({
     queryKey: ["/api/admin/media"],
   });
 
@@ -1763,6 +1900,10 @@ function MediaLibrary() {
       refetch();
     }
   };
+
+  if (mediaError) {
+    return <AdminDataUnavailable scope="Media records" />;
+  }
 
   return (
     <Card>

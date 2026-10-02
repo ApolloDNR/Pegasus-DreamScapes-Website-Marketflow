@@ -20,19 +20,19 @@ export const FAQ_SECTIONS: FaqSection[] = [
     items: [
       {
         q: "What kinds of properties do you review?",
-        a: "Any situation where the path forward isn't obvious: deferred maintenance, distressed title, contested ownership, development potential, or creative structure. SFR through small multifamily in the East Bay and surrounding areas.",
+        a: "You may submit context about residential, land, or selected commercial situations. Property-type and geographic fit are considered case by case; submission does not promise review.",
       },
       {
         q: "Is there a fee to submit?",
-        a: "No. Submissions are free. Every serious intake gets reviewed — not an auto-reply.",
+        a: "No fee is charged to submit. Submission does not promise review, analysis, a response, an offer, or any later service.",
       },
       {
         q: "How long does a review take?",
-        a: "A free property review comes back within 48 hours. If we need more to give you a straight answer, we reach out directly.",
+        a: "There is no public review or response-time commitment. Pegasus may request more information if it elects to consider the submission.",
       },
       {
         q: "Do you guarantee an offer?",
-        a: "No. Every property gets a path, but not every property gets an offer. If Pegasus isn't the right fit, you'll get an honest read and, where appropriate, a referral to someone who is.",
+        a: "No. A submission may receive no offer, review, path, referral, or response. Any later transaction or service requires its own diligence and written terms.",
       },
     ],
   },
@@ -41,15 +41,15 @@ export const FAQ_SECTIONS: FaqSection[] = [
     items: [
       {
         q: "What makes Pegasus different from a regular real estate investor?",
-        a: "Strategy first. We review the structural situation before we decide on a lane: acquisition, JV, creative finance, referral, or something else entirely. We don't chase properties. We design paths.",
+        a: "The public site starts with a structured intake and educational frameworks for possible lanes. Actual availability, review, recommendations, services, and transactions are conditional.",
       },
       {
         q: "Is Apollo licensed?",
-        a: "Yes. Apollo Duran, California DRE #02333658, provides licensed real estate services through Keller Williams Realty East Bay — each office independently owned and operated. Licensed work is held to a fiduciary standard.",
+        a: "For license verification, CA DRE #02333658 is listed under Duran Ramirez, Paolo Ariel. The responsible broker listed in DRE records is BMP Realty Inc DBA Keller Williams Realty-East Bay. This site uses Paolo “Apollo” Duran as a public-facing name; verify current status before engagement. Representation may be available only under a separate written brokerage agreement.",
       },
       {
         q: "Can you help if I just want to list my property?",
-        a: "Yes. If a traditional sale is the right path, we'll route you there through our KW East Bay relationship or an appropriate referral.",
+        a: "You may ask about licensed-representation availability. No listing, referral, or agency relationship exists without current license verification, fit, capacity, and a separate written agreement.",
       },
       {
         q: "What is the Strategy Lab?",
@@ -57,7 +57,7 @@ export const FAQ_SECTIONS: FaqSection[] = [
       },
       {
         q: "What's the difference between a Strategy Snapshot and a Deal Blueprint?",
-        a: "Two depths of the same Strategy Lab work. The Strategy Snapshot is preliminary and informational: a free read with no account required (lane fit, ranges, headline math), or a fuller saved snapshot with a Pegasus account (scenarios, risk register, sensitivity, shareable). The Deal Blueprint is a deeper, human-prepared memo for one specific property — underwriting, structure, risk register, and outreach scripts, written by the Pegasus team. It's available by request after a review; most submissions don't need one, and we tell you which fits before you commit.",
+        a: "The Strategy Snapshot is a preliminary educational output based on user inputs. A Deal Blueprint is a possible separately scoped analysis. A request is not an order; availability, author, contents, fee, timing, and limits require written agreement.",
       },
     ],
   },
@@ -66,15 +66,15 @@ export const FAQ_SECTIONS: FaqSection[] = [
     items: [
       {
         q: "What is MarketFlow?",
-        a: "The private deal network where reviewed opportunities, trusted operators, buyers, and capital relationships connect. It's not a public marketplace. Access is by introduction.",
+        a: "MarketFlow is a private controlled-pilot workspace. It is not a public marketplace. Access, inventory, participants, review, matching, introductions, and transaction availability are not guaranteed.",
       },
       {
         q: "How do I get access to MarketFlow?",
-        a: "Request access at /marketflow/access. Tell us who introduced you and what role you'd fill. We verify every introduction before sending an invite.",
+        a: "Request access at /marketflow/access and provide introduction context and role. Requests are discretionary and do not promise verification, approval, an invite, or inventory.",
       },
       {
         q: "I don't have an introduction. Can I still get in?",
-        a: "Reach out through the contact form. If there's a fit and the timing is right, we'll figure it out.",
+        a: "You may use the contact form, but no access path, response, introduction, or exception is promised.",
       },
     ],
   },
@@ -83,11 +83,11 @@ export const FAQ_SECTIONS: FaqSection[] = [
     items: [
       {
         q: "What are the Pegasus Buyboxes?",
-        a: "A free interest list. You tell us the kind of deal you want to see (ADU upside, value-add, repositioning) and we contact you only when a reviewed property matches that profile. No fee. No subscription. No public marketplace. Every match is reviewed by Pegasus before anyone is contacted.",
+        a: "The public Buybox page describes orientation criteria for controlled-pilot interest only. It does not publish public buyer profiles, offer public signup, or publish live inventory. No reviewed live inventory is published, and submitting interest does not promise review, access, matching, notification, or a transaction.",
       },
       {
-        q: "If I sign up for a Buybox, am I committing to buy?",
-        a: "No. Subscribing to a Buybox profile means you'll be notified when we have a reviewed property that matches. There is no obligation to buy, no auto-send, and you can unsubscribe at any time.",
+        q: "Does submitting Buybox interest commit me to buy?",
+        a: "No. It records controlled-pilot interest only and creates no purchase obligation, public profile, account, access, notification, match, or transaction right.",
       },
     ],
   },

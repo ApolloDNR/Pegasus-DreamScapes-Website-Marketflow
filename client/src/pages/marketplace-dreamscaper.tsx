@@ -1,11 +1,9 @@
-import { useQuery } from "@tanstack/react-query";
 import { MarketplaceLayout } from "@/components/marketplace-layout";
 import { AuthGuard } from "@/components/auth-guard";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Progress } from "@/components/ui/progress";
 import { Link } from "wouter";
 import type { CapitalProject } from "@shared/schema";
 import {
@@ -28,8 +26,6 @@ import { useAuthenticatedQuery } from "@/hooks/use-authenticated-query";
 
 interface ProjectStats {
   activeProjects: number;
-  totalRaised: number;
-  totalFundingGoal: number;
   projectsCompleted: number;
 }
 
@@ -37,22 +33,21 @@ export default function MarketplaceDreamscaperPage() {
   const { profile } = useSupabaseAuth();
   const isPegasus = profile?.is_pegasus_badged;
 
-  const { data: stats, isLoading } = useAuthenticatedQuery<ProjectStats>(
-    QUERY_KEYS.userStats("dreamscaper"),
-  );
+  const {
+    data: stats,
+    isLoading,
+    isError: statsError,
+  } = useAuthenticatedQuery<ProjectStats>(QUERY_KEYS.userStats("dreamscaper"));
 
-  const { data: myProjects, isLoading: isProjectsLoading } = useQuery<CapitalProject[]>({
-    queryKey: ["/api/supabase/capital-projects/my"],
-  });
+  const {
+    data: myProjects,
+    isLoading: isProjectsLoading,
+    isError: projectsError,
+  } = useAuthenticatedQuery<CapitalProject[]>([
+    "/api/supabase/marketplace/dreamscaper/projects",
+  ]);
 
-  const displayStats: ProjectStats = stats ?? {
-    activeProjects: 0,
-    totalRaised: 0,
-    totalFundingGoal: 0,
-    projectsCompleted: 0,
-  };
-
-  const recentProjects = myProjects?.slice(0, 3) || [];
+  const recentProjects = myProjects?.slice(0, 3) ?? [];
 
   return (
     <AuthGuard requiredRoles={["admin", "pegasus_dreamscaper", "dreamscaper"]}>
@@ -65,26 +60,26 @@ export default function MarketplaceDreamscaperPage() {
                 DreamScaper Dashboard
               </h1>
               <p className="text-muted-foreground">
-                Transform properties and raise capital for your projects
+                Review private project submissions and controlled-pilot relationship context.
               </p>
             </div>
             <div className="flex items-center gap-2">
               {isPegasus && (
                 <Badge variant="default" className="gap-1">
                   <Sparkles className="h-3 w-3" />
-                  Pegasus Partner
+                  Pilot participant
                 </Badge>
               )}
               <Link href="/marketflow/submit">
                 <Button data-testid="button-new-project">
                   <Plus className="h-4 w-4 mr-2" />
-                  New Project
+                  Submit project record
                 </Button>
               </Link>
             </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Active Projects</CardTitle>
@@ -93,12 +88,14 @@ export default function MarketplaceDreamscaperPage() {
               <CardContent>
                 {isLoading ? (
                   <Skeleton className="h-8 w-16" />
+                ) : statsError || !stats ? (
+                  <p className="text-sm text-muted-foreground">Unavailable</p>
                 ) : (
                   <div className="text-2xl font-bold" data-testid="stat-active-projects">
-                    {displayStats.activeProjects}
+                    {stats.activeProjects}
                   </div>
                 )}
-                <p className="text-xs text-muted-foreground">In progress</p>
+                <p className="text-xs text-muted-foreground">Statuses recorded in this workspace</p>
               </CardContent>
             </Card>
 
@@ -110,55 +107,30 @@ export default function MarketplaceDreamscaperPage() {
               <CardContent>
                 {isLoading ? (
                   <Skeleton className="h-8 w-16" />
+                ) : statsError || !stats ? (
+                  <p className="text-sm text-muted-foreground">Unavailable</p>
                 ) : (
                   <div className="text-2xl font-bold" data-testid="stat-completed-projects">
-                    {displayStats.projectsCompleted}
+                    {stats.projectsCompleted}
                   </div>
                 )}
-                <p className="text-xs text-muted-foreground">Total transformations</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Raising Capital</CardTitle>
-                <Target className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <Skeleton className="h-8 w-16" />
-                ) : (
-                  <div className="text-2xl font-bold" data-testid="stat-raising-capital">
-                    {displayStats.totalFundingGoal > 0 ? Math.round((displayStats.totalRaised / displayStats.totalFundingGoal) * 100) : 0}%
-                  </div>
-                )}
-                <p className="text-xs text-muted-foreground">Open funding rounds</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Capital Raised</CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                {isLoading ? (
-                  <Skeleton className="h-8 w-24" />
-                ) : (
-                  <div className="text-2xl font-bold" data-testid="stat-total-raised">
-                    ${displayStats.totalRaised.toLocaleString()}
-                  </div>
-                )}
-                <p className="text-xs text-muted-foreground">Lifetime total</p>
+                <p className="text-xs text-muted-foreground">Source-supplied completion statuses</p>
               </CardContent>
             </Card>
           </div>
 
+          <Card className="border-dashed" data-testid="notice-capital-coordination-boundary">
+            <CardContent className="py-4 text-sm leading-relaxed text-muted-foreground">
+              Capital relationships are coordinated separately under written terms. This website
+              does not verify funds raised, commitments, or completed financing.
+            </CardContent>
+          </Card>
+
           <div className="grid gap-6 lg:grid-cols-2">
             <Card>
               <CardHeader>
-                <CardTitle>Active Projects</CardTitle>
-                <CardDescription>Your ongoing transformations and capital raises</CardDescription>
+                <CardTitle>Project records</CardTitle>
+                <CardDescription>Your latest private project submissions and source-supplied statuses</CardDescription>
               </CardHeader>
               <CardContent>
                 {isProjectsLoading ? (
@@ -167,23 +139,26 @@ export default function MarketplaceDreamscaperPage() {
                       <Skeleton key={i} className="h-20 w-full" />
                     ))}
                   </div>
+                ) : projectsError || !myProjects ? (
+                  <AccountDataUnavailable
+                    testId="state-dreamscaper-projects-unavailable"
+                    title="Project records unavailable"
+                    detail="No empty project history is being inferred. Try again after the account connection is restored."
+                  />
                 ) : recentProjects.length === 0 ? (
                   <div className="text-center py-8">
                     <Hammer className="w-10 h-10 text-muted-foreground mx-auto mb-3" />
-                    <p className="text-muted-foreground mb-4">No projects yet</p>
+                    <p className="text-muted-foreground mb-4">No recorded project submissions</p>
                     <Link href="/marketflow/submit">
                       <Button size="sm">
                         <Plus className="w-4 h-4 mr-2" />
-                        Create Your First Project
+                        Submit a project record
                       </Button>
                     </Link>
                   </div>
                 ) : (
                   <div className="space-y-4">
                     {recentProjects.map((project) => {
-                      const fundingProgress = project.fundingGoal 
-                        ? Math.min(100, ((project.amountRaised || 0) / project.fundingGoal) * 100) 
-                        : 0;
                       return (
                         <div key={project.id} className="space-y-2 p-3 rounded-lg border hover-elevate" data-testid={`project-item-${project.id}`}>
                           <div className="flex items-center justify-between">
@@ -197,13 +172,6 @@ export default function MarketplaceDreamscaperPage() {
                               )}
                             </div>
                             <ProjectStatusBadge status={project.status || "DRAFT"} />
-                          </div>
-                          <div className="space-y-1">
-                            <div className="flex justify-between text-sm">
-                              <span className="text-muted-foreground">Funding Progress</span>
-                              <span>${((project.amountRaised || 0) / 1000).toFixed(0)}K / ${((project.fundingGoal || 0) / 1000).toFixed(0)}K</span>
-                            </div>
-                            <Progress value={fundingProgress} className="h-2" />
                           </div>
                         </div>
                       );
@@ -225,13 +193,13 @@ export default function MarketplaceDreamscaperPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Quick Actions</CardTitle>
-                <CardDescription>Manage your DreamScaper activities</CardDescription>
+                <CardDescription>Use the working project tools available in this pilot</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 <Link href="/marketflow/submit" className="block">
                   <Button variant="outline" className="w-full justify-start" data-testid="action-new-project">
                     <Building2 className="h-4 w-4 mr-2" />
-                    Create New Project
+                    Submit project record
                   </Button>
                 </Link>
                 <Button
@@ -246,12 +214,12 @@ export default function MarketplaceDreamscaperPage() {
                   Capital coordination · controlled pilot
                 </Button>
                 <p id="capital-raise-pilot-note" className="text-xs text-muted-foreground">
-                  Project capital relationships remain private and coordinated by Pegasus.
+                  Project capital relationships remain private and are coordinated separately.
                 </p>
                 <Link href="/marketflow/calculators" className="block">
                   <Button variant="outline" className="w-full justify-start" data-testid="action-calculators">
                     <TrendingUp className="h-4 w-4 mr-2" />
-                    Project Calculators
+                  Project calculators
                   </Button>
                 </Link>
               </CardContent>
@@ -265,7 +233,8 @@ export default function MarketplaceDreamscaperPage() {
                 <CardTitle className="text-lg">Browse Wholesale Deals</CardTitle>
               </div>
               <CardDescription>
-                Discover off-market properties from verified wholesalers. Submit JV requests on deals that match your investment criteria.
+                Review authorized private records from participating sources. No inventory,
+                availability, or personalized match is implied.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -273,13 +242,13 @@ export default function MarketplaceDreamscaperPage() {
                 <Link href="/marketflow/deals">
                   <Button data-testid="button-browse-deals">
                     <Target className="h-4 w-4 mr-2" />
-                    Browse All Deals
+                    Review deal records
                   </Button>
                 </Link>
                 <Link href="/marketflow/capital">
                   <Button variant="outline" data-testid="button-browse-capital">
                     <Handshake className="h-4 w-4 mr-2" />
-                    View Capital Opportunities
+                    Review capital relationships
                   </Button>
                 </Link>
               </div>
@@ -291,18 +260,39 @@ export default function MarketplaceDreamscaperPage() {
   );
 }
 
+function AccountDataUnavailable({
+  testId,
+  title,
+  detail,
+}: {
+  testId: string;
+  title: string;
+  detail: string;
+}) {
+  return (
+    <div
+      className="rounded-lg border border-dashed p-6 text-center"
+      role="status"
+      data-testid={testId}
+    >
+      <p className="font-medium">{title}</p>
+      <p className="mt-1 text-sm text-muted-foreground">{detail}</p>
+    </div>
+  );
+}
+
 function ProjectStatusBadge({ status }: { status: string }) {
   switch (status.toUpperCase()) {
     case "OPEN_FOR_INVESTMENT":
     case "FUNDING":
-      return <Badge variant="secondary">Raising Capital</Badge>;
+      return <Badge variant="secondary">Capital context</Badge>;
     case "FUNDED":
-      return <Badge className="bg-green-600">Funded</Badge>;
+      return <Badge variant="secondary">Source status: funded</Badge>;
     case "IN_PROGRESS":
       return <Badge>In Progress</Badge>;
     case "COMPLETED":
     case "EXITED":
-      return <Badge variant="outline">Completed</Badge>;
+      return <Badge variant="outline">Source status: completed</Badge>;
     case "DRAFT":
       return <Badge variant="outline">Draft</Badge>;
     default:

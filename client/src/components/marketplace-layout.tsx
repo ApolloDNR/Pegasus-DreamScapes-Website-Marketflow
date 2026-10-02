@@ -29,7 +29,6 @@ import {
   Crown,
   Home,
   LogOut,
-  Settings,
   Sparkles,
   User,
 } from "lucide-react";
@@ -58,6 +57,11 @@ export function MarketplaceLayout({ children }: MarketplaceLayoutProps) {
   const { profile, user, signOut, userRole } = useSupabaseAuth();
 
   const roleItems = getRoleNavItems(userRole);
+  const roleDashboardPath = getRoleDashboardPath(userRole);
+  const dashboardPath =
+    roleDashboardPath === "/marketflow"
+      ? "/marketflow/dashboard"
+      : roleDashboardPath;
   const displayName = profile?.display_name || user?.email?.split("@")[0] || "User";
   const initials = displayName
     .split(" ")
@@ -72,7 +76,15 @@ export function MarketplaceLayout({ children }: MarketplaceLayoutProps) {
   };
 
   const handleSignOut = async () => {
-    await signOut();
+    try {
+      await signOut();
+    } finally {
+      // Replit/OIDC is the primary server session. Clearing only the Supabase
+      // client would silently authenticate the same user again on reload.
+      if (typeof window !== "undefined") {
+        window.location.assign("/api/logout");
+      }
+    }
   };
 
   return (
@@ -97,7 +109,6 @@ export function MarketplaceLayout({ children }: MarketplaceLayoutProps) {
               <SidebarGroupContent>
                 <SidebarMenu>
                   {BASE_NAV_ITEMS.map((item) => {
-                    const dashboardPath = getRoleDashboardPath(userRole);
                     const isActive =
                       item.href === "/marketflow"
                         ? location === dashboardPath ||
@@ -208,19 +219,17 @@ export function MarketplaceLayout({ children }: MarketplaceLayoutProps) {
                     side="top"
                     className="w-[--radix-dropdown-menu-trigger-width]"
                   >
-                    <DropdownMenuItem asChild>
-                      <Link href={`/profile/${user?.id}`}>
-                        <User className="mr-2 h-4 w-4" />
-                        View Profile
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link href="/marketflow/settings">
-                        <Settings className="mr-2 h-4 w-4" />
-                        Settings
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
+                    {user?.id && (
+                      <>
+                        <DropdownMenuItem asChild>
+                          <Link href={`/profile/${user.id}`}>
+                            <User className="mr-2 h-4 w-4" />
+                            View Profile
+                          </Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                      </>
+                    )}
                     <DropdownMenuItem onClick={handleSignOut}>
                       <LogOut className="mr-2 h-4 w-4" />
                       Sign Out

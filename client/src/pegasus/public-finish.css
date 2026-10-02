@@ -1,0 +1,165 @@
+/* Public presentation standards, extending the approved navy/copper system.
+ * The locked homepage arrival and application-specific controls keep their
+ * own geometry. Legacy marketing utilities yield to one readable action scale. */
+.pg-root :is(.btn-primary, .btn-solid-light, .btn-line, .btn-line-light):not(.hv-hero *),
+.pg-root :is(.ab6-button, .ab6-text-link, .hv-proof-link, .pg-next-step-link, .pg-path-help),
+.pg-root .dp .hv-hero-link {
+  font-family: var(--pg-font-ui, Inter, Arial, sans-serif);
+  font-size: .875rem !important;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0 !important;
+  text-transform: none;
+  min-height: 48px;
+  max-width: 100%;
+}
+.pg-root :is(.btn-primary, .btn-solid-light, .btn-line, .btn-line-light):not(.hv-hero *) {
+  padding: .8rem 1.25rem;
+  border-radius: 2px;
+}
+.pg-root :is(.btn-primary, .btn-solid-light, .btn-line, .btn-line-light, .ab6-button, .ab6-text-link, .hv-proof-link, .pg-next-step-link, .pg-path-help):focus-visible,
+.pg-root .dp .hv-hero-link:focus-visible {
+  outline: 2px solid var(--accent-bright);
+  outline-offset: 4px;
+}
+.pg-root .pg-nav-cta {
+  min-height: 46px;
+  font-family: var(--pg-font-ui, Inter, Arial, sans-serif);
+  font-size: .8125rem !important;
+  font-weight: 500;
+  line-height: 1.5;
+  letter-spacing: 0 !important;
+  text-transform: none;
+}
+
+.pg-arrival-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem 1.75rem;
+  margin-top: 1.75rem;
+}
+.pg-arrival-action,
+.pg-arrival-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .9rem;
+  min-height: 48px;
+  max-width: 100%;
+  font: 500 .875rem/1.5 var(--pg-font-ui, Inter, Arial, sans-serif);
+}
+.pg-arrival-secondary { color: #f1dcc3; border-bottom: 1px solid #a48a70; }
+.pg-arrival-secondary:hover { color: #fff4e3; border-color: #dfb68d; }
+.pg-arrival-secondary:focus-visible { outline: 2px solid #dfb68d; outline-offset: 4px; }
+.pg-arrival-actions svg { width: 16px; height: 16px; flex-shrink: 0; }
+.pg-arrival-caption,
+.pg-root :is(.hwo-hero-caption, .dp-hero-caption) {
+  margin: 1.5rem 0 0;
+  color: #d0c5b6;
+  font: 400 .75rem/1.65 var(--pg-font-ui, Inter, Arial, sans-serif);
+  letter-spacing: 0;
+  text-transform: none;
+}
+.pg-root :is(#audience-options, #relationship-guidelines, #development-framework) { scroll-margin-top: 104px; }
+
+/* Compact, useful arrivals on supporting pages. */
+.pg-page-hero-nav-shade {
+  background: linear-gradient(to bottom, rgba(7, 19, 32, .88), rgba(7, 19, 32, .7) 48%, rgba(7, 19, 32, 0));
+}
+.pg-root .pg-page-hero { min-height: 600px; }
+.pg-root .pg-page-hero h1 {
+  max-width: 23ch;
+  font-size: clamp(2.5rem, 4.6vw, 4rem);
+  line-height: 1.1;
+  font-weight: 400;
+}
+.pg-root .pg-page-hero .pg-page-hero-lead {
+  max-width: 64ch;
+  font-size: 1.0625rem;
+  line-height: 1.75;
+}
+.pg-root :is(.hwo, .dp) :is(.hwo-hero, .dp-hero) {
+  min-height: 0;
+  padding: 9rem 0 4rem;
+}
+.pg-root :is(.hwo-hero, .dp-hero) .hv-rule { display: none; }
+.pg-root :is(.hwo-hero, .dp-hero) .hwo-h1 {
+  max-width: 22ch;
+  margin-top: 1.25rem;
+  font-size: clamp(2.75rem, 4.4vw, 4rem);
+  font-weight: 400;
+  line-height: 1.1;
+  text-wrap: balance;
+}
+.pg-root :is(.hwo-hero, .dp-hero) .hv-lead {
+  max-width: 66ch;
+  margin-top: 1.5rem;
+  font: 400 1.0625rem/1.75 var(--pg-font-ui, Inter, Arial, sans-serif);
+}
+.pg-root :is(.hwo, .dp) :is(.hv-h2, .hv-h2-cream) {
+  font-size: clamp(2rem, 3.2vw, 3rem);
+  line-height: 1.18;
+  max-width: 26ch;
+}
+.pg-root .dp .hv-hero-link { display: inline-flex; align-items: center; }
+.pg-root .pg-section-heading { font-size: clamp(2rem, 3.4vw, 3rem); line-height: 1.18; }
+.pg-root .pg-audience-options { padding-block: clamp(3.5rem, 6vw, 5.5rem); }
+.pg-root .pg-audience-options .surface-card {
+  border: 0;
+  border-top: 1px solid var(--line);
+  border-radius: 0;
+  padding: 1.75rem 0 0;
+  box-shadow: none;
+  background: transparent;
+}
+.pg-root .pg-audience-options .surface-card > p { font-size: 1rem; line-height: 1.75; }
+.pg-root .pg-audience-options .surface-card .btn-line { align-self: flex-start; }
+.pg-root .pg-audience-license {
+  margin: -.5rem 0 2rem;
+  padding-left: 1rem;
+  border-left: 1px solid var(--line);
+  color: var(--muted);
+  font: 400 .8125rem/1.7 var(--pg-font-ui, Inter, Arial, sans-serif);
+  text-align: left;
+}
+
+/* Founder identity precedes the operating principles on About. */
+.pg-root .ab6-arrival { min-height: 0; padding-top: 116px; }
+.pg-root .ab6-arrival-grid { padding-block: 3rem 4rem; gap: clamp(3rem, 6vw, 6rem); }
+.pg-root .ab6-arrival h1 { font-size: clamp(2.75rem, 4.6vw, 4.15rem); line-height: 1.12; max-width: 21ch; }
+.pg-root .ab6-arrival-lead { font-size: 1.0625rem; line-height: 1.75; }
+.pg-root .ab6-arrival-aside .ab6-doctrine { font-size: 1.625rem; line-height: 1.3; }
+.pg-root .ab6-arrival-rail span { font: 400 .8125rem/1.6 var(--pg-font-ui, Inter, Arial, sans-serif); letter-spacing: 0; text-transform: none; }
+.pg-root .about-v6 h2 { font-size: clamp(2rem, 3.4vw, 3rem); line-height: 1.18; }
+.pg-root .ab6-founder-portrait img { max-height: 560px; }
+.pg-root .ab6-convictions { border-top: 1px solid var(--ab6-line); }
+.pg-root .ab6-kicker { font-size: .6875rem; letter-spacing: .18em; }
+/* About's lazy stylesheet must not restore the superseded blue palette. */
+.pg-root[data-theme='dark'] main .about-v6 {
+  --ab6-navy: #101b25;
+  --ab6-navy-soft: #20313c;
+  --ab6-limestone: #101b25;
+  --ab6-limestone-deep: #15222b;
+}
+.pg-root[data-theme='dark'] .about-v6 .ab6-founder { background: #15222b; }
+
+@media (max-width: 900px) {
+  .pg-root :is(.hwo, .dp) :is(.hwo-hero, .dp-hero) { padding-top: 8rem; }
+  .pg-root .ab6-arrival-grid { gap: 2.5rem; }
+  .pg-root .pg-page-hero { min-height: 0; }
+}
+@media (max-width: 600px) {
+  .pg-root :is(.hwo-hero, .dp-hero) .hwo-h1,
+  .pg-root .pg-page-hero h1,
+  .pg-root .ab6-arrival h1 { font-size: 2.55rem; line-height: 1.12; }
+  .pg-root :is(.hwo-hero, .dp-hero) .hv-lead,
+  .pg-root .pg-page-hero .pg-page-hero-lead { font-size: 1rem; line-height: 1.7; }
+  .pg-arrival-actions { align-items: stretch; flex-direction: column; gap: .75rem; }
+  .pg-arrival-actions > a { width: 100%; }
+  .pg-arrival-caption { font-size: .6875rem; }
+  .pg-root .ab6-arrival { padding-top: 112px; }
+  .pg-root .ab6-arrival-grid { padding-block: 1.5rem 3rem; }
+  .pg-root .ab6-arrival-rail span { font-size: .75rem; }
+  .pg-root .pg-audience-options .surface-card .btn-line { width: 100%; }
+}

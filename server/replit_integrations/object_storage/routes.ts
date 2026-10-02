@@ -1,5 +1,23 @@
-import type { Express } from "express";
+import type { Express, RequestHandler } from "express";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
+
+type ObjectStorageRouteService = Pick<
+  ObjectStorageService,
+  | "getObjectEntityUploadURL"
+  | "normalizeObjectEntityPath"
+  | "getObjectEntityFile"
+  | "downloadObject"
+>;
+
+interface ObjectStorageRouteOptions {
+  requireAuth?: RequestHandler;
+  isAvailable?: () => boolean;
+  createService?: () => ObjectStorageRouteService;
+}
+
+export function isReplitObjectStorageConfigured(): boolean {
+  return Boolean(process.env.REPL_ID && process.env.PRIVATE_OBJECT_DIR);
+}
 
 /**
  * Register object storage routes for file uploads.
@@ -13,8 +31,29 @@ import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
  * - Add file metadata storage (save to database after upload)
  * - Add ACL policies for access control
  */
-export function registerObjectStorageRoutes(app: Express): void {
-  const objectStorageService = new ObjectStorageService();
+export function registerObjectStorageRoutes(
+  app: Express,
+  options: ObjectStorageRouteOptions = {},
+): void {
+  const available = options.isAvailable?.() ?? isReplitObjectStorageConfigured();
+
+  if (!available) {
+    app.post("/api/uploads/request-url", (_req, res) => {
+      res.setHeader("Cache-Control", "no-store");
+      return res.status(503).json({ error: "File storage unavailable" });
+    });
+    app.get("/objects/:objectPath(*)", (_req, res) => {
+      res.setHeader("Cache-Control", "no-store");
+      return res.status(404).json({ error: "Object not found" });
+    });
+    return;
+  }
+
+  const objectStorageService =
+    options.createService?.() ?? new ObjectStorageService();
+  const requireAuth: RequestHandler =
+    options.requireAuth ??
+    ((_req, res) => res.status(401).json({ message: "Unauthorized" }));
 
   /**
    * Request a presigned URL for file upload.
@@ -35,7 +74,7 @@ export function registerObjectStorageRoutes(app: Express): void {
    * IMPORTANT: The client should NOT send the file to this endpoint.
    * Send JSON metadata only, then upload the file directly to uploadURL.
    */
-  app.post("/api/uploads/request-url", async (req, res) => {
+  app.post("/api/uploads/request-url", requireAuth, async (req, res) => {
     try {
       const { name, size, contentType } = req.body;
 
@@ -70,7 +109,7 @@ export function registerObjectStorageRoutes(app: Express): void {
    * This serves files from object storage. For public files, no auth needed.
    * For protected files, add authentication middleware and ACL checks.
    */
-  app.get("/objects/:objectPath(*)", async (req, res) => {
+  app.get("/objects/:objectPath(*)", requireAuth, async (req, res) => {
     try {
       const objectFile = await objectStorageService.getObjectEntityFile(req.path);
       await objectStorageService.downloadObject(objectFile, res);
@@ -83,4 +122,3 @@ export function registerObjectStorageRoutes(app: Express): void {
     }
   });
 }
-

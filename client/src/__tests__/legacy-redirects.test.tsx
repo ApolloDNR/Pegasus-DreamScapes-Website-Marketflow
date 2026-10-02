@@ -6,7 +6,7 @@ import { render, cleanup, waitFor } from "@testing-library/react";
 import { Router, Switch, Route, Redirect, useLocation } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 
-import { legacyRedirects } from "@/App";
+import { legacyRedirects, Router as AppRouter } from "@/LegacyApp";
 import { PEGASUS_URLS } from "@/pegasus/routes";
 
 // Legacy-redirect dead-end net (Task #213).
@@ -31,7 +31,7 @@ import { PEGASUS_URLS } from "@/pegasus/routes";
 
 function readAppSrc(): string {
   return fs.readFileSync(
-    path.join(process.cwd(), "client/src/App.tsx"),
+    path.join(process.cwd(), "client/src/LegacyApp.tsx"),
     "utf-8",
   );
 }
@@ -111,6 +111,30 @@ function renderAt(
 }
 
 afterEach(() => cleanup());
+
+describe("query-preserving SPA aliases", () => {
+  it("keeps a calculator tab deep link when navigating in-app to Strategy Lab", async () => {
+    const navigation = { current: "" };
+    const hook = (() => [
+      "/calculators",
+      (to: string) => {
+        navigation.current = to;
+      },
+    ]) as ReturnType<typeof memoryLocation>["hook"];
+
+    render(
+      <Router hook={hook} searchHook={() => "?tab=roi"}>
+        <AppRouter />
+      </Router>,
+    );
+
+    await waitFor(() => {
+      expect(navigation.current).toBe(
+        "/strategy-lab?tool=calculators&tab=roi",
+      );
+    });
+  });
+});
 
 describe("Legacy redirects all land on a live registered route (Task #213)", () => {
   it("has redirects to test (non-vacuous)", () => {

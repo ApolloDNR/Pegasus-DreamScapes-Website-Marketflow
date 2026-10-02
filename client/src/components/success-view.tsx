@@ -1,3 +1,4 @@
+import { useEffect, useId, useRef, useState } from "react";
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { CardSurface } from "@/components/ui/card-primitives";
@@ -12,9 +13,9 @@ import { CheckCircle2, Inbox, Search, Compass, FlagTriangleRight, ArrowRight } f
 //   2. Sets the four-step review expectation.
 //   3. Offers a single "Add another" path back to the form.
 //
-// formType drives copy. The 4-step timeline is invariant — every Pegasus
-// intake follows the same Receive → Triage → Strategy review → Path
-// decision arc. Per-form copy lives in the FORM_COPY map below.
+// formType drives copy. Most intakes share the same four-stage review arc;
+// MarketFlow uses a separate manual-access review sequence so the confirmation
+// never implies deal analysis, comps, inventory, or approval.
 
 export type SuccessFormType =
   | "submit"
@@ -26,28 +27,52 @@ interface SuccessViewProps {
   formType: SuccessFormType;
   onAddAnother: () => void;
   referenceTag?: string;
+  headingLevel?: 1 | 2;
 }
 
-const TIMELINE = [
+const DEFAULT_TIMELINE = [
   {
     icon: Inbox,
     title: "Received",
-    sub: "Logged the moment you hit send.",
+    sub: "The site recorded the information you submitted.",
   },
   {
     icon: Search,
-    title: "Triaged",
-    sub: "Acquisitions reads every submission within 48 hours.",
+    title: "Possible triage",
+    sub: "Pegasus may consider the request for fit, information needs, and current capacity.",
   },
   {
     icon: Compass,
-    title: "Strategy review",
-    sub: "We pull comps, run the structural read, decide if the path fits.",
+    title: "Possible review",
+    sub: "Any property or strategy work occurs only if Pegasus elects to proceed.",
   },
   {
     icon: FlagTriangleRight,
-    title: "Path decision",
-    sub: "You get a real answer — even if the answer is a referral elsewhere.",
+    title: "Possible response",
+    sub: "A submission does not guarantee review, an offer, a referral, or a response time.",
+  },
+];
+
+const MARKETFLOW_TIMELINE = [
+  {
+    icon: Inbox,
+    title: "Request logged",
+    sub: "The site recorded the private context you submitted.",
+  },
+  {
+    icon: Search,
+    title: "Possible consideration",
+    sub: "Pegasus may consider the record if pilot capacity and a responsible fit exist.",
+  },
+  {
+    icon: Compass,
+    title: "Possible follow-up",
+    sub: "Pegasus may ask for clarification, but no review or response is promised.",
+  },
+  {
+    icon: FlagTriangleRight,
+    title: "No access created",
+    sub: "Only a separate direct invitation can create controlled-pilot access.",
   },
 ];
 
@@ -63,68 +88,93 @@ const FORM_COPY: Record<
 > = {
   submit: {
     kicker: "Submission received",
-    headline: "The property is in review.",
-    lead: "Acquisitions reads every serious submission. You will hear back with the structural read on your property and the next step, even if the answer is that Pegasus is not the right fit.",
+    headline: "Your property submission was recorded.",
+    lead: "This confirms receipt only. Pegasus may review the information for fit and capacity, but no analysis, offer, referral, or response is promised.",
     expectations: [
-      "Most Property Reads come back within 48 hours.",
-      "If we need more on the situation, we will reach out directly — no auto-emails.",
-      "Every property gets a path. Not every property gets an offer.",
+      "You can save the reference shown here for your records.",
+      "Pegasus may request more information if it chooses to consider the opportunity.",
+      "Any service, representation, purchase, or partnership requires separate written terms.",
     ],
     addAnotherLabel: "Submit another property",
   },
   contact: {
     kicker: "Message received",
     headline: "The note is in.",
-    lead: "The team reads every message that lands here. We will reply within 48 hours with a direct answer.",
+    lead: "This page confirms that the site recorded your note. It does not promise review, routing, or a response time.",
     expectations: [
-      "Replies come from the team lead closest to your topic.",
-      "If your note belongs in a structured path (sell, build, capital), we will redirect you to the right intake.",
-      "Press and partnership requests are routed the same day.",
+      "Keep the reference shown here if one was issued.",
+      "Pegasus may direct a relevant note to another intake if capacity and context support it.",
+      "No relationship or obligation is created by sending a message.",
     ],
     addAnotherLabel: "Send another message",
   },
   marketflow_access: {
     kicker: "Request received",
-    headline: "Your access request is logged.",
-    // COPY_DECK §12 locked confirmation (issue #22)
-    lead: "Your MarketFlow request has been received. Pegasus reviews access manually and will follow up if there is a fit.",
+    headline: "Your MarketFlow interest was recorded.",
+    lead: "This receipt confirms only that the site recorded your request. It does not guarantee human review, a response, approval, an invitation, inventory, or access.",
     expectations: [
-      "We verify every introduction by hand before sending an invite.",
-      "If there is a fit, you will get a personal invite link and onboarding call.",
-      "If MarketFlow is not the right room for you yet, we will say so plainly.",
+      "Pegasus may consider the record if current pilot capacity and context support it.",
+      "Any follow-up, verification, approval, or invitation would occur separately.",
+      "The request creates no membership, inventory rights, submission privileges, placement, compensation, or introduction.",
     ],
     addAnotherLabel: "Submit a different request",
   },
   vendor: {
     kicker: "Application received",
-    headline: "Your application is in front of the team.",
-    lead: "We review every vendor intake by hand. If there is a fit on a current or upcoming scope, we will reach out directly.",
+    headline: "Your vendor application was recorded.",
+    lead: "This is an application receipt, not approval, placement, onboarding, or an offer of work. Pegasus may contact you if a future scope and current capacity support a next step.",
     expectations: [
-      "Vendor reviews include reference checks and license verification.",
-      "Approval is rolling — we add new operators as scopes open up.",
-      "We do not sell directory listings. The list stays short on purpose.",
+      "Credentials, licenses, insurance, and references may be requested for a specific future scope.",
+      "Status and eligibility are determined case by case; no application outcome is promised.",
+      "Submitting does not create employment, agency, exclusivity, compensation, or volume rights.",
     ],
     addAnotherLabel: "Submit another application",
   },
 };
 
-export function SuccessView({ formType, onAddAnother, referenceTag }: SuccessViewProps) {
+export function SuccessView({
+  formType,
+  onAddAnother,
+  referenceTag,
+  headingLevel = 2,
+}: SuccessViewProps) {
   const copy = FORM_COPY[formType];
+  const timeline = formType === "marketflow_access" ? MARKETFLOW_TIMELINE : DEFAULT_TIMELINE;
+  const statusRef = useRef<HTMLDivElement>(null);
+  const headingId = useId();
+  const [announcement, setAnnouncement] = useState("");
+  const Heading = headingLevel === 1 ? "h1" : "h2";
+
+  useEffect(() => {
+    statusRef.current?.focus({ preventScroll: true });
+    setAnnouncement(copy.headline);
+  }, [copy.headline]);
 
   return (
-    <div className="w-full" data-testid={`success-view-${formType}`}>
+    <div
+      ref={statusRef}
+      role="region"
+      aria-labelledby={headingId}
+      tabIndex={-1}
+      className={`success-view success-view--${formType} w-full focus:outline-none`}
+      data-testid={`success-view-${formType}`}
+    >
+      <p role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+        {announcement}
+      </p>
       <CardSurface className="p-8 sm:p-10 lg:p-14">
         <div className="text-center max-w-2xl mx-auto">
           <CheckCircle2 className="w-12 h-12 text-primary mx-auto mb-6" aria-hidden="true" />
           <p className="text-[11px] uppercase tracking-[0.32em] text-primary font-supporting font-semibold mb-4">
             {copy.kicker}
           </p>
-          <h2
+          <Heading
+            id={headingId}
             className="font-serif text-3xl sm:text-4xl font-semibold tracking-[-0.02em] text-foreground mb-5"
             data-testid={`text-success-headline-${formType}`}
           >
             {copy.headline}
-          </h2>
+          </Heading>
           <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
             {copy.lead}
           </p>
@@ -143,7 +193,7 @@ export function SuccessView({ formType, onAddAnother, referenceTag }: SuccessVie
             What happens next
           </p>
           <ol className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {TIMELINE.map((step, i) => {
+            {timeline.map((step, i) => {
               const Icon = step.icon;
               return (
                 <li
@@ -194,13 +244,13 @@ export function SuccessView({ formType, onAddAnother, referenceTag }: SuccessVie
               <Link href="/strategy-lab">
                 <div className="group p-4 rounded-md border border-border/40 bg-background hover:border-primary/30 transition-colors cursor-pointer">
                   <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors mb-1">Run Strategy Lab</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">See where your property fits across 14 strategies — ranges and lane fit — while we prepare the review.</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">Explore educational ranges and possible lanes without implying that a submitted property is under review.</p>
                 </div>
               </Link>
               <Link href="/projects">
                 <div className="group p-4 rounded-md border border-border/40 bg-background hover:border-primary/30 transition-colors cursor-pointer">
                   <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors mb-1">See Our Work</p>
-                  <p className="text-xs text-muted-foreground leading-relaxed">Review completed projects and the structural approaches behind each one.</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">View the one case study currently ready for public review, with its stated limits.</p>
                 </div>
               </Link>
             </div>

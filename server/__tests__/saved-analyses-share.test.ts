@@ -41,6 +41,7 @@ function reset() {
 
 function seedRow(partial: Partial<Row>): Row {
   const row: Row = {
+    ...partial,
     id: partial.id ?? nextId++,
     userId: partial.userId ?? "owner-1",
     isShared: partial.isShared ?? false,
@@ -74,7 +75,10 @@ vi.mock("../storage", () => {
         if (data.tags === null || Array.isArray(data.tags))
           patch.tags = data.tags;
         // Mirror the production token-mint rule.
-        if (data.isShared === true && !row.shareToken) {
+        if (data.isShared === false) {
+          patch.shareToken = null;
+          patch.sharedAt = null;
+        } else if (data.isShared === true && !row.shareToken) {
           patch.shareToken =
             "tok_" + Math.random().toString(36).slice(2, 18).padEnd(16, "x");
           patch.sharedAt = new Date();
@@ -219,6 +223,43 @@ describe("PATCH /api/saved-analyses/:id (share flow over HTTP)", () => {
     });
     expect(updateCalls).toHaveLength(0);
   });
+
+  it("revokes the old public URL and returns a different token when shared again", async () => {
+    seedRow({
+      id: 6,
+      userId: "owner-1",
+      isShared: true,
+      shareToken: "OLD_PUBLIC_TOKEN",
+      sharedAt: new Date("2026-08-20T12:00:00.000Z"),
+    });
+
+    const revoke = await fetch(`${baseUrl}/api/saved-analyses/6`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ isShared: false }),
+    });
+    expect(revoke.status).toBe(200);
+    expect(await revoke.json()).toMatchObject({
+      isShared: false,
+      shareToken: null,
+      sharedAt: null,
+    });
+
+    const oldLink = await fetch(
+      `${baseUrl}/api/shared-analyses/OLD_PUBLIC_TOKEN`,
+    );
+    expect(oldLink.status).toBe(404);
+
+    const reShare = await fetch(`${baseUrl}/api/saved-analyses/6`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ isShared: true }),
+    });
+    expect(reShare.status).toBe(200);
+    const reSharedBody = await reShare.json();
+    expect(reSharedBody.shareToken).toBeTruthy();
+    expect(reSharedBody.shareToken).not.toBe("OLD_PUBLIC_TOKEN");
+  });
 });
 
 describe("GET /api/shared-analyses/:token (public read over HTTP)", () => {
@@ -252,7 +293,9 @@ describe("GET /api/shared-analyses/:token (public read over HTTP)", () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.id).toBe(22);
-    expect(body.shareToken).toBe("PUBLIC_TOKEN");
+    // The token is already present in the request URL and is never echoed
+    // into the public DTO.
+    expect(body).not.toHaveProperty("shareToken");
     expect(memRows.get(22)!.viewCount).toBe(4);
 
     await fetch(`${baseUrl}/api/shared-analyses/PUBLIC_TOKEN`);
@@ -282,5 +325,66 @@ describe("GET /api/shared-analyses/:token (public read over HTTP)", () => {
     const pubBody = await pub.json();
     expect(pubBody.id).toBe(33);
     expect(memRows.get(33)!.viewCount).toBe(1);
+  });
+
+  it("returns only sanitized calculator-share fields with an explicit unverified-output label", async () => {
+    seedRow({
+      id: 44,
+      userId: "private-owner-id",
+      isShared: true,
+      shareToken: "SANITIZED_PUBLIC_TOKEN",
+      sharedAt: new Date("2026-08-20T12:00:00.000Z"),
+      viewCount: 6,
+      name: "Model run\u0000",
+      calculatorType: "roi",
+      dealType: "private-deal",
+      dealId: 12345,
+      propertyAddress: "400 Model Way\u202E",
+      inputs: {
+        purchasePrice: 510000,
+        label: "User input\u0000",
+        nestedPrivateObject: { secret: "must be dropped" },
+      },
+      results: {
+        roi: 19.2,
+        explanation: "Calculator output\u202E",
+        infiniteValue: Number.POSITIVE_INFINITY,
+        nestedPrivateObject: { secret: "must be dropped" },
+      },
+      primaryMetric: "Projected ROI",
+      primaryValue: "19.2%",
+      notes: "User note\u0000",
+      pdfUrl: "https://private.example/report.pdf",
+      pdfGeneratedAt: new Date("2026-08-20T12:00:00.000Z"),
+      createdAt: new Date("2026-08-19T12:00:00.000Z"),
+      updatedAt: new Date("2026-08-20T12:00:00.000Z"),
+    });
+
+    const res = await fetch(
+      `${baseUrl}/api/shared-analyses/SANITIZED_PUBLIC_TOKEN`,
+    );
+    expect(res.status).toBe(200);
+    expect(res.headers.get("x-robots-tag")).toContain("noindex");
+    expect(res.headers.get("cache-control")).toContain("no-store");
+    const body = await res.json();
+
+    expect(body).not.toHaveProperty("userId");
+    expect(body).not.toHaveProperty("shareToken");
+    expect(body).not.toHaveProperty("isShared");
+    expect(body).not.toHaveProperty("dealType");
+    expect(body).not.toHaveProperty("dealId");
+    expect(body).not.toHaveProperty("pdfUrl");
+    expect(body).not.toHaveProperty("pdfGeneratedAt");
+    expect(body).not.toHaveProperty("updatedAt");
+    expect(body.outputContext).toMatchObject({
+      source: "user_entered_inputs_and_automated_model",
+      verifiedByPegasus: false,
+    });
+    expect(body.name).toBe("Model run");
+    expect(body.propertyAddress).toBe("400 Model Way");
+    expect(body.inputs).toEqual({ purchasePrice: 510000, label: "User input" });
+    expect(body.results).toEqual({ roi: 19.2, explanation: "Calculator output" });
+    expect(body.notes).toBe("User note");
+    expect(body.viewCount).toBe(7);
   });
 });

@@ -71,11 +71,11 @@ export type LaneFitVerdict =
   | "not_recommended";
 
 export const LANE_VERDICT_LABELS: Record<LaneFitVerdict, string> = {
-  strong: "Strong fit",
-  possible: "Possible fit",
-  weak: "Weak fit",
+  strong: "Higher modeled fit",
+  possible: "Possible modeled fit",
+  weak: "Lower modeled fit",
   needs_more_data: "Needs more data",
-  not_recommended: "Not recommended",
+  not_recommended: "Not supported by inputs",
 };
 
 // ───────────────────────────────────────────────────────────────────────────

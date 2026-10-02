@@ -59,7 +59,7 @@ export function PeggyPublicNote() {
             setOpen(true);
             trackCtaClick("peggy_dock", "Open Peggy", "/peggy");
           }}
-          className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-40 flex items-center gap-2 rounded-full bg-[hsl(var(--copper))] p-3.5 sm:px-5 sm:py-3 text-white shadow-lg shadow-black/30 hover:bg-[hsl(27_56%_44%)] transition-all duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2"
+          className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-40 flex items-center gap-2 rounded-full bg-[hsl(var(--copper))] p-3.5 sm:px-5 sm:py-3 text-[hsl(var(--copper-foreground))] shadow-lg shadow-black/30 hover:bg-[hsl(var(--copper))] transition-all duration-200 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[hsl(var(--bronze))] focus-visible:ring-offset-2"
           aria-label="Open Peggy"
           data-testid="button-peggy-public-open"
         >
@@ -162,7 +162,7 @@ export function PeggyPublicNote() {
             <Button
               type="submit"
               disabled={submit.isPending}
-              className="w-full bg-[hsl(var(--bronze))] hover:bg-[hsl(var(--bronze))]/90 text-white text-[12px] uppercase tracking-[0.14em] font-semibold h-10 rounded-sm"
+              className="w-full bg-[hsl(var(--bronze))] hover:bg-[hsl(var(--bronze))] text-[hsl(var(--copper-foreground))] text-[12px] uppercase tracking-[0.14em] font-semibold h-10 rounded-sm"
               data-testid="button-peggy-submit"
             >
               {submit.isPending ? "Sending…" : "Leave a note"}

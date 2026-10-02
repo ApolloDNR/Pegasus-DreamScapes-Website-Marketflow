@@ -1,5 +1,12 @@
 # Elevation Log
 
+> **Correction recorded 2026-08-06.** The July 28–29 entries below describe a
+> post-approval drift state. The owner-approved arrival hero, theme behavior,
+> navigation, CTAs, and proof rail are locked in
+> `docs/design/final-design-lock.md`, section “Homepage arrival lock.” That
+> later lock supersedes any claim below that the heavy-column replacement was
+> approved or that light mode should retain dark hero photography.
+
 Audit trail for `HANDOFF_TO_CODEX.md` workstreams. One entry per shipped pass.
 
 ## 2026-07-29 · WS1 + WS3 + WS4 (Claude)

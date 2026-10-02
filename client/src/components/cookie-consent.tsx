@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { X } from "lucide-react";
@@ -10,7 +10,7 @@ import {
 } from "@/lib/consent";
 
 // Website Brief v1.0 §11 / Wave 1 — slim bottom-bar consent notice. Default
-// view is a single horizontal strip (44–56px tall on desktop) with a
+// view is a compact horizontal strip with 44px actions and a
 // one-line message + Manage / Accept buttons; it does NOT cover the hero.
 // "Manage" opens an expanded panel with the per-category toggles. Cookies
 // remain off-by-default until the visitor explicitly opts in.
@@ -18,14 +18,21 @@ export function CookieConsent() {
   const [visible, setVisible] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
   const [analytics, setAnalytics] = useState(false);
-  const [marketing, setMarketing] = useState(false);
+  const manageRef = useRef<HTMLButtonElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const detailsWereOpen = useRef(false);
+
+  useEffect(() => {
+    if (showDetails) closeRef.current?.focus();
+    else if (detailsWereOpen.current) manageRef.current?.focus();
+    detailsWereOpen.current = showDetails;
+  }, [showDetails]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
       if (!hasDecided()) {
         const current = readConsent();
         setAnalytics(current.analytics);
-        setMarketing(current.marketing);
         setVisible(true);
       }
     }, 350);
@@ -52,6 +59,7 @@ export function CookieConsent() {
         aria-labelledby="cookie-consent-title"
         className="fixed inset-x-0 bottom-0 z-[60] px-4 pb-4 sm:px-6 sm:pb-6 pointer-events-none"
         data-testid="cookie-consent-banner"
+        onKeyDown={event => { if (event.key === 'Escape') { event.preventDefault(); setShowDetails(false); } }}
       >
         <div className="pg-cookie-panel pointer-events-auto mx-auto max-w-2xl rounded-md border border-border bg-card shadow-md">
           <div className="p-5 sm:p-6 space-y-4">
@@ -59,29 +67,30 @@ export function CookieConsent() {
               <div>
                 <p
                   id="cookie-consent-title"
-                  className="pg-cookie-title text-[11px] uppercase tracking-[0.3em] text-primary font-supporting font-semibold mb-2"
+                  className="pg-cookie-title mb-2"
                 >
-                  Cookie preferences
+                  Privacy preferences
                 </p>
                 <p className="pg-cookie-copy text-sm text-muted-foreground leading-relaxed">
-                  Analytics and marketing cookies are off until you opt in.
+                  Optional analytics stay off until you opt in.
                 </p>
               </div>
               <button
+                ref={closeRef}
                 type="button"
                 onClick={() => setShowDetails(false)}
                 className="pg-cookie-close text-muted-foreground hover:text-foreground transition-colors"
-                aria-label="Close cookie preferences"
+                aria-label="Close privacy preferences"
                 data-testid="button-cookie-close-details"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4" aria-hidden="true" />
               </button>
             </div>
 
             <div className="space-y-3 border-t border-border/60 pt-4" data-testid="cookie-consent-details">
               <ToggleRow
                 label="Essential"
-                description="Required to run the site, store your theme, and keep submissions secure. Cannot be disabled."
+                description="Local browser storage remembers your theme and consent choices. It is always active."
                 checked={true}
                 disabled
                 testId="toggle-cookie-essential"
@@ -93,13 +102,7 @@ export function CookieConsent() {
                 onChange={setAnalytics}
                 testId="toggle-cookie-analytics"
               />
-              <ToggleRow
-                label="Marketing"
-                description="Reserved for future first-party campaign attribution. We do not currently run third-party retargeting."
-                checked={marketing}
-                onChange={setMarketing}
-                testId="toggle-cookie-marketing"
-              />
+              <p className="pg-cookie-copy text-sm text-muted-foreground leading-relaxed">Marketing tracking is not used.</p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 sm:justify-end pt-2">
@@ -114,7 +117,7 @@ export function CookieConsent() {
               <Button
                 size="sm"
                 className="pg-cookie-btn-solid bg-primary hover:bg-primary/90 text-primary-foreground"
-                onClick={() => persist({ analytics, marketing })}
+                onClick={() => persist({ analytics, marketing: false })}
                 data-testid="button-cookie-save"
               >
                 Save preferences
@@ -135,13 +138,13 @@ export function CookieConsent() {
       data-testid="cookie-consent-banner"
     >
       <div className="pg-cookie-bar pointer-events-auto bg-card/95 backdrop-blur-md border-t border-border shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.25)]">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2 flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4">
           <p
             id="cookie-consent-title"
             className="pg-cookie-copy text-xs sm:text-sm text-foreground leading-snug flex-1"
           >
-            <span className="hidden sm:inline">We use essential cookies to run this site. </span>
-            Analytics and marketing are off until you opt in.{" "}
+            <span className="hidden sm:inline">Local browser storage remembers your theme and consent choices. </span>
+            Optional analytics stay off until you opt in.{" "}
             <a
               href="/privacy"
               className="pg-cookie-link underline hover:text-primary transition-colors"
@@ -151,8 +154,9 @@ export function CookieConsent() {
             </a>
             .
           </p>
-          <div className="flex items-center gap-2 self-stretch sm:self-auto flex-shrink-0">
+          <div className="pg-cookie-actions flex items-center gap-2 self-stretch sm:self-auto flex-shrink-0">
             <Button
+              ref={manageRef}
               variant="ghost"
               size="sm"
               className="pg-cookie-btn h-8 px-3 text-xs"
@@ -173,7 +177,7 @@ export function CookieConsent() {
             <Button
               size="sm"
               className="pg-cookie-btn-solid h-8 px-4 text-xs bg-primary hover:bg-primary/90 text-primary-foreground"
-              onClick={() => persist({ analytics: true, marketing: true })}
+              onClick={() => persist({ analytics: true, marketing: false })}
               data-testid="button-cookie-accept-all"
             >
               Accept
@@ -213,7 +217,7 @@ function ToggleRow({
         onCheckedChange={(v) => onChange?.(!!v)}
         disabled={disabled}
         data-testid={testId}
-        aria-label={`${label} cookies`}
+        aria-label={`${label} preference`}
       />
     </div>
   );

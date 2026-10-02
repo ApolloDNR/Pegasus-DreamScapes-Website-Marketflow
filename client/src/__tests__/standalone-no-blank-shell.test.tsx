@@ -12,7 +12,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // The prototype net (pegasus-no-blank-shell.test.tsx) only covers URLs the
 // Pegasus prototype shell owns (PEGASUS_URLS). But App.tsx also mounts many
 // app-level pages directly on the wouter <Switch> — e.g. /submit,
-// /projects/nelson-dr, /library, /vendor-network, /connect, /disclosures,
+// /projects/nelson-dr, /library, /vendor-network, /disclosures,
 // /privacy, /terms, /faq, /marketflow/access. None of those are covered by
 // the prototype net, so a future refactor could leave one rendering an empty
 // or crashing page with NO test failure.
@@ -104,7 +104,7 @@ if (typeof window !== "undefined" && !(window as unknown as { scrollTo?: unknown
   (window as unknown as { scrollTo: () => void }).scrollTo = () => {};
 }
 
-import { Router as AppRouter } from "@/App";
+import { Router as AppRouter } from "@/LegacyApp";
 import { isPegasusUrl } from "@/pegasus/routes";
 import { SiteContentProvider } from "@/contexts/site-content-context";
 import { EditModeProvider } from "@/contexts/edit-mode-context";
@@ -117,7 +117,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 // Every public, standalone (non-prototype) content route mounted in App.tsx.
 // Deliberately excludes: PEGASUS_URLS (covered by the prototype net),
 // AuthGuard-gated operator surfaces, pure redirects (legacyRedirects), the
-// /login + /signup auth forms, and dynamic-:param detail routes (no canned
+// /login + /signup + password-recovery auth forms, and dynamic-:param detail routes (no canned
 // id to resolve). Each entry must render a real heading + copy, never a
 // blank/crashing/mis-redirected shell.
 const STANDALONE_URLS: string[] = [
@@ -127,7 +127,6 @@ const STANDALONE_URLS: string[] = [
   "/pegasus-standard",
   "/departments",
   "/case-study",
-  "/connect",
   "/projects",
   "/projects/nelson-dr",
   "/vendor-network",
@@ -136,7 +135,6 @@ const STANDALONE_URLS: string[] = [
   "/privacy",
   "/terms",
   "/deal-blueprint",
-  "/strategy-lab/library",
   "/strategy-lab/submitted",
   "/strategy-lab/blueprint-confirmed",
   // /strategy-lab/classic is now a pure redirect into the unified Lab's
@@ -207,7 +205,7 @@ describe("Every standalone (non-prototype) public route renders real content, ne
   // test entry here or an explicit, documented exclusion below — it fails CI.
   it("STANDALONE_URLS covers every public standalone route mounted in App.tsx", () => {
     const appSrc = fs.readFileSync(
-      path.join(process.cwd(), "client/src/App.tsx"),
+      path.join(process.cwd(), "client/src/LegacyApp.tsx"),
       "utf-8",
     );
     const re = /<Route\s+path="([^"]+)"\s+component=/g;
@@ -220,7 +218,12 @@ describe("Every standalone (non-prototype) public route renders real content, ne
     expect(componentRoutes.length).toBeGreaterThan(15);
 
     // Auth forms — exercised by their own flows, not "content pages".
-    const AUTH_FORMS = new Set(["/login", "/signup"]);
+    const AUTH_FORMS = new Set([
+      "/login",
+      "/signup",
+      "/forgot-password",
+      "/reset-password",
+    ]);
     // Admin surfaces — gated by their own in-page auth, need an admin
     // session to render real content (see keyboard-a11y.test.tsx's
     // setAuthState pattern); out of scope for this public-content net.

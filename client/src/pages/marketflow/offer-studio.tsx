@@ -13,6 +13,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CapitalRelationshipOnlyNotice } from "@/components/capital-relationship-only-notice";
+import {
+  firstMarketflowMoney,
+  formatMarketflowMoney,
+  isPositiveMarketflowMoney,
+  normalizeMarketflowMoney,
+  readWholesaleFinancials,
+} from "@/components/marketflow-financial-truth";
 import {
   ArrowLeft,
   Building2,
@@ -47,6 +55,76 @@ import { isAdminRole, isWholesalerRole, isDreamscaperRole, isBuyerRole, isInvest
 type Lane = "WHOLESALE" | "CAPITAL" | "LISTING";
 type OfferStatus = "pending" | "accepted" | "rejected" | "countered";
 
+type OfferStudioDeal = Record<string, any> & {
+  askingPrice?: number;
+  arv?: number;
+  estimatedRepairs?: number;
+  repairEstimate?: number;
+  repairCost?: number;
+  repairCosts?: number;
+  propertyAddress?: string;
+};
+
+const MIN_OFFER_AMOUNT = 1_000;
+const MAX_OFFER_AMOUNT = 10_000_000_000;
+const MAX_INSPECTION_DAYS = 365;
+
+const FUNDING_TYPES = [
+  "cash",
+  "cash_reserves",
+  "hard_money",
+  "conventional",
+  "private_lender",
+  "self_directed_ira",
+  "other",
+] as const;
+
+type FundingType = (typeof FUNDING_TYPES)[number];
+
+interface MarketflowFinancialTerms {
+  offerPrice: number;
+  earnestMoney: number;
+  closeDate: string;
+  inspectionPeriod: number;
+  fundingType: FundingType;
+  notes: string;
+}
+
+function isFundingType(value: string): value is FundingType {
+  return FUNDING_TYPES.some((fundingType) => fundingType === value);
+}
+
+function adaptOfferStudioDeal(
+  lane: Lane,
+  rawDeal: Record<string, any> | undefined,
+): OfferStudioDeal | undefined {
+  if (!rawDeal) return undefined;
+  if (lane === "LISTING") {
+    return {
+      ...rawDeal,
+      askingPrice:
+        typeof rawDeal.listPrice === "number"
+          ? rawDeal.listPrice
+          : rawDeal.askingPrice,
+      propertyAddress:
+        rawDeal.propertyAddress || rawDeal.address || rawDeal.title,
+    };
+  }
+  return rawDeal;
+}
+
+function parseBoundedWholeNumber(
+  value: string,
+  minimum: number,
+  maximum: number,
+): number | null {
+  if (!value.trim()) return null;
+  const parsed = Number(value);
+  return Number.isSafeInteger(parsed) && parsed >= minimum && parsed <= maximum
+    ? parsed
+    : null;
+}
+
 interface LadderOffer {
   id: string;
   side: "me" | "them";
@@ -54,7 +132,7 @@ interface LadderOffer {
   timestamp: Date;
   status: OfferStatus;
   terms: {
-    offerPrice: number;
+    offerPrice: number | null;
     earnestMoney: number;
     closeDate: string;
     inspectionPeriod: number;
@@ -73,10 +151,10 @@ function transformOffer(offer: MarketflowOffer, currentUserId?: string): LadderO
     timestamp: new Date(offer.createdAt!),
     status: (offer.status as OfferStatus) || "pending",
     terms: {
-      offerPrice:
-        (payload.offerPrice as number) ||
-        (payload.assignmentFee as number) ||
-        0,
+      offerPrice: firstMarketflowMoney(
+        payload.offerPrice,
+        payload.assignmentFee,
+      ),
       earnestMoney: (payload.earnestMoney as number) || 0,
       closeDate:
         (payload.closeDate as string) ||
@@ -90,13 +168,7 @@ function transformOffer(offer: MarketflowOffer, currentUserId?: string): LadderO
   };
 }
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-    maximumFractionDigits: 0,
-  }).format(amount);
-}
+const formatCurrency = formatMarketflowMoney;
 
 function StatusBadge({ status }: { status: OfferStatus }) {
   switch (status) {
@@ -181,23 +253,24 @@ export default function MarketflowOfferStudioPage() {
     queryKey: ["/api/wholesale-deals", dealId],
     enabled: !!dealId && lane === "WHOLESALE" && isAuthenticated,
   });
-  const { data: capitalProject, isLoading: capitalLoading } = useQuery<any>({
-    queryKey: ["/api/capital-projects", dealId],
-    enabled: !!dealId && lane === "CAPITAL" && isAuthenticated,
-  });
   const { data: listing, isLoading: listingLoading } = useQuery<any>({
-    queryKey: ["/api/retail-listings", dealId],
+    queryKey: ["/api/listings", dealId],
     enabled: !!dealId && lane === "LISTING" && isAuthenticated,
   });
 
-  const deal: any =
-    lane === "WHOLESALE" ? wholesaleDeal : lane === "CAPITAL" ? capitalProject : listing;
-  const dealOwnerId = deal?.submittedBy || deal?.operatorId || deal?.createdBy || null;
+  const deal = useMemo(
+    () =>
+      adaptOfferStudioDeal(
+        lane,
+        lane === "WHOLESALE" ? wholesaleDeal : lane === "LISTING" ? listing : undefined,
+      ),
+    [lane, wholesaleDeal, listing],
+  );
 
   // --- Negotiation loading ---
   const { data: dealNegotiations } = useQuery<MarketflowNegotiation[]>({
     queryKey: ["/api/marketflow/negotiations/deal", lane, dealId],
-    enabled: !!dealId && isAuthenticated && roleAllowed,
+    enabled: !!dealId && lane !== "CAPITAL" && isAuthenticated && roleAllowed,
   });
 
   const currentNegotiation = dealNegotiations?.find(
@@ -214,7 +287,7 @@ export default function MarketflowOfferStudioPage() {
     messages: NegotiationMessage[];
   }>({
     queryKey: ["/api/marketflow/negotiations", currentNegotiation?.id],
-    enabled: !!currentNegotiation?.id && isAuthenticated,
+    enabled: !!currentNegotiation?.id && lane !== "CAPITAL" && isAuthenticated,
   });
 
   const offers: LadderOffer[] = useMemo(
@@ -247,30 +320,45 @@ export default function MarketflowOfferStudioPage() {
   }, [chatOpen, messages.length]);
 
   // --- Composer state (counter-offer ladder) ---
-  const [composer, setComposer] = useState({
-    offerPrice: 0,
-    earnestMoney: 5000,
+  const [composer, setComposer] = useState<{
+    offerPrice: string;
+    earnestMoney: string;
+    closeDate: string;
+    inspectionPeriod: string;
+    fundingType: FundingType;
+    notes: string;
+  }>({
+    offerPrice: "",
+    earnestMoney: "5000",
     closeDate: "",
-    inspectionPeriod: 10,
+    inspectionPeriod: "10",
     fundingType: "cash",
     notes: "",
   });
+  const [composerOfferPriceError, setComposerOfferPriceError] = useState(false);
+  const [composerCloseDateError, setComposerCloseDateError] = useState(false);
+  const closeDateInputRef = useRef<HTMLInputElement>(null);
 
   // Seed composer from latest counterparty offer for fast counters
   useEffect(() => {
     if (!latestOffer) {
-      if (deal?.askingPrice && composer.offerPrice === 0) {
-        setComposer((c) => ({ ...c, offerPrice: Math.round((deal.askingPrice || 0) * 0.92) }));
+      if (deal?.askingPrice && composer.offerPrice === "") {
+        setComposer((current) => ({
+          ...current,
+          offerPrice: String(Math.round(Number(deal.askingPrice) * 0.92)),
+        }));
       }
       return;
     }
-    if (latestOffer.side === "them") {
+    if (latestOffer.side === "them" && latestOffer.terms.offerPrice !== null) {
       setComposer({
-        offerPrice: latestOffer.terms.offerPrice,
-        earnestMoney: latestOffer.terms.earnestMoney || 5000,
+        offerPrice: String(latestOffer.terms.offerPrice),
+        earnestMoney: String(latestOffer.terms.earnestMoney ?? 5000),
         closeDate: latestOffer.terms.closeDate || "",
-        inspectionPeriod: latestOffer.terms.inspectionPeriod || 10,
-        fundingType: latestOffer.terms.fundingType || "cash",
+        inspectionPeriod: String(latestOffer.terms.inspectionPeriod ?? 10),
+        fundingType: isFundingType(latestOffer.terms.fundingType)
+          ? latestOffer.terms.fundingType
+          : "cash",
         notes: "",
       });
     }
@@ -279,15 +367,11 @@ export default function MarketflowOfferStudioPage() {
 
   // --- Mutations ---
   const createOfferMutation = useMutation({
-    mutationFn: async (payload: Record<string, unknown>) => {
+    mutationFn: async (payload: MarketflowFinancialTerms) => {
       if (!dealId) throw new Error("Deal ID is required");
-      const negotiation = currentNegotiation;
-      const recipientId = negotiation
-        ? negotiation.posterId === user?.id
-          ? negotiation.counterpartyId
-          : negotiation.posterId
-        : dealOwnerId;
-      if (!recipientId) throw new Error("Cannot determine deal owner for this offer");
+      if (lane === "CAPITAL") {
+        throw new Error("Capital Offer Studio is relationship information only.");
+      }
 
       let parsedDealId: number | string = dealId;
       if (lane === "WHOLESALE") {
@@ -299,12 +383,9 @@ export default function MarketflowOfferStudioPage() {
       const res = await apiRequest("POST", "/api/marketflow/offers", {
         lane,
         dealId: parsedDealId,
-        recipientId,
         offerKind:
           lane === "WHOLESALE"
             ? "WHOLESALE_ASSIGNMENT"
-            : lane === "CAPITAL"
-            ? "CAPITAL_INVESTMENT"
             : "LISTING_INQUIRY",
         payload,
       });
@@ -356,7 +437,7 @@ export default function MarketflowOfferStudioPage() {
     }: {
       offerId: number;
       action: "accept" | "reject" | "counter";
-      counterPayload?: Record<string, unknown>;
+      counterPayload?: MarketflowFinancialTerms;
     }) => {
       const res = await apiRequest("POST", `/api/marketflow/offers/${offerId}/respond`, {
         action,
@@ -378,18 +459,72 @@ export default function MarketflowOfferStudioPage() {
 
   // --- Handlers ---
   const handleSendComposer = () => {
-    if (composer.offerPrice < 1000) {
+    const offerPrice = parseBoundedWholeNumber(
+      composer.offerPrice,
+      MIN_OFFER_AMOUNT,
+      MAX_OFFER_AMOUNT,
+    );
+    if (offerPrice === null) {
+      setComposerOfferPriceError(true);
+      return;
+    }
+    setComposerOfferPriceError(false);
+
+    const closeDateInput = closeDateInputRef.current;
+    if (
+      !composer.closeDate ||
+      !closeDateInput?.value ||
+      !closeDateInput.validity.valid
+    ) {
+      setComposerCloseDateError(true);
+      closeDateInput?.focus();
+      return;
+    }
+    setComposerCloseDateError(false);
+
+    const earnestMoney = parseBoundedWholeNumber(
+      composer.earnestMoney,
+      0,
+      MAX_OFFER_AMOUNT,
+    );
+    const inspectionPeriod = parseBoundedWholeNumber(
+      composer.inspectionPeriod,
+      0,
+      MAX_INSPECTION_DAYS,
+    );
+    if (earnestMoney === null || earnestMoney > offerPrice) {
       toast({
-        title: "Offer too low",
-        description: "Enter at least $1,000.",
+        title: "Valid earnest money required",
+        description: "Enter a whole-dollar amount from $0 through the total.",
         variant: "destructive",
       });
       return;
     }
-    const payload = { ...composer };
-    if (latestOffer && latestOffer.side === "them" && latestOffer.status === "pending") {
+    if (inspectionPeriod === null) {
+      toast({
+        title: "Valid inspection period required",
+        description: "Enter a whole number from 0 through 365 days.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const payload = {
+      offerPrice,
+      earnestMoney,
+      closeDate: composer.closeDate,
+      inspectionPeriod,
+      fundingType: composer.fundingType,
+      notes: composer.notes,
+    } satisfies MarketflowFinancialTerms;
+
+    if (
+      latestOffer &&
+      latestOffer.side === "them" &&
+      latestOffer.status === "pending"
+    ) {
       respondMutation.mutate({
-        offerId: parseInt(latestOffer.id),
+        offerId: parseInt(latestOffer.id, 10),
         action: "counter",
         counterPayload: payload,
       });
@@ -433,7 +568,16 @@ export default function MarketflowOfferStudioPage() {
     return <AccessDenied reason="Missing deal reference. Open Offer Studio from a deal card." />;
   }
 
-  const isLoading = wholesaleLoading || capitalLoading || listingLoading;
+  if (lane === "CAPITAL") {
+    return (
+      <CapitalRelationshipOnlyNotice
+        backPath={`/marketflow/capital/${dealId}`}
+        backLabel="Back to project record"
+      />
+    );
+  }
+
+  const isLoading = wholesaleLoading || listingLoading;
 
   if (isLoading) {
     return (
@@ -471,7 +615,13 @@ export default function MarketflowOfferStudioPage() {
   }
 
   const propertyAddress = deal.propertyAddress || deal.title || deal.address || "Untitled deal";
-  const askingPrice = deal.askingPrice || deal.fundingGoal || 0;
+  const financials = readWholesaleFinancials(deal);
+  const askingPrice = financials.price;
+  const repairs = financials.repairs;
+  const hasRequiredDealFinancials =
+    lane === "LISTING"
+      ? isPositiveMarketflowMoney(askingPrice)
+      : financials.hasRequiredInputs;
 
   return (
     <div className="min-h-screen bg-background flex flex-col" data-testid="page-offer-studio">
@@ -538,14 +688,16 @@ export default function MarketflowOfferStudioPage() {
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Asking</span>
-                <span className="font-semibold tabular-nums">{formatCurrency(askingPrice)}</span>
+                <span className="font-semibold tabular-nums" data-testid="text-context-asking-price">{formatCurrency(askingPrice)}</span>
               </div>
-              {deal.arv ? (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">ARV</span>
-                  <span className="font-semibold tabular-nums">{formatCurrency(deal.arv)}</span>
-                </div>
-              ) : null}
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">ARV</span>
+                <span className="font-semibold tabular-nums" data-testid="text-context-arv">{formatCurrency(normalizeMarketflowMoney(deal.arv))}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Repairs</span>
+                <span className="font-semibold tabular-nums" data-testid="text-context-repairs">{formatCurrency(repairs)}</span>
+              </div>
               {deal.assignmentFee ? (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Assignment Fee</span>
@@ -640,7 +792,10 @@ export default function MarketflowOfferStudioPage() {
                               "{offer.terms.notes}"
                             </p>
                           )}
-                          {offer.status === "pending" && offer.side === "them" && !agreementReached && (
+                          {offer.status === "pending" &&
+                            offer.side === "them" &&
+                            !agreementReached &&
+                            isPositiveMarketflowMoney(offer.terms.offerPrice) && (
                             <div className="flex gap-2 mt-3">
                               <Button
                                 size="sm"
@@ -676,6 +831,25 @@ export default function MarketflowOfferStudioPage() {
 
         {/* CENTER: Counter-offer composer */}
         <main className="p-6 overflow-y-auto">
+          {!hasRequiredDealFinancials ? (
+            <Card
+              className="flex h-full flex-col items-center justify-center border-dashed p-8 text-center"
+              data-testid="state-offer-studio-financials-incomplete"
+            >
+              <AlertCircle className="mb-4 h-8 w-8 text-amber-600" />
+              <CardTitle className="font-serif text-xl">Financial record incomplete</CardTitle>
+              <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
+                {lane === "LISTING"
+                  ? "A list or asking price must be provided on the reviewed record before Offer Studio financial actions are available."
+                  : "Price, ARV, and repairs must be provided on the reviewed record before Offer Studio financial actions are available."}
+              </p>
+              <Link href={`/marketflow/deals/${dealId}`}>
+                <Button variant="outline" className="mt-6">
+                  Review deal record
+                </Button>
+              </Link>
+            </Card>
+          ) : (
           <Card className="h-full flex flex-col">
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
@@ -685,7 +859,10 @@ export default function MarketflowOfferStudioPage() {
                     ? "Counter Offer"
                     : "New Offer"}
                 </CardTitle>
-                {latestOffer && latestOffer.side === "them" && latestOffer.status === "pending" && (
+                {latestOffer &&
+                  latestOffer.side === "them" &&
+                  latestOffer.status === "pending" &&
+                  isPositiveMarketflowMoney(latestOffer.terms.offerPrice) && (
                   <Badge variant="secondary" className="text-xs" data-testid="badge-countering">
                     <ArrowRightLeft className="w-3 h-3 mr-1" />
                     Replying to {formatCurrency(latestOffer.terms.offerPrice)}
@@ -698,19 +875,56 @@ export default function MarketflowOfferStudioPage() {
               <fieldset disabled={agreementReached} className="space-y-5">
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <Label htmlFor="offer-price" className="text-xs uppercase tracking-wider">
-                      Offer Price
+                    <Label
+                      htmlFor="offer-price"
+                      className="text-xs uppercase tracking-wider"
+                    >
+                      {lane === "WHOLESALE"
+                        ? "Total assignment price"
+                        : "Offer Price"}
                     </Label>
                     <Input
                       id="offer-price"
                       type="number"
-                      value={composer.offerPrice || ""}
-                      onChange={(e) =>
-                        setComposer((c) => ({ ...c, offerPrice: parseInt(e.target.value) || 0 }))
-                      }
+                      step="1"
+                      value={composer.offerPrice}
+                      onChange={(event) => {
+                        const value = event.target.value;
+                        setComposer((current) => ({
+                          ...current,
+                          offerPrice: value,
+                        }));
+                        if (
+                          parseBoundedWholeNumber(
+                            value,
+                            MIN_OFFER_AMOUNT,
+                            MAX_OFFER_AMOUNT,
+                          ) !== null
+                        ) {
+                          setComposerOfferPriceError(false);
+                        }
+                      }}
                       placeholder="0"
+                      aria-invalid={composerOfferPriceError ? "true" : undefined}
+                      aria-describedby={
+                        composerOfferPriceError
+                          ? "offer-total-assignment-price-error"
+                          : undefined
+                      }
                       data-testid="input-offer-price"
                     />
+                    {composerOfferPriceError && (
+                      <p
+                        id="offer-total-assignment-price-error"
+                        role="alert"
+                        className="text-xs text-destructive"
+                        data-testid="error-offer-total-assignment-price"
+                      >
+                        {lane === "WHOLESALE"
+                          ? "Total assignment price is invalid."
+                          : "Offer price is invalid."}
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="earnest-money" className="text-xs uppercase tracking-wider">
@@ -719,25 +933,54 @@ export default function MarketflowOfferStudioPage() {
                     <Input
                       id="earnest-money"
                       type="number"
-                      value={composer.earnestMoney || ""}
-                      onChange={(e) =>
-                        setComposer((c) => ({ ...c, earnestMoney: parseInt(e.target.value) || 0 }))
+                      value={composer.earnestMoney}
+                      onChange={(event) =>
+                        setComposer((current) => ({
+                          ...current,
+                          earnestMoney: event.target.value,
+                        }))
                       }
                       placeholder="5000"
                       data-testid="input-earnest-money"
                     />
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor="close-date" className="text-xs uppercase tracking-wider">
+                    <Label
+                      htmlFor="close-date"
+                      className="text-xs uppercase tracking-wider"
+                    >
                       Close Date
                     </Label>
                     <Input
+                      ref={closeDateInputRef}
                       id="close-date"
                       type="date"
+                      required
                       value={composer.closeDate}
-                      onChange={(e) => setComposer((c) => ({ ...c, closeDate: e.target.value }))}
+                      onChange={(event) => {
+                        const value = event.target.value;
+                        setComposer((current) => ({
+                          ...current,
+                          closeDate: value,
+                        }));
+                        if (value) setComposerCloseDateError(false);
+                      }}
+                      aria-invalid={composerCloseDateError ? "true" : undefined}
+                      aria-describedby={
+                        composerCloseDateError ? "offer-close-date-error" : undefined
+                      }
                       data-testid="input-close-date"
                     />
+                    {composerCloseDateError && (
+                      <p
+                        id="offer-close-date-error"
+                        role="alert"
+                        className="text-xs text-destructive"
+                        data-testid="error-offer-close-date"
+                      >
+                        Closing date is required.
+                      </p>
+                    )}
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="inspection-period" className="text-xs uppercase tracking-wider">
@@ -746,9 +989,12 @@ export default function MarketflowOfferStudioPage() {
                     <Input
                       id="inspection-period"
                       type="number"
-                      value={composer.inspectionPeriod || ""}
-                      onChange={(e) =>
-                        setComposer((c) => ({ ...c, inspectionPeriod: parseInt(e.target.value) || 0 }))
+                      value={composer.inspectionPeriod}
+                      onChange={(event) =>
+                        setComposer((current) => ({
+                          ...current,
+                          inspectionPeriod: event.target.value,
+                        }))
                       }
                       placeholder="10"
                       data-testid="input-inspection-period"
@@ -764,7 +1010,15 @@ export default function MarketflowOfferStudioPage() {
                     id="funding-type"
                     className="w-full h-10 rounded-md border bg-background px-3 text-sm"
                     value={composer.fundingType}
-                    onChange={(e) => setComposer((c) => ({ ...c, fundingType: e.target.value }))}
+                    onChange={(event) => {
+                      const value = event.target.value;
+                      if (isFundingType(value)) {
+                        setComposer((current) => ({
+                          ...current,
+                          fundingType: value,
+                        }));
+                      }
+                    }}
                     data-testid="select-funding-type"
                   >
                     <option value="cash">Cash reserves</option>
@@ -822,6 +1076,7 @@ export default function MarketflowOfferStudioPage() {
               </div>
             </CardContent>
           </Card>
+          )}
         </main>
 
         {/* RIGHT: AI advisor */}
@@ -829,7 +1084,7 @@ export default function MarketflowOfferStudioPage() {
           <PeggyAdvisor
             dealInfo={{
               propertyAddress,
-              askingPrice,
+              askingPrice: askingPrice ?? undefined,
               arv: deal.arv,
               lane,
             }}
@@ -979,16 +1234,12 @@ export default function MarketflowOfferStudioPage() {
 // Peggy advisor pane (right-rail full height)
 // =====================================================
 interface AdvisorProps {
-  dealInfo: { propertyAddress: string; askingPrice: number; arv?: number; lane: Lane };
+  dealInfo: { propertyAddress: string; askingPrice?: number; arv?: number; lane: Lane };
   offers: LadderOffer[];
   agreementReached: boolean;
 }
 
 function PeggyAdvisor({ dealInfo, offers, agreementReached }: AdvisorProps) {
-  const [query, setQuery] = useState("");
-  const [aiResponse, setAiResponse] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
   const latestOffer = offers[offers.length - 1];
   const offerCount = offers.length;
 
@@ -1023,61 +1274,14 @@ function PeggyAdvisor({ dealInfo, offers, agreementReached }: AdvisorProps) {
     ];
   }, [agreementReached, offerCount, latestOffer]);
 
-  const quickPrompts = [
-    "What's a fair counter here?",
-    "Which term should I move on?",
-    "How do I frame this offer?",
-    "What risks am I missing?",
-  ];
-
-  const askPeggy = async (promptText: string) => {
-    if (!promptText.trim()) return;
-    setIsLoading(true);
-    setAiResponse(null);
-    try {
-      const context = [
-        `Deal: ${dealInfo.propertyAddress}`,
-        `Asking: $${dealInfo.askingPrice?.toLocaleString() || "N/A"}`,
-        `ARV: ${dealInfo.arv ? `$${dealInfo.arv.toLocaleString()}` : "n/a"}`,
-        `Lane: ${dealInfo.lane}`,
-        `Offers: ${offerCount}`,
-        latestOffer
-          ? `Latest: $${latestOffer.terms.offerPrice.toLocaleString()} from ${latestOffer.senderName} (${latestOffer.status})`
-          : "No offers yet",
-        `Agreement: ${agreementReached ? "reached" : "open"}`,
-      ].join("\n");
-
-      const res = await fetch("/api/peggy-ai/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: promptText,
-          context,
-          mode: "negotiation_advisor",
-        }),
-      });
-      if (!res.ok) throw new Error("Peggy unavailable");
-      const data = await res.json();
-      setAiResponse(
-        data.response ||
-          data.message ||
-          "I can help — share a little more about what's blocking you.",
-      );
-    } catch {
-      setAiResponse("Peggy is offline right now. Try again in a moment.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-primary/10 h-full flex flex-col" data-testid="card-peggy-advisor">
       <CardHeader className="pb-2">
         <CardTitle className="text-base flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-primary" />
-          Peggy · Negotiation Advisor
+          Negotiation checklist
           <Badge variant="secondary" className="ml-auto text-[10px]">
-            Beta
+            General guidance
           </Badge>
         </CardTitle>
       </CardHeader>
@@ -1090,72 +1294,9 @@ function PeggyAdvisor({ dealInfo, offers, agreementReached }: AdvisorProps) {
           ))}
         </div>
 
-        <div className="space-y-2">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-supporting font-semibold">
-            Quick prompts
-          </p>
-          <div className="flex flex-wrap gap-1.5">
-            {quickPrompts.map((prompt) => (
-              <Button
-                key={prompt}
-                size="sm"
-                variant="outline"
-                className="text-xs h-7"
-                onClick={() => {
-                  setQuery(prompt);
-                  askPeggy(prompt);
-                }}
-                disabled={isLoading}
-                data-testid={`button-prompt-${prompt.slice(0, 10).replace(/\s+/g, "-")}`}
-              >
-                {prompt}
-              </Button>
-            ))}
-          </div>
-        </div>
-
-        <Separator />
-
-        <div className="space-y-2 flex-1 flex flex-col">
-          <Textarea
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Ask Peggy about this negotiation…"
-            className="min-h-[80px] text-sm resize-none"
-            data-testid="input-peggy-question"
-          />
-          <Button
-            size="sm"
-            onClick={() => askPeggy(query)}
-            disabled={isLoading || !query.trim()}
-            data-testid="button-ask-peggy"
-          >
-            {isLoading ? (
-              <>
-                <RefreshCw className="w-3 h-3 mr-1 animate-spin" />
-                Thinking…
-              </>
-            ) : (
-              <>
-                <MessageSquare className="w-3 h-3 mr-1" />
-                Ask Peggy
-              </>
-            )}
-          </Button>
-
-          {aiResponse && (
-            <div
-              className="p-3 bg-background rounded-lg border text-sm space-y-2 mt-2"
-              data-testid="text-peggy-response"
-            >
-              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                <Sparkles className="w-3 h-3 text-primary" />
-                Peggy's Response
-              </div>
-              <p className="text-foreground whitespace-pre-wrap">{aiResponse}</p>
-            </div>
-          )}
-        </div>
+        <p className="text-xs leading-relaxed text-muted-foreground">
+          Context for {dealInfo.propertyAddress || "this record"}, based only on activity shown here. This checklist is informational, not legal, financial, or brokerage advice.
+        </p>
       </CardContent>
     </Card>
   );

@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Mail, Phone, Calendar, Wrench } from "lucide-react";
 import type { Lead } from "@shared/schema";
+import { projectPegasusLeadOperationalDetails } from "@shared/lead-routing";
 
 const formatDate = (iso: string | Date | null) => {
   if (!iso) return "—";
@@ -75,6 +76,7 @@ export default function AdminVendorsPage() {
             </div>
             {vendors.map((v) => {
               const leadData = (v.leadData ?? {}) as Record<string, unknown>;
+              const operationalDetails = projectPegasusLeadOperationalDetails(v);
               const company = (leadData.company as string) || (leadData.companyName as string) || null;
               const trade = (leadData.trade as string) || (leadData.tradeCategory as string) || (leadData.category as string) || null;
               const license = (leadData.license as string) || (leadData.licenseNumber as string) || null;
@@ -151,6 +153,26 @@ export default function AdminVendorsPage() {
                         <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">Notes</p>
                         <p className="text-sm text-foreground whitespace-pre-wrap" data-testid={`text-vendor-notes-${v.id}`}>
                           {v.notes}
+                        </p>
+                      </div>
+                    )}
+                    {operationalDetails.context && (
+                      <div className="mt-4 pt-4 border-t border-border/50">
+                        <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
+                          Submitted profile / context
+                        </p>
+                        <p className="text-sm text-foreground whitespace-pre-wrap" data-testid={`text-vendor-context-${v.id}`}>
+                          {operationalDetails.context}
+                        </p>
+                      </div>
+                    )}
+                    {operationalDetails.message && (
+                      <div className="mt-4 pt-4 border-t border-border/50">
+                        <p className="text-xs uppercase tracking-wider text-muted-foreground mb-1">
+                          About their work
+                        </p>
+                        <p className="text-sm text-foreground whitespace-pre-wrap" data-testid={`text-vendor-message-${v.id}`}>
+                          {operationalDetails.message}
                         </p>
                       </div>
                     )}

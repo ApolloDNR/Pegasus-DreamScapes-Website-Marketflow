@@ -1,16 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from "@/components/ui/dropdown-menu";
 import {
   Sheet,
   SheetContent,
@@ -24,25 +16,21 @@ import {
   BellOff, 
   Check, 
   CheckCheck, 
-  X, 
   MessageSquare, 
   DollarSign, 
   FileText, 
   Handshake, 
   TrendingUp,
-  AlertCircle,
   Info,
   ExternalLink,
   Settings,
-  Trash2,
-  MoreVertical
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+import { apiRequest, AUTHENTICATED_QUERY_META } from "@/lib/queryClient";
+import { isKnownSpaPath } from "@shared/spa-routes";
 
 export interface Notification {
-  id: string;
+  id: string | number;
   type: "deal_update" | "offer_received" | "offer_accepted" | "counter_offer" | "message" | "jv_request" | "document" | "system";
   title: string;
   message: string;
@@ -56,40 +44,35 @@ export interface Notification {
   priority?: "low" | "normal" | "high" | "urgent";
 }
 
-interface NotificationSettings {
-  emailNotifications: boolean;
-  pushNotifications: boolean;
-  dealUpdates: boolean;
-  offerAlerts: boolean;
-  messageAlerts: boolean;
-  weeklyDigest: boolean;
-}
-
 export function NotificationBell({ userId }: { userId?: string }) {
   const [isOpen, setIsOpen] = useState(false);
   const queryClient = useQueryClient();
 
-  const { data: notifications } = useQuery<Notification[]>({
+  const { data: notifications, isLoading, isError } = useQuery<Notification[]>({
     queryKey: ["/api/notifications", userId],
+    queryFn: async () => (await apiRequest("GET", "/api/notifications")).json(),
     enabled: !!userId,
     refetchInterval: 30000,
+    meta: AUTHENTICATED_QUERY_META,
   });
 
   const markReadMutation = useMutation({
     mutationFn: async (notificationId: string) => {
-      return apiRequest("POST", `/api/notifications/${notificationId}/read`);
+      if (!userId) throw new Error("Authentication required");
+      return apiRequest("PATCH", `/api/notifications/${notificationId}/read`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications", userId], exact: true });
     },
   });
 
   const markAllReadMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest("POST", "/api/notifications/read-all");
+      if (!userId) throw new Error("Authentication required");
+      return apiRequest("POST", "/api/notifications/mark-all-read");
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications", userId], exact: true });
     },
   });
 
@@ -142,7 +125,9 @@ export function NotificationBell({ userId }: { userId?: string }) {
             )}
           </div>
           <SheetDescription>
-            {unreadCount > 0 
+            {isError
+              ? "Your private notifications could not be loaded."
+              : unreadCount > 0
               ? `You have ${unreadCount} unread notification${unreadCount > 1 ? "s" : ""}`
               : "You're all caught up!"}
           </SheetDescription>
@@ -150,12 +135,20 @@ export function NotificationBell({ userId }: { userId?: string }) {
 
         <ScrollArea className="h-[calc(100vh-200px)]">
           <div className="space-y-2 pr-4">
-            {displayNotifications.length > 0 ? (
+            {isError ? (
+              <div className="py-8 text-center" role="status">
+                <BellOff className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
+                <p className="font-medium">Notifications unavailable</p>
+                <p className="mt-1 text-sm text-muted-foreground">Your private notifications could not be loaded.</p>
+              </div>
+            ) : isLoading ? (
+              <div className="py-8 text-center text-sm text-muted-foreground">Loading notifications…</div>
+            ) : displayNotifications.length > 0 ? (
               displayNotifications.map((notification) => (
                 <NotificationItem
                   key={notification.id}
                   notification={notification}
-                  onMarkRead={() => markReadMutation.mutate(notification.id)}
+                  onMarkRead={() => markReadMutation.mutate(String(notification.id))}
                   onClose={() => setIsOpen(false)}
                 />
               ))
@@ -203,7 +196,7 @@ function NotificationItem({
     if (!notification.isRead) {
       onMarkRead();
     }
-    if (notification.actionUrl) {
+    if (notification.actionUrl && isKnownSpaPath(notification.actionUrl)) {
       window.location.href = notification.actionUrl;
       onClose();
     }
@@ -249,7 +242,7 @@ function NotificationItem({
             )}
           </div>
         </div>
-        {notification.actionUrl && (
+        {notification.actionUrl && isKnownSpaPath(notification.actionUrl) && (
           <ExternalLink className="w-4 h-4 text-muted-foreground shrink-0" />
         )}
       </div>
@@ -258,24 +251,6 @@ function NotificationItem({
 }
 
 export function NotificationPreferences() {
-  const { toast } = useToast();
-  const [settings, setSettings] = useState<NotificationSettings>({
-    emailNotifications: true,
-    pushNotifications: true,
-    dealUpdates: true,
-    offerAlerts: true,
-    messageAlerts: true,
-    weeklyDigest: false,
-  });
-
-  const handleToggle = (key: keyof NotificationSettings) => {
-    setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
-    toast({
-      title: "Settings updated",
-      description: "Your notification preferences have been saved.",
-    });
-  };
-
   return (
     <Card>
       <CardHeader>
@@ -284,109 +259,51 @@ export function NotificationPreferences() {
           Notification Preferences
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-3">
-          <PreferenceToggle
-            label="Email Notifications"
-            description="Receive notifications via email"
-            checked={settings.emailNotifications}
-            onToggle={() => handleToggle("emailNotifications")}
-          />
-          <PreferenceToggle
-            label="Push Notifications"
-            description="Browser push notifications"
-            checked={settings.pushNotifications}
-            onToggle={() => handleToggle("pushNotifications")}
-          />
-          <PreferenceToggle
-            label="Deal Updates"
-            description="Alerts when deals you're watching change"
-            checked={settings.dealUpdates}
-            onToggle={() => handleToggle("dealUpdates")}
-          />
-          <PreferenceToggle
-            label="Offer Alerts"
-            description="Notifications for new offers and counters"
-            checked={settings.offerAlerts}
-            onToggle={() => handleToggle("offerAlerts")}
-          />
-          <PreferenceToggle
-            label="Message Alerts"
-            description="New message notifications"
-            checked={settings.messageAlerts}
-            onToggle={() => handleToggle("messageAlerts")}
-          />
-          <PreferenceToggle
-            label="Weekly Digest"
-            description="Weekly summary of market activity"
-            checked={settings.weeklyDigest}
-            onToggle={() => handleToggle("weeklyDigest")}
-          />
+      <CardContent>
+        <div className="rounded-lg border p-4" role="status">
+          <p className="text-sm font-medium">Notification preferences are not available yet.</p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            No settings are shown as saved until a persistent preferences service is available.
+          </p>
         </div>
       </CardContent>
     </Card>
   );
 }
 
-function PreferenceToggle({
-  label,
-  description,
-  checked,
-  onToggle,
-}: {
-  label: string;
-  description: string;
-  checked: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <div 
-      className="flex items-center justify-between p-3 rounded-lg border cursor-pointer hover-elevate"
-      onClick={onToggle}
-    >
-      <div>
-        <p className="font-medium text-sm">{label}</p>
-        <p className="text-xs text-muted-foreground">{description}</p>
-      </div>
-      <div className={`w-10 h-6 rounded-full transition-colors ${
-        checked ? "bg-primary" : "bg-muted"
-      } relative`}>
-        <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-transform ${
-          checked ? "left-5" : "left-1"
-        }`} />
-      </div>
-    </div>
-  );
-}
-
 export function useNotifications(userId?: string) {
   const queryClient = useQueryClient();
 
-  const { data: notifications = [] } = useQuery<Notification[]>({
+  const { data: notifications = [], isError } = useQuery<Notification[]>({
     queryKey: ["/api/notifications", userId],
+    queryFn: async () => (await apiRequest("GET", "/api/notifications")).json(),
     enabled: !!userId,
     refetchInterval: 30000,
+    meta: AUTHENTICATED_QUERY_META,
   });
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   const markAsRead = useCallback(
     async (notificationId: string) => {
-      await apiRequest("POST", `/api/notifications/${notificationId}/read`);
-      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+      if (!userId) throw new Error("Authentication required");
+      await apiRequest("PATCH", `/api/notifications/${notificationId}/read`);
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications", userId], exact: true });
     },
-    [queryClient]
+    [queryClient, userId]
   );
 
   const markAllAsRead = useCallback(async () => {
-    await apiRequest("POST", "/api/notifications/read-all");
-    queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
-  }, [queryClient]);
+    if (!userId) throw new Error("Authentication required");
+    await apiRequest("POST", "/api/notifications/mark-all-read");
+    queryClient.invalidateQueries({ queryKey: ["/api/notifications", userId], exact: true });
+  }, [queryClient, userId]);
 
   return {
     notifications,
     unreadCount,
     markAsRead,
     markAllAsRead,
+    isError,
   };
 }

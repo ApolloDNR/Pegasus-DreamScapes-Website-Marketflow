@@ -6,10 +6,13 @@ const MAX_AGE_MS = 2 * 60 * 60 * 1_000;
 const MAX_FUTURE_SKEW_MS = 5 * 60 * 1_000;
 const MAX_MONEY = 10_000_000_000;
 const SUMMARY_LABEL =
-  "Directional Strategy Lab brief (visitor-entered; requires Pegasus review):";
+  "Directional Strategy Lab brief (visitor-entered; automated and unverified):";
 
 export type StrategyLabHandoffInput = {
   address?: string;
+  city?: string;
+  ownerSituation?: string;
+  planningObjective?: string;
   propertyType?: string;
   occupancy?: string;
   condition?: string;
@@ -24,6 +27,10 @@ export type StrategyLabHandoffInput = {
   memoNextStep?: string;
   engineVersion?: string;
   generatedAt?: string;
+  scenario?: 'base' | 'conservative' | 'upside';
+  modelAssumptions?: string;
+  scopeReported?: boolean;
+  illustrative?: boolean;
 };
 
 export type StrategyLabHandoffBrief = StrategyLabHandoffInput & {
@@ -33,6 +40,9 @@ export type StrategyLabHandoffBrief = StrategyLabHandoffInput & {
 
 const TEXT_LIMITS = {
   address: 500,
+  city: 180,
+  ownerSituation: 160,
+  planningObjective: 180,
   propertyType: 80,
   occupancy: 80,
   condition: 80,
@@ -42,6 +52,7 @@ const TEXT_LIMITS = {
   primaryMetric: 200,
   memoNextStep: 300,
   engineVersion: 80,
+  modelAssumptions: 240,
 } as const satisfies Partial<
   Record<keyof StrategyLabHandoffInput, number>
 >;
@@ -113,6 +124,15 @@ function sanitizeInput(
     const amount = boundedMoney(value[key]);
     if (amount !== undefined) result[key] = amount;
   }
+
+  if (['base', 'conservative', 'upside'].includes(String(value.scenario))) {
+    result.scenario = value.scenario as StrategyLabHandoffInput['scenario'];
+  }
+  if (value.scopeReported === true) {
+    result.scopeReported = true;
+    if (value.rehabBudget === 0) result.rehabBudget = 0;
+  }
+  if (value.illustrative === true) result.illustrative = true;
 
   const generatedAt = isoDate(value.generatedAt);
   if (generatedAt) result.generatedAt = generatedAt;
@@ -206,6 +226,12 @@ export function formatStrategyLabHandoffSummary(
   brief: StrategyLabHandoffBrief,
 ): string {
   const parts: string[] = [];
+  if (brief.scenario) parts.push(`Scenario: ${brief.scenario.charAt(0).toUpperCase()}${brief.scenario.slice(1)}`);
+  if (brief.ownerSituation) parts.push(`Owner situation: ${brief.ownerSituation}`);
+  if (brief.planningObjective) parts.push(`Planning objective: ${brief.planningObjective}`);
+  if (brief.city) parts.push(`City: ${brief.city}`);
+  if (brief.illustrative) parts.push('Synthetic example with editable assumptions');
+  if (brief.modelAssumptions) parts.push(`Model assumptions: ${brief.modelAssumptions}`);
   if (brief.address) parts.push(`Address: ${brief.address}`);
 
   const facts = [

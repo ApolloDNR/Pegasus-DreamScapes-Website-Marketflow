@@ -91,8 +91,14 @@ CREATE INDEX IF NOT EXISTS idx_capital_projects_external_owner ON capital_projec
 -- Update RLS policies to also check external_user_id
 DROP POLICY IF EXISTS "Users can update own profile" ON user_profiles;
 CREATE POLICY "Users can update own profile" 
-  ON user_profiles FOR UPDATE 
-  USING (auth.uid() = user_id OR external_user_id IS NOT NULL);
+  ON user_profiles FOR UPDATE
+  TO authenticated
+  USING ((SELECT auth.uid()) = user_id)
+  WITH CHECK ((SELECT auth.uid()) = user_id);
+
+-- External identities are authorized by the application server using the
+-- service role. A non-null external ID is never, by itself, proof that the
+-- current Supabase user owns the row.
 
 DO $$ 
 BEGIN

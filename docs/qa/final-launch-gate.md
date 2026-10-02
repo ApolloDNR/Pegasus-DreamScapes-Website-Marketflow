@@ -88,7 +88,8 @@ Run before launch:
 & "C:\Users\Apoll\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe" node_modules\typescript\bin\tsc --noEmit
 & "C:\Users\Apoll\.cache\codex-runtimes\codex-primary-runtime\dependencies\node\bin\node.exe" node_modules\vite\bin\vite.js build
 npm run smoke:launch -- --example
-npm run smoke:launch -- --base-url https://YOUR_DEPLOYED_SITE --post-test-lead
+npm run smoke:launch -- --base-url https://YOUR_DEPLOYED_SITE
+npm run smoke:launch -- --base-url https://YOUR_DEPLOYED_SITE --post-test-lead --test-email YOUR_AUTHORIZED_TEST_EMAIL
 ```
 
 Also verify:
@@ -102,7 +103,7 @@ Also verify:
 - Forms validate required fields.
 - Form failure states are readable.
 - Staff notification path is tested.
-- Production `/api/leads` smoke creates the local lead row, queues/forwards the HQ outbox payload, and sends the staff email notification.
+- The canonical `/api/opportunities` smoke returns a valid record receipt. Separately confirm the database row, correlated `hq_outbox` forwarded state and traceable HQ receipt, and staff/customer notification receipts. A green health response, queued outbox item, or accepted POST alone does not prove delivery.
 - Production logging is available.
 
 ## Security And Privacy Gate

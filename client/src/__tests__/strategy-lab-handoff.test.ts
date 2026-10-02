@@ -21,6 +21,19 @@ afterEach(() => {
 });
 
 describe("Strategy Lab intake handoff", () => {
+  it("preserves bounded scenario assumptions and an explicitly reported zero scope", () => {
+    writeStrategyLabHandoff({ address: "New model", askingPrice: 600000, rehabBudget: 0, scopeReported: true, scenario: "conservative", modelAssumptions: "75% acquisition LTV; 8.5% interest; 30 years; 3% closing reserve", illustrative: true });
+    const brief = readStrategyLabHandoff()!;
+    expect(brief).toMatchObject({ scenario: "conservative", rehabBudget: 0, scopeReported: true, illustrative: true });
+    const summary = formatStrategyLabHandoffSummary(brief);
+    expect(summary).toContain("Scenario: Conservative");
+    expect(summary).toContain("Scope: $0");
+    expect(summary).toContain("8.5% interest");
+    expect(summary).toContain("Synthetic example");
+    window.sessionStorage.setItem(STRATEGY_LAB_HANDOFF_SESSION_KEY, JSON.stringify({ ...brief, scenario: "guaranteed", modelAssumptions: "x".repeat(1000) }));
+    expect(readStrategyLabHandoff()?.scenario).toBeUndefined();
+    expect(readStrategyLabHandoff()?.modelAssumptions?.length).toBeLessThanOrEqual(240);
+  });
   it("stores only a bounded, versioned Strategy Lab brief", () => {
     expect(writeStrategyLabHandoff({
       address: "  19 Bay View Ave\nWalnut Creek, CA  ",
@@ -101,7 +114,7 @@ describe("Strategy Lab intake handoff", () => {
     const summary = formatStrategyLabHandoffSummary(brief!);
 
     expect(summary).toContain(
-      "Directional Strategy Lab brief (visitor-entered; requires Pegasus review):",
+      "Directional Strategy Lab brief (visitor-entered; automated and unverified):",
     );
     expect(summary).toContain("Asking price / basis: $600,000");
     expect(summary).toContain("Scope: $105,000");

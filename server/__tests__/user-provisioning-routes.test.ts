@@ -190,6 +190,45 @@ describe("POST /api/supabase/provision-user — authenticated self-provisioning"
     },
   );
 
+  it.each([
+    { isApproved: true },
+    { is_approved: true },
+    { isPegasusBadged: true },
+    { is_pegasus_badged: true },
+    { primaryRole: "admin" },
+    { primary_role: "admin" },
+    { roles: ["admin"] },
+    { permissions: ["marketflow:submit"] },
+    { marketflowAccess: true },
+    { isAdmin: true },
+    { isStaff: true },
+    { pegasusRoleType: "pegasus_wholesaler" },
+    { approvalStatus: "approved" },
+  ])(
+    "rejects self-managed approval or privilege fields: %j",
+    async (attemptedPrivilege) => {
+      requireRouteRegistrar();
+
+      const response = await postProvisioning(
+        {
+          userId: "new-user",
+          role: "wholesaler",
+          displayName: "New User",
+          ...attemptedPrivilege,
+        },
+        "new-user",
+      );
+
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual({
+        message: "Approval and access fields cannot be self-provisioned",
+      });
+      expect(dependencies.getUserRoles).not.toHaveBeenCalled();
+      expect(dependencies.createUserProfile).not.toHaveBeenCalled();
+      expect(dependencies.addUserRole).not.toHaveBeenCalled();
+    },
+  );
+
   it("rejects changing an already-provisioned account to another self-serve role", async () => {
     requireRouteRegistrar();
     dependencies.getUserRoles.mockResolvedValue([{ role: "investor" }]);

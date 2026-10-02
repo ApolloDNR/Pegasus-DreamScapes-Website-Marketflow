@@ -1,5 +1,6 @@
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import { ReactNode, useEffect, useState, useRef } from "react";
+import { usePrefersReducedMotion } from "@/hooks/use-prefers-reduced-motion";
 
 export const fadeInUp: Variants = {
   initial: { opacity: 0, y: 20 },
@@ -128,8 +129,14 @@ export function ScrollReveal({
 }: ScrollRevealProps) {
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const reduceMotion = usePrefersReducedMotion();
 
   useEffect(() => {
+    if (reduceMotion) {
+      setIsVisible(true);
+      return;
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
@@ -145,7 +152,7 @@ export function ScrollReveal({
     }
 
     return () => observer.disconnect();
-  }, [threshold]);
+  }, [reduceMotion, threshold]);
 
   const directionOffset = {
     up: { y: 40, x: 0 },
@@ -158,13 +165,20 @@ export function ScrollReveal({
   return (
     <motion.div
       ref={ref}
-      initial={{ 
-        opacity: 0, 
+      initial={reduceMotion ? false : {
+        opacity: 0,
         ...directionOffset[direction]
       }}
-      animate={isVisible ? { opacity: 1, x: 0, y: 0 } : {}}
-      transition={{ 
-        duration: 0.6, 
+      animate={
+        reduceMotion || isVisible
+          ? { opacity: 1, x: 0, y: 0 }
+          : {}
+      }
+      transition={reduceMotion ? {
+        duration: 0,
+        delay: 0
+      } : {
+        duration: 0.6,
         delay,
         ease: [0.25, 0.1, 0.25, 1]
       }}

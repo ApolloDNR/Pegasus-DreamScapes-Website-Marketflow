@@ -104,7 +104,7 @@ const PROPERTY_TYPES = [
 
 const LISTING_TYPES = [
   { value: "on_market", label: "On Market" },
-  { value: "off_market", label: "Off Market" },
+  { value: "off_market", label: "Direct submission" },
   { value: "coming_soon", label: "Coming Soon" },
   { value: "pocket_listing", label: "Pocket Listing" },
 ];

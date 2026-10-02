@@ -7,6 +7,10 @@ import { Router, Switch, Route, Redirect, useLocation } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 
 import { PEGASUS_URLS } from "@/pegasus/routes";
+import {
+  LEGACY_SPA_EXACT_REDIRECTS,
+  LEGACY_SPA_PREFIX_REDIRECTS,
+} from "@shared/redirects";
 
 // Server-side legacy-redirect dead-end net (Task #216).
 //
@@ -30,29 +34,19 @@ function read(rel: string): string {
   return fs.readFileSync(path.join(process.cwd(), rel), "utf-8");
 }
 
-// Extract the [from, to] tuples inside the server's LEGACY_REDIRECTS literal.
-function extractServerRedirects(): Array<[string, string]> {
-  const src = read("server/routes.ts");
-  const start = src.indexOf("const LEGACY_REDIRECTS");
-  if (start === -1) return [];
-  const slice = src.slice(start, start + 4000);
-  const close = slice.indexOf("];");
-  const body = close === -1 ? slice : slice.slice(0, close);
-  const out: Array<[string, string]> = [];
-  const re = /\[\s*['"]([^'"]+)['"]\s*,\s*['"]([^'"]+)['"]\s*\]/g;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(body)) !== null) out.push([m[1], m[2]]);
-  return out;
-}
-
-const SERVER_REDIRECTS = extractServerRedirects();
+const SERVER_REDIRECTS: Array<[string, string]> = [
+  ...LEGACY_SPA_EXACT_REDIRECTS.map(([from, to]) => [from, to] as [string, string]),
+  ...LEGACY_SPA_PREFIX_REDIRECTS.map(
+    ([prefix, to]) => [`${prefix}/*`, to] as [string, string],
+  ),
+];
 
 // Every literal `<Route path="...">` registered in App.tsx, plus the public
 // URLs owned by the Pegasus prototype shell. These are the real surfaces a
 // redirect is allowed to land on — identical to the client net's table so both
 // layers are checked against the same source of truth.
 const REGISTERED_PATTERNS: string[] = (() => {
-  const src = read("client/src/App.tsx");
+  const src = read("client/src/LegacyApp.tsx");
   const re = /path="([^"]+)"/g;
   const out = new Set<string>();
   let m: RegExpExecArray | null;
@@ -163,5 +157,19 @@ describe("Harness regression: a server redirect to an unknown path fails (Task #
     expect(
       container.querySelector('[data-testid="real-page"]'),
     ).toBeNull();
+  });
+});
+
+describe("nested legacy operator redirects", () => {
+  it.each([
+    ["/marketplace/admin/users/operator-42", "/marketflow/admin"],
+    ["/marketplace/deals/deal-42/negotiate", "/marketflow/deals"],
+    ["/marketplace/properties/east-bay/listing-42", "/marketflow/properties"],
+  ])("redirects multi-segment alias %s to %s", async (from, to) => {
+    const { container, probe } = renderAt(from, SERVER_REDIRECTS);
+
+    await waitFor(() => expect(probe.current).toBe(to));
+    expect(container.querySelector('[data-testid="not-found"]')).toBeNull();
+    expect(container.querySelector('[data-testid="real-page"]')).not.toBeNull();
   });
 });
