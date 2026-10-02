@@ -7,6 +7,7 @@ import {
   render,
   screen,
   waitFor,
+  within,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { Router } from "wouter";
@@ -109,6 +110,18 @@ afterEach(async () => {
 });
 
 describe("mounted Work With Apollo representation handoff", () => {
+  it("keeps the full licensed identity and broker beside representation entry and form", () => {
+    renderPage();
+    const opening = document.querySelector('.ep-opening')!;
+    const formSection = document.querySelector('#apollo-lead')!;
+    for (const region of [opening, formSection]) {
+      expect(region).toHaveTextContent('Paolo Ariel “Apollo” Duran Ramirez');
+      expect(region).toHaveTextContent('DRE #02333658');
+      expect(region).toHaveTextContent('BMP Realty Inc DBA Keller Williams Realty-East Bay');
+    }
+    expect(within(opening as HTMLElement).getByRole('heading', {level: 1})).toHaveTextContent('Buy or sell with Apollo.');
+  });
+
   it("synchronizes Buyer and Seller choices with the real form field and submitted lane", async () => {
     renderPage();
 

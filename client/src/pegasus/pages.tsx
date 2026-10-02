@@ -18,6 +18,7 @@ import {
 import { PremiumStrategyLab } from './strategy-lab-experience';
 import { PremiumMarketFlow } from './marketflow-experience';
 import { ConnectChooser } from '@/pages/connect';
+import { REPRESENTATION_IDENTITY } from './public-content';
 import { PageAction, PageOpening, PageClosing, ProjectEvidence } from './experience-page';
 
 export { CategoryPage } from './category-page';
@@ -41,7 +42,7 @@ const APOLLO_REP = {
 // PRD §7.11 required copy (issue #22), locked verbatim, plus the page-level
 // no-agreement clarifier.
 const APOLLO_DISCLOSURE =
-  'This site uses Paolo “Apollo” Duran as a public-facing name. For license verification, CA DRE #02333658 is listed under Duran Ramirez, Paolo Ariel. The responsible broker listed in DRE records is BMP Realty Inc DBA Keller Williams Realty-East Bay. Verify current status before engagement. Pegasus Dreamscapes Corp. is not a real estate brokerage. Licensed representation may be available only through a separate written brokerage agreement. No agency relationship is created without a written agreement. This page is not an agency agreement.';
+  'Paolo Ariel “Apollo” Duran Ramirez is a California real estate salesperson, DRE #02333658. The license record is listed under Duran Ramirez, Paolo Ariel. The responsible broker listed in DRE records is BMP Realty Inc DBA Keller Williams Realty-East Bay. Verify current status before engagement. Pegasus Dreamscapes Corp. is not a real estate brokerage. Licensed representation may be available only through a separate written brokerage agreement. No agency relationship is created without a written agreement. This page is not an agency agreement.';
 
 /* ================================================================
    HOME
@@ -130,9 +131,9 @@ export function InvestmentsPage({ go: _go, openPeggy: _openPeggy }: { go: Nav; o
    ================================================================ */
 export function DevelopmentPage({ go: _go }: { go: Nav }) {
   return <article className="experience-page">
-    <PageOpening title="A practical plan for the work ahead."
+    <PageOpening title="Explore a development opportunity."
       image={{ src:'/images/pegasus-craft-blueprint.webp', alt:'Architectural plans being examined at a worktable', width:1280, height:896, caption:'Planning study · Illustrative scene' }}
-      action={{ href: '/bring-an-opportunity?intent=explore', label: 'Discuss a project' }}><p>Start with the property, proposed scope, budget, and constraints. Renovation and ground-up work each need clearly defined responsibilities.</p></PageOpening>
+      action={{ href: '/bring-an-opportunity?intent=explore', label: 'Discuss an opportunity' }}><p>Share a property or potential development partnership for consideration. Site conditions, ownership, the concept, and proposed roles help frame the conversation.</p><p className="ep-notice">Any project would require qualified providers, applicable licenses and permits, and separate written agreements defining each party’s responsibilities.</p></PageOpening>
     <section id="development-framework" className="ep-section"><div className="experience-wrap ep-split">
       <h2>Define the work before it starts.</h2>
       <ol className="ep-rows ep-numbered">
@@ -143,7 +144,7 @@ export function DevelopmentPage({ go: _go }: { go: Nav }) {
       </ol>
     </div></section>
     <ProjectEvidence title="A documented residential transformation." />
-    <PageClosing title="Discuss the work you have in mind." href="/bring-an-opportunity?intent=explore" label="Discuss a project"><p className="ep-notice">This page does not claim an in-house construction team or guaranteed capacity. A future project would require property-specific diligence, qualified providers, applicable licenses and permits, and a signed agreement defining scope, budget, schedule, changes, completion, and remedies.</p></PageClosing>
+    <PageClosing title="Share the opportunity you have in mind." href="/bring-an-opportunity?intent=explore" label="Discuss an opportunity"><p className="ep-notice">This page does not claim an in-house construction team or guaranteed capacity. A future project would require property-specific diligence, qualified providers, applicable licenses and permits, and a signed agreement defining scope, budget, schedule, changes, completion, and remedies.</p></PageClosing>
   </article>;
 }
 
@@ -268,8 +269,8 @@ export function WorkWithApolloPage({ go }: { go: Nav }) {
   return (
     <article className="experience-page ep-representation">
       <PageOpening title="Buy or sell with Apollo." image={{ src: '/images/founder/apollo.webp', alt: 'Apollo Duran', width: 1100, height: 1375, portrait: true }} action={{ href: '#apollo-paths', label: 'Discuss representation' }}>
-        <p>Ask about current buyer or seller representation with Apollo Duran. Start with your plans, location, and timing.</p>
-        <p className="ep-notice">CA DRE #02333658 · Responsible broker: BMP Realty Inc DBA Keller Williams Realty-East Bay. Verify current status. Pegasus Dreamscapes Corp. is not a real estate brokerage.</p>
+        <p>Ask about current buyer or seller representation with Apollo. Start with your plans, location, and timing.</p>
+        <p className="ep-notice">{REPRESENTATION_IDENTITY} Verify current status. Pegasus Dreamscapes Corp. is not a real estate brokerage.</p>
       </PageOpening>
       <ApolloSelector selectedKey={selectorKey} onSelect={selectPath} leadRef={leadRef} roleFieldRef={roleFieldRef} />
       <section className="ep-section ep-warm"><div className="experience-wrap ep-split">

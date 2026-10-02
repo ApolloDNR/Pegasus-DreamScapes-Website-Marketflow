@@ -133,7 +133,7 @@ describe("Homepage premium editorial contract", () => {
     const { container } = renderHome();
     const founder = container.querySelector<HTMLElement>('[data-hv="founder"]')!;
     expect(founder).toHaveTextContent('Apollo Duran');
-    expect(founder).toHaveTextContent('Duran Ramirez, Paolo Ariel');
+    expect(founder).toHaveTextContent('Paolo Ariel “Apollo” Duran Ramirez');
     expect(founder).toHaveTextContent('BMP Realty Inc DBA Keller Williams Realty-East Bay');
     expect(founder).toHaveTextContent('CA DRE #02333658');
   });

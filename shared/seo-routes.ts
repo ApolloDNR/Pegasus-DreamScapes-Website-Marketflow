@@ -181,7 +181,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
   "/work-with-apollo": {
     title: tag("Buy or Sell With Apollo"),
     description:
-      "Ask about possible representation with Apollo Duran. Verify the site-listed Keller Williams East Bay affiliation and DRE #02333658 before engagement.",
+      "Representation inquiries: Paolo Ariel “Apollo” Duran Ramirez, DRE #02333658; BMP Realty Inc DBA Keller Williams Realty-East Bay. Verify current status.",
     image: `${SITE_URL}/og/work-with-apollo.png`,
   },
   "/peggy": {

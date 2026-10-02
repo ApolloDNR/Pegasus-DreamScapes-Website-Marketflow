@@ -139,7 +139,7 @@ const LANES: ConnectLane[] = [
 export function ConnectChooser({ context = 'card' }: { context?: 'card' | 'contact' }) {
   return <article className="experience-page ep-connect">
     <PageOpening title={context === 'contact' ? 'Let’s understand what you have in mind.' : 'Apollo Duran. Pegasus Dreamscapes.'} image={context === 'card' ? { src: '/images/founder/apollo.webp', alt: 'Apollo Duran', width: 1100, height: 1375, portrait: true } : undefined}>
-      <p>{context === 'contact' ? 'Choose the path for your property, project, or question. You can also reach Apollo directly.' : 'Founder, Pegasus Dreamscapes. Residential construction and real estate operations in the East Bay.'}</p>
+      <p>{context === 'contact' ? 'Choose the path for your property, project, or question. You can also reach Apollo directly.' : 'Founder, Pegasus Dreamscapes. Property opportunities, development partnerships, and real estate operations in the East Bay.'}</p>
       <div className="ep-contact-links"><a href={PUBLIC_CONTACT.telephone} data-testid="link-connect-phone">{PUBLIC_CONTACT.phone}</a><a href={`mailto:${PUBLIC_CONTACT.email}`} data-testid="link-connect-email">{PUBLIC_CONTACT.email}</a></div>
       <p className="ep-notice">{REPRESENTATION_NOTICE}</p>
     </PageOpening>

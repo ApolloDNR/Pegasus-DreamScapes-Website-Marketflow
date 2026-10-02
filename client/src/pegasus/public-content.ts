@@ -26,5 +26,6 @@ export const HOME_PATHS = [
 export const PUBLIC_CONTACT = {
   name: 'Apollo Duran', email: 'apollo@pegasusdreamscapes.com', phone: '925-744-8525', telephone: 'tel:9257448525',
 } as const;
-export const REPRESENTATION_NOTICE = 'Licensed representation may be available only through a separate written brokerage agreement. CA DRE #02333658 is listed under Duran Ramirez, Paolo Ariel; responsible broker: BMP Realty Inc DBA Keller Williams Realty-East Bay. Verify current status.';
+export const REPRESENTATION_IDENTITY = 'Paolo Ariel “Apollo” Duran Ramirez · California real estate salesperson · CA DRE #02333658. Responsible broker: BMP Realty Inc DBA Keller Williams Realty-East Bay.';
+export const REPRESENTATION_NOTICE = `${REPRESENTATION_IDENTITY} Verify current status. Licensed representation may be available only through a separate written brokerage agreement.`;
 export const SUBMISSION_NOTICE = 'Submission does not create representation, confidentiality, source protection, partnership, review, or a duty to respond.';
