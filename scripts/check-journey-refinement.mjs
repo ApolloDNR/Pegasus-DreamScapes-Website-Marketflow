@@ -54,7 +54,14 @@ try {
   }
   await capture(page,key,'companion-field-note');
   await page.locator('.peggy-panel').getByRole('button',{name:/Show me around/}).click();
+  const sectionDetails=page.getByRole('button',{name:'Section details and stops',exact:true});
+  if(await sectionDetails.isVisible()) {
+    assert.equal(await sectionDetails.getAttribute('aria-expanded'),'false',`${key}: compact tour details start collapsed`);
+    await sectionDetails.click();
+    assert.equal(await sectionDetails.getAttribute('aria-expanded'),'true',`${key}: compact tour details expand`);
+  }
   const trail=page.getByRole('navigation',{name:'Page tour sections'});
+  await trail.waitFor();
   assert.equal(await trail.getByRole('button').count(),await page.locator('[data-peggy-page] h1,[data-peggy-page] h2').count());
   await trail.getByRole('button').nth(1).click();
   assert.equal(await trail.getByRole('button').nth(1).getAttribute('aria-current'),'step');
