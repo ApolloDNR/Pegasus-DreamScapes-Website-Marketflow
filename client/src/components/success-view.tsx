@@ -152,6 +152,7 @@ export function SuccessView({
 
   return (
     <div
+      data-peggy-private
       ref={statusRef}
       role="region"
       aria-labelledby={headingId}

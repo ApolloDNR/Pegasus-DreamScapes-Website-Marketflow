@@ -181,7 +181,7 @@ export function BuyerCriteriaForm({ initialDraft, onDraftChange, referrer, initi
   };
   const exclusionCount = draft.criteria.rehabExclusions.length + draft.criteria.occupancyExclusions.length;
   const detailCount = Number(draft.criteria.purchaser.entityType !== 'undecided') + Number(!!draft.criteria.purchaser.entityName) + Number(draft.criteria.timing.closingDays !== null);
-  if (receipt !== null) return <div ref={success} tabIndex={-1} role="status" className="space-y-4"><h2 className="font-serif text-3xl">Criteria received.</h2><p>Reference: {receipt}</p><p>This records your criteria for possible consideration. It does not create representation, verified status, priority, alerts, or a guaranteed match.</p></div>;
+  if (receipt !== null) return <div data-peggy-private ref={success} tabIndex={-1} role="status" className="space-y-4"><h2 className="font-serif text-3xl">Criteria received.</h2><p>Reference: {receipt}</p><p>This records your criteria for possible consideration. It does not create representation, verified status, priority, alerts, or a guaranteed match.</p></div>;
   return <form style={scrollClearance} id="buyer-criteria" aria-label="Buying criteria" noValidate aria-busy={pending} className="min-w-0 space-y-6 scroll-mt-28" onSubmit={async e => {
     e.preventDefault(); if (busy.current || pending) return; setError('');
     const validation = validateDraft(draft); setErrors(validation);

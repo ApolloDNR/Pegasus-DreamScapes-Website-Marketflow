@@ -510,7 +510,7 @@ export default function SubmitPropertyPage() {
         {announcement}
       </p>
       {result ? (
-      <div className="intake-page intake-received min-h-screen pt-32 pb-24 px-6">
+      <div data-peggy-private className="intake-page intake-received min-h-screen pt-32 pb-24 px-6">
         <div className="mx-auto max-w-2xl text-center">
           <div className="mx-auto mb-8 flex h-16 w-16 items-center justify-center rounded-full border-2 border-[#b47645]">
             <Check className="h-7 w-7 text-[#975735] dark:text-[#c88a5d]" strokeWidth={2.4} />

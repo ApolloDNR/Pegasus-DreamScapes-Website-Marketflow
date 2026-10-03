@@ -18,6 +18,7 @@ Baseline: `0bd952f10460adbbf879da6a847a6a5f22d0c9ea`.
 - Pages with a concluding inquiry retain that ending. Optional related reading is a quiet row on informational pages. Tools has one page-guide invitation, clearly separate from the request-based Property Review.
 - FAQ, utility and MarketFlow request surfaces use the existing paper/navy/copper typography and control rhythm. Supplemental access-process detail can be expanded; material access boundaries and contact consent remain visible.
 - The final fresh-eyes pass corrects phone role-control focus, calculator prefix spacing, expanded-guide-to-chat section alignment and narrow legal-contact wrapping. All eight calculator tabs remain available.
+- Post-publication rendered intake checks identified a stale expected referral prefix and receipt text repeated by local page guidance. The exact payload and reference assertions remain strict; inquiry, buyer, shared and lane confirmation regions are now excluded from page-guide extraction. No automatic external transmission was observed.
 
 ## Preserved boundaries
 

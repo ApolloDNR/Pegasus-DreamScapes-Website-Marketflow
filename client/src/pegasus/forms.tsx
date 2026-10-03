@@ -242,6 +242,7 @@ export function LeadForm({
     );
     return (
       <div
+        data-peggy-private
         ref={successRef}
         role="status"
         aria-live="polite"

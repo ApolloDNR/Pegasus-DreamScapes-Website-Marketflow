@@ -213,7 +213,7 @@ describe("Pegasus LeadForm explicit contact consent", () => {
     confirm.mockReturnValue(true);
     apiRequestMock.mockResolvedValueOnce(new Response(JSON.stringify({ id: 102, stage: "new" }), { status: 201 }));
     submit();
-    await screen.findByRole("heading", { name: "Property details received." });
+    expect((await screen.findByRole("heading", { name: "Property details received." })).closest("[data-peggy-private]")).not.toBeNull();
     expect(apiRequestMock).toHaveBeenCalledTimes(2);
     expect(apiRequestMock.mock.calls[1][2]).toEqual(expect.objectContaining({ firstName: "Grace", lastName: "Hopper" }));
     expect(apiRequestMock.mock.calls[1][3]["Idempotency-Key"]).not.toBe(originalKey);
@@ -513,6 +513,7 @@ describe("MarketFlow access explicit contact consent", () => {
 
     const success = await screen.findByTestId("success-view-marketflow_access");
     expect(success).toHaveAttribute("role", "region");
+    expect(success).toHaveAttribute("data-peggy-private");
     expect(success).toHaveAccessibleName("Your MarketFlow interest was recorded.");
     expect(success).toHaveFocus();
     expect(within(success).getByRole("heading", { level: 1 })).toHaveTextContent(

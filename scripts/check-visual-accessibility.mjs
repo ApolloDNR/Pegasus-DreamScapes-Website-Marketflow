@@ -2199,7 +2199,7 @@ try {
           urgency: 'No immediate deadline',
           estimatedValue: 650000,
           estimatedDebt: 225000,
-          notes: 'Intake intent: property \u2014 Owner situation: Inherited property \u2014 Rendered QA exact-safe submission.',
+          notes: 'Intake intent: property \u2014 Owner situation: Inherited property \u2014 Referral reference: property-owners \u2014 Rendered QA exact-safe submission.',
           consentAccepted: true,
         };
         const expectedPayloadKeys = [...Object.keys(expectedPayload), 'ts_elapsed_ms'].sort();
@@ -2357,6 +2357,7 @@ try {
           'Intake success heading did not receive focus',
         );
         assert(await page.getByText('Reference: rendered-qa-opportunity').count() === 1, 'Intake success reference changed');
+        assert(await page.locator('.intake-received[data-peggy-private]').count() === 1, 'Private receipt is not excluded from page guidance');
         await captureEvidenceScreenshot(
           page,
           health,
