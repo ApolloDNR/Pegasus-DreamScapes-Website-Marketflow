@@ -27,6 +27,19 @@ async function waitForTopArrival(page, pathname) {
     return heading && document.activeElement===heading && Math.abs(scrollY)<2;
   },pathname);
 }
+async function scrollWithWheel(page, selector, center=false) {
+  const {targetY,deltaY}=await page.locator(selector).evaluate((element,center)=>{
+    const margin=center ? Math.max(0,(innerHeight-element.getBoundingClientRect().height)/2) : Number.parseFloat(getComputedStyle(element).scrollMarginTop)||0;
+    const targetY=Math.max(0,Math.min(document.documentElement.scrollHeight-innerHeight,element.getBoundingClientRect().top+scrollY-margin));
+    return {targetY,deltaY:targetY-scrollY};
+  },center);
+  const {height}=page.viewportSize();
+  // Keep the pointer in the reading gutter, outside controls measured below.
+  await page.mouse.move(1,height/2);
+  // A real visitor's wheel input cancels any remaining deferred arrival.
+  await page.mouse.wheel(0,deltaY);
+  await page.waitForFunction(targetY=>Math.abs(scrollY-targetY)<2,targetY);
+}
 async function capture(page,key,state) {
   await phase(`${key}/${state}/fonts`,()=>page.evaluate(async()=>{await document.fonts.ready;}));
   await phase(`${key}/${state}/images`,()=>page.evaluate(async()=>{
@@ -66,7 +79,7 @@ try {
     await page.goto(origin+'/'); await page.locator('.home-pathways').waitFor();
     await waitForTopArrival(page,'/');
   });
-  await page.locator('#home-paths-title').evaluate(el=>el.scrollIntoView({block:'start'}));
+  await scrollWithWheel(page,'#home-paths-title');
   const pathways=page.locator('.home-pathways');
   await pathways.getByRole('link').last().evaluate(el=>el.focus({preventScroll:true}));
   assert.equal(await pathways.getAttribute('data-preview'),'2');
@@ -145,7 +158,11 @@ try {
   assert.equal(await page.locator('.journey-continuation').count(),0,`${key}: owners keeps one closing`);
   // The owner and Our Work pages end with their own closing; the process page retains curated onward links.
   await page.goto(origin+'/how-we-operate');await page.locator('.ep-opening').waitFor();
-  const next=page.getByRole('navigation',{name:'Related reading'});await next.scrollIntoViewIfNeeded();await capture(page,key,'continuation');
+  await waitForTopArrival(page,'/how-we-operate');
+  const next=page.getByRole('navigation',{name:'Related reading'});
+  await scrollWithWheel(page,'.journey-related',true);
+  assert(await next.evaluate(element=>{const rect=element.getBoundingClientRect();return rect.top>=0 && rect.bottom<=innerHeight;}),`${key}: related reading is in the captured viewport`);
+  await capture(page,key,'continuation');
   await next.getByRole('link',{name:/See the work/}).click();await page.getByRole('heading',{name:'Nelson Drive, documented.'}).waitFor();
   assert.equal(await page.locator('.journey-continuation').count(),0,`${key}: Our Work keeps one closing`);
   await page.goto(origin+'/tools');await page.locator('.tools-finder').waitFor();await capture(page,key,'tools');
@@ -173,12 +190,12 @@ try {
   if(width < 768 && theme === 'light') {
     await phase(`${key}/enlarged-text/owner-arrival`,async()=>{
       await page.goto(origin+'/property-owners');await page.locator('.ep-opening').waitFor();
-      // The lazy page can be visible before its deferred focus/top arrival.
-      // Finish that real navigation before this fixture scrolls the page.
+      // Wait for destination focus, then use visitor input below to supersede
+      // any queued arrival that remains after the first focus/top reset.
       await waitForTopArrival(page,'/property-owners');
     });
     await phase(`${key}/enlarged-text/section-guide`,async()=>{
-    await page.locator('[data-testid="situation-stepper"] h2').evaluate(el=>el.scrollIntoView({block:'start'}));
+    await scrollWithWheel(page,'[data-testid="situation-stepper"] h2');
     await page.locator('.journey-section-toggle').waitFor();await page.locator('.journey-section-toggle').click();
     });
     await phase(`${key}/enlarged-text/reflow`,async()=>{
