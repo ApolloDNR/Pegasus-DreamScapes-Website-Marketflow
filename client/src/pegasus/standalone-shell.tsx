@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState, type ReactNode } from 'react';
 import { useLocation } from 'wouter';
 import './_group.css';
+import './experience-coherence.css';
 import './public-reading.css';
 import './utility-pages.css';
 import type { Nav, Route, PeggyHandoff } from './theme';
@@ -8,6 +9,7 @@ import { NavBar } from './nav';
 import { Footer } from './footer';
 import { JourneyContinuation } from './journey';
 import { Peggy } from './peggy';
+import { useBeginPeggyReview } from './peggy-review-handoff';
 import { routeForUrl, urlFor } from './routes';
 import { useTheme } from '@/components/theme-provider';
 
@@ -67,7 +69,10 @@ export function PegasusStandaloneShell({
     },
     [setLocation],
   );
-  const onHandoffToReview = useCallback((_h: PeggyHandoff) => go('contact'), [go]);
+  const beginPeggyReview = useBeginPeggyReview();
+  const onHandoffToReview = useCallback((handoff: PeggyHandoff) => {
+    setLocation(beginPeggyReview(handoff));
+  }, [beginPeggyReview, setLocation]);
 
   useEffect(() => {
     let ticking = false;

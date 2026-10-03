@@ -250,7 +250,7 @@ export const SEO_ROUTES: Record<string, SeoRoute> = {
     image: DEFAULT_OG_IMAGE,
   },
   "/deal-blueprint": {
-    title: tag("Deal Blueprint"),
+    title: tag("Property Review"),
     description:
       "Request review for a possible, separately scoped property memo. No purchase, acceptance, fee, turnaround, or delivery is promised by the public intake.",
     image: DEFAULT_OG_IMAGE,

@@ -33,11 +33,14 @@ export function PropertyOwnersPage({ go: _go }: { go: Nav }) {
     params.set('owner_situation', SITUATIONS[next].label);
     setLocation(`/property-owners?${params.toString()}`, { replace: true });
   };
-  const selectedSituationHref = `/bring-an-opportunity?intent=property&owner_situation=${encodeURIComponent(SITUATIONS[idx].label)}`;
+  const situationHref = (label?: string) => `/bring-an-opportunity?intent=property&ref=property-owners${label ? `&owner_situation=${encodeURIComponent(label)}` : ''}`;
+  const selectedSituationHref = situationHref(SITUATIONS[idx].label);
+  // The first example is exploratory until a choice is explicitly made.
+  const pageIntakeHref = situationHref(SITUATIONS.some(item => item.label === requested) ? requested! : undefined);
   return <article className="experience-page po">
     <PageOpening title="A clear next step for your property."
       image={{ src:'/images/nelson/nelson-exterior-1280.webp', alt:'Completed Nelson Drive home and landscaped front garden', width:1280, height:853, caption:'Nelson Drive · Completed project' }}
-      action={{ label: 'Tell us about the property', href: '/bring-an-opportunity?intent=property' }}>
+      action={{ label: 'Tell us about the property', href: pageIntakeHref }}>
       <p>Repairs, inherited ownership, unfinished work, or a difficult timeline. Start with your situation and what you want to resolve.</p>
     </PageOpening>
     <section className="ep-section" data-testid="situation-stepper">
@@ -72,7 +75,7 @@ export function PropertyOwnersPage({ go: _go }: { go: Nav }) {
         <li><div><h3>Review before submitting.</h3><p>Any later role, economics, or service requires separate diligence and written terms.</p></div></li>
       </ol>
     </div></section>
-    <PageClosing title="Tell us about the property." href={selectedSituationHref} label="Tell us about the property">
+    <PageClosing title="Tell us about the property." href={pageIntakeHref} label="Tell us about the property">
       <p>Tell us where things stand, what you want to change, and any date that matters. You can review everything before sending.</p>
       <p className="ep-notice">Submission may be considered, but no written review, response, route, or offer is promised. It is not a valuation, appraisal, legal opinion, foreclosure-rescue service, representation agreement, or closing commitment.</p>
     </PageClosing>

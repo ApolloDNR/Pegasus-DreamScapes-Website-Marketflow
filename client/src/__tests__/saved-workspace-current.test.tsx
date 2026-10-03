@@ -9,6 +9,30 @@ describe("saved workspace", () => {
   beforeEach(() => window.localStorage.clear());
   afterEach(cleanup);
 
+  it("provides a direct return to the tools index", () => {
+    render(<SavedPage go={vi.fn()} />);
+    const link = screen.getByRole("link", { name: "Back to tools" });
+    expect(link).toHaveAttribute("href", "/tools");
+    expect(screen.getByRole("heading", { name: "Your saved work." }).closest("header")).toContainElement(link);
+  });
+
+  it("resumes a readable version-two draft", () => {
+    window.localStorage.setItem("pegasus.strategy-lab.v2", JSON.stringify({ schemaVersion: 2, savedAt: "2026-08-30T08:00:00.000Z", state: { address: "Older synthetic property" } }));
+    render(<SavedPage go={vi.fn()} />);
+    expect(screen.getByRole("heading", { name: "Older synthetic property" })).toBeVisible();
+    expect(screen.getByRole("link", { name: "Resume in Strategy Lab" })).toHaveAttribute("href", "/strategy-lab?resume=saved");
+  });
+
+  it("uses the same validated workspace as the Lab when its saved date is unavailable", () => {
+    window.localStorage.setItem("pegasus.strategy-lab.v3", JSON.stringify({ schemaVersion: 3, savedAt: "2026-08-30T08:00:00.000Z", state: { address: "Older saved property" } }));
+    const workspace = { ...emptyWorkspace(), base: { ...illustrativeDraft(), address: "Current saved property" } };
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify({ schemaVersion: 4, savedAt: "invalid", workspace }));
+    render(<SavedPage go={vi.fn()} />);
+    expect(screen.getByRole("heading", { name: "Current saved property" })).toBeVisible();
+    expect(screen.queryByRole("heading", { name: "Older saved property" })).not.toBeInTheDocument();
+    expect(screen.getByText("Browser draft")).toBeVisible();
+  });
+
   it("resumes the new Intelligence Desk draft ahead of an older saved model", () => {
     window.localStorage.setItem("pegasus.strategy-lab.v3", JSON.stringify({ schemaVersion: 3, savedAt: "2026-08-30T08:00:00.000Z", state: { address: "Old property" } }));
     const workspace = { ...emptyWorkspace(), base: { ...illustrativeDraft(), address: "New property" } };
@@ -37,6 +61,6 @@ describe("saved workspace", () => {
 
     expect(screen.getByRole("heading", { name: "19 Bay View Avenue" })).toBeVisible();
     expect(screen.queryByText("Obsolete profit card")).not.toBeInTheDocument();
-    expect(screen.getByRole("link", { name: /Resume in Strategy Lab/i })).toHaveAttribute("href", "/strategy-lab");
+    expect(screen.getByRole("link", { name: /Resume in Strategy Lab/i })).toHaveAttribute("href", "/strategy-lab?resume=saved");
   });
 });

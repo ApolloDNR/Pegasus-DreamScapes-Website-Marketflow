@@ -15,7 +15,7 @@ const groups = [
   ] },
   { label: 'Company', links: [
     { label: 'About Pegasus', href: '/about' }, { label: 'Our Work', href: '/our-work' },
-    { label: 'Contact', href: '/contact' }, { label: 'Connect', href: '/connect' },
+    { label: 'Contact Apollo', href: '/contact' },
     { label: 'Peggy', href: '/peggy' }, { label: 'FAQ', href: '/faq' },
   ] },
 ];

@@ -105,6 +105,7 @@ function consentAndSubmitMarketflowAccess() {
 const settlePendingRequests: Array<() => void> = [];
 
 beforeEach(() => {
+  vi.spyOn(window, "scrollTo").mockImplementation(() => {});
   sessionStorage.clear();
   // Keep requests pending while assertions inspect them, then settle this
   // test's requests so the remount-safe shared flight cannot leak into another.
@@ -349,7 +350,7 @@ describe("MarketFlow access explicit contact consent", () => {
   });
 
   it("shows the consent error and does not request access while unchecked", async () => {
-    renderWithQueryClient(<MarketflowAccessPage />);
+    renderWithQueryClient(<MarketflowAccessPage />, { search: "?role=operator" });
     fillMarketflowAccessForm();
 
     expect(screen.getByTestId("checkbox-access-consent")).toHaveAttribute(
@@ -368,7 +369,7 @@ describe("MarketFlow access explicit contact consent", () => {
     let now = 50_000;
     vi.spyOn(Date, "now").mockImplementation(() => now);
 
-    renderWithQueryClient(<MarketflowAccessPage />);
+    renderWithQueryClient(<MarketflowAccessPage />, { search: "?role=operator" });
     fillMarketflowAccessForm();
     expect(screen.getByTestId("select-access-role")).toHaveTextContent(
       "Operator / builder",
@@ -411,7 +412,7 @@ describe("MarketFlow access explicit contact consent", () => {
   it("binds a hidden honeypot and rejects a filled bot field", async () => {
     let now = 80_000;
     vi.spyOn(Date, "now").mockImplementation(() => now);
-    const { container } = renderWithQueryClient(<MarketflowAccessPage />);
+    const { container } = renderWithQueryClient(<MarketflowAccessPage />, { search: "?role=operator" });
     const honeypot = container.querySelector<HTMLInputElement>(
       'input[name="hp_company"]',
     );
@@ -434,7 +435,7 @@ describe("MarketFlow access explicit contact consent", () => {
   it("rejects a submit before three seconds with a durable inline alert", async () => {
     let now = 90_000;
     vi.spyOn(Date, "now").mockImplementation(() => now);
-    renderWithQueryClient(<MarketflowAccessPage />);
+    renderWithQueryClient(<MarketflowAccessPage />, { search: "?role=operator" });
     fillMarketflowAccessForm();
     now = 92_500;
     consentAndSubmitMarketflowAccess();
@@ -447,7 +448,7 @@ describe("MarketFlow access explicit contact consent", () => {
   it("rejects whitespace-only identity fields before calling the API", async () => {
     let now = 95_000;
     vi.spyOn(Date, "now").mockImplementation(() => now);
-    renderWithQueryClient(<MarketflowAccessPage />);
+    renderWithQueryClient(<MarketflowAccessPage />, { search: "?role=operator" });
     fillMarketflowAccessForm();
     fireEvent.change(screen.getByTestId("input-access-name"), {
       target: { value: "   " },
@@ -462,7 +463,7 @@ describe("MarketFlow access explicit contact consent", () => {
   it("announces that the request is being recorded and prevents duplicate submission", async () => {
     let now = 100_000;
     vi.spyOn(Date, "now").mockImplementation(() => now);
-    renderWithQueryClient(<MarketflowAccessPage />);
+    renderWithQueryClient(<MarketflowAccessPage />, { search: "?role=operator" });
     fillMarketflowAccessForm();
     now = 105_000;
     consentAndSubmitMarketflowAccess();
@@ -482,7 +483,7 @@ describe("MarketFlow access explicit contact consent", () => {
     apiRequestMock
       .mockRejectedValueOnce(new Error("offline"))
       .mockResolvedValueOnce(new Response(JSON.stringify({ id: 101, stage: "new" }), { status: 201 }));
-    renderWithQueryClient(<MarketflowAccessPage />);
+    renderWithQueryClient(<MarketflowAccessPage />, { search: "?role=operator" });
     fillMarketflowAccessForm();
     now = 115_000;
     consentAndSubmitMarketflowAccess();
@@ -505,7 +506,7 @@ describe("MarketFlow access explicit contact consent", () => {
       configurable: true,
       value: vi.fn(),
     });
-    const { container } = renderWithQueryClient(<MarketflowAccessPage />);
+    const { container } = renderWithQueryClient(<MarketflowAccessPage />, { search: "?role=operator" });
     fillMarketflowAccessForm();
     now = 125_000;
     consentAndSubmitMarketflowAccess();

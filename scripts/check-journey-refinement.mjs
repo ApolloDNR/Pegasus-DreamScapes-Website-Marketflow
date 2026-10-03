@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { chromium } from 'playwright-core';
+import { checkPublicRouteContinuity } from './public-route-continuity-check.mjs';
 process.env.APP_ENV='preview'; process.env.SITE_INDEXABLE='false'; process.env.DATABASE_URL='';
 const {default:app}=await import('../server.mjs');
 const server=app.listen(0,'127.0.0.1'); await new Promise(resolve=>server.once('listening',resolve));
@@ -28,6 +29,7 @@ try {
   await context.route('**/*',route=>{if(route.request().method()!=='GET'){writes.push(route.request().url());return route.abort();} return new URL(route.request().url()).origin===origin?route.continue():route.abort();});
   await context.addInitScript(theme=>{localStorage.setItem('pegasus-ui-theme',theme);localStorage.setItem('pegasus-cookie-consent',JSON.stringify({essential:true,analytics:false,marketing:false,decidedAt:'2026-01-01T00:00:00.000Z'}));},theme);
   const page=await context.newPage();currentPage=page;page.on('pageerror',error=>errors.push(error.message));
+  await checkPublicRouteContinuity(page, origin);
   await page.goto(origin+'/'); await page.locator('.home-pathways').waitFor();
   await page.locator('#home-paths-title').evaluate(el=>el.scrollIntoView({block:'start'}));
   const pathways=page.locator('.home-pathways');
@@ -79,6 +81,7 @@ try {
     await page.locator('[data-tour-fixture]').evaluate(el=>el.remove());
     await page.waitForFunction(()=>document.querySelectorAll('.peggy-tour-trail button').length===6);
   }
+  if(await sectionDetails.isVisible() && await sectionDetails.getAttribute('aria-expanded') === 'false') await sectionDetails.click();
   await trail.getByRole('button').nth(1).press('ArrowRight');
   assert.equal(await trail.getByRole('button').nth(2).getAttribute('aria-current'),'step');
   assert(await trail.getByRole('button').nth(2).evaluate(el=>el===document.activeElement));
@@ -109,7 +112,7 @@ try {
   assert.equal(await page.locator('.journey-continuation').count(),0,`${key}: owners keeps one closing`);
   // The owner and Our Work pages end with their own closing; the process page retains curated onward links.
   await page.goto(origin+'/how-we-operate');await page.locator('.ep-opening').waitFor();
-  const next=page.locator('.journey-continuation');await next.scrollIntoViewIfNeeded();await capture(page,key,'continuation');
+  const next=page.getByRole('navigation',{name:'Related reading'});await next.scrollIntoViewIfNeeded();await capture(page,key,'continuation');
   await next.getByRole('link',{name:/See the work/}).click();await page.getByRole('heading',{name:'The work, in detail.'}).waitFor();
   assert.equal(await page.locator('.journey-continuation').count(),0,`${key}: Our Work keeps one closing`);
   await page.goto(origin+'/tools');await page.locator('.tools-finder').waitFor();await capture(page,key,'tools');
@@ -119,6 +122,18 @@ try {
   assert.equal(await page.getByRole('link',{name:'View saved work'}).getAttribute('href'),'/saved');
   await page.getByRole('button',{name:/Check a number/}).click();await page.getByRole('link',{name:/After-repair value/}).click();
   await page.waitForURL('**/strategy-lab?tool=calculators&tab=arv');
+  for (const tab of ['arv','roi','brrrr','cashflow','wholesale','piti','ownvsrent','hardmoney']) {
+    await page.getByTestId(`tab-${tab}`).click();
+    const collisions = await page.locator('.id-calculators input.pl-10:visible').evaluateAll(inputs => inputs.flatMap(input => {
+      const icon = input.parentElement.querySelector('svg');
+      if (!icon) return [];
+      const style = getComputedStyle(input);
+      const textLeft = input.getBoundingClientRect().left + parseFloat(style.borderLeftWidth) + parseFloat(style.paddingLeft);
+      return textLeft < icon.getBoundingClientRect().right + 4 ? [{id:input.id,textLeft,iconRight:icon.getBoundingClientRect().right}] : [];
+    }));
+    assert.deepEqual(collisions, [], `${key}/${tab}: field text clears currency/percent icons`);
+  }
+
   assert.equal(await page.locator('.journey-continuation,.journey-wayfinder').count(),0);
   await page.goto(origin+'/bring-an-opportunity');await page.getByRole('heading').first().waitFor();
   assert.equal(await page.locator('.journey-continuation,.journey-wayfinder').count(),0);

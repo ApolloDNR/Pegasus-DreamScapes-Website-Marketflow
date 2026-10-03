@@ -626,9 +626,9 @@ const buyerSplits: { heading: string; copy: string; paths: SplitPath[]; founderP
   founderPhoto: true,
   peggyHint: true,
   paths: [
-    { name: 'Possible buyer representation', desc: 'Ask about current licensed-representation availability. Search, diligence, valuation, and offer duties require a separate written brokerage agreement.', cta: 'Request representation', href: '/work-with-apollo' },
-    { name: 'Investor buyer request', desc: 'Submit an investor-interest mandate for possible consideration. This is not a representation request, capital application, MarketFlow account, or promise of a response.', cta: 'Submit investor interest', href: '/bring-an-opportunity?intent=buyer' },
-    { name: 'MarketFlow controlled pilot', desc: 'Request discretionary controlled-pilot access. Approval, an account, inventory, review, matching, and transactions are not promised.', cta: 'Request pilot access', href: '/marketflow/access' },
+    { name: 'Possible buyer representation', desc: 'Ask about current licensed-representation availability. Search, diligence, valuation, and offer duties require a separate written brokerage agreement.', cta: 'Request representation', href: '/work-with-apollo?intent=buy#apollo-paths' },
+    { name: 'Investor buyer request', desc: 'Submit an investor-interest mandate for possible consideration. This is not a representation request, capital application, MarketFlow account, or promise of a response.', cta: 'Submit investor interest', href: '#buyer-criteria' },
+    { name: 'MarketFlow controlled pilot', desc: 'Request discretionary controlled-pilot access. Approval, an account, inventory, review, matching, and transactions are not promised.', cta: 'Request pilot access', href: '/marketflow/access?role=buyer' },
   ],
 };
 

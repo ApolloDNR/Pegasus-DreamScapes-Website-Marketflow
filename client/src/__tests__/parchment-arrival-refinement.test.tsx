@@ -64,6 +64,6 @@ describe('Approved parchment arrival refinement', () => {
     expect(opening.getByRole('img')).toHaveAttribute('src', '/images/nelson/nelson-exterior-1280.webp');
     // PageOpening uppercases captions; assert the factual label, not its casing.
     expect(opening.getByText(/Completed project/i)).toBeInTheDocument();
-    expect(opening.getByRole('link', { name: 'Tell us about the property' })).toHaveAttribute('href', '/bring-an-opportunity?intent=property');
+    expect(opening.getByRole('link', { name: 'Tell us about the property' })).toHaveAttribute('href', '/bring-an-opportunity?intent=property&ref=property-owners');
   });
 });

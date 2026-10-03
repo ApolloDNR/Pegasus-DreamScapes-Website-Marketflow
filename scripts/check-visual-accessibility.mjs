@@ -1462,7 +1462,7 @@ async function verifyWideOwnerHero(page, originalViewport) {
       const primaryBox = await primary.boundingBox();
       assert(primaryBox && primaryBox.width >= 44 && primaryBox.height >= 44,
         `Owner primary action is too small: ${context}`);
-      assert(await primary.getAttribute('href') === '/bring-an-opportunity?intent=property', 'Owner hero lost its intake destination');
+      assert(await primary.getAttribute('href') === '/bring-an-opportunity?intent=property&ref=property-owners', 'Owner hero lost its intake destination');
       await primary.click({ trial: true, timeout: 5_000 });
       console.log(`[design] owner wide-desktop PASS ${context}`);
       if (screenshotDir) {
@@ -1586,7 +1586,7 @@ async function exercisePublicDesign(page, route, viewport, health) {
   }
   if (route === '/buyers') {
     const paths = page.locator('#audience-options');
-    for (const href of ['/work-with-apollo', '/bring-an-opportunity?intent=buyer', '/marketflow/access']) {
+    for (const href of ['/work-with-apollo?intent=buy#apollo-paths', '#buyer-criteria', '/marketflow/access?role=buyer']) {
       assert(await paths.locator(`a[href="${href}"]`).count() === 1, `Buyers lost the separate ${href} path`);
     }
     assert(await page.getByRole('link', { name: /Explore the case study/ }).getAttribute('href') === '/projects/nelson-dr',

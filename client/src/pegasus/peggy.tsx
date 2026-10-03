@@ -10,7 +10,7 @@ import {
 } from '@shared/peggy-access';
 import { peggyFetchWithSingleRefresh } from '@/lib/peggy-access';
 import type { PeggyPageContext } from '@shared/peggy-page-context';
-import { usePeggyPageGuide } from './peggy-page-guide';
+import { scrollToGuideSection, usePeggyPageGuide } from './peggy-page-guide';
 import { PeggyGuideWelcome, PeggyLocation, PeggyTour } from './peggy-guide-ui';
 import './peggy-guide.css';
 
@@ -145,8 +145,8 @@ export function Peggy({
     const section = guide.sections[tourIndex];
     if (!section) { setTourIndex(null); return; }
     section.element.classList.add('peggy-tour-target');
-    section.element.scrollIntoView?.({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-    return () => section.element.classList.remove('peggy-tour-target');
+    const frame = requestAnimationFrame(() => scrollToGuideSection(section.element));
+    return () => { cancelAnimationFrame(frame); section.element.classList.remove('peggy-tour-target'); };
   }, [tourIndex, guide.sections]);
   useEffect(() => {
     if (tourIndex !== null) document.querySelector<HTMLElement>('.peggy-tour')?.focus({ preventScroll: true });
@@ -387,7 +387,7 @@ export function Peggy({
       section.classList.add('peggy-tour-return-focus');
       // Removing the reserved rail may reflow the page. Restore the current
       // heading after that layout change, rather than jumping to the opener.
-      section.scrollIntoView?.({ block: 'start', behavior: 'auto' });
+      scrollToGuideSection(section, 'auto');
       section.focus({ preventScroll: true });
       section.addEventListener('blur', () => {
         if (originalTabIndex === null) section.removeAttribute('tabindex');
@@ -413,8 +413,15 @@ export function Peggy({
     const snapshot = guide.snapshot(index);
     if (!snapshot) return;
     offerQuestion({ context: { ...snapshot, ...(selectedText ? { selection: selectedText } : {}) }, prompt: selectedText ? 'Explain the selected passage in plain language.' : `Explain “${snapshot.section}” in plain language. What should I notice here?` });
+    const source = guide.sections[index]?.element;
     setTourIndex(null);
     setOpen(true);
+    // Expanding a top guide changes reading clearance. Once it becomes chat,
+    // reveal the explicitly asked section so the visible summary and prepared
+    // question continue to describe the same place.
+    requestAnimationFrame(() => {
+      if (source?.isConnected && window.location.pathname === guide.path) scrollToGuideSection(source, 'auto');
+    });
   };
   const preparePrompt = (prompt: string) => {
     offerQuestion({ prompt });

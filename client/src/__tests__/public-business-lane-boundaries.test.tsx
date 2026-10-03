@@ -84,11 +84,11 @@ describe("public business-lane boundaries", () => {
     expect(screen.getAllByText("Possible buyer representation").length).toBeGreaterThan(0);
     expect(screen.getByText("Investor buyer request")).toBeInTheDocument();
     expect(screen.getByText("MarketFlow controlled pilot")).toBeInTheDocument();
-    expect(container.querySelector('a[href="/work-with-apollo"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/work-with-apollo?intent=buy#apollo-paths"]')).not.toBeNull();
     expect(
-      container.querySelector('a[href="/bring-an-opportunity?intent=buyer"]'),
+      container.querySelector('a[href="#buyer-criteria"]'),
     ).not.toBeNull();
-    expect(container.querySelector('a[href="/marketflow/access"]')).not.toBeNull();
+    expect(container.querySelector('a[href="/marketflow/access?role=buyer"]')).not.toBeNull();
     expect(screen.getByRole("button", { name: /share buying criteria/i })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /get on the buyer list/i })).not.toBeInTheDocument();
   });

@@ -29,3 +29,25 @@ export const PUBLIC_CONTACT = {
 export const REPRESENTATION_IDENTITY = 'Paolo Ariel “Apollo” Duran Ramirez · California real estate salesperson · CA DRE #02333658. Responsible broker: BMP Realty Inc DBA Keller Williams Realty-East Bay.';
 export const REPRESENTATION_NOTICE = `${REPRESENTATION_IDENTITY} Verify current status. Licensed representation may be available only through a separate written brokerage agreement.`;
 export const SUBMISSION_NOTICE = 'Submission does not create representation, confidentiality, source protection, partnership, review, or a duty to respond.';
+
+// Public section membership is separate from exact current-page semantics.
+const PUBLIC_ROUTE_PARENTS: Record<string, string> = {
+  '/buyers': '/work-with-apollo',
+  '/capital': '/deal-partners',
+  '/operators': '/deal-partners',
+  '/referral': '/deal-partners',
+  '/vendor-network': '/deal-partners',
+  '/strategy-lab': '/tools',
+  '/saved': '/tools',
+  '/deal-blueprint': '/tools',
+  '/calculators': '/tools',
+  '/projects': '/our-work',
+  '/case-study': '/our-work',
+};
+
+export function publicNavigationState(location: string, href: string) {
+  const path = location.split(/[?#]/, 1)[0].replace(/\/$/, '') || '/';
+  const current = path === href;
+  const parent = Object.entries(PUBLIC_ROUTE_PARENTS).find(([root]) => path === root || path.startsWith(`${root}/`))?.[1];
+  return { current, active: current || parent === href };
+}

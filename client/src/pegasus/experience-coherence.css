@@ -1,0 +1,76 @@
+/* One reading rhythm across marketing, tool and standalone route families. */
+.pg-root .site-mobile-link[data-active='true'] {
+  color:var(--experience-copper);
+  border-inline-start:2px solid currentColor;
+  padding-inline-start:14px;
+  background:var(--experience-limestone);
+}
+.journey-related { background:var(--experience-paper); color:var(--experience-text); border-top:1px solid var(--experience-rule); padding-block:24px; font:400 14px/1.5 var(--pg-font-ui); }
+.journey-related > div { display:flex; align-items:center; justify-content:space-between; gap:20px 48px; }
+.journey-related > div > span { color:var(--experience-muted); }
+.journey-related > div > div { display:flex; gap:16px 36px; flex-wrap:wrap; }
+.journey-related a { display:inline-flex; align-items:center; gap:14px; min-height:44px; color:var(--experience-copper); }
+.journey-related a:hover { text-decoration:underline; text-underline-offset:5px; }
+.journey-related a:focus-visible { outline:2px solid currentColor; outline-offset:4px; }
+.id-tool-navigation,.utility-wayfinding { display:flex; align-items:center; flex-wrap:wrap; gap:12px 28px; font:400 14px/1.5 var(--pg-font-ui); }
+.id-tool-navigation a,.utility-wayfinding a { display:inline-flex; align-items:center; min-height:44px; color:var(--experience-copper); text-underline-offset:5px; }
+.id-tool-navigation a:hover,.utility-wayfinding a:hover { text-decoration:underline; }
+.id-tool-navigation { margin-bottom:20px; }
+.utility-wayfinding { margin-top:18px; }
+.peggy-workspace .public-reading-surface { --background:39 46% 93%; --card:39 46% 93%; --muted:38 41% 89%; }
+.peggy-workspace .public-reading-surface[data-theme='dark'] { --background:203 58% 10%; --card:203 49% 15%; --muted:203 49% 15%; }
+.public-reading-surface .faq-page > section:first-child { background:var(--experience-midnight); }
+.public-reading-surface .faq-page > section:first-child > svg { display:none; }
+.public-reading-surface .faq-page > section:first-child .faq-wrap { padding-top:144px; padding-bottom:48px; }
+.public-reading-surface .faq-page h1 { font:400 clamp(36px,4.4vw,60px)/1.14 'Playfair Display',Georgia,serif; letter-spacing:0; }
+.public-reading-surface .faq-page > section:first-child p:last-child { font-size:17px; line-height:1.65; }
+.public-reading-surface .faq-page :is(.faq-tools label,.faq-search-field input,.faq-topics button,.faq-help,.faq-result-count) { font-size:14px; }
+.public-reading-surface .faq-page .faq-search-field input { font-size:16px; }
+.public-reading-surface .faq-section h2 { letter-spacing:.04em; text-transform:none; font-family:Inter,system-ui,sans-serif; font-size:16px; }
+.public-reading-surface .faq-section [data-testid^='faq-q'] { font-family:Inter,system-ui,sans-serif; font-weight:500; font-size:17px; line-height:1.5; }
+.public-reading-surface :is(.legal-page,.faq-page) :is(h1,h2) { text-wrap:balance; }
+/* Avoid oversized marketing spacing on the small utility/empty state. */
+.experience-page.ep-saved .ep-opening-reading { padding-bottom:28px; }
+.experience-page.ep-saved .ep-opening .journey-invite { margin-top:12px; padding-top:12px; }
+.experience-page.ep-saved > .ep-section { padding-top:40px; }
+@media(max-width:767px) {
+  .journey-related > div { display:block; }
+  .journey-related > div > div { margin-top:8px; column-gap:24px; }
+  .public-reading-surface .faq-page > section:first-child .faq-wrap { padding-top:112px; padding-bottom:32px; }
+  .public-reading-surface .faq-page > section:first-child p:first-child { margin-bottom:16px; font-size:11px; letter-spacing:.14em; }
+  .public-reading-surface .faq-page > section:first-child h1 { margin-bottom:18px; }
+  .public-reading-surface .faq-page > section:first-child p:last-child { font-size:16px; }
+  .public-reading-surface .legal-page > section:first-child { padding-top:112px; padding-bottom:32px; }
+  .public-reading-surface .legal-page h1 > span { font-size:18px; margin-top:14px; }
+  .experience-page:not(.ep-home) .ep-opening-chapter { padding-bottom:36px; }
+  .experience-page .ep-opening-chapter h1 { font-size:clamp(36px,10vw,42px); }
+  .experience-page .ep-opening-portrait h1 { font-size:clamp(38px,11vw,48px); }
+  .experience-page .ep-section-title { margin-bottom:24px; }
+  .id-tool-navigation { margin-bottom:12px; }
+}
+
+@media(max-width:360px) {
+  .pg-root .site-nav-inner { gap:8px; }
+  .pg-root .site-wordmark { font-size:17px; }
+  .pg-root .site-brand-mark { width:30px; height:30px; }
+  .pg-root .site-menu-button { min-width:64px; font-size:14px; }
+}
+/* The pilot request stays within the same editorial/form family. Material
+   access and consent boundaries remain visible; process detail is optional. */
+.public-reading-surface .mf-access-intro { background:var(--experience-midnight); padding-top:140px; padding-bottom:48px; }
+.public-reading-surface .mf-access-intro h1 { font:400 clamp(40px,4.6vw,64px)/1.12 'Playfair Display',Georgia,serif; letter-spacing:0; max-width:19ch; }
+.public-reading-surface .mf-access-back { display:inline-flex; min-height:44px; align-items:center; margin-bottom:12px; font:400 14px/1.5 Inter,system-ui,sans-serif; color:#efd5be; text-decoration:underline; text-underline-offset:5px; }
+.public-reading-surface .mf-access-review > h2 { font-size:32px; line-height:1.2; letter-spacing:0; max-width:20ch; }
+.public-reading-surface .mf-access-body { padding-block:48px 64px; gap:48px; }
+.public-reading-surface .mf-access-further { margin-top:20px; border-block:1px solid hsl(var(--border)); }
+.public-reading-surface .mf-access-further summary { min-height:48px; padding-block:12px; cursor:pointer; font-size:15px; font-weight:500; color:hsl(var(--primary)); }
+.public-reading-surface .mf-access-further summary:focus-visible { outline:2px solid currentColor; outline-offset:4px; }
+.public-reading-surface .mf-access-perks { margin-top:0; border-top:0; }
+.public-reading-surface .mf-access-perks small,.public-reading-surface .mf-access-boundary { font-size:14px; line-height:1.65; }
+.public-reading-surface .mf-access-form-card { background:hsl(var(--background)); border-radius:2px; box-shadow:none; }
+@media(max-width:767px) {
+  .public-reading-surface .mf-access-intro { padding-top:108px; padding-bottom:32px; }
+  .public-reading-surface .mf-access-intro h1 { font-size:38px; }
+  .public-reading-surface .mf-access-body { width:calc(100% - 48px); padding-block:32px 48px; gap:32px; }
+  .public-reading-surface .mf-access-form-card { padding:20px 0; border-inline:0; }
+}

@@ -16,6 +16,7 @@ beforeEach(() => {
   vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: true })));
   vi.stubGlobal('fetch', vi.fn());
   HTMLElement.prototype.scrollIntoView = vi.fn();
+  vi.stubGlobal('scrollTo', vi.fn());
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({ top:700, left:0, right:800, bottom:800, width:800, height:100, x:0, y:700, toJSON:() => ({}) });
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
@@ -282,17 +283,9 @@ describe('the shared public journey', () => {
       rerender(<JourneyContinuation path={path}/>);expect(screen.queryByRole('region')).not.toBeInTheDocument();
     }
   });
-  it.each(['/work-with-apollo', '/buyers'])('keeps the founder’s head within responsive portrait previews on %s', (path) => {
-    render(<JourneyContinuation path={path} />);
-    const portrait = screen.getByRole('img');
-    expect(portrait).toHaveAttribute('src', '/images/founder/apollo.webp');
-    expect(portrait).toHaveStyle({ objectPosition: 'center top' });
-  });
-  it('retains the centered crop for property evidence previews', () => {
-    render(<JourneyContinuation path="/about" />);
-    const image = screen.getByRole('img');
-    expect(image).toHaveAttribute('src', '/images/nelson/kitchen-after.webp');
-    expect(image.style.objectPosition).toBe('');
+  it.each(['/work-with-apollo', '/buyers', '/about'])('does not repeat a large exploration panel after the terminal action on %s', (path) => {
+    const {container}=render(<JourneyContinuation path={path} />);
+    expect(container).toBeEmptyDOMElement();
   });
   it('dismisses the section outline with Escape and focuses the chosen heading', () => {
     const elements=[document.createElement('h1'),document.createElement('h2'),document.createElement('h2')];

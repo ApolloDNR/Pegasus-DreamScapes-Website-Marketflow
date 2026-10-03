@@ -12,6 +12,7 @@ import { memoryLocation } from "wouter/memory-location";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { Landing } from "@/pegasus/Landing";
+import { PeggyReviewHandoffProvider } from "@/pegasus/peggy-review-handoff";
 import { ThemeProvider } from "@/components/theme-provider";
 import { ROUTE_TO_URL } from "@/pegasus/routes";
 import { PEGGY_CONVERSATION_ACCESS_HEADER } from "@shared/peggy-access";
@@ -85,6 +86,7 @@ if (typeof window !== "undefined") {
 
 function renderLanding(routePath = "/") {
   const mem = memoryLocation({ path: routePath, record: true });
+  const useMemorySearch = () => mem.hook()[0].split("?")[1] ?? "";
   const qc = new QueryClient({
     defaultOptions: {
       queries: { retry: false, gcTime: 0, staleTime: 0 },
@@ -94,8 +96,8 @@ function renderLanding(routePath = "/") {
   const utils = render(
     <QueryClientProvider client={qc}>
       <ThemeProvider>
-        <Router hook={mem.hook}>
-          <Landing />
+        <Router hook={mem.hook} searchHook={useMemorySearch}>
+          <PeggyReviewHandoffProvider><Landing /></PeggyReviewHandoffProvider>
         </Router>
       </ThemeProvider>
     </QueryClientProvider>,
@@ -282,8 +284,11 @@ describe("Peggy handoff action buttons navigate to real routes (Task #214)", () 
 
     expect(history.length, "review handoff produced no navigation").toBeGreaterThan(before);
     const target = history[history.length - 1];
-    expect(target).toBe(ROUTE_TO_URL.contact);
+    expect(target.split("?")[0]).toBe(ROUTE_TO_URL.contact);
+    expect(new URLSearchParams(target.split("?")[1]).get("peggy-review")).toBeTruthy();
     expectValidNavTarget(target, "Peggy review handoff");
+    expect(await within(container).findByLabelText("The situation")).toHaveValue("probate");
+    expect(within(container).getByLabelText("Property address or area")).toHaveValue("east-bay");
   });
 
   it("chat-error fallback offers Review + Strategy Lab that both route to real surfaces", async () => {
@@ -316,7 +321,9 @@ describe("Peggy handoff action buttons navigate to real routes (Task #214)", () 
     let before = history.length;
     fireEvent.click(review);
     expect(history.length).toBeGreaterThan(before);
-    expect(history[history.length - 1]).toBe(ROUTE_TO_URL.contact);
-    expectValidNavTarget(history[history.length - 1], "Peggy error Review CTA");
+    const target = history[history.length - 1];
+    expect(target.split("?")[0]).toBe(ROUTE_TO_URL.contact);
+    expect(new URLSearchParams(target.split("?")[1]).get("peggy-review")).toBeTruthy();
+    expectValidNavTarget(target, "Peggy error Review CTA");
   });
 });

@@ -5,7 +5,7 @@ import type { Route, Nav, Theme, NavLink } from './theme';
 import { BrandMark } from './primitives';
 import { PREMIUM_NAVIGATION } from './data';
 import { urlFor } from './routes';
-import { PRIMARY_LINKS, REAL_ESTATE_LINKS, PUBLIC_ACTIONS, PUBLIC_CONTACT } from './public-content';
+import { PRIMARY_LINKS, REAL_ESTATE_LINKS, PUBLIC_ACTIONS, PUBLIC_CONTACT, publicNavigationState } from './public-content';
 import './experience.css';
 
 type PremiumItem = NavLink & { note?: string; badge?: string };
@@ -23,8 +23,12 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
   const desktopMoreRef = useRef<HTMLDivElement>(null);
   const desktopMoreButtonRef = useRef<HTMLButtonElement>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
+  const restoreMenuFocusRef = useRef(true);
 
-  const closeNavigation = () => {
+  const closeNavigation = (event?: React.MouseEvent<HTMLElement>) => {
+    if (event && (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0)) return;
+    const href = event?.currentTarget.getAttribute('href');
+    restoreMenuFocusRef.current = !!href && new URL(href, window.location.href).pathname === window.location.pathname;
     setMenuOpen(false);
     setDesktopMoreOpen(false);
     setNavigationQuery('');
@@ -43,6 +47,7 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
   };
 
   useEffect(() => {
+    restoreMenuFocusRef.current = false;
     setMenuOpen(false);
     setDesktopMoreOpen(false);
     setNavigationQuery('');
@@ -86,6 +91,7 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
       navRef.current?.removeAttribute('inert');
       return;
     }
+    restoreMenuFocusRef.current = true;
     const previousOverflow = document.body.style.overflow;
     const previousPadding = document.body.style.paddingRight;
     const scrollbar = window.innerWidth - document.documentElement.clientWidth;
@@ -122,14 +128,17 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
       document.body.style.paddingRight = previousPadding;
       background.forEach(element => element.removeAttribute('inert'));
       navRef.current?.removeAttribute('inert');
-      (returnFocusRef.current?.isConnected ? returnFocusRef.current : menuButtonRef.current)?.focus();
+      if (restoreMenuFocusRef.current) {
+        (returnFocusRef.current?.isConnected ? returnFocusRef.current : menuButtonRef.current)?.focus({ preventScroll: true });
+      }
       returnFocusRef.current = null;
     };
   }, [menuOpen]);
 
   const overHero = route === 'home' && !scrolled;
-  const current = (href: string) => location === href || location.startsWith(`${href}/`);
-  const estateActive = REAL_ESTATE_LINKS.some(item => current(item.href));
+  const current = (href: string) => publicNavigationState(location, href).current;
+  const active = (href: string) => publicNavigationState(location, href).active;
+  const estateActive = REAL_ESTATE_LINKS.some(item => active(item.href));
   const entries = [
     ...REAL_ESTATE_LINKS.map(item => ({ ...item, note: '' })),
     ...PRIMARY_LINKS.map(item => ({ ...item, note: '' })),
@@ -174,7 +183,7 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
               {themeControl}
             </div>}
           </div>
-          {PRIMARY_LINKS.map(item => <Link key={item.href} href={item.href} onClick={closeNavigation} className="site-nav-link" aria-current={current(item.href) ? 'page' : undefined}>{item.label}</Link>)}
+          {PRIMARY_LINKS.map(item => <Link key={item.href} href={item.href} onClick={closeNavigation} className="site-nav-link" data-active={active(item.href) || undefined} aria-current={current(item.href) ? 'page' : undefined}>{item.label}</Link>)}
         </div>
         <Link href={PUBLIC_ACTIONS.opportunity.href} className="experience-button site-header-action">{PUBLIC_ACTIONS.opportunity.label}<ArrowRight aria-hidden="true" size={16} /></Link>
         <button ref={menuButtonRef} type="button" className="site-menu-button" aria-label="Open menu" aria-expanded={menuOpen} aria-controls="site-mobile-menu" onClick={toggleMenu}><Menu aria-hidden="true" size={21} />Menu</button>
@@ -184,7 +193,7 @@ export function NavBar({ go: _go, route, theme, toggleTheme, scrolled, openPeggy
       <div className="site-mobile-top"><span>Menu</span><button type="button" data-menu-initial-focus onClick={() => setMenuOpen(false)} aria-label="Close menu"><X aria-hidden="true" size={23} />Close</button></div>
       <div className="site-mobile-body">
         <details className="site-mobile-estate" open={estateActive || undefined}><summary>Real Estate<ChevronDown aria-hidden="true" size={19} /></summary><div>{estateLinks}</div></details>
-        {PRIMARY_LINKS.map(item => <Link key={item.href} href={item.href} onClick={closeNavigation} className="site-mobile-link" aria-current={current(item.href) ? 'page' : undefined}>{item.label}<ArrowRight aria-hidden="true" size={18} /></Link>)}
+        {PRIMARY_LINKS.map(item => <Link key={item.href} href={item.href} onClick={closeNavigation} className="site-mobile-link" data-active={active(item.href) || undefined} aria-current={current(item.href) ? 'page' : undefined}>{item.label}<ArrowRight aria-hidden="true" size={18} /></Link>)}
         <Link href={PUBLIC_ACTIONS.opportunity.href} onClick={closeNavigation} className="experience-button site-mobile-action">{PUBLIC_ACTIONS.opportunity.label}<ArrowRight aria-hidden="true" size={18} /></Link>
         {searchControl('mobile-nav-search')}{query && searchResults}
         {themeControl}

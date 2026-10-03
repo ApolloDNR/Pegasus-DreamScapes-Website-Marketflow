@@ -59,6 +59,8 @@ const guideCss = postcss.parse(readFileSync(resolve(process.cwd(), "client/src/p
 function guideDeclarations(selector: string): Record<string, string> {
   const values: Record<string, string> = {};
   guideCss.walkRules(selector, (rule) => {
+    // This contract describes the phone layout, not the wider compact row.
+    if (rule.parent?.type === "atrule" && "params" in rule.parent && String(rule.parent.params).includes("min-width:641px")) return;
     rule.walkDecls(decl => { values[decl.prop] = decl.value; });
   });
   return values;
@@ -70,6 +72,8 @@ describe("compact page-tour layout", () => {
     expect(tour.display).toBe('flex');
     expect(tour['flex-direction']).toBe('column');
     expect(tour.overflow).toBe('hidden');
+    expect(tour.top).toContain('--journey-nav-height');
+    expect(tour.bottom).toBe('auto');
     expect(tour['max-height']).toContain('100dvh');
     expect(tour['max-height']).toContain('--peggy-tour-bottom');
     const cookie = guideDeclarations('.pg-cookie-visible .peggy-tour[data-compact="true"]');

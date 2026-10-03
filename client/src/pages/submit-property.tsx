@@ -244,11 +244,25 @@ export default function SubmitPropertyPage() {
       preVisitor: INTENT_TO_VISITOR[intent] ?? "",
       ownerSituation: ownerSituation.situation,
       ownerSituationLabel: ownerSituation.sourceLabel,
-      partnerNeed: ["deal-jv", "deal"].includes(intent)
+      partnerNeed: ["deal-jv", "deal"].includes(intent) || p.get("ref") === "deal-partners"
         ? normalizePartnerNeed(p.get("partner_need"))
         : "",
     };
   }, []);
+  const propertyReviewRequest = utm.intent === "blueprint";
+  // Return destinations are authored local routes, never untrusted ref URLs.
+  const returnPath = propertyReviewRequest
+    ? { href: '/deal-blueprint', label: 'Back to Property Review' }
+    : utm.referralReference === 'strategy-lab'
+      ? { href: '/strategy-lab', label: 'Back to Strategy Lab' }
+      : utm.referralReference === 'property-owners' || utm.ownerSituationLabel
+        ? { href: `/property-owners${utm.ownerSituationLabel ? `?owner_situation=${encodeURIComponent(utm.ownerSituationLabel)}` : ''}`, label: 'Back to Property Owners' }
+        : utm.referralReference === 'deal-partners' || utm.partnerNeed
+          ? { href: `/deal-partners${utm.partnerNeed ? `?partner_need=${encodeURIComponent(utm.partnerNeed)}` : ''}`, label: 'Back to Deal Partners' }
+          : utm.intent === 'buyer'
+            ? { href: '/buyers#buyer-criteria', label: 'Back to Buyer Paths' }
+            : { href: '/', label: 'Back to Pegasus' };
+  const returnLink = <a className="experience-link mb-6" href={returnPath.href}><ArrowLeft aria-hidden="true" size={16} />{returnPath.label}</a>;
   const [strategyLabBrief, setStrategyLabBrief] = useState<StrategyLabHandoffBrief | null>(() =>
     utm.referralReference === "strategy-lab"
       ? readStrategyLabHandoff()
@@ -479,7 +493,8 @@ export default function SubmitPropertyPage() {
 
   if (form.visitorType === 'buyer' && step > 0 && !result) return (
     <div className="intake-page min-h-screen pt-28 pb-24 px-6"><div className="mx-auto max-w-3xl">
-      <button type="button" className="min-h-11 underline mb-6" onClick={() => moveToStep(0)}>Return to Start</button>
+      <h1 className="mb-5">Investor-interest request.</h1>
+      {returnLink}<br /><button type="button" className="min-h-11 underline mb-6" onClick={() => moveToStep(0)}>Return to Start</button>
       <BuyerCriteriaForm initialDraft={buyerDraft} onDraftChange={setBuyerDraft} initialReceipt={buyerReceipt} onReceipt={setBuyerReceipt} pending={buyerPending} onPendingChange={setBuyerPending} />
     </div></div>
   );
@@ -509,8 +524,8 @@ export default function SubmitPropertyPage() {
           </h1>
           <p className="text-[17px] leading-relaxed text-[#454b55] dark:text-[#cfc5b4]">{CONFIRMATION_COPY}</p>
           <p className="mt-6 text-sm text-[#6b5f4d] dark:text-[#b9a888]">Reference: {result.id}</p>
-          <a href="/" className="mt-10 inline-block border border-[#975735] bg-[#975735] px-8 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-white hover:bg-[#975735] transition-colors">
-            Back to Pegasus
+          <a href={returnPath.href} className="mt-10 inline-block border border-[#975735] bg-[#975735] px-8 py-4 text-sm font-semibold uppercase tracking-[0.14em] text-white hover:bg-[#975735] transition-colors">
+            {returnPath.label}
           </a>
         </div>
       </div>
@@ -518,10 +533,12 @@ export default function SubmitPropertyPage() {
     <div className="intake-page min-h-screen pt-28 pb-24 px-6">
       <div className="mx-auto max-w-5xl">
         <div className="intake-opening max-w-3xl">
+          {returnLink}
           <h1 className="font-serif text-4xl sm:text-5xl leading-tight text-[#0b1d29] dark:text-[#fcfaf6]">
-            Tell us what you have.
+            {propertyReviewRequest ? 'Request a Property Review.' : 'Tell us what you have.'}
           </h1>
-          <p className="intake-intro">A property, a project, or a question. Share what you know, then review it before sending.</p>
+          <p className="intake-intro">{propertyReviewRequest ? 'Share the property and the question you would like a separately scoped review to address.' : 'A property, a project, or a question. Share what you know, then review it before sending.'}</p>
+          {propertyReviewRequest && <p className="intake-draft-note">A request is not an order or acceptance. Availability, scope, fees, and timing require a separate written engagement.</p>}
           {(utm.ownerSituationLabel || strategyLabBrief?.ownerSituation) && <p className="mt-3 text-sm leading-relaxed text-[#6b5f4d] dark:text-[#b9a888]">Starting with {utm.ownerSituationLabel || strategyLabBrief?.ownerSituation}. Add what you know; you can edit the situation before sending.</p>}
           {utm.partnerNeed && (
             <p className="mt-3 text-sm leading-relaxed text-[#6b5f4d] dark:text-[#b9a888]">
@@ -696,7 +713,7 @@ export default function SubmitPropertyPage() {
               </legend>
               <details className="intake-review" open>
                 <summary>Review your inquiry</summary>
-                <dl>{[
+                <dl>{propertyReviewRequest && <div><dt>Request type</dt><dd>Property Review request</dd></div>}{[
                   ['Starting point', VISITOR_TYPES.find(item => item.value === form.visitorType)?.label || form.visitorType, 0],
                   ['Property or area', (form.propertyAddress || form.city || form.zipCode) ? [form.propertyAddress, form.city, form.state, form.zipCode].filter(Boolean).join(', ') : 'Not provided', 1],
                   ['Situation', form.situation || 'Not provided', 2],
