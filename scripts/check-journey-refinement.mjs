@@ -22,7 +22,21 @@ async function phase(label, operation, timeoutMs) {
 }
 async function capture(page,key,state) {
   await phase(`${key}/${state}/fonts`,()=>page.evaluate(async()=>{await document.fonts.ready;}));
-  await phase(`${key}/${state}/images`,()=>page.evaluate(async()=>{await Promise.all([...document.images].filter(img=>img.getBoundingClientRect().top<innerHeight).map(img=>img.decode().catch(()=>{})));}));
+  await phase(`${key}/${state}/images`,()=>page.evaluate(async()=>{
+    const visibleImages=[...document.images].filter(image=>{
+      const rect=image.getBoundingClientRect();
+      return rect.width>0 && rect.height>0 && rect.bottom>0 && rect.top<innerHeight
+        && rect.right>0 && rect.left<innerWidth
+        && image.checkVisibility({opacityProperty:true,visibilityProperty:true,contentVisibilityAuto:true});
+    });
+    await Promise.all(visibleImages.map(async image=>{
+      try { await image.decode(); }
+      catch(error) {
+        const {top,bottom,left,right,width,height}=image.getBoundingClientRect();
+        throw new Error(`Visible image decode failed: ${JSON.stringify({src:image.currentSrc||image.src,loading:image.loading,complete:image.complete,naturalWidth:image.naturalWidth,rect:{top,bottom,left,right,width,height}})}: ${String(error)}`);
+      }
+    }));
+  }));
   assert(await phase(`${key}/${state}/geometry`,()=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)),`${key}/${state}: overflow`);
   await phase(`${key}/${state}/load-axe`,()=>page.addScriptTag({content:axe}));
   const violations=await phase(`${key}/${state}/axe`,()=>page.evaluate(async()=> (await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}})).violations.map(item=>({id:item.id,nodes:item.nodes.map(node=>node.target)}))));
