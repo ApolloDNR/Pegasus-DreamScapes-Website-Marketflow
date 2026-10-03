@@ -34,13 +34,20 @@ async function check(page, key, state) {
   results.push({ key, state, screenshot, axeViolations: 0, ...geometry });
 }
 async function openPeggy(page) {
-  await openAvailablePeggy(page, { pageGuide: true });
+  const { preparesSectionQuestion } = await openAvailablePeggy(page, { pageGuide: true });
   const dialog = page.getByRole('dialog', { name: 'Peggy, the Pegasus intake concierge', exact: true });
   await dialog.waitFor();
   // An inline or tour invitation may prepare a section question. This gate
   // starts with an empty composer before exercising the suggested-question flow.
-  await dialog.getByRole('textbox', { name: 'Talk to Peggy', exact: true }).fill('');
   const attachedContext = dialog.getByRole('button', { name: 'Remove attached page context', exact: true });
+  if (preparesSectionQuestion) {
+    await attachedContext.waitFor();
+    await page.waitForFunction(() => {
+      const section = document.querySelector('.peggy-attached-context summary span')?.textContent;
+      return section && document.querySelector('.peggy-input textarea')?.value === `Explain “${section}” in plain language. What should I notice here?`;
+    });
+  }
+  await dialog.getByRole('textbox', { name: 'Talk to Peggy', exact: true }).fill('');
   if (await attachedContext.isVisible()) await attachedContext.click();
 }
 try {
