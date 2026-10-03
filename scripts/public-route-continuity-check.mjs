@@ -5,7 +5,7 @@ import { runWithinDeadline } from './rendered-qa-liveness.mjs';
 export async function checkPublicRouteContinuity(page, origin, runStage = runWithinDeadline) {
   const top = async (name) => {
     await page.getByRole('heading', { name, exact: true, level: 1 }).waitFor();
-    await page.waitForFunction(() => Math.abs(window.scrollY) < 2);
+    await page.waitForFunction(() => Math.abs(window.scrollY) < 2 && document.querySelector('main h1') === document.activeElement);
     assert(await page.locator('main h1').evaluate(element => element === document.activeElement), `${name}: destination heading owns focus`);
   };
   const ownerFooter = async () => {

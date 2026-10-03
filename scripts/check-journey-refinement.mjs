@@ -20,6 +20,13 @@ async function phase(label, operation, timeoutMs) {
   console.log(`[journey:pass] ${label}`);
   return result;
 }
+async function waitForTopArrival(page, pathname) {
+  await page.waitForFunction(pathname=>{
+    const surface=[...document.querySelectorAll('[data-navigation-path]')].find(element=>element.dataset.navigationPath===pathname);
+    const heading=surface?.querySelector('h1');
+    return heading && document.activeElement===heading && Math.abs(scrollY)<2;
+  },pathname);
+}
 async function capture(page,key,state) {
   await phase(`${key}/${state}/fonts`,()=>page.evaluate(async()=>{await document.fonts.ready;}));
   await phase(`${key}/${state}/images`,()=>page.evaluate(async()=>{
@@ -55,7 +62,10 @@ try {
   await context.addInitScript(theme=>{localStorage.setItem('pegasus-ui-theme',theme);localStorage.setItem('pegasus-cookie-consent',JSON.stringify({essential:true,analytics:false,marketing:false,decidedAt:'2026-01-01T00:00:00.000Z'}));},theme);
   const page=await context.newPage();currentPage=page;page.on('pageerror',error=>errors.push(error.message));
   await checkPublicRouteContinuity(page, origin, (label,operation)=>phase(`${key}/route-continuity/${label}`,operation));
-  await page.goto(origin+'/'); await page.locator('.home-pathways').waitFor();
+  await phase(`${key}/home-arrival`,async()=>{
+    await page.goto(origin+'/'); await page.locator('.home-pathways').waitFor();
+    await waitForTopArrival(page,'/');
+  });
   await page.locator('#home-paths-title').evaluate(el=>el.scrollIntoView({block:'start'}));
   const pathways=page.locator('.home-pathways');
   await pathways.getByRole('link').last().evaluate(el=>el.focus({preventScroll:true}));
@@ -161,9 +171,17 @@ try {
   await page.goto(origin+'/bring-an-opportunity');await page.getByRole('heading').first().waitFor();
   assert.equal(await page.locator('.journey-continuation,.journey-wayfinder').count(),0);
   if(width < 768 && theme === 'light') {
-    await page.goto(origin+'/property-owners');await page.locator('.ep-opening').waitFor();
+    await phase(`${key}/enlarged-text/owner-arrival`,async()=>{
+      await page.goto(origin+'/property-owners');await page.locator('.ep-opening').waitFor();
+      // The lazy page can be visible before its deferred focus/top arrival.
+      // Finish that real navigation before this fixture scrolls the page.
+      await waitForTopArrival(page,'/property-owners');
+    });
+    await phase(`${key}/enlarged-text/section-guide`,async()=>{
     await page.locator('[data-testid="situation-stepper"] h2').evaluate(el=>el.scrollIntoView({block:'start'}));
     await page.locator('.journey-section-toggle').waitFor();await page.locator('.journey-section-toggle').click();
+    });
+    await phase(`${key}/enlarged-text/reflow`,async()=>{
     await page.evaluate(()=>{const sizes=[...document.querySelectorAll('body *')].filter(el=>el instanceof HTMLElement).map(el=>[el,parseFloat(getComputedStyle(el).fontSize)]);for(const [el,size] of sizes) el.style.fontSize=`${size*2}px`;});
     await page.addStyleTag({content:'.journey-wayfinder button{font-size:26px!important}.journey-section-name{font-size:24px!important}.journey-section-count,.journey-outline button>span{font-size:20px!important}.journey-wayfinder-ask{font-size:22px!important}'});
     await page.locator('[data-testid="situation-stepper"] h2').evaluate(el=>el.scrollIntoView({block:'start'}));
@@ -171,6 +189,7 @@ try {
     await page.waitForFunction(()=>document.querySelector('.journey-wayfinder')?.getBoundingClientRect().top >= document.querySelector('.site-nav').getBoundingClientRect().bottom - 1);
     if(!await page.locator('.journey-outline').count()) await page.locator('.journey-section-toggle').click();
     assert(await page.evaluate(()=>(()=>{const brand=document.querySelector('.site-brand').getBoundingClientRect(),menu=document.querySelector('.site-menu-button').getBoundingClientRect();return brand.right <= menu.left || brand.bottom <= menu.top;})()),`${key}: enlarged navigation collision`);
+    });
     await capture(page,key,'enlarged-text');
   }
   assert.deepEqual(writes,[],`${key}: unexpected service writes`);assert.deepEqual(errors,[],`${key}: page errors`);
