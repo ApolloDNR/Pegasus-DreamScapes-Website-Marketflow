@@ -134,7 +134,7 @@ export function DevelopmentPage({ go: _go }: { go: Nav }) {
   return <article className="experience-page">
     <PageOpening title="Explore a development opportunity."
       image={{ src:'/images/pegasus-craft-blueprint.webp', alt:'Architectural plans being examined at a worktable', width:1280, height:896, caption:'Planning study · Illustrative scene' }}
-      action={{ href: '/bring-an-opportunity?intent=explore', label: 'Discuss an opportunity' }}><p>Share a property or potential development partnership for consideration. Site conditions, ownership, the concept, and proposed roles help frame the conversation.</p><p className="ep-notice">Any project would require qualified providers, applicable licenses and permits, and separate written agreements defining each party’s responsibilities.</p></PageOpening>
+      action={{ href: '/bring-an-opportunity?intent=explore', label: 'Discuss an opportunity' }}><p>Before committing to a renovation or development, connect the proposed work to the property’s condition, budget, permissions, and intended sale or hold. Share a property or potential development partnership, your proposed role, and the decision you need to make.</p><p className="ep-notice">Any project would require qualified providers, applicable licenses and permits, and separate written agreements defining each party’s responsibilities.</p></PageOpening>
     <section id="development-framework" className="ep-section"><div className="experience-wrap ep-split">
       <h2>Define the work before it starts.</h2>
       <ol className="ep-rows ep-numbered">

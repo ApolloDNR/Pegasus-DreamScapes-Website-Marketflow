@@ -77,7 +77,7 @@ describe('Blueprint v1.1 mounted homepage', () => {
     fireEvent.click(more);
     expect(more).toHaveAttribute('aria-expanded', 'false');
     expect(capital).toBeVisible();
-    expect(plan.getByRole('link', { name: 'Model the assumptions' })).toHaveAttribute('href', '/strategy-lab');
+    expect(plan.getByRole('link', { name: 'Model the assumptions' })).toHaveAttribute('href', '/strategy-lab?question=funding');
     expect(plan.getByText(/does not arrange funding or imply that capital is available/)).toBeInTheDocument();
     fireEvent.click(capital);
     expect(capital).toHaveAttribute('aria-pressed', 'false');

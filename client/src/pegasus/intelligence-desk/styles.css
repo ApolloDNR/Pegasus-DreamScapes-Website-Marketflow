@@ -29,6 +29,7 @@
 .id-command nav button { border-bottom:2px solid transparent; padding:18px 0 16px; color:var(--id-muted); font-size:14px; min-height:48px; }
 .id-command nav button[aria-current] { border-color:var(--id-accent); color:var(--id-accent); font-weight:600; }
 .id-economics { margin-top:28px; padding:24px 0; border-bottom:1px solid var(--id-rule); }
+.id-economics h2 { margin-bottom:20px; }
 .id-economics dl { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); }
 .id-economics dl > div { padding:0 24px; border-left:1px solid var(--id-rule); }
 .id-economics dl > div:first-child { border-left:0; padding-left:0; }
@@ -38,6 +39,10 @@
 .id-workspace { padding-top:30px; scroll-margin-top:112px; }
 .id-desk .id-view-title { font-size:32px; margin-bottom:22px; }
 .id-overview-grid { display:grid; grid-template-columns:minmax(0,2.4fr) minmax(260px,1fr); gap:36px; align-items:start; }
+.id-overview-grid .id-economics { margin-top:0; padding-top:0; border-bottom:0; }
+.id-overview-grid .id-economics dl { grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px 0; }
+.id-overview-grid .id-economics dl > div:nth-child(odd) { border-left:0; padding-left:0; }
+.id-overview-grid + .id-read { margin-top:28px; }
 .id-overview-grid > *, .id-assumptions-layout > * { min-width:0; }
 .id-read { background:#0b1d29; color:#fcfaf6; padding:30px 32px 24px; border:1px solid #3b505a; border-radius:4px; }
 .pg-root[data-theme='dark'] .id-read { background:#102733; }
@@ -125,6 +130,7 @@
 .id-paths td strong { display:block; font-size:16px; font-weight:600; }
 .id-paths td span { display:block; font-size:13px; color:var(--id-muted); }
 .id-paths td .id-path-fit-label { display:none; }
+.id-paths .id-path-measures { margin-bottom:14px; }
 .id-paths > button { margin-top:12px; }
 .id-risk-summary { display:flex; justify-content:space-between; align-items:center; gap:24px; padding:20px 0 0; border-top:1px solid var(--id-rule); margin-top:20px; }
 .id-risk-summary p { display:flex; align-items:center; gap:10px; font-size:13px; }
@@ -395,7 +401,7 @@
 @media print {
   body:has(.id-memo)::before { display:none !important; content:none; }
   body:has(.id-memo) .id-memo header { display:block !important; }
-  body:has(.id-memo) :is(.site-nav,.site-footer,.site-mobile-menu,.peggy-fab,.peggy-panel,.cookie-banner,.cookie-preferences-dialog,.id-opening,.id-command,.id-economics,.id-memo-actions,.id-memo-handoff,.id-workspace-footer,.id-boundary,.id-calculators,[data-testid='button-peggy-widget'],[data-testid='button-peggy-public-open'],.id-view-title) { display:none !important; }
+  body:has(.id-memo) :is(.site-nav,.site-footer,.site-mobile-menu,.peggy-fab,.peggy-panel,.cookie-banner,.cookie-preferences-dialog,.id-opening,.id-command,.id-planning-question,.id-economics,.id-memo-actions,.id-memo-handoff,.id-workspace-footer,.id-boundary,.id-calculators,[data-testid='button-peggy-widget'],[data-testid='button-peggy-public-open'],.id-view-title) { display:none !important; }
   body:has(.id-memo) .intelligence-desk-page { --id-paper:#fff; --id-ink:#111; --id-muted:#333; --id-rule:#bbb; background:white; color:#111; }
   .id-desk { max-width:none; padding:0; }
   .id-workspace { padding-top:0; }
@@ -419,6 +425,11 @@
 .id-property-actions { display:flex; gap:20px; }
 .id-property-actions .id-text-button { font-size:13px; min-height:36px; }
 .id-desk .id-property-context { font-size:13px; padding:14px 0 0; }
+.id-planning-question { border-left:2px solid var(--id-accent); padding:4px 0 4px 20px; margin-bottom:26px; }
+.id-planning-question h2 { font-size:24px; margin-bottom:8px; }
+.id-planning-question p { max-width:80ch; font-size:14px; }
+.id-planning-question p + p { margin-top:4px; }
+.id-listing-comparison { padding-bottom:18px; }
 .id-context-review { border-block:1px solid var(--id-rule); padding:24px 0; margin-bottom:24px; }
 .id-context-review h2 { margin-bottom:12px; }
 .id-context-review p { margin-bottom:12px; max-width:78ch; }

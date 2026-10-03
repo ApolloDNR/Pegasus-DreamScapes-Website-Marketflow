@@ -3,7 +3,7 @@ import { X, Send, ArrowRight, ChevronDown, CornerDownLeft, Loader2, Bookmark, Bo
 import type { ChatTurn, PeggyHandoff, Nav } from './theme';
 import { PEGGY_ROLES, PEGGY_FOLLOWUPS, PEGGY_SLA, PEGGY_COMPLIANCE, PEGGY_STATUS } from './data';
 import { PeggyMark } from './peggy-mark';
-import { JourneyWayfinder, PEGGY_GUIDE_REQUEST, type PeggyGuideRequest } from './journey';
+import { JourneyWayfinder, hasJourneyWayfinder, PEGGY_GUIDE_REQUEST, type PeggyGuideRequest } from './journey';
 import { addChat, updateChat } from './savedStore';
 import {
   type PeggyConversationAccessResponse,
@@ -12,6 +12,7 @@ import { peggyFetchWithSingleRefresh } from '@/lib/peggy-access';
 import type { PeggyPageContext } from '@shared/peggy-page-context';
 import { scrollToGuideSection, usePeggyPageGuide } from './peggy-page-guide';
 import { PeggyGuideWelcome, PeggyLocation, PeggyTour } from './peggy-guide-ui';
+import { usePeggyInvitationVisibility } from './peggy-invitation-visibility';
 import './peggy-guide.css';
 
 const GREETING =
@@ -132,8 +133,12 @@ export function Peggy({
   const [pendingQuestion, setPendingQuestion] = useState<PreparedQuestion | null>(null);
   const panelOpen = open && tourIndex === null;
   const pinned = pinnedContext;
+  const wayfinderAvailable = !open && hasJourneyWayfinder(guide.path, guide.sections.length, guide.index);
+  const invitations = usePeggyInvitationVisibility(guide.path, guide.sections, wayfinderAvailable);
+  const hideWayfinderAsk = invitations.focused !== 'wayfinder' && Boolean(invitations.inline || guide.selectedText || invitations.focused === 'launcher');
+  const hideLauncher = open || (invitations.focused !== 'launcher' && Boolean(invitations.inline || wayfinderAvailable || guide.selectedText));
   const restoreOpenerFocus = () => requestAnimationFrame(() => {
-    const candidates = [openerRef.current, fabRef.current, document.querySelector<HTMLElement>('button[aria-label="Open menu"]')];
+    const candidates = [openerRef.current, invitations.inline, document.querySelector<HTMLElement>('.journey-wayfinder-ask'), fabRef.current, document.querySelector<HTMLElement>('button[aria-label="Open menu"]')];
     const target = candidates.find(element => element?.isConnected && element !== document.body && !element.closest('[hidden],[inert],[aria-hidden="true"]') && element.getBoundingClientRect().width > 0 && getComputedStyle(element).visibility !== 'hidden' && getComputedStyle(element).display !== 'none');
     target?.focus({ preventScroll: true });
   });
@@ -489,12 +494,12 @@ export function Peggy({
 
   return (
     <>
-      <JourneyWayfinder path={guide.path} sections={guide.sections} index={guide.index} hidden={open} onAsk={() => explainSection(guide.index, '')} />
+      <JourneyWayfinder path={guide.path} sections={guide.sections} index={guide.index} hidden={open} askHidden={hideWayfinderAsk} onAsk={() => explainSection(guide.index, '')} />
       {!open && guide.selectedText && <button type="button" className="peggy-selection-launcher" onClick={() => explainSection()}><FileText size={17} aria-hidden="true" />Ask Peggy about this</button>}
       <button ref={fabRef} type="button" onClick={() => open ? close() : setOpen(true)}
         aria-label={open ? 'Close Peggy' : 'Talk to Peggy, the Pegasus intake concierge'}
         aria-expanded={open} aria-controls={panelId}
-        className={`peggy-fab ${open ? 'is-open' : ''}`} hidden={open}>
+        className={`peggy-fab ${open ? 'is-open' : ''}`} hidden={hideLauncher}>
         {open ? <X size={20} aria-hidden="true" /> : <PeggyMark size={34} />}
         {!open && <span className="peggy-fab-label">Ask Peggy <span>Your guide to Pegasus</span></span>}
       </button>

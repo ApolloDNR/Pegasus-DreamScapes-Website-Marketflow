@@ -5,6 +5,7 @@ export default function DealBlueprintPage() {
   useSEO({ title: 'Property Review', description: 'Request a separately scoped property review. Availability, work, fees, and timing require a written engagement.' });
   return <article className="experience-page">
     <PageOpening title="Request a Property Review." action={{ href: '/bring-an-opportunity?intent=blueprint&ref=deal-blueprint', label: 'Request a Property Review' }}>
+      <p>A purchase, renovation, sale, or hold can turn on one unanswered question. Request a written analysis of the property assumptions, structures, or risks you need to examine.</p>
       <PageAction href="/tools" secondary>Back to Tools</PageAction>
       <p>A Property Review, also called a Deal Blueprint, is a possible separately scoped written analysis for a specific property. Availability is reviewed case by case.</p>
       <p className="ep-notice">A request is not an order or acceptance. Pegasus may decline, request more information, or suggest a public self-service tool.</p>

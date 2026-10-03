@@ -17,7 +17,7 @@ export function GuideInvite({ compact = false, choose = false }: { compact?: boo
   return <div className={`journey-invite${compact ? ' is-compact' : ''}`} data-peggy-private>
     <span className="journey-avatar"><PeggyMark size={30} /></span>
     <div>{!compact && <><strong>A little guidance?</strong><p>Peggy can walk you through this page.</p></>}
-      <button type="button" onClick={event => requestPeggyGuide(choose ? 'choose' : 'tour', event.currentTarget)}>
+      <button type="button" data-peggy-invitation onClick={event => requestPeggyGuide(choose ? 'choose' : 'tour', event.currentTarget)}>
         {choose ? 'Want help choosing? Ask Peggy.' : 'Show me around'}<ArrowRight size={17} aria-hidden="true" />
       </button>
     </div>
@@ -25,7 +25,7 @@ export function GuideInvite({ compact = false, choose = false }: { compact?: boo
 }
 
 export function ExplainWithPeggy() {
-  return <button type="button" className="journey-explain" data-peggy-private onClick={event => requestPeggyGuide('explain', event.currentTarget)}>
+  return <button type="button" className="journey-explain" data-peggy-private data-peggy-invitation onClick={event => requestPeggyGuide('explain', event.currentTarget)}>
     <span className="journey-avatar"><PeggyMark size={21} /></span>Explore this with Peggy<ArrowRight size={16} aria-hidden="true" />
   </button>;
 }
@@ -80,8 +80,12 @@ export function JourneyContinuation({ path }: { path: string }) {
   </div></nav>;
 }
 
-export function JourneyWayfinder({ path, sections, index, hidden, onAsk }: {
-  path: string; sections: GuideSection[]; index: number; hidden: boolean; onAsk: () => void;
+export function hasJourneyWayfinder(path: string, sectionCount: number, index: number) {
+  return Object.hasOwn(JOURNEY_ROUTES, journeyPath(path)) && sectionCount >= 3 && index > 0;
+}
+
+export function JourneyWayfinder({ path, sections, index, hidden, askHidden = false, onAsk }: {
+  path: string; sections: GuideSection[]; index: number; hidden: boolean; askHidden?: boolean; onAsk: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const host = useRef<HTMLElement>(null);
@@ -116,7 +120,7 @@ export function JourneyWayfinder({ path, sections, index, hidden, onAsk }: {
     document.addEventListener('pointerdown', dismiss); document.addEventListener('keydown', escape);
     return () => { document.removeEventListener('pointerdown', dismiss); document.removeEventListener('keydown', escape); };
   }, [expanded]);
-  if (hidden || !Object.hasOwn(JOURNEY_ROUTES, journeyPath(path)) || sections.length < 3 || index === 0) return null;
+  if (hidden || !hasJourneyWayfinder(path, sections.length, index)) return null;
   const visit = (section: GuideSection) => {
     setExpanded(false);
     cancelAnimationFrame(visitFrame.current);
@@ -131,7 +135,7 @@ export function JourneyWayfinder({ path, sections, index, hidden, onAsk }: {
         <span className="journey-section-count">{`${index + 1} of ${sections.length}`}</span>
         <span className="journey-section-name">{sections[index]?.label}</span><ChevronDown size={16} aria-hidden="true" />
       </button>
-      <button className="journey-wayfinder-ask" type="button" onClick={() => { setExpanded(false); onAsk(); }}><span className="journey-avatar"><PeggyMark size={23} /></span><span>Ask Peggy</span></button>
+      <button className="journey-wayfinder-ask" hidden={askHidden} type="button" onClick={() => { setExpanded(false); onAsk(); }}><span className="journey-avatar"><PeggyMark size={23} /></span><span>Ask Peggy</span></button>
     </div>
     {expanded && <div id={id} className="journey-outline experience-wrap">{sections.map((section, i) => <button type="button" key={i} aria-current={i === index ? 'location' : undefined} onClick={() => visit(section)}><span>{String(i + 1).padStart(2, '0')}</span>{section.label}<ArrowRight size={16} aria-hidden="true" /></button>)}</div>}
   </nav>;

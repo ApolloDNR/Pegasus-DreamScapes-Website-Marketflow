@@ -105,6 +105,8 @@ describe("rendered visual-accessibility gate contract", () => {
     );
 
     expect(routeLiterals).toEqual([
+      "/projects",
+      "/case-study",
       "/marketflow/buyboxes",
       "/marketflow/deals",
       "/strategy-lab/library",

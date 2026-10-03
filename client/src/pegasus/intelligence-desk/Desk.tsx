@@ -34,7 +34,9 @@ function queryState(search: string) {
   const lane = params.get('lane') as StrategyLane;
   const tab = params.get('tab') as CalcTabKey;
   const calculators = params.get('tool') === 'calculators';
-  return { resumeSaved: params.getAll('resume').length === 1 && params.get('resume') === 'saved', view: VIEWS.includes(view) ? view : calculators ? 'assumptions' as const : 'overview' as const, lane: STRATEGY_LANES.includes(lane) ? lane : null, calculators, tab: CALCULATORS.includes(tab) ? tab : 'arv' as const };
+  // Carry only this authored question, never arbitrary URL text or property data.
+  const question = params.getAll('question').length === 1 && params.get('question') === 'funding' ? 'funding' : null;
+  return { question, resumeSaved: params.getAll('resume').length === 1 && params.get('resume') === 'saved', view: VIEWS.includes(view) ? view : calculators || question ? 'assumptions' as const : 'overview' as const, lane: STRATEGY_LANES.includes(lane) ? lane : null, calculators, tab: CALCULATORS.includes(tab) ? tab : 'arv' as const };
 }
 
 export function IntelligenceDesk({ openPeggy }: { openPeggy: (role?: string, prompt?: string) => void }) {
@@ -138,7 +140,7 @@ export function IntelligenceDesk({ openPeggy }: { openPeggy: (role?: string, pro
     for (const [key, value] of Object.entries(values)) value === null ? url.searchParams.delete(key) : url.searchParams.set(key, value);
     window.history.replaceState(window.history.state, '', url.toString());
   };
-  const move = (next: DeskView) => { if (view !== next) focusView.current = true; setView(next); setConfirmation(null); updateQuery({ view: next === 'overview' ? null : next }); };
+  const move = (next: DeskView) => { if (view !== next) focusView.current = true; setView(next); setConfirmation(null); updateQuery({ view: next === 'overview' && !initial.question ? null : next }); };
   const inspect = (lane: StrategyLane) => { setSelectedLane(lane); updateQuery({ lane }); };
   const draft = React.useMemo(() => scenarioDraft(workspace, workspace.activeScenario), [workspace]);
   const analysis = React.useMemo(() => analyzeDraft(draft), [draft]);
@@ -212,6 +214,7 @@ export function IntelligenceDesk({ openPeggy }: { openPeggy: (role?: string, pro
   return <div className={`id-desk${isStarting ? ' is-starting' : ''}`}>
     <nav className="id-tool-navigation" aria-label="Strategy Lab tools"><Link href="/tools" className="id-text-button">All tools</Link><Link href="/saved" className="id-text-button">Saved work</Link></nav>
     <header className="id-opening"><div><h1 data-peggy-summary={VIEW_GUIDES.overview}>Strategy Lab.</h1><p>Compare property costs and outcomes.</p></div>{!isStarting && workspaceActions}</header>
+    {initial.question === 'funding' && <section className="id-planning-question" data-peggy-private aria-label="Planning question"><h2>What would funding require?</h2><p>Start with purchase and exit assumptions, then review debt and capital. Your current inputs and selected scenario are unchanged.</p><p>This does not arrange funding or imply that capital is available.</p></section>}
     {resumeDraft && <section className="id-context-review" data-navigation-section data-peggy-private aria-label="Review saved draft" onKeyDown={event => { if (event.key === 'Escape') { event.preventDefault(); cancelResume(); } }}>
       <h2>Resume your saved draft?</h2>
       <p>Your current workspace, <strong>{workspace.base.address || 'Untitled working property'}</strong>, has changes that differ from the saved draft, <strong>{resumeDraft.base.address || 'Untitled saved property'}</strong>.</p>

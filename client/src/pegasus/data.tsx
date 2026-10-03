@@ -690,7 +690,7 @@ export const CATEGORIES: Record<AudienceKey, Category> = {
     heroScrimTop: true,
     layout: 'grid',
     pointsLabel: 'How you buy',
-    lead: 'Choose the lane that matches the request: licensed buyer representation, investor-interest intake, or discretionary access to the controlled MarketFlow pilot. These lanes are separate and none promises inventory, service, access, or a response.',
+    lead: 'Consider purchase price, condition, renovation costs, and intended use together. Choose licensed buyer representation, investor-interest intake, or discretionary access to the controlled MarketFlow pilot. These lanes are separate and none promises inventory, service, access, or a response.',
     points: [
       { t: 'Possible buyer representation', d: 'Availability, duties, search scope, fees, and brokerage relationship must be confirmed in a signed agreement.' },
       { t: 'Buy-box questions', d: 'Educational tools can help frame location, condition, cost, and exit assumptions without recommending a purchase.' },

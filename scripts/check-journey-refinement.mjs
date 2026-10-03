@@ -4,6 +4,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { chromium } from 'playwright-core';
 import { checkPublicRouteContinuity } from './public-route-continuity-check.mjs';
+import { openAvailablePeggy } from './peggy-ui-test-helpers.mjs';
 process.env.APP_ENV='preview'; process.env.SITE_INDEXABLE='false'; process.env.DATABASE_URL='';
 const {default:app}=await import('../server.mjs');
 const server=app.listen(0,'127.0.0.1'); await new Promise(resolve=>server.once('listening',resolve));
@@ -40,9 +41,7 @@ try {
   for(let i=1;i<rows.length;i++) assert(rows[i].top >= rows[i-1].bottom-1,`${width}: directory rows do not overlap`);
   for(const key of ['title','arrow']) assert(Math.max(...rows.map(row=>row[key]))-Math.min(...rows.map(row=>row[key])) < 2,`${width}: directory ${key} alignment`);
   await capture(page,key,'illustrated-pathways');
-  if(await page.locator('.peggy-fab').isVisible()) await page.locator('.peggy-fab').click();
-  else { await page.getByRole('button',{name:'Open menu',exact:true}).click(); await page.getByRole('button',{name:'Talk to Peggy',exact:true}).click(); }
-  await page.locator('.peggy-panel.is-open').waitFor();
+  await openAvailablePeggy(page, { pageGuide: true });
   if(width >= 1440) {
     await page.waitForFunction(()=>document.querySelector('[data-peggy-page]').getBoundingClientRect().right <= document.querySelector('.peggy-panel').getBoundingClientRect().left+1);
     assert(await page.locator('.experience-path').last().isVisible(),`${key}: routes remain visible beside Peggy`);
@@ -52,7 +51,7 @@ try {
     await page.waitForFunction(()=>document.querySelector('.peggy-location > summary')?.textContent.includes('What brings you here'));
     await page.locator('.peggy-close').click();
     assert(await page.locator('[data-peggy-page]').evaluate(el=>Math.abs(el.getBoundingClientRect().width-innerWidth)<2),`${key}: closing restores page width`);
-    await page.locator('.peggy-fab').click();
+    await openAvailablePeggy(page, { pageGuide: true });
   }
   await capture(page,key,'companion-field-note');
   await page.locator('.peggy-panel').getByRole('button',{name:/Show me around/}).click();
@@ -113,7 +112,7 @@ try {
   // The owner and Our Work pages end with their own closing; the process page retains curated onward links.
   await page.goto(origin+'/how-we-operate');await page.locator('.ep-opening').waitFor();
   const next=page.getByRole('navigation',{name:'Related reading'});await next.scrollIntoViewIfNeeded();await capture(page,key,'continuation');
-  await next.getByRole('link',{name:/See the work/}).click();await page.getByRole('heading',{name:'The work, in detail.'}).waitFor();
+  await next.getByRole('link',{name:/See the work/}).click();await page.getByRole('heading',{name:'Nelson Drive, documented.'}).waitFor();
   assert.equal(await page.locator('.journey-continuation').count(),0,`${key}: Our Work keeps one closing`);
   await page.goto(origin+'/tools');await page.locator('.tools-finder').waitFor();await capture(page,key,'tools');
   await page.getByRole('button',{name:'Explore eight calculators'}).click();

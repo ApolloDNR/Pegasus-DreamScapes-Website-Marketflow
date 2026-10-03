@@ -53,7 +53,7 @@ export function HomeProject() {
       </div>
 
       <div className="experience-proof-note home-project-onward">
-        <p>See the original condition, the renovation decisions, and the documented budget and sale.</p>
+        <p>See the original condition, the visible changes, and the documented budget and sale. The available record does not verify Pegasus’s or Apollo’s project role.</p>
         <Link href="/projects/nelson-dr" className="experience-link">Explore the case study<ArrowRight aria-hidden="true" size={17} /></Link>
       </div>
     </div>

@@ -9,7 +9,7 @@ import { HomePathways } from '@/pegasus/home-pathways';
 const callbacks = { toStrategyLab: vi.fn(), onHandoffToReview: vi.fn(), go: vi.fn(), toSubmit: vi.fn() };
 function PublicPage({ initialPrompt = null }: { initialPrompt?: string | null }) {
   const [open, setOpen] = useState(false);
-  return <><main data-peggy-page><h1>Property introduction</h1><p>Public starting point.</p><GuideInvite /><h2>Repairs and scope</h2><p>Review the repair questions.</p><form><input defaultValue="PRIVATE FIELD" /></form><ExplainWithPeggy /><h2>Next steps</h2><p>Review before submitting.</p></main><Peggy {...callbacks} open={open} setOpen={setOpen} initialPrompt={initialPrompt} pagePath="/property-owners" /></>;
+  return <><button type="button" onClick={() => setOpen(true)}>Talk to Peggy from menu</button><main data-peggy-page><h1>Property introduction</h1><p>Public starting point.</p><GuideInvite /><h2>Repairs and scope</h2><p>Review the repair questions.</p><form><input defaultValue="PRIVATE FIELD" /></form><ExplainWithPeggy /><h2>Next steps</h2><p>Review before submitting.</p></main><Peggy {...callbacks} open={open} setOpen={setOpen} initialPrompt={initialPrompt} pagePath="/property-owners" /></>;
 }
 const input = () => screen.getByRole('textbox', { name: 'Talk to Peggy' });
 beforeEach(() => {
@@ -136,7 +136,9 @@ describe('the shared public journey', () => {
     fireEvent.click(within(screen.getByRole('navigation', { name:'Peggy page outline' })).getByRole('button', { name:/Next steps/ }));
     fireEvent.keyDown(document, { key:'Escape' });
     fireEvent.click(screen.getByRole('button', { name:'Close' }));
-    fireEvent.click(screen.getByRole('button', { name:/Talk to Peggy, the/ }));
+    // The contextual invitation can replace the launcher after a tour. The
+    // site menu still reopens the same chat without preparing another question.
+    fireEvent.click(screen.getByRole('button', { name:'Talk to Peggy from menu' }));
     expect(input()).toHaveValue(choice === 'keep' ? 'My edited property question' : 'Different property and scenario');
     expect(screen.queryByRole('group', { name:'Review a suggested question' })).not.toBeInTheDocument();
     expect(fetch).not.toHaveBeenCalled();

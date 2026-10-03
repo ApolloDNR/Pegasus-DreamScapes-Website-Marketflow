@@ -190,7 +190,7 @@ const SIGNATURE_ROUTES: SignatureRoute[] = [
   },
   {
     path: "/deal-partners",
-    pageHeading: /Bring the deal. Define the role/i,
+    pageHeading: /Bring the property. Define the next decision/i,
     groupName: "What the deal is missing",
     initialChoice: "Seller access or negotiation",
     nextChoice: "Underwriting",

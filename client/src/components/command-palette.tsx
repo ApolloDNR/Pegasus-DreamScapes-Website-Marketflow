@@ -75,7 +75,7 @@ export function CommandPalette() {
     { id: "wholesale", label: "For Partners", description: "Bring a lead, deal, or JV opportunity", icon: Briefcase, href: "/deal-partners", keywords: ["deals", "investment", "jv"] },
     { id: "sell", label: "For Sellers", description: "Submit a property or plan a listing", icon: DollarSign, href: "/sellers", keywords: ["sell", "property", "listing"] },
     { id: "invest", label: "Capital & Partnerships", description: "Private capital and partnership conversations", icon: TrendingUp, href: "/capital", keywords: ["partner", "capital"] },
-    { id: "projects", label: "Case Studies", description: "Real project examples", icon: Target, href: "/projects", keywords: ["portfolio", "examples"] },
+    { id: "projects", label: "Case Studies", description: "Real project examples", icon: Target, href: "/our-work", keywords: ["portfolio", "examples"] },
     { id: "about", label: "About Us", description: "Our story and mission", icon: Users, href: "/about", keywords: ["team", "company"] },
     { id: "contact", label: "Contact", description: "Get in touch", icon: Mail, href: "/contact", keywords: ["email", "phone", "message"] },
   ];

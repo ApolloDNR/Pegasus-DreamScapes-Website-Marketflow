@@ -50,9 +50,9 @@ export function PageClosing({ title = 'Start with what you have.', children, hre
   </div></section>;
 }
 
-export function ProjectEvidence({ title = 'See the work on Nelson Drive.' }: { title?: string }) {
+export function ProjectEvidence({ title = 'Examine the Nelson Drive transformation.' }: { title?: string }) {
   return <section className="ep-section ep-evidence"><div className="experience-wrap ep-split">
     <figure><img src="/images/nelson/kitchen-after.webp" alt="Completed Nelson Drive kitchen with navy cabinetry and a quartz island" width={1600} height={996} loading="lazy" decoding="async" /><figcaption>Nelson Drive · Completed East Bay residential transformation</figcaption></figure>
-    <div><h2 data-peggy-summary="See the original photographs and available records from Nelson Drive. Open the case study to understand the work in detail.">{title}</h2><p>Real project photographs, the recorded scope, and the available financial record.</p><PageAction href="/projects/nelson-dr" secondary>Explore the case study</PageAction><div><ExplainWithPeggy /></div></div>
+    <div><h2 data-peggy-summary="See the original photographs and available records from Nelson Drive. Open the case study to understand the work in detail.">{title}</h2><p>Compare the original condition, visible renovation, and recorded sale.</p><p className="ep-notice">The available record does not verify Pegasus’s or Apollo’s project role.</p><PageAction href="/projects/nelson-dr" secondary>Explore the case study</PageAction><div><ExplainWithPeggy /></div></div>
   </div></section>;
 }

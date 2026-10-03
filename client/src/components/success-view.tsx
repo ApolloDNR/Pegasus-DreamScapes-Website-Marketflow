@@ -248,7 +248,7 @@ export function SuccessView({
                   <p className="text-xs text-muted-foreground leading-relaxed">Explore educational ranges and possible lanes without implying that a submitted property is under review.</p>
                 </div>
               </Link>
-              <Link href="/projects">
+              <Link href="/our-work">
                 <div className="group p-4 rounded-md border border-border/40 bg-background hover:border-primary/30 transition-colors cursor-pointer">
                   <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors mb-1">See Our Work</p>
                   <p className="text-xs text-muted-foreground leading-relaxed">View the one case study currently ready for public review, with its stated limits.</p>

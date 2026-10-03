@@ -11,12 +11,12 @@ import { PropertySketch } from '../property-sketch';
 export function KeyEconomics({ analysis }: { analysis: ReadyAnalysis }) {
   const total = analysis.presentation.capitalStack.reduce((sum, row) => sum + row.amount, 0);
   const debt = analysis.presentation.capitalStack.find(row => row.source === 'conventional')?.amount;
-  return <section className="id-economics" data-peggy-private aria-label="Key economics"><dl>{[
-    ['Purchase basis', money(analysis.property.purchasePrice)],
-    ['Acquisition + scope + reserve', money(total)],
+  return <section className="id-economics" data-peggy-private aria-label="Key economics"><h2>Cash needed and purchase costs</h2><dl>{[
     ['Cash required', money(analysis.presentation.totalCashIn)],
+    ['Acquisition + scope + reserve', money(total)],
     ['Acquisition debt', money(debt)],
-  ].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>{analysis.missing.includes('scope') && <p>Scope is unreported. These amounts exclude its cost.</p>}</section>;
+    ['Purchase basis', money(analysis.property.purchasePrice)],
+  ].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl><p>Purchase, scope and closing reserve only. Excludes ongoing carrying and exit costs. Modeled debt is not a lending offer.</p>{analysis.missing.includes('scope') && <p>Scope is unreported. These amounts exclude its cost.</p>}</section>;
 }
 
 export function Unavailable({ analysis, onEdit }: { analysis: Analysis; onEdit: () => void }) {
@@ -59,27 +59,29 @@ export function Overview({ draft, analysis, selectedLane, onLane, onView, onExam
 
   return <>
     <div className="id-overview-grid">
-      <aside className="id-read" aria-label="Result inspector" aria-live="polite">
-        <header><h2>{lane.lane === top.lane ? 'Leading path' : 'Path in view'}</h2>{lane.lane !== top.lane && <span>Inspecting this path</span>}</header>
-        <div className="id-read-main">
-          <div><h3 ref={resultHeading} tabIndex={-1}>{laneName(lane)}</h3><p className="id-verdict">{lane.verdictLabel}</p><dl className="id-read-primary"><div><dt>{lane.lane === 'listing_referral' ? 'Exit value above investor allowance' : lane.economics.primaryMetric}</dt><dd>{safeMetric(lane.economics.primaryValue)}</dd></div></dl><p className="id-metric-explanation">{metricExplanation(analysis, lane)}</p></div>
-          <div className="id-read-next"><h4>{next.title}</h4><p>{next.detail}</p><button type="button" className="id-text-button" onClick={() => onAction(next)}>{next.label} <ArrowRight aria-hidden="true" /></button><div className="id-fit-reason"><h4>What drives this fit</h4><p>{fitExplanation(lane)}</p></div></div>
-        </div>
-        <details className="id-read-evidence"><summary>Supporting factors and model detail</summary><div className="id-read-factors"><div><h4>What supports it</h4><p>{lane.confidence.supportingFactors.join(' ') || 'No supporting factor is established by the current inputs.'}</p></div><div><h4>What needs attention</h4><p>{[...lane.confidence.sensitiveFactors, ...lane.confidence.missingInputs].join(' ') || 'Title, permits and market evidence still require independent verification.'}</p></div></div><dl className="id-inspector-metrics">{lane.economics.metrics.map(metric => <div key={metric.label}><dt>{metric.label}</dt><dd>{safeMetric(metric.value)}</dd></div>)}</dl></details>
-        {lane.lane !== top.lane && <p className="id-read-attribution">Leading path: {laneName(top)}. The Memo summarizes that path.</p>}
-        <p className="id-read-boundary">Automated model summary. A ranked fit is not a professional recommendation.</p>
-      </aside>
+      <KeyEconomics analysis={analysis} />
       <aside className="id-context" aria-label="Property and model">
         <header><h2>Your assumptions</h2><button type="button" className="id-text-button" onClick={() => onView('assumptions')} aria-label="Edit property assumptions"><SlidersHorizontal aria-hidden="true" />Edit</button></header>
         <p>{draft.propertyType} · {draft.occupancy === 'Unknown or needs review' ? 'Occupancy unknown' : draft.occupancy}</p>
-        <dl>{[['Scope', analysis.property.rehabBudget === undefined ? 'Unreported' : money(analysis.property.rehabBudget)], ['Exit value', money(analysis.property.arvEstimate)], ['Market rent', analysis.property.marketRent === undefined ? 'Unreported' : `${money(analysis.property.marketRent)} / month`]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
+        <dl>{[['Scope', analysis.property.rehabBudget === undefined ? 'Unreported' : money(analysis.property.rehabBudget)], ['Exit value', money(analysis.property.arvEstimate)], ['Market rent', analysis.property.marketRent === undefined ? 'Unreported' : `${money(analysis.property.marketRent)} / month`], ['Acquisition loan', `${analysis.options.loanLtvPct}% of purchase basis`], ['Closing reserve', `${analysis.options.closingReservePct}% of purchase basis`]].map(([label, value]) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
         <p className="id-caption">{draft.illustrative ? 'Synthetic example. Every assumption is editable.' : 'Visitor-entered, unverified assumptions.'} No market feed is connected.</p>
         <button type="button" className="id-text-button" onClick={() => onView('memo')}>Read the decision brief <ArrowRight aria-hidden="true" /></button>
       </aside>
     </div>
-    <KeyEconomics analysis={analysis} />
+      <aside className="id-read" aria-label="Result inspector" aria-live="polite">
+        <header><h2>{lane.lane === top.lane ? 'Leading path' : 'Path in view'}</h2>{lane.lane !== top.lane && <span>Inspecting this path</span>}</header>
+        <div className="id-read-main">
+          <div><h3 ref={resultHeading} tabIndex={-1}>{laneName(lane)}</h3><p className="id-verdict">{lane.verdictLabel}</p>{lane.lane === 'listing_referral' ? <p className="id-metric-explanation">{safeMetric(lane.economics.primaryValue) === 'Unavailable' ? lane.headline : 'The model uses an investor-allowance comparison to rank this path. Review the assumptions before relying on that signal.'}</p> : <><dl className="id-read-primary"><div><dt>{lane.economics.primaryMetric}</dt><dd>{safeMetric(lane.economics.primaryValue)}</dd></div></dl><p className="id-metric-explanation">{metricExplanation(analysis, lane)}</p></>}</div>
+          <div className="id-read-next"><h4>{next.title}</h4><p>{next.detail}</p><button type="button" className="id-text-button" onClick={() => onAction(next)}>{next.label} <ArrowRight aria-hidden="true" /></button>{lane.lane !== 'listing_referral' && <div className="id-fit-reason"><h4>What drives this fit</h4><p>{fitExplanation(lane)}</p></div>}</div>
+        </div>
+        {lane.lane === 'listing_referral' && <details className="id-read-evidence id-listing-comparison"><summary>How the listing comparison works</summary><dl className="id-inspector-metrics"><div><dt>Exit value above investor allowance</dt><dd>{safeMetric(lane.economics.primaryValue)}</dd></div></dl><p>{metricExplanation(analysis, lane)} It is not profit, an offer, or a return.</p><div className="id-fit-reason"><h4>What drives this fit</h4><p>{fitExplanation(lane)}</p></div></details>}
+        <details className="id-read-evidence"><summary>Supporting factors and model detail</summary><div className="id-read-factors"><div><h4>What supports it</h4><p>{lane.confidence.supportingFactors.join(' ') || 'No supporting factor is established by the current inputs.'}</p></div><div><h4>What needs attention</h4><p>{[...lane.confidence.sensitiveFactors, ...lane.confidence.missingInputs].join(' ') || 'Title, permits and market evidence still require independent verification.'}</p></div></div><dl className="id-inspector-metrics">{lane.economics.metrics.map(metric => <div key={metric.label}><dt>{metric.label}</dt><dd>{safeMetric(metric.value)}</dd></div>)}</dl></details>
+        {lane.lane !== top.lane && <p className="id-read-attribution">Leading path: {laneName(top)}. The Memo summarizes that path.</p>}
+        <p className="id-read-boundary">Automated model summary. A ranked fit is not a professional recommendation.</p>
+      </aside>
     <section className="id-paths">
       <header><h2>Modeled strategy paths</h2><span>Select a path to bring its read into view.</span></header>
+      <p className="id-caption id-path-measures">Each path reports a different measure. Dollar amounts are not comparable returns.</p>
       <table aria-label="Ranked strategy paths" role="table">
         <thead role="rowgroup"><tr role="row"><th scope="col" role="columnheader">Path</th><th scope="col" role="columnheader">Modeled fit</th><th scope="col" role="columnheader">Model result</th></tr></thead>
         <tbody role="rowgroup">{(allPaths ? snapshot.lanes : snapshot.lanes.slice(0, 3)).map(item => <tr key={item.lane} role="row" data-selected={item.lane === lane.lane}>

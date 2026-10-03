@@ -39,7 +39,7 @@ describe('Approved parchment arrival refinement', () => {
     const selector = plan.getByRole('button', { name: /^Choose a planning question/ });
     for (const [, name, href] of [
       ['control', 'Can the property move forward?', '/deal-partners'], ['underwriting', 'Do the numbers make sense?', '/strategy-lab'],
-      ['buyer', 'Who is the potential buyer?', '/deal-partners'], ['capital', 'What would funding require?', '/strategy-lab'],
+      ['buyer', 'Who is the potential buyer?', '/deal-partners'], ['capital', 'What would funding require?', '/strategy-lab?question=funding'],
       ['development', 'What work needs to happen?', '/development'], ['local', 'What does the location change?', '/property-owners'],
       ['disposition', 'Sell, refinance, or keep it?', '/strategy-lab'], ['assetops', 'What would ownership involve?', '/strategy-lab'],
     ]) {

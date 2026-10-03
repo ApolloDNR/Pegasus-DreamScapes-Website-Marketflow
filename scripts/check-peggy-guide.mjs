@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { chromium } from 'playwright-core';
+import { openAvailablePeggy } from './peggy-ui-test-helpers.mjs';
 process.env.APP_ENV = 'preview';
 process.env.SITE_INDEXABLE = 'false';
 process.env.DATABASE_URL = '';
@@ -40,9 +41,7 @@ async function check(page, key, state, tour = false) {
   evidence.push({ key, state, screenshot: `${key}-${state}.png`, ...geometry, axeViolations: 0 });
 }
 async function openPeggy(page) {
-  if (await page.locator('.peggy-fab').isVisible()) await page.locator('.peggy-fab').click();
-  else { await page.getByRole('button', { name: 'Open menu', exact: true }).click(); await page.getByRole('button', { name: 'Talk to Peggy', exact: true }).click(); }
-  await page.locator('.peggy-panel.is-open').waitFor();
+  await openAvailablePeggy(page, { pageGuide: true });
 }
 try {
   for (const width of process.env.PEGGY_GUIDE_WIDTH ? [Number(process.env.PEGGY_GUIDE_WIDTH)] : [320, 390, 768, 1440]) for (const theme of ['light', 'dark']) {
@@ -103,7 +102,12 @@ try {
     assert.equal(requests[0].body.context.currentView, undefined, 'Conversation creation should not upload page data');
     await check(page, key, 'conversation-fixture');
     await panel.getByRole('button', { name: 'Close', exact: true }).click();
-    await page.waitForFunction(() => document.activeElement?.matches('.peggy-fab,button[aria-label="Open menu"]'));
+    await page.waitForFunction(() => {
+      const target = document.activeElement;
+      if (!target?.matches('.peggy-fab,.journey-wayfinder-ask,[data-peggy-invitation],button[aria-label="Open menu"]') || target.closest('[hidden],[inert]')) return false;
+      const rect = target.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0 && getComputedStyle(target).visibility !== 'hidden';
+    });
     await page.locator('[data-hv="arrival"]').scrollIntoViewIfNeeded();
     const selected = await page.locator('.experience-intro').evaluate(element => {
       const range = document.createRange(); range.selectNodeContents(element);

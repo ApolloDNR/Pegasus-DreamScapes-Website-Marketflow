@@ -53,6 +53,7 @@
 .journey-section-name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .journey-section-toggle > svg { flex:none; color:var(--experience-copper); }
 .journey-section-toggle[aria-expanded='true'] > svg { transform:rotate(180deg); }
+.journey-wayfinder-ask[hidden] { display:none; }
 .journey-wayfinder-ask { display:flex; align-items:center; gap:10px; min-height:44px; white-space:nowrap; }
 .journey-wayfinder .journey-avatar { width:32px; height:32px; }
 .journey-outline { display:grid; grid-template-columns:1fr 1fr; gap:0 40px; padding-block:16px 24px; max-height:calc(100dvh - var(--journey-nav-height,88px) - 90px); overflow:auto; }

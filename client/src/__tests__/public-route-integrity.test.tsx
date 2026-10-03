@@ -75,7 +75,7 @@ describe("Projects public fallback truth", () => {
 
     expect(screen.getByText("1 documented case study")).toBeInTheDocument();
     expect(screen.getByText("Completed")).toBeInTheDocument();
-    expect(screen.getByText("Nelson Drive is available now.")).toBeInTheDocument();
+    expect(screen.getByText("The Nelson Drive case study is available now.")).toBeInTheDocument();
     expect(screen.getByText(/completed East Bay residential transformation/i)).toBeInTheDocument();
     expect(screen.getByText("View case study")).toBeInTheDocument();
     expect(screen.queryByText("In Progress")).not.toBeInTheDocument();

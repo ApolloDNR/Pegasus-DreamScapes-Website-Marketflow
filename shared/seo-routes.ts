@@ -332,6 +332,7 @@ const SITEMAP_EXCLUDE_RE: RegExp[] = [
   /^\/saved$/,
   /^\/(privacy|terms|disclosures)$/,
   /^\/investments$/,
+  /^\/(projects|case-study)$/,
   /^\/submit$/,
   /^\/marketflow\/(admin|dashboard|messages|submit|negotiate)(\/|$)/,
   // Buyboxes are soft-launched (config publicReady: false). The page stays

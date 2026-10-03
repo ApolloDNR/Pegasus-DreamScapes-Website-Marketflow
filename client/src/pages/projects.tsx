@@ -89,7 +89,7 @@ export default function Projects() {
           </article>
           <div className="project-record-note">
             <p>{NELSON_COST_DISCLOSURE}</p>
-            <p><strong>Nelson Drive is available now.</strong> Additional projects will be added when their records are ready for public review.</p>
+            <p><strong>The Nelson Drive case study is available now.</strong> Additional projects will be added when their records are ready for public review.</p>
           </div>
         </div>
       </section>
