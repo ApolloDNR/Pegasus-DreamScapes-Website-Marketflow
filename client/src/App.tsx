@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { isPegasusUrl } from "@/pegasus/routes";
 import { NavigationContinuity } from "@/components/navigation-continuity";
 import PublicApp from "@/PublicApp";
+import { PeggyReviewHandoffProvider } from "@/pegasus/peggy-review-handoff";
 import { normalizeSpaPath } from "@shared/spa-routes";
 import { useSEO } from "@/hooks/use-seo";
 import {
@@ -54,15 +55,15 @@ export default function App() {
   const metadata = <><NavigationContinuity /><RouteSeoDefaults location={location} /></>;
 
   if (isPegasusUrl(normalizeSpaPath(location))) {
-    return <>{metadata}<PublicApp /></>;
+    return <PeggyReviewHandoffProvider>{metadata}<PublicApp /></PeggyReviewHandoffProvider>;
   }
 
   return (
-    <>
+    <PeggyReviewHandoffProvider>
       {metadata}
       <Suspense fallback={<RootLoader />}>
         <LegacyApp />
       </Suspense>
-    </>
+    </PeggyReviewHandoffProvider>
   );
 }

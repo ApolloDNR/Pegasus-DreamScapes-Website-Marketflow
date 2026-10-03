@@ -46,7 +46,7 @@ export function PageClosing({ title = 'Start with what you have.', children, hre
   title?: string; children?: ReactNode; href?: string; label?: string;
 }) {
   return <section className="ep-section ep-dark ep-closing"><div className="experience-wrap ep-split">
-    <h2>{title}</h2><div>{children}<PageAction href={href}>{label}</PageAction>{href.startsWith('/bring-an-opportunity') && <BeforeYouBegin />}<p className="ep-notice">{SUBMISSION_NOTICE}</p></div>
+    <h2>{title}</h2><div>{children}<PageAction href={href}>{label}</PageAction>{href.startsWith('/bring-an-opportunity') && <><BeforeYouBegin /><p className="ep-notice">{SUBMISSION_NOTICE}</p></>}</div>
   </div></section>;
 }
 

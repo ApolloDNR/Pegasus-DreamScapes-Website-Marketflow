@@ -35,6 +35,7 @@ function completeIntake() {
 }
 
 beforeEach(() => {
+  vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
   window.localStorage.clear();
   window.sessionStorage.clear();
   apiRequestMock.mockResolvedValue({ status: 201, redirected: false, json: async () => ({ id: 'synthetic-partner-qa', status: 'New' }) });
@@ -42,13 +43,14 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   apiRequestMock.mockReset();
+  vi.restoreAllMocks();
   window.history.replaceState({}, '', '/');
 });
 
 describe('Partner to intake continuity', () => {
   it('lets a general partnership proposer choose a truthful role instead of preselecting capital', () => {
     mountPartners();
-    const href = screen.getByRole('link', { name: 'Share a partnership proposal' }).getAttribute('href')!;
+    const href = screen.getByRole('link', { name: 'Choose a partnership request' }).getAttribute('href')!;
     cleanup();
     mountIntake(href);
     expect(screen.getByRole('button', { name: /A property I own/ })).toHaveAttribute('aria-pressed', 'false');

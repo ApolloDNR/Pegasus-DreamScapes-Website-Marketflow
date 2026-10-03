@@ -159,6 +159,8 @@
 .id-field { display:flex; flex-direction:column; gap:7px; min-width:0; }
 .id-field label,.id-sensitivity label { font-size:13px; font-weight:500; }
 .id-desk :is(input:not([type='checkbox']),select) { width:100%; min-width:0; min-height:46px; padding:10px 12px; border:1px solid var(--id-rule); border-radius:3px; background:var(--id-paper); color:var(--id-ink); font-size:16px; line-height:1.5; }
+/* Calculator prefixes need their own text clearance beyond the shared fields. */
+.id-desk .id-calculators input.pl-10 { padding-left:2.5rem; }
 .id-desk [aria-invalid='true'] { border-color:var(--id-accent) !important; }
 .id-field small { font-size:13px; color:var(--id-muted); }
 .id-input-wrap { position:relative; }

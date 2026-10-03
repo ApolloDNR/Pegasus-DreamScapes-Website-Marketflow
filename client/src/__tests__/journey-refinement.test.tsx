@@ -7,15 +7,16 @@ import { ToolsPage } from '@/pegasus/tools';
 import { HomePathways } from '@/pegasus/home-pathways';
 
 const callbacks = { toStrategyLab: vi.fn(), onHandoffToReview: vi.fn(), go: vi.fn(), toSubmit: vi.fn() };
-function PublicPage() {
+function PublicPage({ initialPrompt = null }: { initialPrompt?: string | null }) {
   const [open, setOpen] = useState(false);
-  return <><main data-peggy-page><h1>Property introduction</h1><p>Public starting point.</p><GuideInvite /><h2>Repairs and scope</h2><p>Review the repair questions.</p><form><input defaultValue="PRIVATE FIELD" /></form><ExplainWithPeggy /><h2>Next steps</h2><p>Review before submitting.</p></main><Peggy {...callbacks} open={open} setOpen={setOpen} pagePath="/property-owners" /></>;
+  return <><main data-peggy-page><h1>Property introduction</h1><p>Public starting point.</p><GuideInvite /><h2>Repairs and scope</h2><p>Review the repair questions.</p><form><input defaultValue="PRIVATE FIELD" /></form><ExplainWithPeggy /><h2>Next steps</h2><p>Review before submitting.</p></main><Peggy {...callbacks} open={open} setOpen={setOpen} initialPrompt={initialPrompt} pagePath="/property-owners" /></>;
 }
 const input = () => screen.getByRole('textbox', { name: 'Talk to Peggy' });
 beforeEach(() => {
   vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: true })));
   vi.stubGlobal('fetch', vi.fn());
   HTMLElement.prototype.scrollIntoView = vi.fn();
+  vi.stubGlobal('scrollTo', vi.fn());
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockReturnValue({ top:700, left:0, right:800, bottom:800, width:800, height:100, x:0, y:700, toJSON:() => ({}) });
 });
 afterEach(() => { cleanup(); vi.restoreAllMocks(); vi.unstubAllGlobals(); });
@@ -33,6 +34,7 @@ describe('the shared public journey', () => {
     render(<PublicPage />);
     fireEvent.click(screen.getByRole('button', { name:'Show me around' }));
     const tour = await screen.findByRole('complementary', { name:'Peggy page guide' });
+    fireEvent.click(within(tour).getByRole('button', { name:'Section details and stops' }));
     const trail = within(tour).getByRole('navigation', { name:'Page tour sections' });
     const last = within(trail).getByRole('button', { name:'Go to section 3: Next steps' });
     fireEvent.click(last);
@@ -47,15 +49,186 @@ describe('the shared public journey', () => {
     expect(within(tour).getByRole('heading')).toHaveTextContent('Property introduction');
     expect(fetch).not.toHaveBeenCalled();
   });
-  it('starts a local tour from the page and restores focus when the guide closes', async () => {
+  it.each(['Close', 'Escape', 'Finish'])('ends a page-started tour with %s in one action and focuses the current section', async (exit) => {
     render(<PublicPage />);
     const opener = screen.getByRole('button', { name:'Show me around' });
     opener.focus(); fireEvent.click(opener);
     const tour = await screen.findByRole('complementary', { name:'Peggy page guide' });
-    expect(within(tour).getByRole('heading')).toHaveTextContent('Property introduction');
-    fireEvent.click(within(tour).getByRole('button', { name:'End page tour' }));
+    fireEvent.click(within(tour).getByRole('button', { name:'Next section' }));
+    if (exit === 'Finish') fireEvent.click(within(tour).getByRole('button', { name:'Next section' }));
+    const currentHeading = screen.getByRole('main').querySelectorAll('h1,h2')[exit === 'Finish' ? 2 : 1];
+    if (exit === 'Escape') fireEvent.keyDown(document, { key:'Escape' });
+    else fireEvent.click(within(tour).getByRole('button', { name:exit === 'Finish' ? 'Finish tour' : 'End page tour' }));
+    expect(screen.queryByRole('complementary', { name:'Peggy page guide' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('dialog', { name:'Peggy, the Pegasus intake concierge' })).not.toBeInTheDocument();
+    await waitFor(() => expect(currentHeading).toHaveFocus());
+    expect(currentHeading).toHaveClass('peggy-tour-return-focus');
+    expect(opener).not.toHaveFocus();
+    expect(fetch).not.toHaveBeenCalled();
+    fireEvent.blur(currentHeading);
+    expect(currentHeading).not.toHaveAttribute('tabindex');
+    expect(currentHeading).not.toHaveClass('peggy-tour-return-focus');
+  });
+  it.each(['Close', 'Escape', 'Finish'])('restores an existing chat and its unsent draft after chat-started %s', async (exit) => {
+    render(<PublicPage />);
+    fireEvent.click(screen.getByRole('button', { name:/Talk to Peggy, the/ }));
+    fireEvent.change(input(), { target:{ value:'My original question' } });
+    fireEvent.click(screen.getByRole('checkbox', { name:'Page context included' }));
+    const panel = screen.getByRole('dialog', { name:'Peggy, the Pegasus intake concierge' });
+    fireEvent.click(within(panel).getByRole('button', { name:/Show me around/ }));
+    const tour = await screen.findByRole('complementary', { name:'Peggy page guide' });
+    if (exit === 'Finish') {
+      fireEvent.click(within(tour).getByRole('button', { name:'Next section' }));
+      fireEvent.click(within(tour).getByRole('button', { name:'Next section' }));
+    }
+    if (exit === 'Escape') fireEvent.keyDown(document, { key:'Escape' });
+    else fireEvent.click(within(tour).getByRole('button', { name:exit === 'Finish' ? 'Finish tour' : 'End page tour' }));
+    expect(screen.queryByRole('complementary', { name:'Peggy page guide' })).not.toBeInTheDocument();
+    expect(input()).toHaveValue('My original question');
+    expect(screen.getByRole('checkbox', { name:'Page context off' })).not.toBeChecked();
+    await waitFor(() => expect(panel).toHaveFocus());
+    expect(fetch).not.toHaveBeenCalled();
+  });
+  it('does not reopen a supplied chat prompt when starting a tour directly from the page', async () => {
+    render(<PublicPage initialPrompt="Prepared property question" />);
+    fireEvent.click(screen.getByRole('button', { name:/Talk to Peggy, the/ }));
+    fireEvent.change(input(), { target:{ value:'My edited property question' } });
     fireEvent.click(screen.getByRole('button', { name:'Close' }));
-    await waitFor(() => expect(opener).toHaveFocus());
+    fireEvent.click(screen.getByRole('button', { name:'Show me around' }));
+    const tour = await screen.findByRole('complementary', { name:'Peggy page guide' });
+    expect(screen.queryByRole('dialog', { name:'Peggy, the Pegasus intake concierge' })).not.toBeInTheDocument();
+    fireEvent.click(within(tour).getByRole('button', { name:'Ask about this' }));
+    expect(input()).toHaveValue('My edited property question');
+    expect(screen.getByRole('group', { name:'Review a suggested question' })).toBeVisible();
+    expect(fetch).not.toHaveBeenCalled();
+  });
+  it.each(['page', 'chat'])('opens a genuinely new supplied prompt during a %s-started tour without sending it', async (origin) => {
+    const { rerender } = render(<PublicPage />);
+    if (origin === 'chat') {
+      fireEvent.click(screen.getByRole('button', { name:/Talk to Peggy, the/ }));
+      fireEvent.click(within(screen.getByRole('dialog', { name:'Peggy, the Pegasus intake concierge' })).getByRole('button', { name:/Show me around/ }));
+    } else fireEvent.click(screen.getByRole('button', { name:'Show me around' }));
+    await screen.findByRole('complementary', { name:'Peggy page guide' });
+    rerender(<PublicPage initialPrompt="New property request from the page" />);
+    expect(screen.queryByRole('complementary', { name:'Peggy page guide' })).not.toBeInTheDocument();
+    expect(input()).toHaveValue('New property request from the page');
+    expect(screen.getByRole('checkbox', { name:'Page context off' })).not.toBeChecked();
+    expect(fetch).not.toHaveBeenCalled();
+  });
+  it.each(['keep', 'use'])('lets the visitor %s an edited draft when a new supplied prompt interrupts a tour', async (choice) => {
+    const { rerender } = render(<PublicPage initialPrompt="Original property request" />);
+    fireEvent.click(screen.getByRole('button', { name:/Talk to Peggy, the/ }));
+    fireEvent.change(input(), { target:{ value:'My edited property question' } });
+    fireEvent.click(document.querySelector('.peggy-location > summary')!);
+    fireEvent.click(within(screen.getByRole('navigation', { name:'Peggy page outline' })).getByRole('button', { name:/Next steps/ }));
+    await screen.findByRole('complementary', { name:'Peggy page guide' });
+    rerender(<PublicPage initialPrompt="Different property and scenario" />);
+    expect(screen.queryByRole('complementary', { name:'Peggy page guide' })).not.toBeInTheDocument();
+    expect(input()).toHaveValue('My edited property question');
+    const proposal = screen.getByRole('group', { name:'Review a suggested question' });
+    expect(proposal).toHaveTextContent('Different property and scenario');
+    expect(proposal).toHaveTextContent('Using this question starts a fresh chat. Nothing is sent yet.');
+    fireEvent.click(within(proposal).getByRole('button', { name:choice === 'keep' ? 'Keep my draft' : 'Use this question' }));
+    expect(input()).toHaveValue(choice === 'keep' ? 'My edited property question' : 'Different property and scenario');
+    expect(screen.getByRole('checkbox', { name:'Page context off' })).not.toBeChecked();
+    // Exiting another tour or reopening the same panel must not replay a
+    // consumed request after the visitor chose to keep their own draft.
+    fireEvent.click(within(screen.getByRole('navigation', { name:'Peggy page outline' })).getByRole('button', { name:/Next steps/ }));
+    fireEvent.keyDown(document, { key:'Escape' });
+    fireEvent.click(screen.getByRole('button', { name:'Close' }));
+    fireEvent.click(screen.getByRole('button', { name:/Talk to Peggy, the/ }));
+    expect(input()).toHaveValue(choice === 'keep' ? 'My edited property question' : 'Different property and scenario');
+    expect(screen.queryByRole('group', { name:'Review a suggested question' })).not.toBeInTheDocument();
+    expect(fetch).not.toHaveBeenCalled();
+  });
+  it('starts a fresh conversation only after accepting a new property request offered during a tour', async () => {
+    let conversations = 0;
+    const fetcher = vi.fn((url: unknown, _init?: RequestInit) => Promise.resolve(new Response(JSON.stringify(url === '/api/peggy/conversations' ? {id:++conversations,accessToken:`fixture-${conversations}`} : {response:`Property answer ${conversations}`}))));
+    vi.stubGlobal('fetch', fetcher);
+    const { rerender } = render(<PublicPage initialPrompt="Original property request" />);
+    fireEvent.click(screen.getByRole('button', { name:/Talk to Peggy, the/ }));
+    fireEvent.click(screen.getByRole('button', { name:'Send' }));
+    await screen.findByText('Property answer 1');
+    fireEvent.click(screen.getByRole('button', { name:'Explore this with Peggy' }));
+    fireEvent.change(input(), { target:{ value:'Keep this edited follow-up' } });
+    fireEvent.click(document.querySelector('.peggy-location > summary')!);
+    fireEvent.click(within(screen.getByRole('navigation', { name:'Peggy page outline' })).getByRole('button', { name:/Next steps/ }));
+    rerender(<PublicPage initialPrompt="Different property request" />);
+    expect(input()).toHaveValue('Keep this edited follow-up');
+    expect(screen.getByText('Property answer 1')).toBeVisible();
+    expect(document.querySelector('.peggy-attached-context')).toHaveTextContent('Repairs and scope');
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    fireEvent.click(screen.getByRole('button', { name:'Use this question' }));
+    expect(input()).toHaveValue('Different property request');
+    expect(screen.queryByText('Property answer 1')).not.toBeInTheDocument();
+    expect(document.querySelector('.peggy-attached-context')).not.toBeInTheDocument();
+    expect(screen.getByRole('checkbox', { name:'Page context off' })).not.toBeChecked();
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    fireEvent.click(screen.getByRole('button', { name:'Send' }));
+    await screen.findByText('Property answer 2');
+    const secondChat = fetcher.mock.calls.filter(([url]) => url === '/api/peggy/chat')[1];
+    expect(JSON.parse(String(secondChat?.[1]?.body))).toMatchObject({ conversationId:2, message:'Different property request', context:{surface:'public-peggy'} });
+    expect(conversations).toBe(2);
+  });
+  it('returns a chat-started outline tour to the same conversation, attached source and draft', async () => {
+    const fetcher = vi.fn((url: unknown, _init?: RequestInit) => Promise.resolve(new Response(JSON.stringify(url === '/api/peggy/conversations' ? {id:1,accessToken:'fixture'} : {response:'Existing conversation answer'}))));
+    vi.stubGlobal('fetch', fetcher);
+    render(<PublicPage />);
+    fireEvent.click(screen.getByRole('button', { name:'Explore this with Peggy' }));
+    fireEvent.click(screen.getByRole('button', { name:'Send' }));
+    await screen.findByText('Existing conversation answer');
+    fireEvent.click(screen.getByRole('button', { name:'Explore this with Peggy' }));
+    expect(document.querySelector('.peggy-attached-context')).toHaveTextContent('Repairs and scope');
+    fireEvent.change(input(), { target:{ value:'Unsent follow-up' } });
+    fireEvent.click(document.querySelector('.peggy-location > summary')!);
+    const outline = screen.getByRole('navigation', { name:'Peggy page outline' });
+    fireEvent.click(within(outline).getByRole('button', { name:/Next steps/ }));
+    const tour = await screen.findByRole('complementary', { name:'Peggy page guide' });
+    expect(within(tour).getByRole('heading')).toHaveTextContent('Next steps');
+    fireEvent.keyDown(document, { key:'Escape' });
+    expect(input()).toHaveValue('Unsent follow-up');
+    expect(screen.getByText('Existing conversation answer')).toBeVisible();
+    expect(document.querySelector('.peggy-attached-context')).toHaveTextContent('Repairs and scope');
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+  it('keeps the phone tour compact until details are requested, with navigation and Ask always available', async () => {
+    render(<PublicPage />);
+    fireEvent.click(screen.getByRole('button', { name:'Show me around' }));
+    const tour = await screen.findByRole('complementary', { name:'Peggy page guide' });
+    const disclosure = within(tour).getByRole('button', { name:'Section details and stops' });
+    expect(disclosure).toHaveAttribute('aria-expanded', 'false');
+    expect(within(tour).getByText('01 / 03')).toBeVisible();
+    expect(within(tour).getByRole('heading')).toHaveTextContent('Property introduction');
+    expect(within(tour).queryByRole('navigation', { name:'Page tour sections' })).not.toBeInTheDocument();
+    expect(within(tour).getByText('Public starting point.')).not.toBeVisible();
+    fireEvent.click(disclosure);
+    expect(disclosure).toHaveAttribute('aria-expanded', 'true');
+    expect(within(tour).getByRole('navigation', { name:'Page tour sections' })).toBeVisible();
+    expect(within(tour).getByRole('button', { name:'End page tour' })).toBeVisible();
+    expect(within(tour).getByRole('button', { name:'Next section' })).toBeVisible();
+    expect(within(tour).getByRole('button', { name:'Ask about this' })).toBeVisible();
+    fireEvent.click(disclosure);
+    fireEvent.click(within(tour).getByRole('button', { name:'Next section' }));
+    fireEvent.click(within(tour).getByRole('button', { name:'Ask about this' }));
+    expect(input()).toHaveValue('Explain “Repairs and scope” in plain language. What should I notice here?');
+    expect(document.querySelector('.peggy-attached-context')).toHaveTextContent('Repairs and scope');
+    expect(fetch).not.toHaveBeenCalled();
+  });
+  it('measures the visible consent bar so the compact tour can sit above it', async () => {
+    render(<><div className="pg-cookie-bar">Consent choices</div><PublicPage /></>);
+    fireEvent.click(screen.getByRole('button', { name:'Show me around' }));
+    const tour = await screen.findByRole('complementary', { name:'Peggy page guide' });
+    expect(tour.style.getPropertyValue('--peggy-cookie-height')).toBe('100px');
+    expect(fetch).not.toHaveBeenCalled();
+  });
+  it('keeps the wide tour explanation and every section stop immediately available', async () => {
+    vi.stubGlobal('matchMedia', vi.fn(() => ({ matches:false })));
+    render(<PublicPage />);
+    fireEvent.click(screen.getByRole('button', { name:'Show me around' }));
+    const tour = await screen.findByRole('complementary', { name:'Peggy page guide' });
+    expect(within(tour).queryByRole('button', { name:'Section details and stops' })).not.toBeInTheDocument();
+    expect(within(tour).getByRole('navigation', { name:'Page tour sections' })).toBeVisible();
+    expect(within(tour).getAllByRole('button', { name:/Go to section/ })).toHaveLength(3);
     expect(fetch).not.toHaveBeenCalled();
   });
   it('offers a section question without losing the draft or sending private fields', async () => {
@@ -110,17 +283,9 @@ describe('the shared public journey', () => {
       rerender(<JourneyContinuation path={path}/>);expect(screen.queryByRole('region')).not.toBeInTheDocument();
     }
   });
-  it.each(['/work-with-apollo', '/buyers'])('keeps the founder’s head within responsive portrait previews on %s', (path) => {
-    render(<JourneyContinuation path={path} />);
-    const portrait = screen.getByRole('img');
-    expect(portrait).toHaveAttribute('src', '/images/founder/apollo.webp');
-    expect(portrait).toHaveStyle({ objectPosition: 'center top' });
-  });
-  it('retains the centered crop for property evidence previews', () => {
-    render(<JourneyContinuation path="/about" />);
-    const image = screen.getByRole('img');
-    expect(image).toHaveAttribute('src', '/images/nelson/kitchen-after.webp');
-    expect(image.style.objectPosition).toBe('');
+  it.each(['/work-with-apollo', '/buyers', '/about'])('does not repeat a large exploration panel after the terminal action on %s', (path) => {
+    const {container}=render(<JourneyContinuation path={path} />);
+    expect(container).toBeEmptyDOMElement();
   });
   it('dismisses the section outline with Escape and focuses the chosen heading', () => {
     const elements=[document.createElement('h1'),document.createElement('h2'),document.createElement('h2')];

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useSearch } from "wouter";
+import { Link, useSearch } from "wouter";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -54,7 +54,9 @@ function WhatYouGet() {
 const accessSchema = z.object({
   name: z.string().trim().min(2, "Enter your full name").max(120, "Keep your name under 120 characters"),
   email: z.string().trim().email("Enter a valid email address").max(254, "Keep your email under 254 characters"),
-  role: z.enum(["operator", "wholesaler", "buyer", "capital", "broker", "other"]),
+  role: z.enum(["operator", "wholesaler", "buyer", "capital", "broker", "other"], {
+    errorMap: () => ({ message: "Choose your relationship" }),
+  }),
   introducedBy: z.string().trim().min(2, "Tell us who introduced you").max(200, "Keep this introduction under 200 characters"),
   notes: z.string().trim().max(2000, "Keep your note under 2,000 characters").optional().default(""),
   hp_company: z.string().max(0, "Leave this field blank").default(""),
@@ -64,6 +66,7 @@ const accessSchema = z.object({
 });
 
 type AccessValues = z.infer<typeof accessSchema>;
+type AccessDraft = Omit<AccessValues, "role"> & { role: AccessValues["role"] | "" };
 
 const ACCESS_ROLE_BY_QUERY: Record<string, AccessValues["role"]> = {
   source: "wholesaler",
@@ -77,16 +80,18 @@ const ACCESS_ROLE_BY_QUERY: Record<string, AccessValues["role"]> = {
 
 const ACCESS_ROLE_LABEL: Record<AccessValues["role"], string> = {
   operator: "Operator / builder",
-  wholesaler: "Deal source",
+  wholesaler: "Deal finder / wholesaler",
   buyer: "Cash buyer",
   capital: "Capital partner",
   broker: "Broker / agent",
   other: "Other relationship",
 };
 
-export function marketflowAccessRole(search: string): AccessValues["role"] {
+export function marketflowAccessRole(search: string): AccessDraft["role"] {
   const requested = new URLSearchParams(search).get("role")?.trim().toLowerCase();
-  return (requested && ACCESS_ROLE_BY_QUERY[requested]) || "operator";
+  return requested && Object.hasOwn(ACCESS_ROLE_BY_QUERY, requested)
+    ? ACCESS_ROLE_BY_QUERY[requested]
+    : "";
 }
 
 export default function MarketflowAccessPage() {
@@ -114,7 +119,7 @@ export default function MarketflowAccessPage() {
     formMountedAt.current = Date.now();
   }, []);
 
-  const form = useForm<AccessValues>({
+  const form = useForm<AccessDraft>({
     resolver: zodResolver(accessSchema),
     defaultValues: {
       name: "",
@@ -127,6 +132,7 @@ export default function MarketflowAccessPage() {
     },
   });
   const selectedRole = form.watch("role");
+  const selectedRoleLabel = selectedRole ? ACCESS_ROLE_LABEL[selectedRole] : "Choose a relationship";
 
   useEffect(() => {
     if (!submitted && focusNameAfterReset.current) {
@@ -180,11 +186,13 @@ export default function MarketflowAccessPage() {
     },
   });
 
-  const submitRequest = (data: AccessValues) => {
+  const submitRequest = (data: AccessDraft) => {
     if (inFlightRef.current) return;
+    // The editable draft may be unselected; only schema-validated roles reach intake.
+    const validated = accessSchema.parse(data);
     inFlightRef.current = true;
     setSubmitError(null);
-    mutation.mutate(data);
+    mutation.mutate(validated);
   };
 
   if (submitted) {
@@ -223,6 +231,7 @@ export default function MarketflowAccessPage() {
       <section className="mf-access-intro">
         <div className="mf-access-intro-inner">
           <div>
+            <Link href="/marketflow" className="mf-access-back">Back to MarketFlow</Link>
             <p className="mf-access-kicker">MarketFlow · Controlled pilot</p>
             <h1>Record your interest in the controlled pilot.</h1>
             <p>MarketFlow is private and invitation-led. This form records the context for possible consideration; it is not an open signup, application decision, or public marketplace.</p>
@@ -230,7 +239,7 @@ export default function MarketflowAccessPage() {
           <aside className="mf-access-protocol" aria-label="Current access protocol">
             <h2>Request boundary</h2>
             <dl>
-              <div><dt>Relationship</dt><dd>{ACCESS_ROLE_LABEL[selectedRole]}</dd></div>
+              <div><dt>Relationship</dt><dd>{selectedRoleLabel}</dd></div>
               <div><dt>Human review</dt><dd>Not promised</dd></div>
               <div><dt>Access created</dt><dd>None</dd></div>
             </dl>
@@ -245,7 +254,7 @@ export default function MarketflowAccessPage() {
           <p className="mf-access-kicker">Before you request access</p>
           <h2>One concise record for possible consideration.</h2>
           <p>Tell Pegasus who you are, how the relationship began, and the role that interests you. The site records the request; Pegasus may or may not review or answer it.</p>
-          <WhatYouGet />
+          <details className="mf-access-further"><summary>How the access request works</summary><WhatYouGet /></details>
           <div className="mf-access-boundary" data-testid="marketflow-private-access-note">
             <ShieldCheck aria-hidden="true" />
             <p>MarketFlow is private and invitation-led. It is not a securities or investment platform, and participation never guarantees a deal, purchase, placement, or compensation.</p>
@@ -255,7 +264,7 @@ export default function MarketflowAccessPage() {
         <div className="mf-access-form-card">
           <div className="mf-access-form-head" role="status" aria-live="polite" aria-atomic="true">
             <span>Selected relationship</span>
-            <strong>{ACCESS_ROLE_LABEL[selectedRole]}</strong>
+            <strong>{selectedRoleLabel}</strong>
           </div>
           <h2>Provide enough context to identify the request.</h2>
           <p className="mf-access-form-lede">Fields are recorded privately and may be handled by service providers that operate this intake.</p>
@@ -306,17 +315,14 @@ export default function MarketflowAccessPage() {
                   <FormLabel>Role</FormLabel>
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
-                      <SelectTrigger data-testid="select-access-role">
-                        <SelectValue />
+                      <SelectTrigger data-testid="select-access-role" onBlur={field.onBlur} ref={field.ref}>
+                        <SelectValue placeholder="Choose a relationship" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="operator">Operator / builder</SelectItem>
-                      <SelectItem value="wholesaler">Deal finder / wholesaler</SelectItem>
-                      <SelectItem value="buyer">Cash buyer</SelectItem>
-                      <SelectItem value="capital">Capital partner</SelectItem>
-                      <SelectItem value="broker">Broker / agent</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
+                      {accessSchema.shape.role.options.map((role) => (
+                        <SelectItem key={role} value={role}>{ACCESS_ROLE_LABEL[role]}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />

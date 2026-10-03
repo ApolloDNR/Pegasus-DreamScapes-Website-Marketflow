@@ -1,7 +1,8 @@
 import React from 'react';
-import { Link, useLocation } from 'wouter';
+import { Link, useLocation, useSearch } from 'wouter';
 import { ArrowRight, ConciergeBell, Check, Send, Calculator, Compass, Ruler, Landmark } from 'lucide-react';
-import type { Nav, Theme, PeggyHandoff } from './theme';
+import type { Nav, Theme } from './theme';
+import { usePreparedPeggyReview } from './peggy-review-handoff';
 import { IMG, SectionHead, ContourLines, BrandMark } from './primitives';
 import {
   CATEGORIES, PILLARS3, FAQ_HOME, APOLLO, NELSON, MARKETFLOW, PEGGY_ROLES, PEGGY_SLA,
@@ -237,7 +238,9 @@ function ApolloSelector({
   const choose = (path: typeof APOLLO_SELECTOR[number]) => {
     onSelect(path.key);
     if (path.mode === 'link') { setLocation(path.href); return; }
-    leadRef.current?.scrollIntoView({ behavior: 'auto', block: 'start' });
+    // Keep the control receiving focus visible even when the introduction and
+    // form stack into one long column on phones.
+    (roleFieldRef.current ?? leadRef.current)?.scrollIntoView({ behavior: 'auto', block: 'center' });
     roleFieldRef.current?.focus({ preventScroll: true });
   };
   return <section className="ep-section" id="apollo-paths" data-testid="section-apollo-selector"><div className="experience-wrap ep-split">
@@ -250,20 +253,29 @@ function ApolloSelector({
 }
 
 export function WorkWithApolloPage({ go }: { go: Nav }) {
-  const [selectorKey, setSelectorKey] = React.useState<ApolloSelectorKey>('sell');
-  const [preferredRole, setPreferredRole] = React.useState(APOLLO_FORM.role);
+  const search = useSearch();
+  const [, setLocation] = useLocation();
+  const requestedKey = new URLSearchParams(search).get('intent') === 'buy' ? 'buy' : 'sell';
+  const [selectorKey, setSelectorKey] = React.useState<ApolloSelectorKey>(requestedKey);
+  const selectedPath = APOLLO_SELECTOR.find(path => path.key === selectorKey);
+  const preferredRole = selectedPath && 'role' in selectedPath ? selectedPath.role : APOLLO_FORM.role;
+  React.useEffect(() => { setSelectorKey(requestedKey); }, [requestedKey]);
+  const rememberRepresentation = (key: 'buy' | 'sell') => {
+    const params = new URLSearchParams(search);
+    params.set('intent', key);
+    setLocation(`/work-with-apollo?${params.toString()}${window.location.hash}`, { replace: true });
+  };
   const leadRef = React.useRef<HTMLDivElement>(null);
   const roleFieldRef = React.useRef<HTMLSelectElement>(null);
 
   const selectPath = (nextKey: ApolloSelectorKey) => {
     setSelectorKey(nextKey);
     const nextPath = APOLLO_SELECTOR.find((path) => path.key === nextKey);
-    if (nextPath && 'role' in nextPath) setPreferredRole(nextPath.role);
+    if (nextPath && 'role' in nextPath) rememberRepresentation(nextPath.key);
   };
   const selectRole = (role: string) => {
-    setPreferredRole(role);
     const path = APOLLO_SELECTOR.find((path) => 'role' in path && path.role === role);
-    if (path) setSelectorKey(path.key);
+    if (path && 'role' in path) { setSelectorKey(path.key); rememberRepresentation(path.key); }
   };
 
   return (
@@ -373,9 +385,14 @@ export function AboutPage({ go, openPeggy }: { go: Nav; openPeggy: () => void })
 /* ================================================================
    CONTACT
    ================================================================ */
-export function ContactPage({ handoff = null }: { handoff?: PeggyHandoff | null }) {
+export function ContactPage() {
+  const { marker, handoff, pending } = usePreparedPeggyReview();
+  if (pending) return <p role="status" className="experience-wrap pt-32 pb-12">Preparing your editable context…</p>;
   if (handoff) {
-    return <LeadSection cfg={CONTACT_FORM} eyebrow="Continue the property handoff" showRole tone="page" handoff={handoff} />;
+    return <LeadSection key={marker} cfg={CONTACT_FORM} eyebrow="Continue the property handoff" showRole tone="page" handoff={handoff} />;
   }
-  return <ConnectChooser context="contact" />;
+  return <>
+    {marker && <p role="status" className="experience-wrap pt-32 pb-6">Your prepared Peggy context is no longer available in this tab. Opening this page does not send anything. Start a new handoff with Peggy or choose a path below.</p>}
+    <ConnectChooser context="contact" />
+  </>;
 }

@@ -56,8 +56,8 @@ export const FAQ_SECTIONS: FaqSection[] = [
         a: "A free tool you run yourself. Enter a property's basics and it sorts the main investment lanes — fix and flip, BRRRR, rental hold, ADU and development, wholesale, and more — showing where each lands as a range, where the risks are, and a suggested next step. It's a starting point, not a final answer.",
       },
       {
-        q: "What's the difference between a Strategy Snapshot and a Deal Blueprint?",
-        a: "The Strategy Snapshot is a preliminary educational output based on user inputs. A Deal Blueprint is a possible separately scoped analysis. A request is not an order; availability, author, contents, fee, timing, and limits require written agreement.",
+        q: "How does Strategy Lab differ from a Property Review?",
+        a: "Strategy Lab produces preliminary educational output based on your inputs. A Property Review, also called a Deal Blueprint, is a possible separately scoped analysis. A request is not an order; availability, author, contents, fee, timing, and limits require written agreement.",
       },
     ],
   },

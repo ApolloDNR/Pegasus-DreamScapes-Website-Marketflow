@@ -4,7 +4,7 @@ import { REPRESENTATION_NOTICE } from './public-content';
 
 export function AboutPageV6({ go: _go }: { go: Nav }) {
   return <article className="experience-page">
-    <PageOpening title="Apollo Duran." image={{ src: '/images/founder/apollo.webp', alt: 'Apollo Duran, founder of Pegasus Dreamscapes', width: 1100, height: 1375, portrait: true, caption: 'Paolo “Apollo” Duran · Founder, Pegasus Dreamscapes' }} action={{ href: '/contact', label: 'Start a conversation' }}>
+    <PageOpening title="Apollo Duran." image={{ src: '/images/founder/apollo.webp', alt: 'Apollo Duran, founder of Pegasus Dreamscapes', width: 1100, height: 1375, portrait: true, caption: 'Paolo “Apollo” Duran · Founder, Pegasus Dreamscapes' }} action={{ href: '/bring-an-opportunity', label: 'Start a conversation' }}>
       <p>A background in residential construction and real estate operations. A practical interest in how a property gets from its current condition to a considered next step.</p>
       <p>Apollo founded Pegasus to connect property strategy with the work required to carry it out.</p>
     </PageOpening>
@@ -19,7 +19,7 @@ export function AboutPageV6({ go: _go }: { go: Nav }) {
       <div><h2>Buy or sell with Apollo.</h2><p>Representation is a separately documented brokerage relationship.</p><PageAction href="/work-with-apollo">Discuss representation</PageAction></div>
       <div><p>{REPRESENTATION_NOTICE}</p><p className="ep-notice">Pegasus Dreamscapes Corp. is a real estate operating company focused on investment and development. It is not a licensed real estate brokerage. If construction or another specialized service is engaged, provider qualifications, licensing, scope, capacity, and responsibility must be established in separate project agreements. This page does not imply a standing team.</p></div>
     </div></section>
-    <PageClosing title="Start a conversation." href="/contact" label="Contact Apollo" />
+    <PageClosing title="Get in touch with Apollo." href="/contact" label="Contact Apollo" />
   </article>;
 }
 export default AboutPageV6;

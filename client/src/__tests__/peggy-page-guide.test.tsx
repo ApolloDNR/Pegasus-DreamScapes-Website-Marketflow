@@ -26,6 +26,7 @@ beforeEach(() => {
   vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: true })));
   vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function(this: HTMLElement) { return { top: this.hasAttribute('data-second') ? secondTop : 100, left: 0, bottom: 200, right: 600, width: 600, height: 100, x: 0, y: 100, toJSON: () => ({}) }; });
   HTMLElement.prototype.scrollIntoView = vi.fn();
+  vi.stubGlobal('scrollTo', vi.fn());
 });
 afterEach(() => { cleanup(); vi.unstubAllGlobals(); vi.restoreAllMocks(); window.getSelection()?.removeAllRanges(); });
 

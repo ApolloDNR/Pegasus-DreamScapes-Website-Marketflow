@@ -35,9 +35,12 @@ export function DealPartnersPage({ go: _go }: { go: Nav }) {
     setLocation(`/deal-partners?${params.toString()}`, { replace: true });
   };
   const pick = MISSING[idx];
-  const selectedNeedHref = `/bring-an-opportunity?intent=deal-jv&ref=deal-partners&partner_need=${encodeURIComponent(pick.label)}`;
+  const opportunityHref = (need?: string, chooseRequest = false) => `/bring-an-opportunity?${chooseRequest ? '' : 'intent=deal-jv&'}ref=deal-partners${need ? `&partner_need=${encodeURIComponent(need)}` : ''}`;
+  const selectedNeedHref = opportunityHref(pick.label);
+  const pageIntakeHref = opportunityHref(requested);
+  const proposalHref = opportunityHref(requested, true);
   return <article className="experience-page dp">
-    <PageOpening title="Bring the deal. Define the role." action={{ label: 'Bring a deal', href: '/bring-an-opportunity?intent=deal-jv' }} secondaryAction={{ label:'Share a partnership proposal', href:'/bring-an-opportunity?ref=deal-partners' }}>
+    <PageOpening title="Bring the deal. Define the role." action={{ label: 'Bring a deal', href: pageIntakeHref }} secondaryAction={{ label:'Choose a partnership request', href: proposalHref }}>
       <p>Share the property or project, your role, and the help you are looking for. Pegasus considers each proposal individually; participation requires separate written terms.</p>
     </PageOpening>
     <section className="ep-section" data-testid="missing-composer"><div className="experience-wrap">
@@ -64,6 +67,6 @@ export function DealPartnersPage({ go: _go }: { go: Nav }) {
         ['/referral', 'Referrals', 'Permissions, boundaries, and separate written terms.'],
       ].map(([href,label,note]) => <Link key={href} href={href}><span><strong>{label}</strong><small>{note}</small></span><ArrowRight aria-hidden="true" /></Link>)}</div>
     </div></section>
-    <PageClosing title="Bring the facts and your proposed role." href="/bring-an-opportunity?intent=deal-jv" label="Bring a deal"><p className="ep-notice">No response, buyer, written terms, distribution, funding, or closing is promised. Brokerage activity, if any, requires the appropriate separately documented licensed relationship.</p></PageClosing>
+    <PageClosing title="Bring the facts and your proposed role." href={pageIntakeHref} label="Bring a deal"><p className="ep-notice">No response, buyer, written terms, distribution, funding, or closing is promised. Brokerage activity, if any, requires the appropriate separately documented licensed relationship.</p></PageClosing>
   </article>;
 }

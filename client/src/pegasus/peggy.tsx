@@ -10,7 +10,7 @@ import {
 } from '@shared/peggy-access';
 import { peggyFetchWithSingleRefresh } from '@/lib/peggy-access';
 import type { PeggyPageContext } from '@shared/peggy-page-context';
-import { usePeggyPageGuide } from './peggy-page-guide';
+import { scrollToGuideSection, usePeggyPageGuide } from './peggy-page-guide';
 import { PeggyGuideWelcome, PeggyLocation, PeggyTour } from './peggy-guide-ui';
 import './peggy-guide.css';
 
@@ -21,6 +21,7 @@ const FALLBACK =
   "I can’t reach the chat service right now. Your draft is ready to edit and send again. You can also continue in Strategy Lab or share it for consideration.";
 
 type ChatMessage = { role: 'user' | 'assistant'; content: string; notice?: boolean; pageContext?: PeggyPageContext };
+type PreparedQuestion = { prompt: string; context?: PeggyPageContext; freshConversation?: boolean };
 
 type HandoffAction =
   | { action: 'strategylab' }
@@ -127,7 +128,8 @@ export function Peggy({
   const [pinnedContext, setPinnedContext] = useState<PeggyPageContext | null>(null);
   const [choosingPath, setChoosingPath] = useState(false);
   const [tourIndex, setTourIndex] = useState<number | null>(null);
-  const [pendingQuestion, setPendingQuestion] = useState<{ prompt: string; context?: PeggyPageContext } | null>(null);
+  const tourOriginRef = useRef<'page' | 'chat'>('chat');
+  const [pendingQuestion, setPendingQuestion] = useState<PreparedQuestion | null>(null);
   const panelOpen = open && tourIndex === null;
   const pinned = pinnedContext;
   const restoreOpenerFocus = () => requestAnimationFrame(() => {
@@ -143,8 +145,8 @@ export function Peggy({
     const section = guide.sections[tourIndex];
     if (!section) { setTourIndex(null); return; }
     section.element.classList.add('peggy-tour-target');
-    section.element.scrollIntoView?.({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
-    return () => section.element.classList.remove('peggy-tour-target');
+    const frame = requestAnimationFrame(() => scrollToGuideSection(section.element));
+    return () => { cancelAnimationFrame(frame); section.element.classList.remove('peggy-tour-target'); };
   }, [tourIndex, guide.sections]);
   useEffect(() => {
     if (tourIndex !== null) document.querySelector<HTMLElement>('.peggy-tour')?.focus({ preventScroll: true });
@@ -158,40 +160,58 @@ export function Peggy({
     }
   }, [open, initialPrompt, initialRole]);
 
+  const prepareConversation = (prompt: string) => {
+    requestGeneration.current += 1;
+    abortRef.current?.abort();
+    abortRef.current = null;
+    conversationAccessRef.current = null;
+    setMessages([{ role: 'assistant', content: GREETING }]);
+    setStreaming(false);
+    setErrored(false);
+    setPrepared(true);
+    setConfirmReset(false);
+    setConversationKey((key) => key + 1);
+    setDraft(prompt);
+    setPinnedContext(null);
+    setIncludeContext(false);
+    setPendingQuestion(null);
+    setTourIndex(null);
+  };
   useEffect(() => {
-    if (!open) { suppliedPromptRef.current = null; return; }
-    if (initialPrompt?.trim() && initialPrompt !== suppliedPromptRef.current) {
-      suppliedPromptRef.current = initialPrompt;
-      requestGeneration.current += 1;
-      abortRef.current?.abort();
-      abortRef.current = null;
-      conversationAccessRef.current = null;
-      setMessages([{ role: 'assistant', content: GREETING }]);
-      setStreaming(false);
-      setErrored(false);
-      setPrepared(true);
-      setConfirmReset(false);
-      setConversationKey((key) => key + 1);
-      setDraft(initialPrompt.trim());
-      setPinnedContext(null);
-      setIncludeContext(false);
+    const prompt = initialPrompt?.trim();
+    if (!prompt) { suppliedPromptRef.current = null; return; }
+    if (!open || initialPrompt === suppliedPromptRef.current) return;
+    // A consumed request stays consumed across tour/panel transitions. The
+    // caller clears initialPrompt when dismissing an explicit handoff, allowing
+    // the same text to be deliberately requested again later.
+    suppliedPromptRef.current = initialPrompt;
+    if (tourIndex !== null) {
       setTourIndex(null);
+      if (streaming || (draft.trim() && draft !== prompt)) {
+        setPendingQuestion({ prompt, freshConversation: true });
+        return;
+      }
     }
+    prepareConversation(prompt);
   }, [open, initialPrompt]);
 
   useEffect(() => {
     if (!open) return;
     if (document.activeElement instanceof HTMLElement && document.activeElement !== document.body && !panelRef.current?.contains(document.activeElement) && !document.activeElement.closest('.peggy-tour')) openerRef.current = document.activeElement;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        if (tourIndex !== null) { setTourIndex(null); requestAnimationFrame(() => panelRef.current?.focus({ preventScroll: true })); }
-        else { setOpen(false); restoreOpenerFocus(); }
-      }
+    if (!panelOpen) return;
+    const id = requestAnimationFrame(() => (initialPrompt ? inputRef.current : panelRef.current)?.focus({ preventScroll: true }));
+    return () => cancelAnimationFrame(id);
+  }, [open, initialPrompt, panelOpen]);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return;
+      if (tourIndex !== null) endTour();
+      else { setOpen(false); restoreOpenerFocus(); }
     };
     document.addEventListener('keydown', onKey);
-    const id = requestAnimationFrame(() => (initialPrompt ? inputRef.current : panelRef.current)?.focus({ preventScroll: true }));
-    return () => { document.removeEventListener('keydown', onKey); cancelAnimationFrame(id); };
-  }, [open, setOpen, initialPrompt, tourIndex !== null]);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [open, setOpen, tourIndex, guide.sections]);
 
   // Match the visible viewport when a mobile soft keyboard reduces usable space.
   useEffect(() => {
@@ -349,15 +369,43 @@ export function Peggy({
   const lastAction = last?.role === 'assistant' ? splitHandoff(last.content).action : null;
 
   const role = PEGGY_ROLES.find((item) => item.role === pickedRole);
-  const startTour = (index = 0) => { setTourIndex(index); setOpen(true); };
-  const endTour = () => { setTourIndex(null); requestAnimationFrame(() => panelRef.current?.focus({ preventScroll: true })); };
-  const applyQuestion = (question: { prompt: string; context?: PeggyPageContext }) => {
-    setDraft(question.prompt);
-    if (question.context) { setPinnedContext(question.context); setIncludeContext(true); }
-    setPendingQuestion(null);
+  const startTour = (index = 0, origin: 'page' | 'chat' = 'chat') => {
+    tourOriginRef.current = origin;
+    setTourIndex(index);
+    setOpen(true);
+  };
+  const endTour = () => {
+    const section = tourIndex === null ? null : guide.sections[tourIndex]?.element;
+    const returnToChat = tourOriginRef.current === 'chat';
+    setTourIndex(null);
+    setOpen(returnToChat);
+    requestAnimationFrame(() => {
+      if (returnToChat) { panelRef.current?.focus({ preventScroll: true }); return; }
+      if (!section?.isConnected) { restoreOpenerFocus(); return; }
+      const originalTabIndex = section.getAttribute('tabindex');
+      section.setAttribute('tabindex', '-1');
+      section.classList.add('peggy-tour-return-focus');
+      // Removing the reserved rail may reflow the page. Restore the current
+      // heading after that layout change, rather than jumping to the opener.
+      scrollToGuideSection(section, 'auto');
+      section.focus({ preventScroll: true });
+      section.addEventListener('blur', () => {
+        if (originalTabIndex === null) section.removeAttribute('tabindex');
+        else section.setAttribute('tabindex', originalTabIndex);
+        section.classList.remove('peggy-tour-return-focus');
+      }, { once: true });
+    });
+  };
+  const applyQuestion = (question: PreparedQuestion) => {
+    if (question.freshConversation) prepareConversation(question.prompt);
+    else {
+      setDraft(question.prompt);
+      if (question.context) { setPinnedContext(question.context); setIncludeContext(true); }
+      setPendingQuestion(null);
+    }
     requestAnimationFrame(() => inputRef.current?.focus({ preventScroll: true }));
   };
-  const offerQuestion = (question: { prompt: string; context?: PeggyPageContext }) => {
+  const offerQuestion = (question: PreparedQuestion) => {
     if (streaming || (draft.trim() && draft !== question.prompt)) setPendingQuestion(question);
     else applyQuestion(question);
   };
@@ -365,8 +413,15 @@ export function Peggy({
     const snapshot = guide.snapshot(index);
     if (!snapshot) return;
     offerQuestion({ context: { ...snapshot, ...(selectedText ? { selection: selectedText } : {}) }, prompt: selectedText ? 'Explain the selected passage in plain language.' : `Explain “${snapshot.section}” in plain language. What should I notice here?` });
+    const source = guide.sections[index]?.element;
     setTourIndex(null);
     setOpen(true);
+    // Expanding a top guide changes reading clearance. Once it becomes chat,
+    // reveal the explicitly asked section so the visible summary and prepared
+    // question continue to describe the same place.
+    requestAnimationFrame(() => {
+      if (source?.isConnected && window.location.pathname === guide.path) scrollToGuideSection(source, 'auto');
+    });
   };
   const preparePrompt = (prompt: string) => {
     offerQuestion({ prompt });
@@ -376,7 +431,7 @@ export function Peggy({
       const detail = (event as CustomEvent<PeggyGuideRequest>).detail;
       if (!detail || !(detail.source instanceof HTMLElement) || !detail.source.isConnected) return;
       openerRef.current = detail.source;
-      if (detail.mode === 'tour') startTour();
+      if (detail.mode === 'tour') startTour(0, 'page');
       else if (detail.mode === 'explain') {
         const root = document.querySelector('[data-peggy-page]');
         const index = root?.contains(detail.source) ? guide.sections.findLastIndex(section => Boolean(section.element.compareDocumentPosition(detail.source) & Node.DOCUMENT_POSITION_FOLLOWING)) : guide.index;
@@ -555,6 +610,7 @@ export function Peggy({
           {pendingQuestion && <div className="peggy-draft-choice" role="group" tabIndex={-1} aria-label="Review a suggested question" aria-describedby={draftChoiceId}>
             <p role="status">{streaming ? 'Peggy is still responding. Your next question is ready to review.' : 'You already have a draft. Keep it, or use this question.'}</p>
             <p id={draftChoiceId}>{pendingQuestion.prompt}</p>
+            {pendingQuestion.freshConversation && <p>Using this question starts a fresh chat. Nothing is sent yet.</p>}
             <div><button type="button" disabled={streaming} onClick={() => applyQuestion(pendingQuestion)}>Use this question</button><button type="button" onClick={() => { setPendingQuestion(null); inputRef.current?.focus(); }}>Keep my draft</button></div>
           </div>}
           {pinned && includeContext && <div className="peggy-attached-context"><details><summary><FileText size={14} aria-hidden="true" /><span>{pinned.selection ? 'Selected passage' : pinned.section}</span><ChevronDown size={14} aria-hidden="true" /></summary><p>{pinned.selection || pinned.excerpt || pinned.section}</p><small>This snapshot stays attached while you scroll. Remove it to use the current view.</small></details><button type="button" aria-label="Remove attached page context" disabled={streaming} onClick={() => { setPinnedContext(null); guide.clearSelection(); }}><X size={16} aria-hidden="true" /></button></div>}

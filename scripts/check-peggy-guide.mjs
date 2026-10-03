@@ -88,9 +88,12 @@ try {
     assert.equal(await page.locator('.peggy-tour-target').innerText(), 'What brings you here?');
     assert.equal(requests.length, 0);
     await check(page, key, 'tour', true);
+    const detailsToggle = tour.getByRole('button', {name:'Section details and stops'});
+    if (await detailsToggle.isVisible()) await detailsToggle.click();
     await tour.getByRole('button', { name: 'Ask about this' }).click();
     await page.waitForFunction(() => document.querySelector('.peggy-input textarea').value.includes('What brings you here?'));
     assert.equal(requests.length, 0);
+    await page.waitForFunction(() => document.querySelector('.peggy-location > summary')?.textContent.includes('What brings you here?'));
     await check(page, key, 'prepared-section');
     await page.locator('#home-invitation-title').scrollIntoViewIfNeeded();
     await panel.getByRole('button', { name: 'Send', exact: true }).click();
