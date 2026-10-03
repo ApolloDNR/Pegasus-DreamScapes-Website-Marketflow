@@ -37,10 +37,10 @@ const LANES: ConnectLane[] = [
   {
     id: "representation",
     href: "/work-with-apollo",
-    audience: "Seller or buyer",
+    audience: "Buy or sell with an agent",
     routeCode: "AGENCY LANE",
     label: "I want Apollo to represent me",
-    short: "Listing representation, buyer representation, pricing, negotiation, and closing discipline.",
+    short: "Ask Apollo about licensed buyer or seller representation through his responsible broker.",
     detail:
       "Use this lane to ask about current licensed-representation availability. Any agency relationship requires current license verification and a separate written brokerage agreement.",
     nextStep: "Review the representation page before any agency conversation begins.",
@@ -51,10 +51,10 @@ const LANES: ConnectLane[] = [
   {
     id: "buyer-investor",
     href: "/buyers",
-    audience: "Buyer",
+    audience: "Buyer paths & criteria",
     routeCode: "BUYER READ",
     label: "I am buying or investing",
-    short: "Investor-minded search, buy-box discipline, diligence, and offer strategy.",
+    short: "Compare representation, investor buying criteria, and private-pilot access as separate requests.",
     detail:
       "For buyers who want more than showings. This lane is for people who want an operator's lens on value, risk, repairs, rent, resale, and offer structure.",
     nextStep: "Share the target area, budget, and the kind of risk you are willing to take.",

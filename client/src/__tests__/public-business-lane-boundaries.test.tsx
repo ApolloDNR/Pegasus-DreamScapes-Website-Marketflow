@@ -89,7 +89,7 @@ describe("public business-lane boundaries", () => {
       container.querySelector('a[href="/bring-an-opportunity?intent=buyer"]'),
     ).not.toBeNull();
     expect(container.querySelector('a[href="/marketflow/access"]')).not.toBeNull();
-    expect(screen.getByRole("button", { name: /submit investor interest/i })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /share buying criteria/i })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /get on the buyer list/i })).not.toBeInTheDocument();
   });
 

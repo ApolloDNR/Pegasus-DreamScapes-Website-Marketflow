@@ -31,7 +31,9 @@ export function NavigationContinuity() {
       target.focus({ preventScroll: true });
       if (targetId) {
         const headerHeight = document.querySelector('nav')?.getBoundingClientRect().height ?? 88;
-        window.scrollTo({ top: Math.max(0, target.getBoundingClientRect().top + window.scrollY - headerHeight - 16), behavior: 'instant' });
+        const targetMargin = Number.parseFloat(getComputedStyle(target).scrollMarginTop);
+        const clearance = Math.max(headerHeight + 16, Number.isFinite(targetMargin) ? targetMargin : 0);
+        window.scrollTo({ top: Math.max(0, target.getBoundingClientRect().top + window.scrollY - clearance), behavior: 'instant' });
       }
       return true;
     };

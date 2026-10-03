@@ -1,3 +1,4 @@
+import { buyerCriteriaLeadSubmissionV1Schema } from "../../shared/buyer-criteria";
 import type { Express, RequestHandler } from "express";
 import { z } from "zod";
 import { fromError } from "zod-validation-error";
@@ -12,6 +13,13 @@ import type { WebsiteDb } from "./db";
 export function registerWebsiteLeadRoute(app: Express, options: {db: WebsiteDb; rateLimit: RequestHandler}) {
   app.post("/api/leads", options.rateLimit, async (req: any, res) => {
     try {
+      const marker = req.body?.leadData;
+      if ((req.body && typeof req.body === 'object' && ('buyerCriteria' in req.body || 'buyerAlertConsent' in req.body)) || (marker && typeof marker === 'object' && ('buyerCriteria' in marker || 'buyerAlertConsent' in marker))) {
+        const parsed = buyerCriteriaLeadSubmissionV1Schema.safeParse(req.body);
+        if (!parsed.success) return res.status(400).json({ message: 'Invalid buying criteria. Review the required choices and try again.' });
+        req.body = parsed.data;
+      }
+
       // Empire Doctrine v1.0.1 — server-truth anti-spam for /submit and
       // /marketflow/access submissions. Honeypot hp_company must be empty;
       // ts_elapsed_ms must be at least 3000 (3-second time-on-form).

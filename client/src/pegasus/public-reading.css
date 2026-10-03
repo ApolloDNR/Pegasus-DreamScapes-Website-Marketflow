@@ -49,3 +49,7 @@
 .intake-review button { font-size:14px; min-height:44px; color:hsl(var(--primary)); text-decoration:underline; text-underline-offset:4px; }
 @media(max-width:1099px) { .intake-page { padding-top:108px; } .legal-page > section:first-child { padding-top:124px; } }
 @media(max-width:600px) { .intake-situation-mobile { display:block; } .intake-situation-desktop { display:none; } .intake-review dl > div { grid-template-columns:1fr; gap:4px; } }
+
+.intake-optional-details { border-block:1px solid hsl(var(--border)); padding-block:8px; }
+.intake-optional-details summary small { display:block; margin-top:5px; font-size:13px; line-height:1.5; font-weight:400; color:hsl(var(--muted-foreground)); }
+.intake-optional-details[open] > div { padding-block:16px 8px; }

@@ -2259,6 +2259,7 @@ try {
         await page.getByLabel('Property type').selectOption({ label: 'Single-family' });
         await page.getByLabel('Occupancy').selectOption({ label: 'Vacant' });
         await page.getByLabel('Condition').selectOption({ label: 'Moderate repairs' });
+        await page.locator('summary').filter({ hasText: 'Value and mortgage details (optional)' }).click();
         await page.getByLabel('Estimated value (if known)').fill('$650,000');
         await page.getByLabel('Estimated mortgage balance (if relevant)').fill('$225,000');
         await page.getByLabel('Anything urgent?').fill('No immediate deadline');

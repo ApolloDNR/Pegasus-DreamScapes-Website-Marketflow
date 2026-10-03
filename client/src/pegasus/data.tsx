@@ -34,7 +34,7 @@ const PREMIUM_MORE_NAV: PremiumNavigationGroup[] = [
     items: [
       { label: 'Development', route: 'development', note: 'A framework for scope, budget, diligence, and delivery terms.' },
       { label: 'Capital Partners', route: 'capital', note: 'Private, project-specific relationships.' },
-      { label: 'Buyers', route: 'buyers', note: 'Representation, diligence, and reviewed opportunity paths.' },
+      { label: 'Buyer paths & criteria', route: 'buyers', note: 'Compare representation, investor buying criteria, and private-pilot access.' },
     ],
   },
   {

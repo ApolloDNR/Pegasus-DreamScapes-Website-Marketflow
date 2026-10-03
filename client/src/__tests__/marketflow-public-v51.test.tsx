@@ -79,7 +79,7 @@ describe("mounted MarketFlow public shell", () => {
     await user.click(screen.getAllByRole("link", { name: "Request Access" })[0]);
     expect(history.at(-1)).toBe("/marketflow/access");
 
-    await user.click(screen.getByRole("link", { name: "Read public criteria" }));
+    await user.click(screen.getByRole("link", { name: "Buybox availability" }));
     expect(history.at(-1)).toBe("/marketflow/buyboxes");
 
     await user.click(screen.getByRole("link", { name: "Start in Strategy Lab" }));

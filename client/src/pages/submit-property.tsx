@@ -1,3 +1,5 @@
+import { BuyerCriteriaForm } from '@/pegasus/buyer-criteria';
+import { createEmptyBuyerCriteriaDraft } from '@shared/buyer-criteria';
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation } from "@tanstack/react-query";
 import { useIntakeRequest } from "@/lib/intake-idempotency";
@@ -268,6 +270,10 @@ export default function SubmitPropertyPage() {
       situation: utm.ownerSituation || labPrefill.situation || "",
     },
   );
+  const [propertyAmountsOpen, setPropertyAmountsOpen] = useState(Boolean(form.estimatedValue || form.estimatedDebt));
+  const [buyerReceipt,setBuyerReceipt]=useState<number|null>(null);
+  const [buyerPending,setBuyerPending]=useState(false);
+  const [buyerDraft, setBuyerDraft] = useState(() => ({...createEmptyBuyerCriteriaDraft(), referredBy: utm.referralReference}));
   const [hp, setHp] = useState("");
   const [result, setResult] = useState<{ id: string } | null>(null);
   const [contactErrors, setContactErrors] = useState<ContactErrors>({});
@@ -471,6 +477,12 @@ export default function SubmitPropertyPage() {
     !!form.contactName && /.+@.+\..+/.test(form.email) && form.consentAccepted,
   ][step];
 
+  if (form.visitorType === 'buyer' && step > 0 && !result) return (
+    <div className="intake-page min-h-screen pt-28 pb-24 px-6"><div className="mx-auto max-w-3xl">
+      <button type="button" className="min-h-11 underline mb-6" onClick={() => moveToStep(0)}>Return to Start</button>
+      <BuyerCriteriaForm initialDraft={buyerDraft} onDraftChange={setBuyerDraft} initialReceipt={buyerReceipt} onReceipt={setBuyerReceipt} pending={buyerPending} onPendingChange={setBuyerPending} />
+    </div></div>
+  );
   return (
     <>
       <p
@@ -580,7 +592,7 @@ export default function SubmitPropertyPage() {
           )}
 
           {step === 1 && (
-            <fieldset className="space-y-5">
+            <fieldset className="space-y-5" aria-describedby="property-details-guidance">
               <legend
                 ref={stepPromptRef}
                 tabIndex={-1}
@@ -589,11 +601,11 @@ export default function SubmitPropertyPage() {
               >
                 The property.
               </legend>
+              <p id="property-details-guidance" className="intake-draft-note">These property details are optional. Share what you know and leave unknowns blank.</p>
               <div>
                 <Label htmlFor="sp-address">Property address</Label>
                 <input id="sp-address" className={field} value={form.propertyAddress}
                   onChange={(e) => set({ propertyAddress: e.target.value })} placeholder="Street address" autoComplete="street-address" />
-                <p className="mt-3 text-sm text-[#6b5f4d] dark:text-[#b9a888]">Share what you know. Partial information is fine.</p>
               </div>
               <div className="grid gap-4 sm:grid-cols-3">
                 <div><Label htmlFor="sp-city">City</Label>
@@ -617,17 +629,20 @@ export default function SubmitPropertyPage() {
                     <option value="">Select…</option>{CONDITIONS.map((o) => <option key={o}>{o}</option>)}
                   </select></div>
               </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div><Label htmlFor="sp-val">Estimated value (if known)</Label>
-                  <input id="sp-val" className={field} value={form.estimatedValue} onChange={(e) => set({ estimatedValue: e.target.value })} placeholder="$" inputMode="numeric" /></div>
-                <div><Label htmlFor="sp-debt">Estimated mortgage balance (if relevant)</Label>
-                  <input id="sp-debt" className={field} value={form.estimatedDebt} onChange={(e) => set({ estimatedDebt: e.target.value })} placeholder="$" inputMode="numeric" /></div>
-              </div>
               <div>
                 <Label htmlFor="sp-urgent">Anything urgent?</Label>
                 <input id="sp-urgent" className={field} value={form.urgency} onChange={(e) => set({ urgency: e.target.value })}
                   placeholder="Auction date, notice received, deadline…" />
               </div>
+              <details className="intake-other-ways intake-optional-details" open={propertyAmountsOpen} onToggle={event => setPropertyAmountsOpen(event.currentTarget.open)}>
+                <summary><span>Value and mortgage details (optional)<small>{[form.estimatedValue, form.estimatedDebt].filter(Boolean).length ? `${[form.estimatedValue, form.estimatedDebt].filter(Boolean).length} details added` : 'Add estimates only if you know them.'}</small></span><ChevronDown aria-hidden="true" size={17} /></summary>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div><Label htmlFor="sp-val">Estimated value (if known)</Label>
+                    <input id="sp-val" className={field} value={form.estimatedValue} onChange={(e) => set({ estimatedValue: e.target.value })} placeholder="$" inputMode="numeric" /></div>
+                  <div><Label htmlFor="sp-debt">Estimated mortgage balance (if relevant)</Label>
+                    <input id="sp-debt" className={field} value={form.estimatedDebt} onChange={(e) => set({ estimatedDebt: e.target.value })} placeholder="$" inputMode="numeric" /></div>
+                </div>
+              </details>
             </fieldset>
           )}
 

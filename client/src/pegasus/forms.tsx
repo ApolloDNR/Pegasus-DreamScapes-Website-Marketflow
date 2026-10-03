@@ -1,3 +1,4 @@
+import { BuyerCriteriaForm } from './buyer-criteria';
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { useLocation } from 'wouter';
 import { ArrowRight, Check, ChevronDown, Mail, Phone, MapPin, ConciergeBell, AlertCircle, Loader2, Bookmark, BookmarkCheck } from 'lucide-react';
@@ -405,7 +406,7 @@ export function LeadSection({
         </div>
         <div className="lg:col-span-7 reveal delay-100">
           <div className="lead-card p-6 sm:p-8 lg:p-11">
-            <LeadForm
+            {cfg.intent === 'buyer' ? <BuyerCriteriaForm /> : <LeadForm
               cfg={cfg}
               showRole={showRole}
               onNavy={false}
@@ -414,7 +415,7 @@ export function LeadSection({
               preferredRole={preferredRole}
               onRoleChange={onRoleChange}
               roleFieldRef={roleFieldRef}
-            />
+            />}
           </div>
         </div>
       </div>
