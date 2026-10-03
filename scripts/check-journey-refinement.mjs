@@ -5,32 +5,42 @@ import path from 'node:path';
 import { chromium } from 'playwright-core';
 import { checkPublicRouteContinuity } from './public-route-continuity-check.mjs';
 import { openAvailablePeggy } from './peggy-ui-test-helpers.mjs';
+import { closeWithinDeadline, runWithinDeadline } from './rendered-qa-liveness.mjs';
 process.env.APP_ENV='preview'; process.env.SITE_INDEXABLE='false'; process.env.DATABASE_URL='';
 const {default:app}=await import('../server.mjs');
 const server=app.listen(0,'127.0.0.1'); await new Promise(resolve=>server.once('listening',resolve));
 const origin=`http://127.0.0.1:${server.address().port}`;
 const out=process.env.JOURNEY_SCREENSHOT_DIR || '/tmp/pegasus-journey-qa'; await mkdir(out,{recursive:true});
 const axe=await readFile(new URL('../node_modules/axe-core/axe.min.js',import.meta.url),'utf8');
-const evidence=[]; let browser; let currentPage;
+const evidence=[]; let browser; let currentPage; let lastPhase='initialization'; let failure;
+async function phase(label, operation, timeoutMs) {
+  lastPhase=label;
+  console.log(`[journey:start] ${label}`);
+  const result=await runWithinDeadline(label,operation,timeoutMs);
+  console.log(`[journey:pass] ${label}`);
+  return result;
+}
 async function capture(page,key,state) {
-  await page.evaluate(async()=>{await document.fonts.ready;await Promise.all([...document.images].filter(img=>img.getBoundingClientRect().top<innerHeight).map(img=>img.decode().catch(()=>{})));});
-  assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),`${key}/${state}: overflow`);
-  await page.addScriptTag({content:axe});
-  const violations=await page.evaluate(async()=> (await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}})).violations.map(item=>({id:item.id,nodes:item.nodes.map(node=>node.target)})));
-  await page.screenshot({path:path.join(out,`${key}-${state}.png`)});
+  await phase(`${key}/${state}/fonts`,()=>page.evaluate(async()=>{await document.fonts.ready;}));
+  await phase(`${key}/${state}/images`,()=>page.evaluate(async()=>{await Promise.all([...document.images].filter(img=>img.getBoundingClientRect().top<innerHeight).map(img=>img.decode().catch(()=>{})));}));
+  assert(await phase(`${key}/${state}/geometry`,()=>page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1)),`${key}/${state}: overflow`);
+  await phase(`${key}/${state}/load-axe`,()=>page.addScriptTag({content:axe}));
+  const violations=await phase(`${key}/${state}/axe`,()=>page.evaluate(async()=> (await axe.run(document,{runOnly:{type:'tag',values:['wcag2a','wcag2aa','wcag21aa']}})).violations.map(item=>({id:item.id,nodes:item.nodes.map(node=>node.target)}))));
+  await phase(`${key}/${state}/screenshot`,()=>page.screenshot({path:path.join(out,`${key}-${state}.png`)}));
   assert.deepEqual(violations,[],`${key}/${state}: accessibility`);
   evidence.push({key,state,screenshot:`${key}-${state}.png`,axeViolations:0,overflow:false});
 }
 try {
  for(const width of process.env.JOURNEY_WIDTH ? [Number(process.env.JOURNEY_WIDTH)] : [320,390,768,1536]) for(const theme of ['light','dark']) {
   const key=`${width}-${theme}`;
+  await phase(`${key}/complete-journey`,async()=>{
   browser=await chromium.launch({executablePath:process.env.CHROME_PATH || chromium.executablePath(),headless:true,ignoreDefaultArgs:['--enable-unsafe-swiftshader'],args:['--no-sandbox','--disable-dev-shm-usage','--disable-gpu','--disable-software-rasterizer','--single-process','--no-zygote']});
   const context=await browser.newContext({viewport:{width,height:width<768?844:1024},reducedMotion:'reduce'});
   const writes=[],errors=[];
   await context.route('**/*',route=>{if(route.request().method()!=='GET'){writes.push(route.request().url());return route.abort();} return new URL(route.request().url()).origin===origin?route.continue():route.abort();});
   await context.addInitScript(theme=>{localStorage.setItem('pegasus-ui-theme',theme);localStorage.setItem('pegasus-cookie-consent',JSON.stringify({essential:true,analytics:false,marketing:false,decidedAt:'2026-01-01T00:00:00.000Z'}));},theme);
   const page=await context.newPage();currentPage=page;page.on('pageerror',error=>errors.push(error.message));
-  await checkPublicRouteContinuity(page, origin);
+  await checkPublicRouteContinuity(page, origin, (label,operation)=>phase(`${key}/route-continuity/${label}`,operation));
   await page.goto(origin+'/'); await page.locator('.home-pathways').waitFor();
   await page.locator('#home-paths-title').evaluate(el=>el.scrollIntoView({block:'start'}));
   const pathways=page.locator('.home-pathways');
@@ -150,8 +160,28 @@ try {
     await capture(page,key,'enlarged-text');
   }
   assert.deepEqual(writes,[],`${key}: unexpected service writes`);assert.deepEqual(errors,[],`${key}: page errors`);
-  await browser.close();console.log(`${key}: Rendered states and complete guide / choice / continuation journeys passed`);
+  await phase(`${key}/browser-close`,()=>closeWithinDeadline(`${key} browser`,()=>browser.close()));
+  browser=undefined;
+  console.log(`${key}: Rendered states and complete guide / choice / continuation journeys passed`);
+  },90_000);
  }
  await writeFile(path.join(out,'results.json'),JSON.stringify({source:process.env.TESTED_SOURCE_SHA || 'working tree',serviceMode:'Local, no writes or live services',checks:evidence.length,results:evidence},null,2));
-} catch(error) { await currentPage?.screenshot({path:path.join(out,'failure.png')}).catch(()=>{}); throw error; }
-finally {await browser?.close();server.close();}
+} catch(error) {
+  failure=error;
+  console.error(`[journey:failed] Last phase: ${lastPhase}`,error);
+  try { await runWithinDeadline('journey failure screenshot',()=>currentPage?.screenshot({path:path.join(out,'failure.png')}),5_000); }
+  catch(diagnosticError) { console.error('[journey:diagnostic-failed]',diagnosticError); }
+  try { await runWithinDeadline('journey failure evidence',()=>writeFile(path.join(out,'failure.json'),JSON.stringify({lastPhase,error:String(error),stack:error?.stack,checks:evidence.length,results:evidence},null,2)),5_000); }
+  catch(diagnosticError) { console.error('[journey:diagnostic-failed]',diagnosticError); }
+} finally {
+  for(const [label,close] of [
+    ['journey browser',()=>browser?.close()],
+    ['journey server',()=>{server.closeAllConnections();return new Promise((resolve,reject)=>server.close(error=>error?reject(error):resolve()));}],
+  ]) {
+    try { await closeWithinDeadline(label,close); }
+    catch(cleanupError) { console.error('[journey:cleanup-failed]',cleanupError); failure??=cleanupError; }
+  }
+}
+// A timed-out browser RPC can retain its transport. Fail finitely after the
+// original error, diagnostic attempts and bounded cleanup have been recorded.
+if(failure) { console.error(failure); process.exit(1); }
