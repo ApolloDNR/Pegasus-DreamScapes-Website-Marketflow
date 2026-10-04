@@ -58,3 +58,6 @@
 .ow-detail-marker[data-active='true'] { background:#eed7c5; color:#0b1d29; outline:2px solid #0b1d29; outline-offset:3px; }
 .ow-photo-inspection button:focus-visible { outline:2px solid var(--experience-copper); outline-offset:4px; }
 .ow-photo-inspection .ow-detail-note { border-left:2px solid var(--experience-copper); padding-left:16px; }
+
+.ow-pair[data-navigation-section] { scroll-margin-top: 160px; }
+.ow-pair[data-navigation-section]:focus-visible { outline: 2px solid var(--pg-copper, #a56944); outline-offset: 8px; }

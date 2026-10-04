@@ -42,11 +42,11 @@ export function PageOpening({ title, children, action, secondaryAction, image, c
   </header>;
 }
 
-export function PageClosing({ title = 'Start with what you have.', children, href = '/bring-an-opportunity', label = 'Start a conversation' }: {
-  title?: string; children?: ReactNode; href?: string; label?: string;
+export function PageClosing({ title = 'Start with what you have.', children, href = '/bring-an-opportunity', label = 'Start a conversation', secondaryAction }: {
+  title?: string; children?: ReactNode; href?: string; label?: string; secondaryAction?: { label: string; href: string };
 }) {
   return <section className="ep-section ep-dark ep-closing"><div className="experience-wrap ep-split">
-    <h2>{title}</h2><div>{children}<PageAction href={href}>{label}</PageAction>{href.startsWith('/bring-an-opportunity') && <><BeforeYouBegin /><p className="ep-notice">{SUBMISSION_NOTICE}</p></>}</div>
+    <h2>{title}</h2><div>{children}{secondaryAction ? <div className="experience-actions"><PageAction href={href}>{label}</PageAction><PageAction href={secondaryAction.href} secondary>{secondaryAction.label}</PageAction></div> : <PageAction href={href}>{label}</PageAction>}{href.startsWith('/bring-an-opportunity') && <><BeforeYouBegin /><p className="ep-notice">{SUBMISSION_NOTICE}</p></>}</div>
   </div></section>;
 }
 

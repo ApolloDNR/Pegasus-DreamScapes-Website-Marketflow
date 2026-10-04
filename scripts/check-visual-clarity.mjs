@@ -161,11 +161,11 @@ try {
         assert.equal(await page.locator('.home-project-note-controls button[aria-pressed="false"] .lucide-chevron-down').count(), 2);
       });
       await page.getByRole('button', {
-        name: 'Navy cabinetry',
+        name: 'Living spaces · Connection',
         exact: true
       }).click();
       assert.equal(await page.getByRole('button', {
-        name: 'Navy cabinetry',
+        name: 'Living spaces · Connection',
         exact: true
       }).getAttribute('aria-pressed'), 'true');
       await capture(page, key + '-photo-notes');

@@ -45,6 +45,9 @@ export default defineConfig({
         manualChunks: {
           "vendor-react": ["react", "react-dom"],
           "vendor-app": ["wouter", "@tanstack/react-query", "lucide-react"],
+          // The shared, stable project record is used by Home and the case study.
+          // Cache it independently instead of duplicating evidence in the app entry.
+          "nelson-record": [path.resolve(projectRoot, "client/src/pegasus/nelson-gallery-data.ts"), path.resolve(projectRoot, "client/src/pegasus/nelson-story.ts")],
         },
       },
     },

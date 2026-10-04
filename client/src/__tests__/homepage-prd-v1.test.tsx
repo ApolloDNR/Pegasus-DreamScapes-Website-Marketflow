@@ -116,7 +116,7 @@ describe("Homepage premium editorial contract", () => {
     const proof = container.querySelector<HTMLElement>('[data-hv="proof"]')!;
     expect(proof).toHaveTextContent('The renovation moved the cooktop to a waterfall island with seating.');
     expect(proof).not.toHaveTextContent(/\$|ROI|profit|sourced the deal/);
-    expect(within(proof).getByRole('link')).toHaveAttribute('href','/projects/nelson-dr');
+    expect(within(proof).getByRole('link')).toHaveAttribute('href','/projects/nelson-dr?from=home&story=kitchen#nelson-kitchen');
   });
   it("removes the duplicated method pitch from Home", () => {
     const { container } = renderHome();

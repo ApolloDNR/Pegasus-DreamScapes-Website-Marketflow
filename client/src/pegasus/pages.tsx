@@ -291,7 +291,7 @@ export function WorkWithApolloPage({ go }: { go: Nav }) {
       </div></section>
       <section className="ep-section ep-dark"><div className="experience-wrap ep-split"><h2>A clearly documented relationship.</h2><div><p>{APOLLO_DISCLOSURE}</p><p className="ep-notice">Equal Housing Opportunity. If representation is offered, the policy is to provide it without unlawful discrimination, subject to the signed brokerage agreement.</p></div></div></section>
       <div ref={leadRef} id="apollo-lead" className="ep-form-section">
-        <LeadSection cfg={APOLLO_FORM} eyebrow="Represent with Apollo" tone="page" headingLevel={2} showRole preferredRole={preferredRole} onRoleChange={selectRole} roleFieldRef={roleFieldRef} showDecorativeContour={false} />
+        <LeadSection cfg={{ ...APOLLO_FORM, heading: <>Is representation <span className="italic text-[var(--accent)]">your next step?</span></> }} eyebrow="Your next decision" tone="page" headingLevel={2} showRole preferredRole={preferredRole} onRoleChange={selectRole} roleFieldRef={roleFieldRef} showDecorativeContour={false} />
       </div>
     </article>
   );

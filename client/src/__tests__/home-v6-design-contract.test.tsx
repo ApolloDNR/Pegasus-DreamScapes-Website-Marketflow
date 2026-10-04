@@ -50,7 +50,7 @@ describe('Blueprint v1.1 mounted homepage', () => {
     const { container } = renderHome();
     const proof = within(container.querySelector<HTMLElement>('[data-hv="proof"]')!);
     expect(proof.getAllByRole('img').map(img => img.getAttribute('src'))).toEqual(['/images/nelson/kitchen-before.webp', '/images/nelson/kitchen-after.webp']);
-    expect(proof.getByRole('link', { name: 'Explore the case study' })).toHaveAttribute('href', '/projects/nelson-dr');
+    expect(proof.getByRole('link', { name: 'Explore the kitchen' })).toHaveAttribute('href', '/projects/nelson-dr?from=home&story=kitchen#nelson-kitchen');
     expect(proof.queryByText(/\$|ROI|profit/)).not.toBeInTheDocument();
   });
   it('keeps method and specialist routes available without repeating their pitch on Home', () => {

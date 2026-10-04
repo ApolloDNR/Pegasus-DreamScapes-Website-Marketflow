@@ -1,5 +1,6 @@
-export const NELSON_PAIRS: Array<{ title: string; before: string; after: string; beforeAlt: string; afterAlt: string; note: string; tag?: string; details?: Array<{ label: string; note: string; x: number; y: number }> }> = [
+export const NELSON_PAIRS: Array<{ id?: string; title: string; before: string; after: string; beforeAlt: string; afterAlt: string; note: string; tag?: string; details?: Array<{ label: string; note: string; x: number; y: number }> }> = [
   {
+    id: 'nelson-kitchen',
     title: 'The kitchen',
     details: [
       { label: 'Deep-navy cabinetry', note: 'Navy cabinetry replaces the dated galley-kitchen finish shown in the earlier photograph.', x: 18, y: 31 },
@@ -13,6 +14,7 @@ export const NELSON_PAIRS: Array<{ title: string; before: string; after: string;
     note: 'Deep-navy cabinetry, a waterfall quartz island, and a statement hood in the finished kitchen.',
   },
   {
+    id: 'nelson-bath',
     title: 'The primary bath',
     details: [
       { label: 'Freestanding tub', note: 'A freestanding soaking tub appears in the completed room.', x: 25, y: 73 },
@@ -27,6 +29,7 @@ export const NELSON_PAIRS: Array<{ title: string; before: string; after: string;
     note: 'From exposed framing to a freestanding tub, glass shower, and warm wood paneling.',
   },
   {
+    id: 'nelson-living',
     title: 'The living space',
     details: [
       { label: 'Connected kitchen', note: 'The finished photograph shows the kitchen opening onto the staged living and dining areas.', x: 27, y: 49 },

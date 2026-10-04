@@ -4,6 +4,8 @@ This file is the standard Codex decision entrypoint for the website repo. Keep d
 
 ## Current Controlling Decisions
 
+- October 4 visitor journey: retain the existing six-section story and direct paths while making original Nelson photographs three user-controlled room chapters with exact case-study anchors and contextual returns. Preview audience outcomes, provide one relevant explore-first alternative beside direct inquiry, and open only the canonical intake privacy notice in a labeled new tab to avoid losing the draft. No image, role, accounting, consent, model or backend claims change. See `docs/qa/visitor-journey-2026-10-04.md`.
+
 - October 4 visual hierarchy: context readouts stay unboxed, route links retain directional cues, quiet actions remain visibly underlined, local selectors use UI type and explicit check/disclosure marks, and the homepage does not imply an initial route selection. Preserve existing copy, model, media and legal/privacy contracts. See `docs/qa/visual-hierarchy-2026-10-04.md`.
 
 - October 3 focused public-experience enhancement: lead with concrete visitor decisions, frame Nelson as documented evidence without unverified execution credit, consolidate duplicate proof routes with compatible deep links, keep one contextual Peggy invitation, explain acquisition cash needs before secondary model comparisons, preserve the funding question and local drafts, and connect About to the existing controlled concept film. Retain all model, privacy, consent and licensed-role boundaries. See `docs/qa/public-experience-enhancement-2026-10-03.md`.

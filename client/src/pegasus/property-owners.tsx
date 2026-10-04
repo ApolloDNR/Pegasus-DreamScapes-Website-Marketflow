@@ -36,7 +36,9 @@ export function PropertyOwnersPage({ go: _go }: { go: Nav }) {
   const situationHref = (label?: string) => `/bring-an-opportunity?intent=property&ref=property-owners${label ? `&owner_situation=${encodeURIComponent(label)}` : ''}`;
   const selectedSituationHref = situationHref(SITUATIONS[idx].label);
   // The first example is exploratory until a choice is explicitly made.
-  const pageIntakeHref = situationHref(SITUATIONS.some(item => item.label === requested) ? requested! : undefined);
+  const requestedSituation = SITUATIONS.some(item => item.label === requested) ? requested! : undefined;
+  const pageIntakeHref = situationHref(requestedSituation);
+  const pageLabHref = `/strategy-lab${requestedSituation ? `?owner_situation=${encodeURIComponent(requestedSituation)}` : ''}`;
   return <article className="experience-page po">
     <PageOpening title="A clear next step for your property."
       image={{ src:'/images/nelson/nelson-exterior-1280.webp', alt:'Completed Nelson Drive home and landscaped front garden', width:1280, height:853, caption:'Nelson Drive · Completed project' }}
@@ -75,8 +77,8 @@ export function PropertyOwnersPage({ go: _go }: { go: Nav }) {
         <li><div><h3>Review before submitting.</h3><p>Any later role, economics, or service requires separate diligence and written terms.</p></div></li>
       </ol>
     </div></section>
-    <PageClosing title="Tell us about the property." href={pageIntakeHref} label="Tell us about the property">
-      <p>Tell us where things stand, what you want to change, and any date that matters. You can review everything before sending.</p>
+    <PageClosing title="Tell us about the property." href={pageIntakeHref} label="Tell us about the property" secondaryAction={{ href: pageLabHref, label: 'Test assumptions in Strategy Lab' }}>
+      <p>Decide whether to discuss the property as it stands or test your assumptions first. Tell us what you want to change and any date that matters. You can review everything before sending.</p>
       <p className="ep-notice">Submission may be considered, but no written review, response, route, or offer is promised. It is not a valuation, appraisal, legal opinion, foreclosure-rescue service, representation agreement, or closing commitment.</p>
     </PageClosing>
   </article>;

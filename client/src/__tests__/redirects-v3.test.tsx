@@ -275,6 +275,6 @@ describe("v4 re-skin: chrome + shell pages never link to an off-limits URL", () 
     const {container} = render(<Router hook={memory.hook}><HomePageV51 go={noop} openPeggy={noop} /></Router>);
     const proof = container.querySelector<HTMLAnchorElement>('[data-hv="proof"] a')!;
     fireEvent.click(proof);
-    expect(memory.history?.at(-1)).toBe('/projects/nelson-dr');
+    expect(memory.history?.at(-1)).toBe('/projects/nelson-dr?from=home&story=kitchen#nelson-kitchen');
   });
 });

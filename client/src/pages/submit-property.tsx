@@ -812,7 +812,7 @@ export default function SubmitPropertyPage() {
               <p id="sp-privacy-notice" className="text-xs leading-relaxed text-[#6e6455] dark:text-[#9aa6b7]">
                 Pegasus may use this information to consider the request and may share it
                 with service providers as described in the privacy notice. The{' '}
-                <a className="underline underline-offset-2" href="/privacy">Privacy Policy</a>{' '}
+                <a className="underline underline-offset-2" href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy (opens in a new tab)</a>{' '}
                 explains retention and your rights. To request access or deletion, email{' '}
                 <a className="underline underline-offset-2" href="mailto:apollo@pegasusdreamscapes.com">
                   apollo@pegasusdreamscapes.com

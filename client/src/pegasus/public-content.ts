@@ -19,9 +19,9 @@ export const PRIMARY_LINKS = [
   { label: 'About', href: '/about' },
 ] as const;
 export const HOME_PATHS = [
-  { label: 'I own a property', note: 'Work through repairs, timing, or the options for your property.', href: '/property-owners' },
-  { label: 'I’m buying or selling', note: 'Ask Apollo about licensed buyer or seller representation.', href: '/work-with-apollo' },
-  { label: 'I have a deal or partnership', note: 'Bring an opportunity, project, or specialty.', href: '/deal-partners' },
+  { label: 'I own a property', note: 'Compare property options, the facts to gather, and what to discuss next.', href: '/property-owners' },
+  { label: 'I’m buying or selling', note: 'Understand buyer and seller representation before asking Apollo about your plans.', href: '/work-with-apollo' },
+  { label: 'I have a deal or partnership', note: 'Clarify your proposed role, what the deal needs, and the facts to bring.', href: '/deal-partners' },
 ] as const;
 export const PUBLIC_CONTACT = {
   name: 'Apollo Duran', email: 'apollo@pegasusdreamscapes.com', phone: '925-744-8525', telephone: 'tel:9257448525',

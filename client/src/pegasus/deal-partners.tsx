@@ -69,6 +69,9 @@ export function DealPartnersPage({ go: _go }: { go: Nav }) {
         ['/referral', 'Referrals', 'Permissions, boundaries, and separate written terms.'],
       ].map(([href,label,note]) => <Link key={href} href={href}><span><strong>{label}</strong><small>{note}</small></span><ArrowRight aria-hidden="true" /></Link>)}</div>
     </div></section>
-    <PageClosing title="Bring the facts and your proposed role." href={pageIntakeHref} label="Bring a deal"><p className="ep-notice">No response, buyer, written terms, distribution, funding, or closing is promised. Brokerage activity, if any, requires the appropriate separately documented licensed relationship.</p></PageClosing>
+    <PageClosing title="Bring the facts and your proposed role." href={pageIntakeHref} label="Bring a deal" secondaryAction={{ href: '/how-we-operate#operating-roles', label: 'Explore the possible roles' }}>
+      <p>Decide which question needs resolving first. Bring the property facts, your authority, and your proposed contribution. If the role is still unclear, explore how those responsibilities differ.</p>
+      <p className="ep-notice">No response, buyer, written terms, distribution, funding, or closing is promised. Brokerage activity, if any, requires the appropriate separately documented licensed relationship.</p>
+    </PageClosing>
   </article>;
 }
