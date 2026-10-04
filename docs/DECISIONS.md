@@ -4,6 +4,8 @@ This file is the standard Codex decision entrypoint for the website repo. Keep d
 
 ## Current Controlling Decisions
 
+- October 4 visual hierarchy: context readouts stay unboxed, route links retain directional cues, quiet actions remain visibly underlined, local selectors use UI type and explicit check/disclosure marks, and the homepage does not imply an initial route selection. Preserve existing copy, model, media and legal/privacy contracts. See `docs/qa/visual-hierarchy-2026-10-04.md`.
+
 - October 3 focused public-experience enhancement: lead with concrete visitor decisions, frame Nelson as documented evidence without unverified execution credit, consolidate duplicate proof routes with compatible deep links, keep one contextual Peggy invitation, explain acquisition cash needs before secondary model comparisons, preserve the funding question and local drafts, and connect About to the existing controlled concept film. Retain all model, privacy, consent and licensed-role boundaries. See `docs/qa/public-experience-enhancement-2026-10-03.md`.
 
 - October 3 public-site coherence: preserve the cinematic assets and cream/navy/copper identity while making forward/history/anchor arrivals explicit, carrying visitor intent through canonical forms, using one Property Review public name, and keeping one purposeful page ending. Optional page guidance must leave the current content and controls visible. Preserve legal/consent text and all existing service/API boundaries. Detailed scope and verification are in `docs/qa/website-experience-coherence-2026-10-03.md`.

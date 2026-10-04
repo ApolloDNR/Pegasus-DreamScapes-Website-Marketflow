@@ -9,11 +9,11 @@
 .journey-related > div { display:flex; align-items:center; justify-content:space-between; gap:20px 48px; }
 .journey-related > div > span { color:var(--experience-muted); }
 .journey-related > div > div { display:flex; gap:16px 36px; flex-wrap:wrap; }
-.journey-related a { display:inline-flex; align-items:center; gap:14px; min-height:44px; color:var(--experience-copper); }
+.journey-related a { text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:5px; display:inline-flex; align-items:center; gap:14px; min-height:44px; color:var(--experience-copper); }
 .journey-related a:hover { text-decoration:underline; text-underline-offset:5px; }
 .journey-related a:focus-visible { outline:2px solid currentColor; outline-offset:4px; }
 .id-tool-navigation,.utility-wayfinding { display:flex; align-items:center; flex-wrap:wrap; gap:12px 28px; font:400 14px/1.5 var(--pg-font-ui); }
-.id-tool-navigation a,.utility-wayfinding a { display:inline-flex; align-items:center; min-height:44px; color:var(--experience-copper); text-underline-offset:5px; }
+.id-tool-navigation a,.utility-wayfinding a { display:inline-flex; align-items:center; min-height:44px; color:var(--experience-copper); text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:5px; }
 .id-tool-navigation a:hover,.utility-wayfinding a:hover { text-decoration:underline; }
 .id-tool-navigation { margin-bottom:20px; }
 .utility-wayfinding { margin-top:18px; }

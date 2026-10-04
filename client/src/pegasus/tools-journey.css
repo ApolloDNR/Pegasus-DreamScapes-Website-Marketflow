@@ -7,7 +7,7 @@
 .tools-task-list button { display:flex; align-items:center; gap:18px; min-height:92px; padding:18px 16px; border-top:1px solid var(--experience-rule); border-left:3px solid transparent; text-align:left; color:var(--experience-text); transition:background-color 160ms; }
 .tools-task-list button:last-child { border-bottom:1px solid var(--experience-rule); }
 .tools-task-list button > span { color:var(--experience-muted); font:400 13px/1.4 var(--pg-font-ui); }
-.tools-task-list button strong { flex:1; font:400 23px/1.25 var(--pg-font-display); }
+.tools-task-list button strong { flex:1; font:500 16px/1.5 var(--pg-font-ui); }
 .tools-task-list button > svg { flex:none; color:var(--experience-copper); }
 .tools-task-list button[aria-pressed='true'] { background:var(--experience-limestone); border-left-color:var(--experience-copper); }
 .tools-task-list button:hover { color:var(--experience-copper); }
@@ -39,7 +39,7 @@
   .tools-opening > div > p { font-size:16px; }
   .tools-finder { grid-template-columns:1fr; gap:28px; margin-top:28px; padding:20px 0 28px; }
   .tools-task-list button { min-height:64px; padding:12px; gap:12px; }
-  .tools-task-list button strong { font-size:21px; }
+  .tools-task-list button strong { font-size:16px; }
   .tools-task-detail { padding:0; border:0; }
   .tools-calculators { grid-template-columns:1fr; }
   .tools-review { grid-template-columns:1fr; gap:32px; }

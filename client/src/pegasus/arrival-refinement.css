@@ -40,9 +40,7 @@
 .pg-root:not([data-theme='dark']) .op-plan .op-choices button:hover { background: #eee5d6; border-color: #8e5030; }
 .pg-root:not([data-theme='dark']) .op-plan .op-choices button[aria-pressed='true'] { color: #0b1d29; background: #eee5d6; border-color: #8e5030; box-shadow: inset 2px 0 #8e5030; }
 .pg-root:not([data-theme='dark']) .op-plan .op-choice-mark { border-color: #8b8175; }
-.pg-root:not([data-theme='dark']) .op-plan .op-map-node,
 .pg-root:not([data-theme='dark']) .op-plan .op-map-branches::before { border-color: #a49989; }
-.pg-root:not([data-theme='dark']) .op-plan .op-map-focus[data-selected='true'] { border-color: #8e5030; }
 .pg-root:not([data-theme='dark']) .op-plan .op-mobile-connection { color: #8e5030 !important; }
 .pg-root:not([data-theme='dark']) .op-plan .op-select-trigger { background:#fcfaf6; color:#0b1d29; border-color:#a49989; }
 .pg-root:not([data-theme='dark']) .op-plan .op-mobile-options { border-color:#a49989; }

@@ -1,6 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'wouter';
-import { ArrowRight, ChevronDown } from 'lucide-react';
+import { ArrowRight, ChevronDown, Compass, MessageCircle } from 'lucide-react';
 import { scrollToGuideSection, type GuideSection } from './peggy-page-guide';
 import { PeggyMark } from './peggy-mark';
 import './journey.css';
@@ -18,7 +18,7 @@ export function GuideInvite({ compact = false, choose = false }: { compact?: boo
     <span className="journey-avatar"><PeggyMark size={30} /></span>
     <div>{!compact && <><strong>A little guidance?</strong><p>Peggy can walk you through this page.</p></>}
       <button type="button" data-peggy-invitation onClick={event => requestPeggyGuide(choose ? 'choose' : 'tour', event.currentTarget)}>
-        {choose ? 'Want help choosing? Ask Peggy.' : 'Show me around'}<ArrowRight size={17} aria-hidden="true" />
+        {choose ? 'Want help choosing? Ask Peggy.' : 'Show me around'}{choose ? <MessageCircle size={17} aria-hidden="true" /> : <Compass size={17} aria-hidden="true" />}
       </button>
     </div>
   </div>;
@@ -26,7 +26,7 @@ export function GuideInvite({ compact = false, choose = false }: { compact?: boo
 
 export function ExplainWithPeggy() {
   return <button type="button" className="journey-explain" data-peggy-private data-peggy-invitation onClick={event => requestPeggyGuide('explain', event.currentTarget)}>
-    <span className="journey-avatar"><PeggyMark size={21} /></span>Explore this with Peggy<ArrowRight size={16} aria-hidden="true" />
+    <span className="journey-avatar"><PeggyMark size={21} /></span>Explore this with Peggy<MessageCircle size={16} aria-hidden="true" />
   </button>;
 }
 

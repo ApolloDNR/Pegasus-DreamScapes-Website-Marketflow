@@ -176,6 +176,20 @@ jobs:
           retention-days: 14
           if-no-files-found: error
 
+      - name: Verify public visual hierarchy and action cues
+        run: node scripts/check-visual-clarity.mjs
+        env:
+          CLARITY_SCREENSHOT_DIR: artifacts/visual-clarity
+
+      - name: Upload visual hierarchy evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pegasus-visual-clarity-${{ env.TESTED_SOURCE_SHA }}
+          path: artifacts/visual-clarity
+          retention-days: 14
+          if-no-files-found: error
+
       - name: Record exact rendered QA build digest
         id: build-digest
         shell: bash

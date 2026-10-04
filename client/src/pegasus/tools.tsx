@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Link } from 'wouter';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Check, ChevronDown } from 'lucide-react';
 import { PUBLIC_ACTIONS } from './public-content';
 import { GuideInvite } from './journey';
 import { PropertySketch } from './property-sketch';
@@ -29,7 +29,7 @@ export function ToolsPage() {
     </header>
     <section className="tools-finder" aria-label="Find a useful tool">
       <div className="tools-task-list" role="group" aria-label="What would you like to do?">{TASKS.map((label, index) => <button type="button" key={label} aria-pressed={task === index} aria-controls="tools-task-detail" onClick={() => selectTask(index)}>
-        <span>{String(index + 1).padStart(2, '0')}</span><strong>{label}</strong><ArrowRight size={19} aria-hidden="true" />
+        <span>{String(index + 1).padStart(2, '0')}</span><strong>{label}</strong>{task === index ? <Check size={19} aria-hidden="true" /> : <ChevronDown size={19} aria-hidden="true" />}
       </button>)}</div>
       <div ref={panel} id="tools-task-detail" className="tools-task-detail" role="region" aria-label={TASKS[task]} tabIndex={-1}>
         {task === 0 ? <div className="tools-lab-layout"><div>

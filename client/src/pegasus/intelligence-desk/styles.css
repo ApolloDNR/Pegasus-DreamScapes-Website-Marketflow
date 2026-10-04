@@ -19,8 +19,8 @@
 .id-button { border:1px solid var(--id-rule); padding:11px 16px; border-radius:3px; }
 .id-button:hover { background:var(--experience-limestone); }
 .id-button.is-primary { background:var(--id-accent); border-color:var(--id-accent); color:var(--id-paper); }
-.id-text-button { padding:8px 0; font-weight:500; }
-.id-text-button:hover { text-decoration:underline; text-underline-offset:4px; }
+.id-text-button { padding:8px 0; font-weight:500; text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:4px; }
+.id-text-button:hover { text-decoration-thickness:2px; }
 .id-command { display:flex; align-items:center; justify-content:space-between; gap:20px; border-block:1px solid var(--id-rule); }
 .id-property { min-width:0; padding:14px 0; }
 .id-property strong { display:block; overflow-wrap:anywhere; font-size:15px; }

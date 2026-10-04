@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'wouter';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Check, ChevronDown } from 'lucide-react';
 import { NELSON_PAIRS } from './nelson-gallery-data';
 import './home-project.css';
 
@@ -47,6 +47,7 @@ export function HomeProject() {
           >
             <span className="home-project-note-number" aria-hidden="true">0{index + 1}</span>
             <span>{item.label}</span>
+            {activeNote === index ? <Check size={16} aria-hidden="true" /> : <ChevronDown size={16} aria-hidden="true" />}
           </button>)}
         </div>
         <p id="home-project-note" className="home-project-note" role="status" aria-live="polite" aria-atomic="true">{renovationNotes[activeNote].note}</p>
