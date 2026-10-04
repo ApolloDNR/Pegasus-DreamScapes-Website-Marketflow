@@ -6,6 +6,7 @@ import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright-core';
+import { openAvailablePeggy } from './peggy-ui-test-helpers.mjs';
 import { sitemapEntries } from '../shared/seo-routes.ts';
 import { closeWithinDeadline, runWithinDeadline } from './rendered-qa-liveness.mjs';
 import {
@@ -49,6 +50,8 @@ const releaseRoutes = [
 ];
 
 const fullPublicRouteExtras = [
+  '/projects',
+  '/case-study',
   '/marketflow/buyboxes',
   '/marketflow/deals',
   '/strategy-lab/library',
@@ -1462,7 +1465,7 @@ async function verifyWideOwnerHero(page, originalViewport) {
       const primaryBox = await primary.boundingBox();
       assert(primaryBox && primaryBox.width >= 44 && primaryBox.height >= 44,
         `Owner primary action is too small: ${context}`);
-      assert(await primary.getAttribute('href') === '/bring-an-opportunity?intent=property', 'Owner hero lost its intake destination');
+      assert(await primary.getAttribute('href') === '/bring-an-opportunity?intent=property&ref=property-owners', 'Owner hero lost its intake destination');
       await primary.click({ trial: true, timeout: 5_000 });
       console.log(`[design] owner wide-desktop PASS ${context}`);
       if (screenshotDir) {
@@ -1586,7 +1589,7 @@ async function exercisePublicDesign(page, route, viewport, health) {
   }
   if (route === '/buyers') {
     const paths = page.locator('#audience-options');
-    for (const href of ['/work-with-apollo', '/bring-an-opportunity?intent=buyer', '/marketflow/access']) {
+    for (const href of ['/work-with-apollo?intent=buy#apollo-paths', '#buyer-criteria', '/marketflow/access?role=buyer']) {
       assert(await paths.locator(`a[href="${href}"]`).count() === 1, `Buyers lost the separate ${href} path`);
     }
     assert(await page.getByRole('link', { name: /Explore the case study/ }).getAttribute('href') === '/projects/nelson-dr',
@@ -1600,7 +1603,7 @@ async function exercisePublicDesign(page, route, viewport, health) {
       ['control', 'Can the property move forward?', 'Underwriting', 'Start with ownership and access.', '/deal-partners'],
       ['underwriting', 'Do the numbers make sense?', 'Capital', 'See the full cost.', '/strategy-lab'],
       ['buyer', 'Who is the potential buyer?', 'Disposition', 'Clarify who the property could suit.', '/deal-partners'],
-      ['capital', 'What would funding require?', 'Underwriting', 'Estimate the cash needed.', '/strategy-lab'],
+      ['capital', 'What would funding require?', 'Underwriting', 'Estimate the cash needed.', '/strategy-lab?question=funding'],
       ['development', 'What work needs to happen?', 'Local context', 'Define the work ahead.', '/development'],
       ['local', 'What does the location change?', 'Development', 'Check what the location changes.', '/property-owners'],
       ['disposition', 'Sell, refinance, or keep it?', 'Buyer', 'Compare selling with keeping it.', '/strategy-lab'],
@@ -2199,7 +2202,7 @@ try {
           urgency: 'No immediate deadline',
           estimatedValue: 650000,
           estimatedDebt: 225000,
-          notes: 'Intake intent: property \u2014 Owner situation: Inherited property \u2014 Rendered QA exact-safe submission.',
+          notes: 'Intake intent: property \u2014 Owner situation: Inherited property \u2014 Referral reference: property-owners \u2014 Rendered QA exact-safe submission.',
           consentAccepted: true,
         };
         const expectedPayloadKeys = [...Object.keys(expectedPayload), 'ts_elapsed_ms'].sort();
@@ -2259,6 +2262,7 @@ try {
         await page.getByLabel('Property type').selectOption({ label: 'Single-family' });
         await page.getByLabel('Occupancy').selectOption({ label: 'Vacant' });
         await page.getByLabel('Condition').selectOption({ label: 'Moderate repairs' });
+        await page.locator('summary').filter({ hasText: 'Value and mortgage details (optional)' }).click();
         await page.getByLabel('Estimated value (if known)').fill('$650,000');
         await page.getByLabel('Estimated mortgage balance (if relevant)').fill('$225,000');
         await page.getByLabel('Anything urgent?').fill('No immediate deadline');
@@ -2356,6 +2360,7 @@ try {
           'Intake success heading did not receive focus',
         );
         assert(await page.getByText('Reference: rendered-qa-opportunity').count() === 1, 'Intake success reference changed');
+        assert(await page.locator('.intake-received[data-peggy-private]').count() === 1, 'Private receipt is not excluded from page guidance');
         await captureEvidenceScreenshot(
           page,
           health,
@@ -2674,12 +2679,12 @@ try {
     await openPage(page, '/peggy');
     const fab = page.locator('.peggy-fab');
     const panel = page.locator('.peggy-panel');
-    await fab.click();
+    await openAvailablePeggy(page, { pageGuide: true });
     assert(await fab.getAttribute('aria-expanded') === 'true', 'Peggy did not open');
     assert(await panel.getAttribute('aria-hidden') === 'false', 'Peggy panel remained hidden');
     await panel.getByRole('button', { name: 'Close', exact: true }).click();
     assert(await fab.getAttribute('aria-expanded') === 'false', 'Peggy did not close');
-    await fab.click();
+    await openAvailablePeggy(page, { pageGuide: true });
     await panel.getByRole('button', { name: 'Find my next step', exact: true }).click();
     await panel.getByText('Go straight to a tool or path', { exact: true }).click();
     await panel.getByTestId('peggy-route-submit').click();

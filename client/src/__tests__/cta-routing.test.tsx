@@ -225,7 +225,7 @@ describe("Click harness actually exercises navigation (Task #201)", () => {
     expect(links).toHaveLength(4);
     for (const link of links) { fireEvent.click(link); expect(memory.history?.at(-1)).toBe(link.getAttribute('href')); }
     expect(memory.history).toContain('/property-owners');
-    expect(memory.history).toContain('/projects/nelson-dr');
+    expect(memory.history).toContain('/projects/nelson-dr?from=home&story=kitchen#nelson-kitchen');
   });
 });
 

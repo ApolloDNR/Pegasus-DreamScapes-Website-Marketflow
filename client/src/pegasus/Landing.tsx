@@ -1,10 +1,12 @@
 import React, { Suspense, lazy, useCallback, useEffect, useRef, useState } from 'react';
 import { useLocation } from 'wouter';
 import './_group.css';
+import './experience-coherence.css';
 import type { Nav, Route, Theme, PeggyHandoff } from './theme';
 import { CATEGORIES } from './data';
 import { NavBar } from './nav';
 import { Peggy } from './peggy';
+import { useBeginPeggyReview } from './peggy-review-handoff';
 import { Footer } from './footer';
 import { JourneyContinuation } from './journey';
 import { HomePageV51 } from './home-v51';
@@ -57,7 +59,7 @@ export function Landing() {
   const [peggyOpen, setPeggyOpen] = useState(false);
   const [peggyRole, setPeggyRole] = useState<string | null>(null);
   const [peggyPrompt, setPeggyPrompt] = useState<string | null>(null);
-  const [peggyHandoff, setPeggyHandoff] = useState<PeggyHandoff | null>(null);
+  const beginPeggyReview = useBeginPeggyReview();
   const progressRef = useRef<HTMLDivElement>(null);
   const parallaxRef = useRef<HTMLDivElement>(null);
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -86,9 +88,8 @@ export function Landing() {
     setLocation(intent ? `/bring-an-opportunity?intent=${intent}` : '/bring-an-opportunity');
   }, [setLocation]);
   const onHandoffToReview = useCallback((h: PeggyHandoff) => {
-    setPeggyHandoff(h);
-    go('contact');
-  }, [go]);
+    setLocation(beginPeggyReview(h));
+  }, [beginPeggyReview, setLocation]);
 
   // Only decorative line work waits for visibility. Content and controls remain readable.
   useEffect(() => {
@@ -147,7 +148,7 @@ export function Landing() {
 
       <NavBar go={go} route={route} theme={theme} toggleTheme={toggleTheme} scrolled={scrolled} openPeggy={openPeggy} />
 
-      <main id="main-content" key={route} className="page-in" tabIndex={-1} data-peggy-page>
+      <main id="main-content" data-navigation-path={location} key={route} className="page-in" tabIndex={-1} data-peggy-page>
         <Suspense fallback={<PageLoader />}>
           {/* Blueprint v1.1 homepage (six sections). The issue-#22 HomePage stays
               exported for reference but no longer mounts. The homepage remains
@@ -172,7 +173,7 @@ export function Landing() {
           {route === 'apollo' && <WorkWithApolloPage go={go} />}
           {route === 'ecosystem' && <EcosystemPage go={go} openPeggy={openPeggy} />}
           {route === 'about' && <AboutPageV6 go={go} />}
-          {route === 'contact' && <ContactPage handoff={peggyHandoff} />}
+          {route === 'contact' && <ContactPage />}
           {route === 'peggy' && <PeggyPage go={go} openPeggy={openPeggy} />}
           {route === 'saved' && <SavedPage go={go} />}
         </Suspense>

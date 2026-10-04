@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocation, useSearch } from 'wouter';
+import { Link, useLocation, useSearch } from 'wouter';
 import { Save, SlidersHorizontal, RotateCcw } from 'lucide-react';
 import { STRATEGY_LANES, type StrategyLane } from '@shared/strategy-lab';
 import type { CalcTabKey } from '@/components/strategy-lab/calculator-tools-panel';
@@ -34,7 +34,9 @@ function queryState(search: string) {
   const lane = params.get('lane') as StrategyLane;
   const tab = params.get('tab') as CalcTabKey;
   const calculators = params.get('tool') === 'calculators';
-  return { view: VIEWS.includes(view) ? view : calculators ? 'assumptions' as const : 'overview' as const, lane: STRATEGY_LANES.includes(lane) ? lane : null, calculators, tab: CALCULATORS.includes(tab) ? tab : 'arv' as const };
+  // Carry only this authored question, never arbitrary URL text or property data.
+  const question = params.getAll('question').length === 1 && params.get('question') === 'funding' ? 'funding' : null;
+  return { question, resumeSaved: params.getAll('resume').length === 1 && params.get('resume') === 'saved', view: VIEWS.includes(view) ? view : calculators || question ? 'assumptions' as const : 'overview' as const, lane: STRATEGY_LANES.includes(lane) ? lane : null, calculators, tab: CALCULATORS.includes(tab) ? tab : 'arv' as const };
 }
 
 export function IntelligenceDesk({ openPeggy }: { openPeggy: (role?: string, prompt?: string) => void }) {
@@ -51,6 +53,8 @@ export function IntelligenceDesk({ openPeggy }: { openPeggy: (role?: string, pro
   const [savedState, setSavedState] = React.useState(JSON.stringify(emptyWorkspace()));
   const [confirmation, setConfirmation] = React.useState<'clear' | 'example' | null>(null);
   const [undo, setUndo] = React.useState<Workspace | null>(null);
+  const [resumeDraft, setResumeDraft] = React.useState<Workspace | null>(null);
+  const resumeCancel = React.useRef<HTMLButtonElement>(null);
   const [hydrated, setHydrated] = React.useState(false);
   const heading = React.useRef<HTMLHeadingElement>(null);
   const workspaceElement = React.useRef<HTMLElement>(null);
@@ -62,17 +66,38 @@ export function IntelligenceDesk({ openPeggy }: { openPeggy: (role?: string, pro
   React.useEffect(() => {
     let saved: Workspace | null = null;
     let working: Workspace | null = null;
+    let savedStorageBlocked = false;
     try {
       for (const key of [STORAGE_KEY, 'pegasus.strategy-lab.v3', 'pegasus.strategy-lab.v2']) {
         const stored = window.localStorage.getItem(key);
         const restored = stored ? restoreDraft(stored) : null;
         if (restored) { saved = restored; setSavedState(JSON.stringify(restored)); break; }
       }
-    } catch { setNotice('Local storage is unavailable. You can still work in this session.'); }
+    } catch { savedStorageBlocked = true; setNotice('Local storage is unavailable. You can still work in this session.'); }
     try { const raw = window.sessionStorage.getItem(SESSION_KEY); working = raw ? restoreDraft(raw) : null; } catch { /* Saved draft recovery still works if session storage is blocked. */ }
     if (working || saved) { setWorkspace((working || saved)!); setNotice(working ? 'Your current-visit workspace was restored. Save locally to keep it after this browser session.' : 'Your private browser draft was restored.'); }
+    if (initial.resumeSaved) {
+      // The URL carries only an intent. Both records must pass restoreDraft before use.
+      // Keep current-visit recovery intact until the visitor confirms a replacement.
+      updateQuery({ resume: null });
+      if (!saved) {
+        setNotice(savedStorageBlocked
+          ? 'Saved draft could not be opened because this browser blocked local storage. Your current workspace is unchanged.'
+          : 'No readable saved draft was found. Your current workspace is unchanged.');
+      } else if (working && JSON.stringify(working) !== JSON.stringify(saved)) {
+        setResumeDraft(saved);
+        setNotice('Your current workspace is still open. Review the saved draft before replacing it.');
+      } else {
+        setNotice('Your saved browser draft was restored.');
+      }
+    }
     setHydrated(true);
   }, []);
+  React.useEffect(() => {
+    if (!resumeDraft) return;
+    const frame = window.requestAnimationFrame(() => resumeCancel.current?.focus());
+    return () => window.cancelAnimationFrame(frame);
+  }, [resumeDraft]);
   React.useEffect(() => {
     if (!hydrated) return;
     try { window.sessionStorage.setItem(SESSION_KEY, serializeDraft(workspace)); }
@@ -113,9 +138,9 @@ export function IntelligenceDesk({ openPeggy }: { openPeggy: (role?: string, pro
   const updateQuery = (values: Record<string, string | null>) => {
     const url = new URL(window.location.href);
     for (const [key, value] of Object.entries(values)) value === null ? url.searchParams.delete(key) : url.searchParams.set(key, value);
-    window.history.replaceState({}, '', url.toString());
+    window.history.replaceState(window.history.state, '', url.toString());
   };
-  const move = (next: DeskView) => { if (view !== next) focusView.current = true; setView(next); setConfirmation(null); updateQuery({ view: next === 'overview' ? null : next }); };
+  const move = (next: DeskView) => { if (view !== next) focusView.current = true; setView(next); setConfirmation(null); updateQuery({ view: next === 'overview' && !initial.question ? null : next }); };
   const inspect = (lane: StrategyLane) => { setSelectedLane(lane); updateQuery({ lane }); };
   const draft = React.useMemo(() => scenarioDraft(workspace, workspace.activeScenario), [workspace]);
   const analysis = React.useMemo(() => analyzeDraft(draft), [draft]);
@@ -127,7 +152,17 @@ export function IntelligenceDesk({ openPeggy }: { openPeggy: (role?: string, pro
       ? { ...current, variants: { ...current.variants, [current.activeScenario]: { ...current.variants[current.activeScenario], [key]: value } } }
       : { ...current, base: { ...current.base, [key]: value, ...(key === 'situation' ? { ownerSituation: '' } : {}), entered: [...new Set([...current.base.entered, key])] } });
   };
-  const replace = (next: Workspace, message: string) => { clearStrategyLabHandoff(); setUndo(workspace); setWorkspace(next); setNotice(message); setConfirmation(null); };
+  const replace = (next: Workspace, message: string) => { clearStrategyLabHandoff(); setUndo(workspace); setWorkspace(next); setNotice(message); setConfirmation(null); setResumeDraft(null); };
+  const cancelResume = () => {
+    setResumeDraft(null);
+    setNotice('Your current workspace was kept. Your saved browser draft is unchanged.');
+    heading.current?.focus({ preventScroll: true });
+  };
+  const resumeSaved = () => {
+    if (!resumeDraft) return;
+    replace(resumeDraft, 'Saved browser draft restored. Undo brings back the previous working state.');
+    heading.current?.focus({ preventScroll: true });
+  };
   const save = () => {
     try { window.localStorage.setItem(STORAGE_KEY, serializeDraft(workspace)); setSavedState(JSON.stringify(workspace)); setNotice('Decision brief saved in this browser.'); }
     catch { setNotice('This browser blocked local saving. Your current desk remains open.'); }
@@ -177,7 +212,15 @@ export function IntelligenceDesk({ openPeggy }: { openPeggy: (role?: string, pro
   const workspaceActions = <div className="id-actions" data-peggy-private><button type="button" className="id-button" onClick={save}><Save aria-hidden="true" />Save locally</button>{calculatorAction}</div>;
   const navigation = <nav aria-label="Analysis views">{VIEWS.map(item => <button type="button" key={item} aria-current={view === item ? 'page' : undefined} onClick={() => move(item)}>{VIEW_NAMES[item]}</button>)}</nav>;
   return <div className={`id-desk${isStarting ? ' is-starting' : ''}`}>
+    <nav className="id-tool-navigation" aria-label="Strategy Lab tools"><Link href="/tools" className="id-text-button">All tools</Link><Link href="/saved" className="id-text-button">Saved work</Link></nav>
     <header className="id-opening"><div><h1 data-peggy-summary={VIEW_GUIDES.overview}>Strategy Lab.</h1><p>Compare property costs and outcomes.</p></div>{!isStarting && workspaceActions}</header>
+    {initial.question === 'funding' && <section className="id-planning-question" data-peggy-private aria-label="Planning question"><h2>What would funding require?</h2><p>Start with purchase and exit assumptions, then review debt and capital. Your current inputs and selected scenario are unchanged.</p><p>This does not arrange funding or imply that capital is available.</p></section>}
+    {resumeDraft && <section className="id-context-review" data-navigation-section data-peggy-private aria-label="Review saved draft" onKeyDown={event => { if (event.key === 'Escape') { event.preventDefault(); cancelResume(); } }}>
+      <h2>Resume your saved draft?</h2>
+      <p>Your current workspace, <strong>{workspace.base.address || 'Untitled working property'}</strong>, has changes that differ from the saved draft, <strong>{resumeDraft.base.address || 'Untitled saved property'}</strong>.</p>
+      <p>Resuming replaces the working inputs, scenarios and diligence with the saved version. Your saved record stays unchanged until you choose Save locally. Undo can restore the previous working state during this visit.</p>
+      <div className="id-actions"><button type="button" ref={resumeCancel} data-navigation-target className="id-button" onClick={cancelResume}>Cancel</button><button type="button" className="id-text-button" onClick={resumeSaved}>Resume saved draft</button></div>
+    </section>}
     {incomingOwner && hydrated && <section className="id-context-review" data-peggy-private aria-label="Review owner context"><h2>Start with your situation</h2><p><strong>{incomingOwner}</strong> · Property owner</p><p>This starts a new property workspace with your selected situation. {changed || draft.address || draft.acquisition ? 'Your current workspace will be replaced. Save it locally first if you need to keep it; Undo restores it during this visit.' : 'You can add the address, goal and assumptions next.'}</p><div className="id-actions"><button type="button" className="id-button is-primary" onClick={applyOwner}>Use this situation</button><button type="button" className="id-text-button" onClick={() => { setIncomingOwner(''); updateQuery({ owner_situation: null }); }}>Keep current workspace</button></div></section>}
     {!isStarting && <div className="id-command" data-peggy-private><div className="id-property"><strong>{draft.address || draft.city || 'New property model'}</strong><span>{SCENARIO_NAMES[workspace.activeScenario]} scenario · {draft.illustrative ? 'Synthetic example' : 'Unverified inputs'}</span><div className="id-property-actions"><button type="button" className="id-text-button" onClick={() => move('assumptions')}>Edit property</button><button type="button" className="id-text-button" onClick={() => setConfirmation('clear')}>Clear property</button></div></div>{navigation}</div>}
     {!isStarting && <p className="id-property-context" data-peggy-private><strong>Your property</strong> · {draft.ownerSituation || draft.situation} · {draft.objective}</p>}
@@ -194,6 +237,6 @@ export function IntelligenceDesk({ openPeggy }: { openPeggy: (role?: string, pro
     {isStarting && <div className="id-start-tools" data-peggy-private><p>Just need a calculation?</p>{calculatorAction}</div>}
     {analysis.status === 'ready' && view !== 'overview' && view !== 'memo' && <KeyEconomics analysis={analysis} />}
     <footer className="id-workspace-footer" data-peggy-private><div role="status" aria-label="Workspace status"><p>{notice}</p>{!isStarting && <span>{changed ? 'Unsaved changes' : 'No unsaved changes'}</span>}</div><div className="id-actions">{undo && <button type="button" className="id-text-button" onClick={() => { clearStrategyLabHandoff(); setWorkspace(undo); setUndo(null); setNotice('Previous working state restored. Save to update the browser draft.'); }}><RotateCcw aria-hidden="true" />Undo</button>}{analysis.status === 'ready' && <button type="button" className="id-text-button" onClick={example}>Load illustrative example</button>}{!isStarting && <button type="button" className="id-text-button" onClick={() => setConfirmation('clear')}>Clear desk</button>}</div></footer>
-    {calculators && <section className="id-calculators" data-peggy-private ref={calculatorPanel} tabIndex={-1} aria-label="Decision calculators"><header><div><p>Decision calculators</p><h2>Open the worksheet your decision requires.</h2></div><button type="button" className="id-button" onClick={() => { setCalculators(false); updateQuery({ tool: null, tab: null }); calculatorOpener.current?.focus(); }}>Close calculators</button></header><React.Suspense fallback={<p>Loading calculators…</p>}><CalculatorToolsPanel activeTab={instrument} setActiveTab={tab => { setInstrument(tab); updateQuery({ tool: 'calculators', tab: tab === 'arv' ? null : tab }); }} publicMode /></React.Suspense></section>}
+    {calculators && <section className="id-calculators" data-navigation-target={calculatorSource.current === 'deeplink' ? '' : undefined} data-peggy-private ref={calculatorPanel} tabIndex={-1} aria-label="Decision calculators"><header><div><p>Decision calculators</p><h2>Open the worksheet your decision requires.</h2></div><button type="button" className="id-button" onClick={() => { setCalculators(false); updateQuery({ tool: null, tab: null }); calculatorOpener.current?.focus(); }}>Close calculators</button></header><React.Suspense fallback={<p>Loading calculators…</p>}><CalculatorToolsPanel activeTab={instrument} setActiveTab={tab => { setInstrument(tab); updateQuery({ tool: 'calculators', tab: tab === 'arv' ? null : tab }); }} publicMode /></React.Suspense></section>}
   </div>;
 }

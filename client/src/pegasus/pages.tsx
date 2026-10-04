@@ -1,7 +1,8 @@
 import React from 'react';
-import { Link, useLocation } from 'wouter';
+import { Link, useLocation, useSearch } from 'wouter';
 import { ArrowRight, ConciergeBell, Check, Send, Calculator, Compass, Ruler, Landmark } from 'lucide-react';
-import type { Nav, Theme, PeggyHandoff } from './theme';
+import type { Nav, Theme } from './theme';
+import { usePreparedPeggyReview } from './peggy-review-handoff';
 import { IMG, SectionHead, ContourLines, BrandMark } from './primitives';
 import {
   CATEGORIES, PILLARS3, FAQ_HOME, APOLLO, NELSON, MARKETFLOW, PEGGY_ROLES, PEGGY_SLA,
@@ -133,7 +134,7 @@ export function DevelopmentPage({ go: _go }: { go: Nav }) {
   return <article className="experience-page">
     <PageOpening title="Explore a development opportunity."
       image={{ src:'/images/pegasus-craft-blueprint.webp', alt:'Architectural plans being examined at a worktable', width:1280, height:896, caption:'Planning study · Illustrative scene' }}
-      action={{ href: '/bring-an-opportunity?intent=explore', label: 'Discuss an opportunity' }}><p>Share a property or potential development partnership for consideration. Site conditions, ownership, the concept, and proposed roles help frame the conversation.</p><p className="ep-notice">Any project would require qualified providers, applicable licenses and permits, and separate written agreements defining each party’s responsibilities.</p></PageOpening>
+      action={{ href: '/bring-an-opportunity?intent=explore', label: 'Discuss an opportunity' }}><p>Before committing to a renovation or development, connect the proposed work to the property’s condition, budget, permissions, and intended sale or hold. Share a property or potential development partnership, your proposed role, and the decision you need to make.</p><p className="ep-notice">Any project would require qualified providers, applicable licenses and permits, and separate written agreements defining each party’s responsibilities.</p></PageOpening>
     <section id="development-framework" className="ep-section"><div className="experience-wrap ep-split">
       <h2>Define the work before it starts.</h2>
       <ol className="ep-rows ep-numbered">
@@ -237,7 +238,9 @@ function ApolloSelector({
   const choose = (path: typeof APOLLO_SELECTOR[number]) => {
     onSelect(path.key);
     if (path.mode === 'link') { setLocation(path.href); return; }
-    leadRef.current?.scrollIntoView({ behavior: 'auto', block: 'start' });
+    // Keep the control receiving focus visible even when the introduction and
+    // form stack into one long column on phones.
+    (roleFieldRef.current ?? leadRef.current)?.scrollIntoView({ behavior: 'auto', block: 'center' });
     roleFieldRef.current?.focus({ preventScroll: true });
   };
   return <section className="ep-section" id="apollo-paths" data-testid="section-apollo-selector"><div className="experience-wrap ep-split">
@@ -250,20 +253,29 @@ function ApolloSelector({
 }
 
 export function WorkWithApolloPage({ go }: { go: Nav }) {
-  const [selectorKey, setSelectorKey] = React.useState<ApolloSelectorKey>('sell');
-  const [preferredRole, setPreferredRole] = React.useState(APOLLO_FORM.role);
+  const search = useSearch();
+  const [, setLocation] = useLocation();
+  const requestedKey = new URLSearchParams(search).get('intent') === 'buy' ? 'buy' : 'sell';
+  const [selectorKey, setSelectorKey] = React.useState<ApolloSelectorKey>(requestedKey);
+  const selectedPath = APOLLO_SELECTOR.find(path => path.key === selectorKey);
+  const preferredRole = selectedPath && 'role' in selectedPath ? selectedPath.role : APOLLO_FORM.role;
+  React.useEffect(() => { setSelectorKey(requestedKey); }, [requestedKey]);
+  const rememberRepresentation = (key: 'buy' | 'sell') => {
+    const params = new URLSearchParams(search);
+    params.set('intent', key);
+    setLocation(`/work-with-apollo?${params.toString()}${window.location.hash}`, { replace: true });
+  };
   const leadRef = React.useRef<HTMLDivElement>(null);
   const roleFieldRef = React.useRef<HTMLSelectElement>(null);
 
   const selectPath = (nextKey: ApolloSelectorKey) => {
     setSelectorKey(nextKey);
     const nextPath = APOLLO_SELECTOR.find((path) => path.key === nextKey);
-    if (nextPath && 'role' in nextPath) setPreferredRole(nextPath.role);
+    if (nextPath && 'role' in nextPath) rememberRepresentation(nextPath.key);
   };
   const selectRole = (role: string) => {
-    setPreferredRole(role);
     const path = APOLLO_SELECTOR.find((path) => 'role' in path && path.role === role);
-    if (path) setSelectorKey(path.key);
+    if (path && 'role' in path) { setSelectorKey(path.key); rememberRepresentation(path.key); }
   };
 
   return (
@@ -279,7 +291,7 @@ export function WorkWithApolloPage({ go }: { go: Nav }) {
       </div></section>
       <section className="ep-section ep-dark"><div className="experience-wrap ep-split"><h2>A clearly documented relationship.</h2><div><p>{APOLLO_DISCLOSURE}</p><p className="ep-notice">Equal Housing Opportunity. If representation is offered, the policy is to provide it without unlawful discrimination, subject to the signed brokerage agreement.</p></div></div></section>
       <div ref={leadRef} id="apollo-lead" className="ep-form-section">
-        <LeadSection cfg={APOLLO_FORM} eyebrow="Represent with Apollo" tone="page" headingLevel={2} showRole preferredRole={preferredRole} onRoleChange={selectRole} roleFieldRef={roleFieldRef} showDecorativeContour={false} />
+        <LeadSection cfg={{ ...APOLLO_FORM, heading: <>Is representation <span className="italic text-[var(--accent)]">your next step?</span></> }} eyebrow="Your next decision" tone="page" headingLevel={2} showRole preferredRole={preferredRole} onRoleChange={selectRole} roleFieldRef={roleFieldRef} showDecorativeContour={false} />
       </div>
     </article>
   );
@@ -373,9 +385,14 @@ export function AboutPage({ go, openPeggy }: { go: Nav; openPeggy: () => void })
 /* ================================================================
    CONTACT
    ================================================================ */
-export function ContactPage({ handoff = null }: { handoff?: PeggyHandoff | null }) {
+export function ContactPage() {
+  const { marker, handoff, pending } = usePreparedPeggyReview();
+  if (pending) return <p role="status" className="experience-wrap pt-32 pb-12">Preparing your editable context…</p>;
   if (handoff) {
-    return <LeadSection cfg={CONTACT_FORM} eyebrow="Continue the property handoff" showRole tone="page" handoff={handoff} />;
+    return <LeadSection key={marker} cfg={CONTACT_FORM} eyebrow="Continue the property handoff" showRole tone="page" handoff={handoff} />;
   }
-  return <ConnectChooser context="contact" />;
+  return <>
+    {marker && <p role="status" className="experience-wrap pt-32 pb-6">Your prepared Peggy context is no longer available in this tab. Opening this page does not send anything. Start a new handoff with Peggy or choose a path below.</p>}
+    <ConnectChooser context="contact" />
+  </>;
 }

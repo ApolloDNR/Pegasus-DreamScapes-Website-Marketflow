@@ -40,7 +40,7 @@ async function main() {
     await pool.end();
   }
   // No provider keys, app DATABASE_URL or NODE_OPTIONS propagate into this run.
-  const env = Object.fromEntries(['PATH','HOME','TMPDIR','TEMP','LANG','CI'].filter((key) => process.env[key]).map((key) => [key, process.env[key]]));
+  const env = Object.fromEntries(['PATH','HOME','TMPDIR','TEMP','LANG','CI','CHROME_PATH','WEBSITE_BROWSER_TESTS'].filter((key) => process.env[key]).map((key) => [key, process.env[key]]));
   const emptyEnvDir = await mkdtemp(join(tmpdir(), 'website-test-env-'));
   Object.assign(env, { WEBSITE_TEST_ENV_DIR: emptyEnvDir, WEBSITE_DB_TESTS: '1', WEBSITE_TEST_DATABASE_URL: target, WEBSITE_TEST_BASELINE_CATALOG: JSON.stringify(baseline) });
   try {

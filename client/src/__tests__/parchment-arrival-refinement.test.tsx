@@ -39,7 +39,7 @@ describe('Approved parchment arrival refinement', () => {
     const selector = plan.getByRole('button', { name: /^Choose a planning question/ });
     for (const [, name, href] of [
       ['control', 'Can the property move forward?', '/deal-partners'], ['underwriting', 'Do the numbers make sense?', '/strategy-lab'],
-      ['buyer', 'Who is the potential buyer?', '/deal-partners'], ['capital', 'What would funding require?', '/strategy-lab'],
+      ['buyer', 'Who is the potential buyer?', '/deal-partners'], ['capital', 'What would funding require?', '/strategy-lab?question=funding'],
       ['development', 'What work needs to happen?', '/development'], ['local', 'What does the location change?', '/property-owners'],
       ['disposition', 'Sell, refinance, or keep it?', '/strategy-lab'], ['assetops', 'What would ownership involve?', '/strategy-lab'],
     ]) {
@@ -64,6 +64,6 @@ describe('Approved parchment arrival refinement', () => {
     expect(opening.getByRole('img')).toHaveAttribute('src', '/images/nelson/nelson-exterior-1280.webp');
     // PageOpening uppercases captions; assert the factual label, not its casing.
     expect(opening.getByText(/Completed project/i)).toBeInTheDocument();
-    expect(opening.getByRole('link', { name: 'Tell us about the property' })).toHaveAttribute('href', '/bring-an-opportunity?intent=property');
+    expect(opening.getByRole('link', { name: 'Tell us about the property' })).toHaveAttribute('href', '/bring-an-opportunity?intent=property&ref=property-owners');
   });
 });

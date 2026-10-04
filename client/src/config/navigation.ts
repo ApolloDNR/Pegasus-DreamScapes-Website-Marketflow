@@ -50,7 +50,7 @@ export const NAV_MORE: NavMoreItem[] = [
   // surfaces here as a Company anchor; the index page stays alive as a
   // deep link though the primary entry point is /development.
   { href: "/about", label: "About", group: "company" },
-  { href: "/projects", label: "Projects", group: "company" },
+  { href: "/our-work", label: "Our Work", group: "company" },
   { href: "/contact", label: "Contact", group: "company" },
   // Amendment 2 §D — Peggy public surface (positioning + safety).
   { href: "/peggy", label: "Peggy", group: "company" },

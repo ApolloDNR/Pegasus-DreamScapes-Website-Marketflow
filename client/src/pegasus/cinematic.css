@@ -29,7 +29,7 @@
 .experience-home .threshold-atlas { width:440px; margin-top:12px; }
 .home-pathways .experience-path,.home-pathways .experience-path:first-child,.home-pathways .experience-path:last-child { min-height:144px; padding:26px 20px; border-top:1px solid var(--experience-rule); border-left:2px solid transparent; transition:background-color 180ms,border-color 180ms; }
 .home-pathways .experience-path:last-child { border-bottom:1px solid var(--experience-rule); }
-.home-pathways .experience-path[data-active] { background:var(--experience-limestone); border-left-color:var(--experience-copper); }
+.home-pathways .experience-path:is(:hover,:focus-visible) { background:var(--experience-limestone); border-left-color:var(--experience-copper); }
 .home-pathways .experience-path strong { font-size:clamp(26px,2.5vw,36px); }
 .home-pathways .experience-path > .home-path-number { border-right:1px solid var(--experience-rule); align-self:stretch; padding-top:6px; font-size:13px; }
 .experience-home .home-pathways .journey-invite { padding-left:20px; }

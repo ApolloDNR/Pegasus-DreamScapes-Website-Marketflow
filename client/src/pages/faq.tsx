@@ -85,8 +85,8 @@ export default function FAQ() {
           </h1>
           <p className="text-lg text-white/80 leading-relaxed max-w-2xl">
             Straight answers about how submissions work, what working with Pegasus
-            looks like, and how the MarketFlow network operates. If your question
-            isn't here, reach out through the contact form.
+            looks like, and how the MarketFlow network operates. Search below,
+            or contact Apollo if you need more context.
           </p>
         </div>
       </section>

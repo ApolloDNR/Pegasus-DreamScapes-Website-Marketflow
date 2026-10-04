@@ -8,7 +8,7 @@ import {
 } from './savedStore';
 
 type CurrentStrategyDraft = {
-  savedAt: string;
+  savedAt: string | null;
   title: string;
 };
 
@@ -19,14 +19,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function readCurrentStrategyDraft(): CurrentStrategyDraft | null {
   if (typeof window === 'undefined') return null;
   try {
-    for (const key of [STORAGE_KEY, 'pegasus.strategy-lab.v3']) {
+    for (const key of [STORAGE_KEY, 'pegasus.strategy-lab.v3', 'pegasus.strategy-lab.v2']) {
       const raw = window.localStorage.getItem(key);
       if (!raw) continue;
       const restored = restoreDraft(raw);
       if (!restored) continue;
       const parsed: unknown = JSON.parse(raw);
-      if (!isRecord(parsed) || typeof parsed.savedAt !== 'string' || !Number.isFinite(Date.parse(parsed.savedAt))) continue;
-      return { savedAt: parsed.savedAt, title: restored.base.address.replace(/\s+/g, ' ').trim().slice(0, 180) || 'Untitled property draft' };
+      const savedAt = isRecord(parsed) && typeof parsed.savedAt === 'string' && Number.isFinite(Date.parse(parsed.savedAt)) ? parsed.savedAt : null;
+      return { savedAt, title: restored.base.address.replace(/\s+/g, ' ').trim().slice(0, 180) || 'Untitled property draft' };
     }
     return null;
   } catch {
@@ -46,9 +46,9 @@ export function SavedPage({ go }: { go: Nav }) {
   const chatRows = useSavedChats();
 
   return <article className="experience-page ep-saved">
-    <PageOpening title="Your saved work." composition="reading"><p>Resume a Strategy Lab draft or read a saved Peggy conversation. These records stay in this browser; saving does not submit them for review.</p></PageOpening>
+    <PageOpening title="Your saved work." composition="reading"><nav className="utility-wayfinding" aria-label="Saved work navigation"><PageAction href="/tools" secondary>Back to tools</PageAction></nav><p>Resume a Strategy Lab draft or read a saved Peggy conversation. These records stay in this browser; saving does not submit them for review.</p></PageOpening>
     <section className="ep-section"><div className="experience-wrap ep-split">
-      <div><h2>Strategy Lab draft</h2>{strategyDraft ? <div className="ep-rule"><h3>{strategyDraft.title}</h3><p className="ep-notice">Browser draft · Saved {fmtDate(strategyDraft.savedAt)}</p><p>Resume the exact visitor-entered state stored by the current Strategy Lab. The draft remains automated and unverified.</p><PageAction href="/strategy-lab">Resume in Strategy Lab</PageAction></div> : <div className="ep-rule"><p>No current Strategy Lab draft is saved in this browser.</p><PageAction href="/strategy-lab">Open Strategy Lab</PageAction></div>}</div>
+      <div><h2>Strategy Lab draft</h2>{strategyDraft ? <div className="ep-rule"><h3>{strategyDraft.title}</h3><p className="ep-notice">Browser draft{strategyDraft.savedAt ? ` · Saved ${fmtDate(strategyDraft.savedAt)}` : ''}</p><p>Resume the exact visitor-entered state stored by the current Strategy Lab. The draft remains automated and unverified.</p><PageAction href="/strategy-lab?resume=saved">Resume in Strategy Lab</PageAction></div> : <div className="ep-rule"><p>No current Strategy Lab draft is saved in this browser.</p><PageAction href="/strategy-lab">Open Strategy Lab</PageAction></div>}</div>
       <div><h2>Peggy conversations</h2>{chatRows.length === 0 && <div className="ep-rule"><p>You have not saved a conversation yet.</p><PageAction href="/peggy" secondary>Talk to Peggy</PageAction></div>}
         {chatRows.map(chat => {
           const transcript = Array.isArray(chat.transcript) ? chat.transcript : [];

@@ -82,7 +82,7 @@ describe("mounted Pegasus public truth contract", () => {
   });
 
   it("does not imply that the Nelson record proves brokerage or project roles", () => {
-    const home = [read("client/src/pegasus/home-v51.tsx"), read("client/src/pegasus/home-project.tsx")].join('\n');
+    const home = [read("client/src/pegasus/home-v51.tsx"), read("client/src/pegasus/home-project.tsx"), read("client/src/pegasus/nelson-story.ts")].join('\n');
     const aboutAndPages = [
       read("client/src/pegasus/about-v6.tsx"),
       read("client/src/pegasus/pages.tsx"),

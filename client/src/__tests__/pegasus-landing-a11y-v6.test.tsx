@@ -190,7 +190,7 @@ const SIGNATURE_ROUTES: SignatureRoute[] = [
   },
   {
     path: "/deal-partners",
-    pageHeading: /Bring the deal. Define the role/i,
+    pageHeading: /Bring the property. Define the next decision/i,
     groupName: "What the deal is missing",
     initialChoice: "Seller access or negotiation",
     nextChoice: "Underwriting",
@@ -673,7 +673,7 @@ describe("Pegasus Strategy Lab workspace accessibility", () => {
 });
 
 describe("Pegasus v6 live About routing", () => {
-  it("uses real canonical links for both Start a conversation actions", async () => {
+  it("uses distinct canonical links for an inquiry and direct contact", async () => {
     const { container } = renderLanding("/about");
 
     await screen.findByRole("heading", {
@@ -686,9 +686,8 @@ describe("Pegasus v6 live About routing", () => {
       name: /Start a conversation|Contact Apollo/i,
     });
     expect(links).toHaveLength(2);
-    for (const link of links) {
-      expect(link).toHaveAttribute("href", "/contact");
-    }
+    expect(within(main!).getByRole("link", {name:"Start a conversation"})).toHaveAttribute("href", "/bring-an-opportunity");
+    expect(within(main!).getByRole("link", {name:"Contact Apollo"})).toHaveAttribute("href", "/contact");
 
     expect(
       within(main!).queryByRole("button", { name: /Start a conversation/i }),

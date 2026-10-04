@@ -124,7 +124,7 @@ function HeroSection() {
                   <ArrowRight className="ml-3 w-4 h-4" />
                 </Button>
               </Link>
-              <Link href="/projects">
+              <Link href="/our-work">
                 <Button
                   size="lg"
                   variant="outline"
@@ -808,7 +808,7 @@ function ProjectsCaseStudiesSection() {
           })}
         </div>
         <Link
-          href="/projects"
+          href="/our-work"
           data-testid="link-development-all-projects"
           className="inline-flex items-center gap-2 text-[11px] uppercase tracking-[0.22em] font-supporting font-semibold text-primary hover:text-[hsl(var(--copper))] transition-colors"
         >

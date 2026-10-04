@@ -3,22 +3,22 @@ import { afterEach, describe, expect, it } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { HomeProject } from '@/pegasus/home-project';
 
-afterEach(cleanup);
+afterEach(() => { cleanup(); window.history.replaceState(null, '', '/'); });
 
-describe('Nelson homepage photograph notes', () => {
-  it('changes the selected factual note while keeping both original photographs available', () => {
+describe('Nelson homepage photographic story', () => {
+  it('returns to the original kitchen photographs after exploring another room', () => {
     render(<HomeProject />);
     const photographs = screen.getAllByRole('img');
     expect(photographs.map(image => image.getAttribute('src'))).toEqual([
       '/images/nelson/kitchen-before.webp', '/images/nelson/kitchen-after.webp',
     ]);
-    expect(screen.getByRole('button', { name: 'Island cooktop' })).toHaveAttribute('aria-pressed', 'true');
-    fireEvent.click(screen.getByRole('button', { name: 'Navy cabinetry' }));
-    expect(screen.getByRole('status')).toHaveTextContent('Navy cabinetry replaces the dated galley-kitchen finish shown in the earlier photograph.');
-    expect(screen.getByRole('button', { name: 'Island cooktop' })).toHaveAttribute('aria-pressed', 'false');
-    fireEvent.click(screen.getByRole('button', { name: 'Statement hood' }));
-    expect(screen.getByRole('status')).toHaveTextContent('The dark hood sits above the island cooktop in the finished kitchen.');
+    expect(screen.getByRole('button', { name: 'Kitchen · Layout' })).toHaveAttribute('aria-pressed', 'true');
+    fireEvent.click(screen.getByRole('button', { name: 'Living spaces · Connection' }));
+    expect(screen.getByRole('status')).toHaveTextContent('dark paneling');
+    expect(screen.getByRole('button', { name: 'Kitchen · Layout' })).toHaveAttribute('aria-pressed', 'false');
+    fireEvent.click(screen.getByRole('button', { name: 'Kitchen · Layout' }));
+    expect(screen.getByRole('status')).toHaveTextContent('moved the cooktop to a waterfall island');
     expect(screen.getAllByRole('img')).toEqual(photographs);
-    expect(screen.getByRole('link', { name: 'Explore the case study' })).toHaveAttribute('href', '/projects/nelson-dr');
+    expect(screen.getByRole('link', { name: 'Explore the kitchen' })).toHaveAttribute('href', '/projects/nelson-dr?from=home&story=kitchen#nelson-kitchen');
   });
 });

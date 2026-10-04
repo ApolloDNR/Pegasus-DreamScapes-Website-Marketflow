@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { Link } from 'wouter';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Check, ChevronDown } from 'lucide-react';
 import { PUBLIC_ACTIONS } from './public-content';
 import { GuideInvite } from './journey';
 import { PropertySketch } from './property-sketch';
@@ -29,7 +29,7 @@ export function ToolsPage() {
     </header>
     <section className="tools-finder" aria-label="Find a useful tool">
       <div className="tools-task-list" role="group" aria-label="What would you like to do?">{TASKS.map((label, index) => <button type="button" key={label} aria-pressed={task === index} aria-controls="tools-task-detail" onClick={() => selectTask(index)}>
-        <span>{String(index + 1).padStart(2, '0')}</span><strong>{label}</strong><ArrowRight size={19} aria-hidden="true" />
+        <span>{String(index + 1).padStart(2, '0')}</span><strong>{label}</strong>{task === index ? <Check size={19} aria-hidden="true" /> : <ChevronDown size={19} aria-hidden="true" />}
       </button>)}</div>
       <div ref={panel} id="tools-task-detail" className="tools-task-detail" role="region" aria-label={TASKS[task]} tabIndex={-1}>
         {task === 0 ? <div className="tools-lab-layout"><div>
@@ -49,7 +49,7 @@ export function ToolsPage() {
         {task !== 2 && <p className="experience-notice">Free planning tool. Educational modeling, not an appraisal, advice, offer, or funding decision.</p>}
       </div>
     </section>
-    <section className="tools-review"><div><h2 data-peggy-summary="You can ask about a separately scoped Property Review. Submission does not promise acceptance or a deliverable; scope and fees require a separate agreement.">Prefer a second set of eyes?</h2><GuideInvite /></div><div><h3>Property Review</h3><p>Have a specific property or decision in mind? Share the context to ask about a separately scoped review.</p><Link href="/deal-blueprint" className="experience-link">Request a Property Review<ArrowRight size={17} aria-hidden="true" /></Link><p className="experience-notice">Request-based. Submission does not promise acceptance, a written review, a response, or a delivery date. Any scope and fees require separate agreement.</p></div></section>
+    <section className="tools-review"><div><h2 data-peggy-summary="You can ask about a separately scoped Property Review. Submission does not promise acceptance or a deliverable; scope and fees require a separate agreement.">Prefer a second set of eyes?</h2></div><div><h3>Property Review</h3><p>Have a specific property or decision in mind? Share the context to ask about a separately scoped review.</p><Link href="/deal-blueprint" className="experience-link">Request a Property Review<ArrowRight size={17} aria-hidden="true" /></Link><p className="experience-notice">Request-based. Submission does not promise acceptance, a written review, a response, or a delivery date. Any scope and fees require separate agreement.</p></div></section>
     <p className="experience-notice tools-network">Working with Pegasus on a project? <Link href="/marketflow">Learn about the private MarketFlow network.</Link></p>
   </div></div>;
 }

@@ -21,6 +21,8 @@ export const renderedQaReleaseRoutes = Object.freeze([
 ]);
 
 export const renderedQaFullPublicRouteExtras = Object.freeze([
+  '/projects',
+  '/case-study',
   '/marketflow/buyboxes',
   '/marketflow/deals',
   '/strategy-lab/library',

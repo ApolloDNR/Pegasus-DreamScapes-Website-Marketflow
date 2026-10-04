@@ -250,7 +250,7 @@ function HeroSection({ project }: { project: Project }) {
       <div className="relative z-10 w-full pb-20 pt-16">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           <Link
-            href="/projects"
+            href="/our-work"
             className="inline-flex items-center gap-2 text-xs uppercase tracking-[0.25em] text-white/80 hover:text-white transition-colors mb-10 group cursor-pointer"
             data-testid="button-back-projects"
           >
@@ -541,7 +541,7 @@ function BodySection({ project }: { project: Project }) {
 
 function RoutingSection() {
   const lanes = [
-    { icon: Building, kicker: "Published Work", title: "See the public record", desc: "Return to the currently published case-study index.", href: "/projects", cta: "Open The Record" },
+    { icon: Building, kicker: "Published Work", title: "See the public record", desc: "Return to the currently published case-study index.", href: "/our-work", cta: "Open The Record" },
     { icon: Briefcase, kicker: "MarketFlow", title: "Controlled pilot", desc: "Learn about the private pilot; access and inventory are not promised.", href: "/marketflow", cta: "View MarketFlow" },
   ];
 
@@ -609,7 +609,7 @@ function NotFound() {
         <p className="text-muted-foreground leading-relaxed mb-8">
           The case study you're looking for may have moved or been removed.
         </p>
-        <Link href="/projects">
+        <Link href="/our-work">
           <Button className="text-sm uppercase tracking-[0.15em] font-semibold px-8 py-6">
             <ArrowLeft className="mr-2 w-4 h-4" />
             Back to The Record

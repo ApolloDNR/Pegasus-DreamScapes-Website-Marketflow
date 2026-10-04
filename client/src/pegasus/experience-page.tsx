@@ -42,17 +42,17 @@ export function PageOpening({ title, children, action, secondaryAction, image, c
   </header>;
 }
 
-export function PageClosing({ title = 'Start with what you have.', children, href = '/bring-an-opportunity', label = 'Start a conversation' }: {
-  title?: string; children?: ReactNode; href?: string; label?: string;
+export function PageClosing({ title = 'Start with what you have.', children, href = '/bring-an-opportunity', label = 'Start a conversation', secondaryAction }: {
+  title?: string; children?: ReactNode; href?: string; label?: string; secondaryAction?: { label: string; href: string };
 }) {
   return <section className="ep-section ep-dark ep-closing"><div className="experience-wrap ep-split">
-    <h2>{title}</h2><div>{children}<PageAction href={href}>{label}</PageAction>{href.startsWith('/bring-an-opportunity') && <BeforeYouBegin />}<p className="ep-notice">{SUBMISSION_NOTICE}</p></div>
+    <h2>{title}</h2><div>{children}{secondaryAction ? <div className="experience-actions"><PageAction href={href}>{label}</PageAction><PageAction href={secondaryAction.href} secondary>{secondaryAction.label}</PageAction></div> : <PageAction href={href}>{label}</PageAction>}{href.startsWith('/bring-an-opportunity') && <><BeforeYouBegin /><p className="ep-notice">{SUBMISSION_NOTICE}</p></>}</div>
   </div></section>;
 }
 
-export function ProjectEvidence({ title = 'See the work on Nelson Drive.' }: { title?: string }) {
+export function ProjectEvidence({ title = 'Examine the Nelson Drive transformation.' }: { title?: string }) {
   return <section className="ep-section ep-evidence"><div className="experience-wrap ep-split">
     <figure><img src="/images/nelson/kitchen-after.webp" alt="Completed Nelson Drive kitchen with navy cabinetry and a quartz island" width={1600} height={996} loading="lazy" decoding="async" /><figcaption>Nelson Drive · Completed East Bay residential transformation</figcaption></figure>
-    <div><h2 data-peggy-summary="See the original photographs and available records from Nelson Drive. Open the case study to understand the work in detail.">{title}</h2><p>Real project photographs, the recorded scope, and the available financial record.</p><PageAction href="/projects/nelson-dr" secondary>Explore the case study</PageAction><div><ExplainWithPeggy /></div></div>
+    <div><h2 data-peggy-summary="See the original photographs and available records from Nelson Drive. Open the case study to understand the work in detail.">{title}</h2><p>Compare the original condition, visible renovation, and recorded sale.</p><p className="ep-notice">The available record does not verify Pegasus’s or Apollo’s project role.</p><PageAction href="/projects/nelson-dr" secondary>Explore the case study</PageAction><div><ExplainWithPeggy /></div></div>
   </div></section>;
 }

@@ -37,9 +37,9 @@ import {
   QUERY_PRESERVING_INTAKE_PATHS,
 } from "@shared/redirects";
 
-function QueryPreservingRedirect({ to }: { to: string }) {
+function QueryPreservingRedirect({ to, canonicalProof = false }: { to: string; canonicalProof?: boolean }) {
   const search = useSearch();
-  return <Redirect to={appendRedirectSearch(to, search)} />;
+  return <Redirect replace={canonicalProof} to={appendRedirectSearch(to, search, canonicalProof ? window.location.hash : "")} />;
 }
 
 // Website Brief v1.0 §11 — boot the consent-gated Plausible loader once
@@ -85,7 +85,6 @@ import Signup from "@/pages/signup";
 import ForgotPassword from "@/pages/forgot-password";
 import ResetPassword from "@/pages/reset-password";
 
-const Projects = lazy(() => import("@/pages/projects"));
 const Calculators = lazy(() => import("@/pages/calculators"));
 const StrategyLabSubmitted = lazy(() => import("@/pages/strategy-lab-submitted"));
 const StrategyLabBlueprintConfirmed = lazy(() => import("@/pages/strategy-lab-blueprint-confirmed"));
@@ -98,7 +97,6 @@ const SnapshotProperty = lazy(() => import("@/pages/snapshot-property"));
 const SubmitPropertyPage = lazy(() => import("@/pages/submit-property"));
 const PegasusStandardPage = lazy(() => import("@/pages/pegasus-standard"));
 const DepartmentsPage = lazy(() => import("@/pages/departments"));
-const CaseStudyPage = lazy(() => import("@/pages/case-study"));
 const NelsonDrPage = lazy(() => import("@/pages/project-nelson-dr"));
 const MarketflowAccess = lazy(() => import("@/pages/marketflow-access"));
 const MarketflowBuyboxes = lazy(() => import("@/pages/marketflow-buyboxes"));
@@ -173,8 +171,6 @@ export function Router() {
       <Route path="/bring-an-opportunity" component={SubmitPropertyPage} />
       <Route path="/pegasus-standard" component={PegasusStandardPage} />
       <Route path="/departments" component={DepartmentsPage} />
-      <Route path="/case-study" component={CaseStudyPage} />
-      <Route path="/projects" component={Projects} />
       <Route path="/projects/nelson-dr" component={NelsonDrPage} />
       {/* Website Spec v4 — /strategy-lab is a live prototype shell page again
        * (mounted via PEGASUS_URLS above). The /strategy-lab/* tool subroutes
@@ -221,7 +217,7 @@ export function Router() {
       {legacyRedirects.map(([from, to]) => (
         <Route key={from} path={from}>
           {() => QUERY_PRESERVING_INTAKE_PATHS.has(from)
-            ? <QueryPreservingRedirect to={to} />
+            ? <QueryPreservingRedirect to={to} canonicalProof={from === "/projects" || from === "/case-study"} />
             : <Redirect to={to} />}
         </Route>
       ))}
@@ -287,6 +283,7 @@ function PageRouteTransition() {
     <AnimatePresence mode="wait" initial={false}>
       <motion.div
         key={location}
+        data-navigation-path={location}
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0 }}

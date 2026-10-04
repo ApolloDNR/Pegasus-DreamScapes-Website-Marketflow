@@ -53,7 +53,7 @@ const COLUMNS: { heading: string; links: FooterLink[] }[] = [
       navMore("/contact"),
       navMore("/faq"),
       navMore("/peggy"),
-      navMore("/projects"),
+      navMore("/our-work"),
     ],
   },
   {

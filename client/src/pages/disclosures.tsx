@@ -241,12 +241,12 @@ export default function Disclosures() {
             <div className="mt-16 pt-10 border-t border-border">
               <div className="flex items-start gap-4">
                 <Mail className="w-5 h-5 text-[#8a5122] dark:text-primary mt-1 flex-shrink-0" />
-                <div>
+                <div className="min-w-0">
                   <p className="text-[13px] uppercase tracking-[0.3em] text-[#8a5122] dark:text-primary font-supporting font-semibold mb-2">
                     Questions about this page
                   </p>
                   <p className="text-base text-foreground/90 leading-relaxed">
-                    Reach the operator directly. <a href="mailto:apollo@pegasusdreamscapes.com" className="text-[#8a5122] dark:text-primary underline underline-offset-2">apollo@pegasusdreamscapes.com</a> · <a href="tel:+19257448525" className="text-[#8a5122] dark:text-primary underline underline-offset-2">925-744-8525</a>.
+                    Reach the operator directly. <a href="mailto:apollo@pegasusdreamscapes.com" className="[overflow-wrap:anywhere] text-[#8a5122] dark:text-primary underline underline-offset-2">apollo@pegasusdreamscapes.com</a> · <a href="tel:+19257448525" className="text-[#8a5122] dark:text-primary underline underline-offset-2">925-744-8525</a>.
                   </p>
                   <p className="text-sm text-muted-foreground mt-3 italic">
                     Site-copy consistency date: August 2026 · Operator-prepared draft

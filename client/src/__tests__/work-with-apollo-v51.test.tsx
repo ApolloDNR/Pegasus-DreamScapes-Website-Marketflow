@@ -194,7 +194,7 @@ describe("mounted Work With Apollo representation handoff", () => {
 
     expect(HTMLElement.prototype.scrollIntoView).toHaveBeenCalledWith({
       behavior: "auto",
-      block: "start",
+      block: "center",
     });
     expect(screen.getByLabelText("I am a…")).toHaveFocus();
   });

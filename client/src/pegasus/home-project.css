@@ -79,7 +79,7 @@
   min-height: 54px;
   padding: 12px 2px;
   border: 0;
-  border-bottom: 2px solid transparent;
+  border-bottom: 2px solid var(--project-rule);
   border-radius: 0;
   background: transparent;
   color: var(--project-muted);
@@ -88,6 +88,8 @@
   cursor: pointer;
   transition: color 160ms ease, border-color 160ms ease;
 }
+
+.home-project-note-controls button > svg { flex: none; margin-left: auto; color: var(--project-copper); }
 
 .home-project-note-controls button:hover,
 .home-project-note-controls button[aria-pressed='true'] {
@@ -153,7 +155,8 @@
   .home-project-before { width: 64%; }
   .home-project-photographs figcaption { margin-top: 8px; font-size: 12px; }
   .home-project-note-controls { gap: 10px; }
-  .home-project-note-controls button { flex-direction: column; align-items: flex-start; justify-content: flex-start; gap: 6px; font-size: 13px; padding-block: 8px 12px; }
+  .home-project-note-controls button { align-items: flex-start; gap: 6px; font-size: 13px; padding-block: 10px 12px; }
+  .home-project-note-controls button > svg { width: 14px; height: 14px; margin-top: 3px; }
   .home-project-note-number { font-size: 12px; }
   .home-project .home-project-note { min-height: 5.1em; padding-left: 16px; font-size: 14px; }
   .home-project .home-project-onward { gap: 14px; padding-top: 22px; }
@@ -161,4 +164,24 @@
 
 @media (prefers-reduced-motion: reduce) {
   .home-project-note-controls button { transition: none; }
+}
+
+/* Chapters are local controls; the photographs remain evidence, without crop or tint. */
+.home-project-note-controls { margin-bottom: 30px; }
+.home-project-photo-frame { display: flex; align-items: flex-end; aspect-ratio: 1600 / 999; }
+.home-project-after .home-project-photo-frame { aspect-ratio: 1600 / 996; }
+.home-project-photo-frame img { max-height: 100%; object-fit: contain; object-position: center bottom; }
+.home-project-story-notes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(24px, 4vw, 64px); padding-block: 28px 32px; }
+.home-project-story-notes > div { min-width: 0; }
+.home-project-story-notes > div + div { border-left: 1px solid var(--project-rule); padding-left: clamp(24px, 4vw, 64px); }
+.home-project .home-project-story-notes p { margin: 0; color: var(--project-paper); font: 400 16px/1.75 var(--pg-font-ui); }
+.home-project .home-project-story-notes .home-project-story-label { margin-bottom: 8px; color: var(--project-copper); font: 500 12px/1.6 var(--pg-font-ui); letter-spacing: .08em; text-transform: uppercase; }
+@media (max-width: 600px) {
+  .home-project-note-controls { grid-template-columns: 1fr; gap: 0; margin-bottom: 24px; }
+  .home-project-note-controls button { min-height: 48px; align-items: center; gap: 12px; font-size: 14px; }
+  .home-project-note-controls button > svg { margin-top: 0; }
+  .home-project-before { width: 72%; }
+  .home-project-story-notes { grid-template-columns: 1fr; gap: 20px; padding-block: 24px; }
+  .home-project-story-notes > div + div { border-left: 0; padding-left: 0; }
+  .home-project .home-project-story-notes p { font-size: 15px; }
 }

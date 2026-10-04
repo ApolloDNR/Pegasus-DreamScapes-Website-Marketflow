@@ -59,4 +59,18 @@ describe('Public navigation continuity', () => {
     await waitFor(() => expect(section).toHaveFocus());
     expect(window.scrollTo).toHaveBeenCalledWith({ top: 536, behavior: 'instant' });
   });
+  it('honors a deep-linked form’s clearance for the header and page guide', async () => {
+    window.history.replaceState(null, '', '/buyers#buyer-criteria');
+    setup('/buyers');
+    const header = screen.getByRole('navigation');
+    vi.spyOn(header, 'getBoundingClientRect').mockReturnValue({ height: 88 } as DOMRect);
+    const form = document.createElement('form');
+    form.id = 'buyer-criteria';
+    form.style.scrollMarginTop = '166px';
+    vi.spyOn(form, 'getBoundingClientRect').mockReturnValue({ top: 640 } as DOMRect);
+    await act(async () => { document.querySelector('main')!.append(form); });
+    await waitFor(() => expect(form).toHaveFocus());
+    expect(window.scrollTo).toHaveBeenCalledWith({ top: 474, behavior: 'instant' });
+  });
+
 });

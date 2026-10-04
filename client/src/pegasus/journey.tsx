@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { Link } from 'wouter';
-import { ArrowRight, ChevronDown } from 'lucide-react';
-import type { GuideSection } from './peggy-page-guide';
+import { ArrowRight, ChevronDown, Compass, MessageCircle } from 'lucide-react';
+import { scrollToGuideSection, type GuideSection } from './peggy-page-guide';
 import { PeggyMark } from './peggy-mark';
 import './journey.css';
 
@@ -17,16 +17,16 @@ export function GuideInvite({ compact = false, choose = false }: { compact?: boo
   return <div className={`journey-invite${compact ? ' is-compact' : ''}`} data-peggy-private>
     <span className="journey-avatar"><PeggyMark size={30} /></span>
     <div>{!compact && <><strong>A little guidance?</strong><p>Peggy can walk you through this page.</p></>}
-      <button type="button" onClick={event => requestPeggyGuide(choose ? 'choose' : 'tour', event.currentTarget)}>
-        {choose ? 'Want help choosing? Ask Peggy.' : 'Show me around'}<ArrowRight size={17} aria-hidden="true" />
+      <button type="button" data-peggy-invitation onClick={event => requestPeggyGuide(choose ? 'choose' : 'tour', event.currentTarget)}>
+        {choose ? 'Want help choosing? Ask Peggy.' : 'Show me around'}{choose ? <MessageCircle size={17} aria-hidden="true" /> : <Compass size={17} aria-hidden="true" />}
       </button>
     </div>
   </div>;
 }
 
 export function ExplainWithPeggy() {
-  return <button type="button" className="journey-explain" data-peggy-private onClick={event => requestPeggyGuide('explain', event.currentTarget)}>
-    <span className="journey-avatar"><PeggyMark size={21} /></span>Explore this with Peggy<ArrowRight size={16} aria-hidden="true" />
+  return <button type="button" className="journey-explain" data-peggy-private data-peggy-invitation onClick={event => requestPeggyGuide('explain', event.currentTarget)}>
+    <span className="journey-avatar"><PeggyMark size={21} /></span>Explore this with Peggy<MessageCircle size={16} aria-hidden="true" />
   </button>;
 }
 
@@ -65,43 +65,44 @@ export const JOURNEY_ROUTES: Record<string, readonly string[]> = {
 };
 export function journeyPath(path: string) { return path.split(/[?#]/, 1)[0].replace(/\/$/, '') || '/'; }
 
+// Pages with a concluding inquiry keep that action terminal. Informational
+// pages may offer quiet related reading without creating another decision funnel.
+const TERMINAL_ROUTES = new Set(['/deal-partners','/development','/about','/work-with-apollo','/buyers','/operators','/referral','/capital','/marketflow','/projects','/projects/nelson-dr','/case-study','/vendor-network','/pegasus-standard']);
 export function JourneyContinuation({ path }: { path: string }) {
-  const id = useId();
-  const next = JOURNEY_ROUTES[journeyPath(path)];
-  if (!next?.length) return null;
-  const primary = destinations[next[0]];
-  return <section className="journey-continuation" aria-labelledby={id}>
-    <div className="experience-wrap journey-continuation-grid">
-      <div className="journey-continuation-intro"><h2 id={id}>A clear next step.</h2><p>Take a closer look, at your pace.</p><GuideInvite compact choose /></div>
-      <div className="journey-destinations">
-        <Link href={primary.href} className={`journey-destination-feature${primary.image ? ' has-image' : ''}`} aria-label={primary.title}>
-          {primary.image && <span className="journey-destination-image"><img {...primary.image} style={primary.image.height > primary.image.width ? { objectPosition: 'center top' } : undefined} loading="lazy" decoding="async" /></span>}
-          <span className="journey-destination-copy"><strong>{primary.title}</strong><span className="journey-destination-note">{primary.note}</span><span className="journey-destination-action">{primary.action}<ArrowRight size={20} aria-hidden="true" /></span></span>
-        </Link>
-        <div className="journey-next-links">{next.slice(1).map(key => {
-        const item = destinations[key];
-        return <Link key={key} href={item.href}><strong>{item.title}</strong><span className="journey-next-note">{item.note}</span><ArrowRight size={20} aria-hidden="true" /></Link>;
-      })}</div></div>
-    </div>
-  </section>;
+  const current = journeyPath(path);
+  const next = JOURNEY_ROUTES[current];
+  if (!next?.length || TERMINAL_ROUTES.has(current)) return null;
+  return <nav className="journey-related" aria-label="Related reading"><div className="experience-wrap">
+    <span>Related reading</span><div>{next.map(key => {
+      const item = destinations[key];
+      return <Link key={key} href={item.href}>{item.title}<ArrowRight size={17} aria-hidden="true" /></Link>;
+    })}</div>
+  </div></nav>;
 }
 
-export function JourneyWayfinder({ path, sections, index, hidden, onAsk }: {
-  path: string; sections: GuideSection[]; index: number; hidden: boolean; onAsk: () => void;
+export function hasJourneyWayfinder(path: string, sectionCount: number, index: number) {
+  return Object.hasOwn(JOURNEY_ROUTES, journeyPath(path)) && sectionCount >= 3 && index > 0;
+}
+
+export function JourneyWayfinder({ path, sections, index, hidden, askHidden = false, onAsk }: {
+  path: string; sections: GuideSection[]; index: number; hidden: boolean; askHidden?: boolean; onAsk: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
   const host = useRef<HTMLElement>(null);
   const toggle = useRef<HTMLButtonElement>(null);
   const id = useId();
+  const visitFrame = useRef(0);
+  useEffect(() => () => cancelAnimationFrame(visitFrame.current), []);
   useEffect(() => setExpanded(false), [path, hidden]);
   useEffect(() => {
     const navigation = document.querySelector<HTMLElement>('.site-nav');
-    if (!navigation || typeof ResizeObserver === 'undefined') return;
+    if (!navigation) return;
     const update = () => document.documentElement.style.setProperty('--journey-nav-height', `${navigation.getBoundingClientRect().height}px`);
     update();
-    const observer = new ResizeObserver(update);
-    observer.observe(navigation);
-    return () => { observer.disconnect(); document.documentElement.style.removeProperty('--journey-nav-height'); };
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update);
+    observer?.observe(navigation);
+    window.addEventListener('resize', update);
+    return () => { observer?.disconnect(); window.removeEventListener('resize', update); document.documentElement.style.removeProperty('--journey-nav-height'); };
   }, []);
   useEffect(() => {
     const row = host.current?.querySelector<HTMLElement>('.journey-wayfinder-row');
@@ -119,10 +120,11 @@ export function JourneyWayfinder({ path, sections, index, hidden, onAsk }: {
     document.addEventListener('pointerdown', dismiss); document.addEventListener('keydown', escape);
     return () => { document.removeEventListener('pointerdown', dismiss); document.removeEventListener('keydown', escape); };
   }, [expanded]);
-  if (hidden || !Object.hasOwn(JOURNEY_ROUTES, journeyPath(path)) || sections.length < 3 || index === 0) return null;
+  if (hidden || !hasJourneyWayfinder(path, sections.length, index)) return null;
   const visit = (section: GuideSection) => {
     setExpanded(false);
-    section.element.scrollIntoView({ block: 'start', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth' });
+    cancelAnimationFrame(visitFrame.current);
+    visitFrame.current = requestAnimationFrame(() => { if (section.element.isConnected) scrollToGuideSection(section.element); });
     const original = section.element.getAttribute('tabindex');
     section.element.setAttribute('tabindex', '-1'); section.element.focus({ preventScroll: true });
     section.element.addEventListener('blur', () => { if (original === null) section.element.removeAttribute('tabindex'); else section.element.setAttribute('tabindex', original); }, { once: true });
@@ -133,7 +135,7 @@ export function JourneyWayfinder({ path, sections, index, hidden, onAsk }: {
         <span className="journey-section-count">{`${index + 1} of ${sections.length}`}</span>
         <span className="journey-section-name">{sections[index]?.label}</span><ChevronDown size={16} aria-hidden="true" />
       </button>
-      <button className="journey-wayfinder-ask" type="button" onClick={() => { setExpanded(false); onAsk(); }}><span className="journey-avatar"><PeggyMark size={23} /></span><span>Ask Peggy</span></button>
+      <button className="journey-wayfinder-ask" hidden={askHidden} type="button" onClick={() => { setExpanded(false); onAsk(); }}><span className="journey-avatar"><PeggyMark size={23} /></span><span>Ask Peggy</span></button>
     </div>
     {expanded && <div id={id} className="journey-outline experience-wrap">{sections.map((section, i) => <button type="button" key={i} aria-current={i === index ? 'location' : undefined} onClick={() => visit(section)}><span>{String(i + 1).padStart(2, '0')}</span>{section.label}<ArrowRight size={16} aria-hidden="true" /></button>)}</div>}
   </nav>;

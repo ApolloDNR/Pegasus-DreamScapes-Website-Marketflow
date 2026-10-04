@@ -35,8 +35,10 @@ describe("legacy query preservation", () => {
   it("covers every retired alias that must preserve context", () => {
     expect([...QUERY_PRESERVING_INTAKE_PATHS].sort()).toEqual([
       "/calculators",
+      "/case-study",
       "/connect",
       "/investments",
+      "/projects",
       "/submit",
       "/submit-deal",
       "/submit-property",

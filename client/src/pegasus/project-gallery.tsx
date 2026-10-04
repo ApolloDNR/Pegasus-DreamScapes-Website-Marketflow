@@ -3,7 +3,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { ArrowLeft, ArrowRight, Expand, X } from 'lucide-react';
 import './project-gallery.css';
 
-type Pair = { title: string; before: string; after: string; beforeAlt: string; afterAlt: string; note: string; tag?: string; details?: Array<{ label: string; note: string; x: number; y: number }> };
+type Pair = { id?: string; title: string; before: string; after: string; beforeAlt: string; afterAlt: string; note: string; tag?: string; details?: Array<{ label: string; note: string; x: number; y: number }> };
 
 export function ProjectGallery({ pairs, finishes }: { pairs: Pair[]; finishes: Array<[string, string]> }) {
   const inspectionId = useId();
@@ -13,7 +13,7 @@ export function ProjectGallery({ pairs, finishes }: { pairs: Pair[]; finishes: A
   const triggerRef = useRef<HTMLButtonElement | null>(null);
   const photos = [
     ...pairs.flatMap((pair) => [
-      { src: pair.before, alt: pair.beforeAlt, title: `${pair.title} · Before`, note: pair.tag ?? 'Documented before condition' },
+      { src: pair.before, alt: pair.beforeAlt, title: `${pair.title} · ${pair.tag ?? 'Before'}`, note: pair.tag ?? 'Documented before condition' },
       { src: pair.after, alt: pair.afterAlt, title: `${pair.title} · After`, note: pair.note },
     ]),
     ...finishes.map(([src, alt]) => ({ src, alt, title: 'The finishing details', note: alt })),
@@ -28,12 +28,12 @@ export function ProjectGallery({ pairs, finishes }: { pairs: Pair[]; finishes: A
   return <Dialog.Root open={active !== null} onOpenChange={(isOpen) => { if (!isOpen) setActive(null); }}>
     <div className="project-gallery"><p className="ow-gallery-hint"><Expand aria-hidden="true" />Select a photograph to view it in full.</p>
     <div className="ow-pairs">
-      {pairs.map((pair, index) => <figure key={pair.title} className="ow-pair" data-inspecting={inspecting === index}>
+      {pairs.map((pair, index) => <figure key={pair.title} id={pair.id} tabIndex={pair.id ? -1 : undefined} data-navigation-section={pair.id ? true : undefined} className="ow-pair" data-inspecting={inspecting === index}>
         <div className="ow-pair-heading"><span>0{index + 1}</span><h3 className="font-serif-display">{pair.title}</h3></div>
         <div className="ow-pair-media">
-          <button type="button" className="ow-shot" onClick={(event) => open(event, index * 2)} aria-label={`Enlarge ${pair.title.toLowerCase()}, before`}>
+          <button type="button" className="ow-shot" onClick={(event) => open(event, index * 2)} aria-label={`Enlarge ${pair.title.toLowerCase()}, ${pair.tag?.toLowerCase() ?? 'before'}`}>
             <img src={pair.before} alt={pair.beforeAlt} loading="lazy" />
-            <i>Before{pair.tag ? ` · ${pair.tag}` : ''}</i><Expand className="ow-expand" aria-hidden="true" />
+            <i>{pair.tag ?? 'Before'}</i><Expand className="ow-expand" aria-hidden="true" />
           </button>
           <button type="button" className="ow-shot ow-shot-after" onClick={(event) => open(event, index * 2 + 1)} aria-label={`Enlarge ${pair.title.toLowerCase()}, after`}>
             <img src={pair.after} alt={pair.afterAlt} loading="lazy" />

@@ -34,7 +34,8 @@
 .experience-button svg,.experience-link svg { flex:none; }
 .experience-home :is(a,button):focus-visible,.experience-tools :is(a,button):focus-visible { outline:2px solid currentColor; outline-offset:5px; }
 .experience-arrival { position:relative; isolation:isolate; display:flex; flex-direction:column; justify-content:center; min-height:660px; background:#0b1d29; color:#fcfaf6; padding:160px 0 72px; }
-.ep-project-story > h3 { max-width:24ch; }
+.ep-project-story > h3, .ep-project-story > #published-work > h3 { max-width:24ch; }
+#published-work, #case-record { scroll-margin-top:calc(var(--journey-nav-height,88px) + var(--journey-wayfinder-row-height,50px) + 22px); }
 .ep-project-chapters { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:40px; list-style:none; padding:0; margin:36px 0 48px; }
 .ep-project-chapters li { border-top:1px solid var(--experience-rule); padding-top:20px; }
 .ep-project-chapters li > span { color:var(--experience-copper); font-size:13px; line-height:1.5; }

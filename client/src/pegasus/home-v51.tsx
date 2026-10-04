@@ -40,7 +40,7 @@ export function HomePageV51(_props: { go: Nav; openPeggy: () => void }) {
       <div className="experience-wrap experience-arrival-copy">
         <p className="experience-geography">Contra Costa &amp; Alameda</p>
         <h1 data-peggy-summary="Start with the big picture: Pegasus connects property strategy, renovation insight and execution in the East Bay."><span>Complex real estate,</span><br /> <em>a clear way forward.</em></h1>
-        <p className="experience-intro">Property strategy, renovation insight, and execution for East Bay owners and partners. Led by Apollo Duran.</p>
+        <p className="experience-intro">Property strategy, renovation insight, and execution for East Bay owners and partners weighing a purchase, renovation, sale, or hold. Led by Apollo Duran.</p>
         <div className="experience-actions">
           <Link href={PUBLIC_ACTIONS.opportunity.href} className="experience-button">{PUBLIC_ACTIONS.opportunity.label}<ArrowRight aria-hidden="true" size={18} /></Link>
           <Link href={PUBLIC_ACTIONS.work.href} className="experience-link">{PUBLIC_ACTIONS.work.label}<ArrowRight aria-hidden="true" size={17} /></Link>

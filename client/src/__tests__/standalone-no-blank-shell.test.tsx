@@ -5,6 +5,8 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import { render, cleanup, waitFor } from "@testing-library/react";
 import { Router as WouterRouter } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
+import { ThemeProvider } from "@/components/theme-provider";
+import { PeggyReviewHandoffProvider } from "@/pegasus/peggy-review-handoff";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Standalone-page blank-shell net (Task #215).
@@ -145,7 +147,8 @@ const STANDALONE_URLS: string[] = [
 ];
 
 function renderRoute(routePath: string) {
-  const { hook } = memoryLocation({ path: routePath, static: true });
+  // Allow canonical redirects so retired proof URLs are checked at their real destination.
+  const { hook } = memoryLocation({ path: routePath });
   const qc = new QueryClient({
     defaultOptions: {
       queries: { retry: false, gcTime: 0, staleTime: 0 },
@@ -153,7 +156,7 @@ function renderRoute(routePath: string) {
     },
   });
   return render(
-    <QueryClientProvider client={qc}>
+    <ThemeProvider><PeggyReviewHandoffProvider><QueryClientProvider client={qc}>
       <TooltipProvider>
         <SiteContentProvider>
           <EditModeProvider>
@@ -171,7 +174,7 @@ function renderRoute(routePath: string) {
           </EditModeProvider>
         </SiteContentProvider>
       </TooltipProvider>
-    </QueryClientProvider>,
+    </QueryClientProvider></PeggyReviewHandoffProvider></ThemeProvider>,
   );
 }
 

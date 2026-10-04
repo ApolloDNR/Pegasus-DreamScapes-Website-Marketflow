@@ -1,3 +1,4 @@
+import {buildBuyerCriteriaLeadSubmission,createEmptyBuyerCriteriaDraft} from '../../../shared/buyer-criteria';
 import { deliverHqBatch } from "../delivery";
 import express from "express";
 import type { AddressInfo } from "node:net";
@@ -18,6 +19,16 @@ describe.skipIf(process.env.WEBSITE_DB_TESTS!=='1')('atomic public intake Postgr
  const clean=async()=>{for(const table of ['notification_outbox','delivery_jobs','intake_requests','admin_audit_log','opportunities','leads']) await db.execute(sql`delete from ${sql.identifier('website')}.${sql.identifier(table)} where org_id=${org}::uuid`);};
  beforeEach(clean);
  afterAll(async()=>{if(db){await clean();await close();}if(oldOrg===undefined)delete process.env.WEBSITE_ORG_ID;else process.env.WEBSITE_ORG_ID=oldOrg;});
+ it('structured buyer HTTP retry preserves the original envelope and one job without activating alert delivery',async()=>{
+  const d=createEmptyBuyerCriteriaDraft();Object.assign(d,{firstName:'Synthetic',email:'buyer@example.test',consentContact:true,referredBy:'synthetic-reference'});d.criteria.geography=[{country:'US',stateCode:'TX',kind:'state'}];d.criteria.assetTypes=['land'];d.criteria.purchaser.role='principal';
+  const payload={...buildBuyerCriteriaLeadSubmission(d),ts_elapsed_ms:4000};
+  const app=express();app.use(express.json());registerWebsiteLeadRoute(app,{db,rateLimit:(_q,_s,next)=>next()});const server=app.listen(0);await new Promise<void>(resolve=>server.once('listening',resolve));
+  const send=()=>fetch(`http://127.0.0.1:${(server.address() as AddressInfo).port}/api/leads`,{method:'POST',headers:{'Content-Type':'application/json','Idempotency-Key':key},body:JSON.stringify(payload)});
+  try{const a=await send();expect(a.status).toBe(201);const receipt=await a.json();const before=(await db.execute<{payload:any}>(sql`select payload from website.delivery_jobs where org_id=${org}::uuid`)).rows[0].payload;
+   const b=await send();expect(b.status).toBe(201);expect(await b.json()).toEqual(receipt);const jobs=await db.execute<{payload:any}>(sql`select payload from website.delivery_jobs where org_id=${org}::uuid`);expect(jobs.rows).toHaveLength(1);expect(jobs.rows[0].payload).toEqual(before);expect(before.submission.captured.leadData).toMatchObject({buyerCriteria:d.criteria,buyerAlertConsent:{emailOptIn:false},referredBy:'synthetic-reference'});expect(before.submission.consent.contact).toBe(true);expect(before.submission.consent.privacyAcknowledged).toBe(false);
+   expect((await db.execute<{n:number}>(sql`select count(*)::int n from website.leads where org_id=${org}::uuid`)).rows[0].n).toBe(1);
+  }finally{await new Promise<void>((r,j)=>server.close(e=>e?j(e):r()));}
+ });
  it('records both receipt types and transactionally queues HQ and email purposes',async()=>{
   const a=await recordWebsiteInquiry({kind:'opportunity',payload:opportunity,idempotencyKey:key,authSubject:null},db);
   expect(a.record.type).toBe('opportunity');expect(a.record.id).toMatch(/^[0-9a-f-]{36}$/);

@@ -74,9 +74,10 @@
 .ep-photo-pair img { aspect-ratio:8/5; }
 .ep-wide-photo img { aspect-ratio:16/9; max-height:620px; }
 .ep-stage-rail { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); border-block:1px solid var(--experience-rule); margin:32px 0; }
-.ep-stage-rail button { text-align:left; padding:20px 12px; min-height:88px; }
+.ep-stage-rail button { position:relative; text-align:left; padding:20px 40px 20px 12px; min-height:88px; }
+.ep-stage-rail button > svg { position:absolute; right:12px; top:50%; transform:translateY(-50%); color:var(--experience-copper); }
 .ep-stage-rail span { display:block; font-size:13px; color:var(--experience-copper); }
-.ep-stage-rail strong { display:block; font:400 24px/1.4 var(--pg-font-display); margin-top:8px; }
+.ep-stage-rail strong { display:block; font:500 16px/1.5 var(--pg-font-ui); margin-top:8px; }
 .ep-four-stages { grid-template-columns:repeat(4,minmax(0,1fr)); }
 .ep-contact-links { display:flex; flex-wrap:wrap; gap:16px 32px; margin:24px 0; }
 .ep-contact-links a { display:inline-flex; min-height:48px; align-items:center; font-size:16px; color:var(--experience-copper); border-bottom:1px solid currentColor; overflow-wrap:anywhere; }
@@ -133,7 +134,7 @@
   .ep-choice-layout { margin-top:24px; }
   .ep-process .ep-numbered { grid-template-columns:1fr; gap:24px; }
   .ep-stage-rail { grid-template-columns:1fr; }
-  .ep-stage-rail button { display:flex; align-items:center; gap:20px; min-height:54px; padding:14px 12px; border-bottom:1px solid var(--experience-rule); }
-  .ep-stage-rail strong { font-size:20px; margin:0; }
+  .ep-stage-rail button { display:flex; align-items:center; gap:20px; min-height:54px; padding:14px 40px 14px 12px; border-bottom:1px solid var(--experience-rule); }
+  .ep-stage-rail strong { font-size:16px; margin:0; }
   .ep-opening-grid .experience-actions > .experience-button { max-width:100%; }
 }

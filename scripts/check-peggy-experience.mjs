@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { chromium } from 'playwright-core';
+import { openAvailablePeggy } from './peggy-ui-test-helpers.mjs';
 process.env.APP_ENV = 'preview';
 process.env.SITE_INDEXABLE = 'false';
 process.env.DATABASE_URL = '';
@@ -33,13 +34,21 @@ async function check(page, key, state) {
   results.push({ key, state, screenshot, axeViolations: 0, ...geometry });
 }
 async function openPeggy(page) {
-  const launcher = page.getByRole('button', { name: 'Talk to Peggy, the Pegasus intake concierge', exact: true });
-  if (await launcher.isVisible()) await launcher.click();
-  else {
-    await page.getByRole('button', { name: 'Open menu', exact: true }).click();
-    await page.getByRole('button', { name: 'Talk to Peggy', exact: true }).click();
+  const { preparesSectionQuestion } = await openAvailablePeggy(page, { pageGuide: true });
+  const dialog = page.getByRole('dialog', { name: 'Peggy, the Pegasus intake concierge', exact: true });
+  await dialog.waitFor();
+  // An inline or tour invitation may prepare a section question. This gate
+  // starts with an empty composer before exercising the suggested-question flow.
+  const attachedContext = dialog.getByRole('button', { name: 'Remove attached page context', exact: true });
+  if (preparesSectionQuestion) {
+    await attachedContext.waitFor();
+    await page.waitForFunction(() => {
+      const section = document.querySelector('.peggy-attached-context summary span')?.textContent;
+      return section && document.querySelector('.peggy-input textarea')?.value === `Explain “${section}” in plain language. What should I notice here?`;
+    });
   }
-  await page.getByRole('dialog', { name: 'Peggy, the Pegasus intake concierge', exact: true }).waitFor();
+  await dialog.getByRole('textbox', { name: 'Talk to Peggy', exact: true }).fill('');
+  if (await attachedContext.isVisible()) await attachedContext.click();
 }
 try {
 
@@ -76,6 +85,9 @@ try {
     await openPeggy(page);
     const dialog = page.getByRole('dialog', { name: 'Peggy, the Pegasus intake concierge', exact: true });
     const input = dialog.getByRole('textbox', { name: 'Talk to Peggy', exact: true });
+    assert.equal(posts, 0, 'Opening Peggy must not send');
+    assert.equal(await input.inputValue(), '');
+    assert.equal(await dialog.getByRole('button', { name: 'Send', exact: true }).isEnabled(), false);
     await check(page, key, 'welcome');
     await dialog.getByRole('button', { name: 'Find my next step', exact: true }).click();
     await dialog.getByRole('button', { name: 'I want to sell a property', exact: true }).click();

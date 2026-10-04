@@ -4,16 +4,17 @@ import { NELSON_FACTS, NELSON_PUBLIC_HIGHLIGHTS } from '@shared/nelson-facts';
 
 export function OurWorkPage({ go: _go }: { go: Nav }) {
   return <article className="experience-page">
-    <PageOpening title="The work, in detail."
+    <PageOpening title="Nelson Drive, documented."
       image={{ src:'/images/nelson/kitchen-after.webp', alt:'The completed Nelson Drive kitchen with navy cabinetry and a waterfall island', width:1600, height:996, caption:'Nelson Drive · Original project photography' }}
       action={{ href:'#project-record', label:'Explore Nelson Drive' }}>
-      <p>A completed East Bay residential transformation, documented from its starting condition to the finished home.</p>
+      <p>A completed East Bay residential transformation, documented from its starting condition to the finished home and sale.</p>
+      <p className="ep-notice">The available record does not verify Pegasus’s or Apollo’s project role.</p>
     </PageOpening>
     <section className="ep-section"><div className="experience-wrap">
       <div className="ep-section-title"><h2 data-peggy-summary="This is the documented Nelson Drive project. Compare the real photographs and follow the case study for the recorded scope and financial information.">Nelson Drive.</h2><p>Richmond / El Sobrante Area, California</p></div>
       <figure className="ep-wide-photo"><img src="/images/nelson/curb.webp" alt="Nelson Drive exterior after the renovation" width={1600} height={1067} loading="eager" decoding="async" /><figcaption>The completed property · Real project photography</figcaption></figure>
       <div className="ep-project-story ep-rule" id="project-record">
-        <h3 id="project-lessons">From dated interiors to a coherent home.</h3>
+        <div id="published-work" role="group" aria-labelledby="project-lessons"><h3 id="project-lessons">From dated interiors to a coherent home.</h3></div>
         <ol className="ep-project-chapters">
           <li><span>01 · The starting point</span><h4>A home ready for change.</h4><p>The kitchen and living room photographs show dated finishes and a more enclosed layout. The bathroom record begins during construction.</p></li>
           <li><span>02 · The visible changes</span><h4>A new focal point.</h4><p>The cooktop moved to a waterfall island with seating. Navy cabinetry and a statement hood anchor the kitchen, alongside updates throughout the home.</p></li>

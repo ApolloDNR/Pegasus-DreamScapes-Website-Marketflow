@@ -35,10 +35,14 @@ export function DealPartnersPage({ go: _go }: { go: Nav }) {
     setLocation(`/deal-partners?${params.toString()}`, { replace: true });
   };
   const pick = MISSING[idx];
-  const selectedNeedHref = `/bring-an-opportunity?intent=deal-jv&ref=deal-partners&partner_need=${encodeURIComponent(pick.label)}`;
+  const opportunityHref = (need?: string, chooseRequest = false) => `/bring-an-opportunity?${chooseRequest ? '' : 'intent=deal-jv&'}ref=deal-partners${need ? `&partner_need=${encodeURIComponent(need)}` : ''}`;
+  const selectedNeedHref = opportunityHref(pick.label);
+  const pageIntakeHref = opportunityHref(requested);
+  const proposalHref = opportunityHref(requested, true);
   return <article className="experience-page dp">
-    <PageOpening title="Bring the deal. Define the role." action={{ label: 'Bring a deal', href: '/bring-an-opportunity?intent=deal-jv' }} secondaryAction={{ label:'Share a partnership proposal', href:'/bring-an-opportunity?ref=deal-partners' }}>
-      <p>Share the property or project, your role, and the help you are looking for. Pegasus considers each proposal individually; participation requires separate written terms.</p>
+    <PageOpening title="Bring the property. Define the next decision." action={{ label: 'Bring a deal', href: pageIntakeHref }} secondaryAction={{ label:'Choose a partnership request', href: proposalHref }}>
+      <p>Tell Apollo what you control, what you know, and where the deal is stuck. Start with the property, your proposed role, and the decision you want to work through.</p>
+      <p className="ep-notice">Pegasus considers each proposal individually; participation requires separate written terms.</p>
     </PageOpening>
     <section className="ep-section" data-testid="missing-composer"><div className="experience-wrap">
       <h2 data-peggy-summary="Choose the missing piece. The details explain which facts to gather and which questions need a separate agreement.">What does the deal need next?</h2>
@@ -50,10 +54,11 @@ export function DealPartnersPage({ go: _go }: { go: Nav }) {
     <section className="ep-section ep-dark"><div className="experience-wrap ep-split">
       <div><h2 data-peggy-summary="Identify the property, your authority and your proposed contribution. Sharing a proposal does not create a partnership or compensation agreement.">Put the proposal on the record.</h2><p>The intake can record a proposed principal, joint-venture, disposition, operating, brokerage, or referral role. Actual involvement would depend on capacity, diligence, applicable law, and separate written terms; receipt creates none of those relationships.</p></div>
       <div><ol className="ep-rows ep-numbered">
-        <li><div><h3>Identify the opportunity.</h3><p>Include the property, known facts, current control, and relevant dates.</p></div></li>
-        <li><div><h3>Define your contribution.</h3><p>Explain your role, authority, and the unresolved decisions.</p></div></li>
-        <li><div><h3>Establish terms separately.</h3><p>A role exists only after diligence, legal compliance, capacity review, and signed terms.</p></div></li>
-      </ol><p className="ep-notice ep-rule">The intake records the submitter and the information provided. Any joint venture, assignment, referral, distribution, representation, or compensation arrangement would require a separate written agreement before anyone relies on it.</p></div>
+        <li><div><h3>The property.</h3><p>Share the address, current condition, and the facts or records you already have.</p></div></li>
+        <li><div><h3>Control and permissions.</h3><p>Identify who owns or controls the opportunity, your role, and what you are authorized to share.</p></div></li>
+        <li><div><h3>The unresolved decision.</h3><p>Explain your proposed contribution and the question holding the deal back.</p></div></li>
+        <li><div><h3>Timing.</h3><p>Include contract dates, access constraints, and the next decision deadline.</p></div></li>
+      </ol><p className="ep-notice ep-rule">The intake records the submitter and the information provided. A role exists only after diligence, legal compliance, capacity review, and signed terms. Any joint venture, assignment, referral, distribution, representation, or compensation arrangement would require a separate written agreement before anyone relies on it.</p></div>
     </div></section>
     <section className="ep-section"><div className="experience-wrap ep-split">
       <h2>Find the relevant conversation.</h2>
@@ -64,6 +69,9 @@ export function DealPartnersPage({ go: _go }: { go: Nav }) {
         ['/referral', 'Referrals', 'Permissions, boundaries, and separate written terms.'],
       ].map(([href,label,note]) => <Link key={href} href={href}><span><strong>{label}</strong><small>{note}</small></span><ArrowRight aria-hidden="true" /></Link>)}</div>
     </div></section>
-    <PageClosing title="Bring the facts and your proposed role." href="/bring-an-opportunity?intent=deal-jv" label="Bring a deal"><p className="ep-notice">No response, buyer, written terms, distribution, funding, or closing is promised. Brokerage activity, if any, requires the appropriate separately documented licensed relationship.</p></PageClosing>
+    <PageClosing title="Bring the facts and your proposed role." href={pageIntakeHref} label="Bring a deal" secondaryAction={{ href: '/how-we-operate#operating-roles', label: 'Explore the possible roles' }}>
+      <p>Decide which question needs resolving first. Bring the property facts, your authority, and your proposed contribution. If the role is still unclear, explore how those responsibilities differ.</p>
+      <p className="ep-notice">No response, buyer, written terms, distribution, funding, or closing is promised. Brokerage activity, if any, requires the appropriate separately documented licensed relationship.</p>
+    </PageClosing>
   </article>;
 }

@@ -1,3 +1,4 @@
+import {buildBuyerCriteriaLeadSubmission,createEmptyBuyerCriteriaDraft} from '../../../shared/buyer-criteria';
 import {beforeAll,afterAll,beforeEach,describe,it,expect,vi} from 'vitest';
 import express from 'express';import type {Server} from 'node:http';import type {AddressInfo} from 'node:net';
 const state=vi.hoisted(()=>({record:vi.fn()}));
@@ -11,6 +12,15 @@ afterAll(async()=>{await new Promise<void>((r,j)=>server.close(e=>e?j(e):r()));}
 beforeEach(()=>{state.record.mockReset().mockImplementation(async(input:any)=>({record:{type:'lead',id:7},duplicate:false,row:{id:7,...input.payload,orgId:'private',authSubject:'private'}}));});
 const post=(data:Record<string,unknown>=body,key='a5000000-0000-4000-8000-000000000002')=>fetch(`${base}/api/leads`,{method:'POST',headers:{'content-type':'application/json','Idempotency-Key':key},body:JSON.stringify(data)});
 describe('website lead route',()=>{
+ it('preserves referral and both permission facts for structured criteria in the immutable payload', async () => {
+  const d=createEmptyBuyerCriteriaDraft();Object.assign(d,{firstName:'Synthetic',email:'buyer@example.test',consentContact:true,referredBy:'referral-person'});d.criteria.geography=[{country:'US',stateCode:'TX',kind:'state'}];d.criteria.assetTypes=['land'];d.criteria.purchaser.role='principal';
+  const payload={...buildBuyerCriteriaLeadSubmission(d),ts_elapsed_ms:4000};const r=await post(payload);expect(r.status).toBe(201);expect(await r.json()).toEqual({id:7,stage:'new'});
+  const captured=state.record.mock.calls[0][0].payload;expect(captured.leadType).toBe('buyer');expect(captured.leadData.referredBy).toBe('referral-person');expect(captured.leadData.buyerCriteria).toEqual(d.criteria);expect(captured.leadData.buyerAlertConsent.emailOptIn).toBe(false);expect(captured.leadData.consentAudit).toMatchObject({consentContact:true,consentCcpaAcknowledged:false});
+ });
+ it('rejects top-level criteria markers instead of treating them as a legacy inquiry',async()=>{expect((await post({...body,buyerCriteria:{}})).status).toBe(400);expect(state.record).not.toHaveBeenCalled();});
+ it.each(['buyerCriteria','buyerAlertConsent'])('rejects malformed %s markers before persistence instead of falling through legacy intake', async marker => {
+  const r=await post({...body,leadData:{[marker]:null}});expect(r.status).toBe(400);expect(state.record).not.toHaveBeenCalled();
+ });
  it.each([
   ['Buy a home (Buyer representation)', 'buyer'],
   ['List my property (Seller representation)', 'seller'],

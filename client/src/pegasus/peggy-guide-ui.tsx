@@ -1,7 +1,7 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import { ArrowLeft, ArrowRight, ChevronDown, Compass, X } from 'lucide-react';
 import type { PeggyPageContext } from '@shared/peggy-page-context';
-import type { GuideSection } from './peggy-page-guide';
+import { scrollToGuideSection, type GuideSection } from './peggy-page-guide';
 import { PeggyMark } from './peggy-mark';
 
 export function PeggyLocation({ context, label, sections, onVisit }: { context: PeggyPageContext; label: string; sections: GuideSection[]; onVisit: (index: number) => void }) {
@@ -64,16 +64,49 @@ export function PeggyTourTrail({ sections, index, onMove }: { sections: GuideSec
 
 export function PeggyTour({ section, index, sections, context, onMove, onEnd, onAsk }: { section: GuideSection; index: number; sections: GuideSection[]; context: PeggyPageContext | null; onMove: (index: number) => void; onEnd: () => void; onAsk: () => void }) {
   const total = sections.length;
+  const detailsId = useId();
+  const host = useRef<HTMLElement>(null);
+  const compactQuery = '(max-width: 1439px)';
+  const [compact, setCompact] = useState(() => window.matchMedia(compactQuery).matches);
+  const [expanded, setExpanded] = useState(false);
+  useEffect(() => {
+    const media = window.matchMedia(compactQuery);
+    const update = () => setCompact(media.matches);
+    media.addEventListener?.('change', update);
+    return () => media.removeEventListener?.('change', update);
+  }, []);
+  useEffect(() => {
+    const cookieBar = document.querySelector<HTMLElement>('.pg-cookie-bar');
+    if (!cookieBar) return;
+    const update = () => host.current?.style.setProperty('--peggy-cookie-height', `${Math.ceil(cookieBar.getBoundingClientRect().height)}px`);
+    update();
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update);
+    observer?.observe(cookieBar);
+    window.addEventListener('resize', update);
+    return () => { observer?.disconnect(); window.removeEventListener('resize', update); };
+  }, []);
+  useEffect(() => {
+    if (!compact) return;
+    const frame = requestAnimationFrame(() => scrollToGuideSection(section.element, 'auto'));
+    return () => cancelAnimationFrame(frame);
+  }, [compact, expanded]);
   const excerpt = context?.excerpt ?? '';
   const firstSentence = excerpt.match(/^.{40,260}?[.!?](?:\s|$)/)?.[0]?.trim();
-  return <aside className="peggy-tour" aria-label="Peggy page guide" tabIndex={-1}>
-    <header><span className="peggy-tour-seal"><PeggyMark size={27} /></span><span>Peggy is showing you around</span><button type="button" onClick={onEnd} aria-label="End page tour"><X size={20} aria-hidden="true" /></button></header>
+  const move = (next: number) => { setExpanded(false); onMove(next); };
+  const currentStep = <div className="peggy-tour-step" aria-live="polite" aria-atomic="true"><span>{String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</span><h2 title={section.title}>{section.title}</h2></div>;
+  return <aside ref={host} className="peggy-tour" data-compact={compact} data-expanded={expanded} aria-label="Peggy page guide" tabIndex={-1}>
+    <header><span className="peggy-tour-seal"><PeggyMark size={27} /></span>{compact ? currentStep : <span>Peggy is showing you around</span>}{compact && <button type="button" className="peggy-tour-details-toggle" aria-label="Section details and stops" aria-expanded={expanded} aria-controls={detailsId} onClick={() => setExpanded(!expanded)}><ChevronDown size={18} aria-hidden="true" /></button>}<button type="button" onClick={onEnd} aria-label="End page tour"><X size={20} aria-hidden="true" /></button></header>
     <div className="peggy-tour-body">
-      <PeggyTourTrail sections={sections} index={index} onMove={onMove} />
-      <div className="peggy-tour-step" aria-live="polite" aria-atomic="true"><span>{String(index + 1).padStart(2, '0')} / {String(total).padStart(2, '0')}</span><h2>{section.title}</h2></div>
-      <p>{section.summary || firstSentence || (excerpt.length > 220 ? `${excerpt.slice(0, 217)}…` : excerpt) || 'Take a look at this section. You can ask Peggy to help explain it.'}</p>
-      <div className="peggy-tour-controls"><button type="button" aria-label="Previous section" onClick={() => onMove(index - 1)} disabled={index === 0}><ArrowLeft size={18} aria-hidden="true" /></button><button type="button" className="peggy-tour-next" onClick={() => index < total - 1 ? onMove(index + 1) : onEnd()}>{index < total - 1 ? 'Next section' : 'Finish tour'}<ArrowRight size={18} aria-hidden="true" /></button></div>
-      <button type="button" className="peggy-tour-ask" onClick={onAsk}>Ask about this</button><small>Page guide · no message sent</small>
+      {!compact && <><PeggyTourTrail sections={sections} index={index} onMove={onMove} />{currentStep}</>}
+      <div id={detailsId} className="peggy-tour-details" hidden={compact && !expanded}>
+        <p>{section.summary || firstSentence || (excerpt.length > 220 ? `${excerpt.slice(0, 217)}…` : excerpt) || 'Take a look at this section. You can ask Peggy to help explain it.'}</p>
+        {compact && <PeggyTourTrail key={String(expanded)} sections={sections} index={index} onMove={onMove} />}
+      </div>
+      <div className="peggy-tour-actions">
+        <div className="peggy-tour-controls"><button type="button" aria-label="Previous section" onClick={() => move(index - 1)} disabled={index === 0}><ArrowLeft size={18} aria-hidden="true" /></button><button type="button" className="peggy-tour-next" onClick={() => index < total - 1 ? move(index + 1) : onEnd()}>{index < total - 1 ? 'Next section' : 'Finish tour'}<ArrowRight size={18} aria-hidden="true" /></button></div>
+        <button type="button" className="peggy-tour-ask" onClick={onAsk}>Ask about this</button>
+      </div>
+      <small>Page guide · no message sent</small>
     </div>
   </aside>;
 }

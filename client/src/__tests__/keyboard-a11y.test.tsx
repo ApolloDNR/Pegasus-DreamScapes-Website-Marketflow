@@ -8,6 +8,7 @@ import { Router } from "wouter";
 import { memoryLocation } from "wouter/memory-location";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { SEO_ROUTES, sitemapEntries } from "@shared/seo-routes";
+import { LEGACY_SPA_EXACT_REDIRECTS } from "@shared/redirects";
 
 // Empire Doctrine v1.0.1 — Keyboard accessibility regression net (Task #143).
 //
@@ -513,7 +514,6 @@ import AboutPage from "@/pages/about";
 import DevelopmentPage from "@/pages/development";
 import SubmitPropertyPage from "@/pages/submit-property";
 import CapitalPage from "@/pages/capital";
-import ProjectsPage from "@/pages/projects";
 import NelsonDrPage from "@/pages/project-nelson-dr";
 import VendorNetworkPage from "@/pages/vendor-network";
 import DisclosuresPage from "@/pages/disclosures";
@@ -522,7 +522,6 @@ import TermsPage from "@/pages/terms";
 import MarketflowAccessPage from "@/pages/marketflow-access";
 import StrategyLabPage from "@/pages/strategy-lab";
 import DepartmentsPage from "@/pages/departments";
-import CaseStudyPage from "@/pages/case-study";
 import PegasusStandardPage from "@/pages/pegasus-standard";
 import DealBlueprintPage from "@/pages/deal-blueprint";
 import FAQPage from "@/pages/faq";
@@ -636,7 +635,7 @@ const PUBLIC_ROUTES: RouteSpec[] = [
   { path: "/development", Page: DevelopmentPage },
   { path: "/bring-an-opportunity", Page: SubmitPropertyPage },
   { path: "/capital", Page: CapitalPage },
-  { path: "/projects", Page: ProjectsPage },
+  { path: "/projects", Page: OurWorkPublicPage },
   { path: "/projects/nelson-dr", Page: NelsonDrPage },
   { path: "/vendor-network", Page: VendorNetworkPage },
   { path: "/contact", Page: ContactPublicPage },
@@ -650,7 +649,7 @@ const PUBLIC_ROUTES: RouteSpec[] = [
   { path: "/work-with-apollo", Page: WorkWithApolloPublicPage },
   { path: "/peggy", Page: PeggyPublicPage },
   { path: "/departments", Page: DepartmentsPage },
-  { path: "/case-study", Page: CaseStudyPage },
+  { path: "/case-study", Page: NelsonDrPage },
   { path: "/pegasus-standard", Page: PegasusStandardPage },
   { path: "/deal-blueprint", Page: DealBlueprintPage },
   { path: "/faq", Page: FAQPage },
@@ -669,8 +668,14 @@ describe("public keyboard route inventory", () => {
       sitemapPaths.filter((routePath) => coverageCount.get(routePath) !== 1),
     ).toEqual([]);
 
+    // Canonicalized proof routes still receive keyboard coverage at their destination.
+    const proofAliases = new Map([["/projects", "/our-work"], ["/case-study", "/projects/nelson-dr"]]);
+    for (const [from, to] of proofAliases) {
+      expect(LEGACY_SPA_EXACT_REDIRECTS).toContainEqual([from, to]);
+      expect(coverageCount.get(from)).toBe(1);
+    }
     const noindexCoverage = coveredPaths
-      .filter((routePath) => !sitemapPaths.includes(routePath))
+      .filter((routePath) => !sitemapPaths.includes(routePath) && !proofAliases.has(routePath))
       .sort();
     expect(noindexCoverage).toEqual(["/disclosures", "/privacy", "/terms"]);
     for (const routePath of noindexCoverage) {

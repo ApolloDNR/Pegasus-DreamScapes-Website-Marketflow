@@ -2,6 +2,8 @@
 export const QUERY_PRESERVING_INTAKE_PATHS: ReadonlySet<string> = new Set([
   "/calculators",
   "/connect",
+  "/projects",
+  "/case-study",
   "/investments",
   "/submit",
   "/submit-property",
@@ -19,6 +21,8 @@ export const LEGACY_SPA_EXACT_REDIRECTS: ReadonlyArray<
 > = [
   ["/calculators", "/strategy-lab?tool=calculators"],
   ["/connect", "/contact"],
+  ["/projects", "/our-work"],
+  ["/case-study", "/projects/nelson-dr"],
   ["/sell", "/property-owners"],
   ["/investments", "/capital"],
   ["/submit-deal", "/bring-an-opportunity?intent=deal-jv"],
@@ -83,7 +87,9 @@ export const LEGACY_SPA_PREFIX_REDIRECTS: ReadonlyArray<
  * Parameters already fixed by the target win over incoming duplicates, so an
  * alias such as `/submit-deal?intent=sell` cannot replace `intent=deal-jv`.
  */
-export function appendRedirectSearch(target: string, search: string): string {
+export function appendRedirectSearch(target: string, search: string, fragment = ""): string {
+  // HTTP redirects inherit browser fragments; SPA redirects must retain them explicitly.
+  if (!target.includes("#") && fragment.startsWith("#")) target += fragment;
   const query = search.replace(/^\?/, "").trim();
   if (!query) return target;
 

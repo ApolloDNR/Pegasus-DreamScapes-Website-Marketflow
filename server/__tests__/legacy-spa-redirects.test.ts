@@ -35,6 +35,13 @@ function requestRedirect(routePattern: string, originalUrl: string) {
 }
 
 describe("legacy SPA server redirects", () => {
+  it.each([
+    ["/projects", "/our-work"],
+    ["/case-study", "/projects/nelson-dr"],
+  ])("canonicalizes proof alias %s without discarding attribution", (from, to) => {
+    expect(requestRedirect(from, `${from}?ref=story`)).toEqual({ status: 301, location: `${to}?ref=story` });
+  });
+
   it("preserves a calculator tab deep link at the canonical Strategy Lab desk", () => {
     expect(
       requestRedirect("/calculators", "/calculators?tab=roi"),

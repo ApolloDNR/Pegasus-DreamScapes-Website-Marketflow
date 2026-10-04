@@ -138,6 +138,7 @@ describe("Start a conversation interaction states", () => {
     const success = await screen.findByRole("heading", { name: "Received." });
     await waitFor(() => expect(success).toHaveFocus());
     expect(screen.getByText("Reference: opportunity-42")).toBeInTheDocument();
+    expect(success.closest("[data-peggy-private]")).not.toBeNull();
     expect(liveRegion).toHaveTextContent("Submission received");
     expect(screen.getByTestId("intake-live-status")).toBe(liveRegion);
   });
